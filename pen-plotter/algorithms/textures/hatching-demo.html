@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hatching & Texture Library Demo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../src/textures/hatching-library.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    .preset-btn {
+      background: #2196F3;
+      margin: 2px 0;
+      padding: 8px;
+      font-size: 13px;
+    }
+    .preset-btn:hover {
+      background: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Hatching Library Demo</h2>
+    
+    <div class="control-group">
+      <h3>Shape</h3>
+      <div class="control">
+        <label>Shape Type:</label>
+        <select id="shapeType">
+          <option value="circle">Circle</option>
+          <option value="square">Square</option>
+          <option value="triangle">Triangle</option>
+          <option value="hexagon">Hexagon</option>
+          <option value="star">Star</option>
+          <option value="heart">Heart</option>
+          <option value="custom">Custom Polygon</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Size: <span class="value" id="shapeSize-val">200</span></label>
+        <input type="range" id="shapeSize" min="50" max="400" value="200">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Pattern</h3>
+      <div class="control">
+        <label>Pattern Type:</label>
+        <select id="patternType">
+          <option value="parallel">Parallel Lines</option>
+          <option value="crosshatch">Cross Hatch</option>
+          <option value="stipple">Stipple</option>
+          <option value="scribble">Scribble</option>
+          <option value="waves">Waves</option>
+          <option value="circular">Circular</option>
+          <option value="organic">Organic</option>
+          <option value="dots">Dots</option>
+          <option value="dashes">Dashes</option>
+          <option value="zigzag">Zigzag</option>
+          <option value="gradient">Gradient</option>
+          <option value="noise">Noise</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Spacing: <span class="value" id="spacing-val">5</span></label>
+        <input type="range" id="spacing" min="2" max="20" value="5">
+      </div>
+      <div class="control">
+        <label>Angle: <span class="value" id="angle-val">45</span>°</label>
+        <input type="range" id="angle" min="0" max="180" value="45">
+      </div>
+      <div class="control">
+        <label>Density: <span class="value" id="density-val">1</span></label>
+        <input type="range" id="density" min="0.1" max="3" value="1" step="0.1">
+      </div>
+      <div class="control" id="amplitude-control" style="display: none;">
+        <label>Amplitude: <span class="value" id="amplitude-val">5</span></label>
+        <input type="range" id="amplitude" min="1" max="20" value="5">
+      </div>
+      <div class="control" id="frequency-control" style="display: none;">
+        <label>Frequency: <span class="value" id="frequency-val">0.1</span></label>
+        <input type="range" id="frequency" min="0.01" max="0.5" value="0.1" step="0.01">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showShape" checked>
+        <label for="showShape">Show Shape Outline</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showBounds">
+        <label for="showBounds">Show Bounds</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animatePattern">
+        <label for="animatePattern">Animate Pattern</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Examples</h3>
+      <button class="preset-btn" onclick="loadExample('wood')">Wood Grain</button>
+      <button class="preset-btn" onclick="loadExample('fabric')">Fabric Texture</button>
+      <button class="preset-btn" onclick="loadExample('shadow')">Shadow</button>
+      <button class="preset-btn" onclick="loadExample('water')">Water</button>
+      <button class="preset-btn" onclick="loadExample('stone')">Stone</button>
+      <button class="preset-btn" onclick="loadExample('gradient-sphere')">Gradient Sphere</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="regenerate()">Regenerate</button>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      shapeType: 'circle',
+      shapeSize: 200,
+      patternType: 'parallel',
+      spacing: 5,
+      angle: 45,
+      density: 1,
+      amplitude: 5,
+      frequency: 0.1,
+      strokeWeight: 1,
+      showShape: true,
+      showBounds: false,
+      animatePattern: false
+    };
+    
+    let hatchingLib;
+    let shape;
+    let pattern = [];
+    let animationTime = 0;
+    let svgCanvas;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      hatchingLib = new HatchingLibrary();
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              if (key === 'animatePattern') {
+                if (params[key]) {
+                  loop();
+                } else {
+                  noLoop();
+                }
+              } else {
+                regenerate();
+              }
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              updateControlVisibility();
+              regenerate();
+            });
+          }
+        }
+      });
+      
+      updateControlVisibility();
+    }
+    
+    function updateControlVisibility() {
+      // Show/hide pattern-specific controls
+      const hasAmplitude = ['waves', 'zigzag'].includes(params.patternType);
+      const hasFrequency = ['waves', 'zigzag', 'organic'].includes(params.patternType);
+      
+      document.getElementById('amplitude-control').style.display = 
+        hasAmplitude ? 'block' : 'none';
+      document.getElementById('frequency-control').style.display = 
+        hasFrequency ? 'block' : 'none';
+      
+      // Hide angle for circular patterns
+      document.getElementById('angle').parentElement.style.display = 
+        params.patternType === 'circular' ? 'none' : 'block';
+    }
+    
+    function createShape() {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const size = params.shapeSize;
+      
+      switch (params.shapeType) {
+        case 'circle':
+          shape = {
+            type: 'circle',
+            x: centerX,
+            y: centerY,
+            radius: size / 2
+          };
+          break;
+          
+        case 'square':
+          shape = {
+            type: 'rect',
+            x: centerX - size / 2,
+            y: centerY - size / 2,
+            width: size,
+            height: size
+          };
+          break;
+          
+        case 'triangle':
+          shape = {
+            type: 'polygon',
+            points: [
+              { x: centerX, y: centerY - size / 2 },
+              { x: centerX - size / 2, y: centerY + size / 2 },
+              { x: centerX + size / 2, y: centerY + size / 2 }
+            ]
+          };
+          break;
+          
+        case 'hexagon':
+          shape = {
+            type: 'polygon',
+            points: []
+          };
+          for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * TWO_PI - PI / 2;
+            shape.points.push({
+              x: centerX + cos(angle) * size / 2,
+              y: centerY + sin(angle) * size / 2
+            });
+          }
+          break;
+          
+        case 'star':
+          shape = {
+            type: 'polygon',
+            points: []
+          };
+          for (let i = 0; i < 10; i++) {
+            const angle = (i / 10) * TWO_PI - PI / 2;
+            const radius = i % 2 === 0 ? size / 2 : size / 4;
+            shape.points.push({
+              x: centerX + cos(angle) * radius,
+              y: centerY + sin(angle) * radius
+            });
+          }
+          break;
+          
+        case 'heart':
+          shape = {
+            type: 'polygon',
+            points: []
+          };
+          for (let t = 0; t <= TWO_PI; t += 0.1) {
+            const x = 16 * pow(sin(t), 3);
+            const y = -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t));
+            shape.points.push({
+              x: centerX + x * size / 40,
+              y: centerY + y * size / 40
+            });
+          }
+          break;
+          
+        case 'custom':
+          // Random polygon
+          shape = {
+            type: 'polygon',
+            points: []
+          };
+          const numPoints = 5 + floor(random(5));
+          for (let i = 0; i < numPoints; i++) {
+            const angle = (i / numPoints) * TWO_PI + random(-0.2, 0.2);
+            const radius = size / 2 * random(0.7, 1);
+            shape.points.push({
+              x: centerX + cos(angle) * radius,
+              y: centerY + sin(angle) * radius
+            });
+          }
+          break;
+      }
+    }
+    
+    function generatePattern() {
+      const options = {
+        spacing: params.spacing,
+        angle: params.angle,
+        density: params.density,
+        amplitude: params.amplitude,
+        frequency: params.frequency
+      };
+      
+      // Add animation
+      if (params.animatePattern) {
+        options.offset = animationTime * 2;
+        options.seed = animationTime * 0.1;
+      }
+      
+      pattern = hatchingLib.fillShape(shape, params.patternType, options);
+    }
+    
+    function regenerate() {
+      createShape();
+      generatePattern();
+      if (!params.animatePattern) {
+        redraw();
+      }
+    }
+    
+    function draw() {
+      background(255);
+      
+      if (params.animatePattern) {
+        animationTime += 0.02;
+        generatePattern();
+      }
+      
+      // Draw shape bounds
+      if (params.showBounds) {
+        const bounds = hatchingLib.getShapeBounds(shape);
+        noFill();
+        stroke(200);
+        strokeWeight(1);
+        rect(bounds.minX, bounds.minY, bounds.width, bounds.height);
+      }
+      
+      // Draw shape outline
+      if (params.showShape) {
+        noFill();
+        stroke(150);
+        strokeWeight(2);
+        
+        if (shape.type === 'circle') {
+          ellipse(shape.x, shape.y, shape.radius * 2);
+        } else if (shape.type === 'rect') {
+          rect(shape.x, shape.y, shape.width, shape.height);
+        } else if (shape.type === 'polygon') {
+          beginShape();
+          shape.points.forEach(p => vertex(p.x, p.y));
+          endShape(CLOSE);
+        }
+      }
+      
+      // Draw pattern
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      
+      pattern.forEach(element => {
+        if (element.type === 'circle') {
+          // Draw dot
+          fill(0);
+          noStroke();
+          ellipse(element.x, element.y, element.radius * 2);
+        } else if (element.start && element.end) {
+          // Draw line
+          noFill();
+          stroke(0);
+          line(element.start.x, element.start.y, element.end.x, element.end.y);
+        }
+      });
+      
+      if (!params.animatePattern) {
+        noLoop();
+      }
+    }
+    
+    function loadExample(example) {
+      switch (example) {
+        case 'wood':
+          params.patternType = 'organic';
+          params.spacing = 3;
+          params.density = 1.5;
+          params.angle = 0;
+          break;
+          
+        case 'fabric':
+          params.patternType = 'crosshatch';
+          params.spacing = 4;
+          params.angle = 45;
+          params.density = 1;
+          break;
+          
+        case 'shadow':
+          params.patternType = 'gradient';
+          params.spacing = 2;
+          params.angle = 135;
+          break;
+          
+        case 'water':
+          params.patternType = 'waves';
+          params.spacing = 6;
+          params.amplitude = 4;
+          params.frequency = 0.15;
+          break;
+          
+        case 'stone':
+          params.patternType = 'noise';
+          params.spacing = 4;
+          params.density = 0.8;
+          break;
+          
+        case 'gradient-sphere':
+          params.shapeType = 'circle';
+          params.patternType = 'circular';
+          params.spacing = 3;
+          break;
+      }
+      
+      // Update UI
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else {
+            element.value = params[key];
+          }
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = params[key];
+        }
+      });
+      
+      updateControlVisibility();
+      regenerate();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `hatching-${params.patternType}-${Date.now()}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`hatching-${params.patternType}-${Date.now()}.png`);
+    }
+  </script>
+</body>
+</html>

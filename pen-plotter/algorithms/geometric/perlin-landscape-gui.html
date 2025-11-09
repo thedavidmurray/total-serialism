@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Perlin Landscape - Topographical Contours</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Perlin Landscape</h2>
+    
+    <div class="control-group">
+      <h3>Terrain Settings</h3>
+      <div class="control">
+        <label>Noise Scale: <span class="value" id="noiseScale-val">0.01</span></label>
+        <input type="range" id="noiseScale" min="0.001" max="0.05" value="0.01" step="0.001">
+      </div>
+      <div class="control">
+        <label>Amplitude: <span class="value" id="amplitude-val">200</span></label>
+        <input type="range" id="amplitude" min="50" max="400" value="200" step="10">
+      </div>
+      <div class="control">
+        <label>Octaves: <span class="value" id="octaves-val">4</span></label>
+        <input type="range" id="octaves" min="1" max="8" value="4" step="1">
+      </div>
+      <div class="control">
+        <label>Persistence: <span class="value" id="persistence-val">0.5</span></label>
+        <input type="range" id="persistence" min="0.1" max="0.9" value="0.5" step="0.05">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Contour Lines</h3>
+      <div class="control">
+        <label>Contour Count: <span class="value" id="contourCount-val">20</span></label>
+        <input type="range" id="contourCount" min="5" max="50" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Line Smoothing: <span class="value" id="smoothing-val">5</span></label>
+        <input type="range" id="smoothing" min="1" max="20" value="5" step="1">
+      </div>
+      <div class="control">
+        <label>Contour Style:</label>
+        <select id="contourStyle">
+          <option value="lines">Simple Lines</option>
+          <option value="weighted">Weighted Lines</option>
+          <option value="dashed">Dashed Lines</option>
+          <option value="filled">Filled Bands</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showLabels">
+        <label for="showLabels">Show Elevation Labels</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>View</h3>
+      <div class="control">
+        <label>View Mode:</label>
+        <select id="viewMode">
+          <option value="top">Top View</option>
+          <option value="perspective">3D Perspective</option>
+          <option value="cross-section">Cross Section</option>
+          <option value="dual">Split View</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Rotation: <span class="value" id="rotation-val">0</span>°</label>
+        <input type="range" id="rotation" min="0" max="360" value="0" step="5">
+      </div>
+      <div class="control">
+        <label>Zoom: <span class="value" id="zoom-val">1</span></label>
+        <input type="range" id="zoom" min="0.5" max="3" value="1" step="0.1">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Color Scheme:</label>
+        <select id="colorScheme">
+          <option value="mono">Monochrome</option>
+          <option value="elevation">Elevation</option>
+          <option value="heatmap">Heat Map</option>
+          <option value="topo">Topographic</option>
+          <option value="blueprint">Blueprint</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showGrid">
+        <label for="showGrid">Show Grid</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showWaterLevel">
+        <label for="showWaterLevel">Show Water Level</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportLayers()">Export as Layers</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      noiseScale: 0.01,
+      amplitude: 200,
+      octaves: 4,
+      persistence: 0.5,
+      contourCount: 20,
+      smoothing: 5,
+      contourStyle: 'lines',
+      showLabels: false,
+      viewMode: 'top',
+      rotation: 0,
+      zoom: 1,
+      strokeWeight: 1,
+      colorScheme: 'mono',
+      showGrid: false,
+      showWaterLevel: false
+    };
+    
+    let heightMap = [];
+    let contours = [];
+    let svgCanvas;
+    let gifExporter;
+    let animationTime = 0;
+    let isAnimating = false;
+    
+    const gridResolution = 100;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 3,
+        quality: 10,
+        width: w,
+        height: h,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+      
+      gifExporter.init(svgCanvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording' 
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          isAnimating = false;
+          noLoop();
+          
+          const link = document.createElement('a');
+          link.href = result.url;
+          link.download = `perlin-landscape-${Date.now()}.gif`;
+          link.click();
+        }
+      });
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      generateHeightMap();
+      generateContours();
+      redraw();
+    }
+    
+    function generateHeightMap() {
+      heightMap = [];
+      
+      for (let y = 0; y < gridResolution; y++) {
+        heightMap[y] = [];
+        for (let x = 0; x < gridResolution; x++) {
+          const height = getNoiseHeight(x, y);
+          heightMap[y][x] = height;
+        }
+      }
+    }
+    
+    function getNoiseHeight(x, y) {
+      let height = 0;
+      let amplitude = params.amplitude;
+      let frequency = params.noiseScale;
+      let maxValue = 0;
+      
+      for (let i = 0; i < params.octaves; i++) {
+        height += noise(x * frequency, y * frequency) * amplitude;
+        maxValue += amplitude;
+        amplitude *= params.persistence;
+        frequency *= 2;
+      }
+      
+      return (height / maxValue) * params.amplitude;
+    }
+    
+    function generateContours() {
+      contours = [];
+      const minHeight = 0;
+      const maxHeight = params.amplitude;
+      const interval = (maxHeight - minHeight) / params.contourCount;
+      
+      for (let i = 1; i < params.contourCount; i++) {
+        const targetHeight = minHeight + i * interval;
+        const contourLines = marchingSquares(targetHeight);
+        contours.push({
+          height: targetHeight,
+          lines: contourLines
+        });
+      }
+    }
+    
+    function marchingSquares(threshold) {
+      const lines = [];
+      const cellSize = width / gridResolution;
+      
+      for (let y = 0; y < gridResolution - 1; y++) {
+        for (let x = 0; x < gridResolution - 1; x++) {
+          const a = heightMap[y][x] > threshold ? 1 : 0;
+          const b = heightMap[y][x + 1] > threshold ? 1 : 0;
+          const c = heightMap[y + 1][x + 1] > threshold ? 1 : 0;
+          const d = heightMap[y + 1][x] > threshold ? 1 : 0;
+          
+          const index = a * 8 + b * 4 + c * 2 + d;
+          
+          const x0 = x * cellSize;
+          const y0 = y * cellSize;
+          const x1 = (x + 1) * cellSize;
+          const y1 = (y + 1) * cellSize;
+          
+          // Linear interpolation for smoother lines
+          const interpX = (h) => {
+            const t = (threshold - heightMap[y][x]) / (heightMap[y][x + 1] - heightMap[y][x]);
+            return lerp(x0, x1, t);
+          };
+          
+          const interpY = (h) => {
+            const t = (threshold - heightMap[y][x]) / (heightMap[y + 1][x] - heightMap[y][x]);
+            return lerp(y0, y1, t);
+          };
+          
+          // Marching squares lookup
+          switch (index) {
+            case 1:
+            case 14:
+              lines.push({
+                x1: x0, y1: interpY(threshold),
+                x2: interpX(threshold), y2: y1
+              });
+              break;
+            case 2:
+            case 13:
+              lines.push({
+                x1: interpX(threshold), y1: y1,
+                x2: x1, y2: interpY(threshold)
+              });
+              break;
+            case 3:
+            case 12:
+              lines.push({
+                x1: x0, y1: interpY(threshold),
+                x2: x1, y2: interpY(threshold)
+              });
+              break;
+            case 4:
+            case 11:
+              lines.push({
+                x1: interpX(threshold), y1: y0,
+                x2: x1, y2: interpY(threshold)
+              });
+              break;
+            case 5:
+              lines.push({
+                x1: x0, y1: interpY(threshold),
+                x2: interpX(threshold), y2: y0
+              });
+              lines.push({
+                x1: interpX(threshold), y1: y1,
+                x2: x1, y2: interpY(threshold)
+              });
+              break;
+            case 6:
+            case 9:
+              lines.push({
+                x1: interpX(threshold), y1: y0,
+                x2: interpX(threshold), y2: y1
+              });
+              break;
+            case 7:
+            case 8:
+              lines.push({
+                x1: x0, y1: interpY(threshold),
+                x2: interpX(threshold), y2: y0
+              });
+              break;
+            case 10:
+              lines.push({
+                x1: x0, y1: interpY(threshold),
+                x2: interpX(threshold), y2: y1
+              });
+              lines.push({
+                x1: interpX(threshold), y1: y0,
+                x2: x1, y2: interpY(threshold)
+              });
+              break;
+          }
+        }
+      }
+      
+      return lines;
+    }
+    
+    function draw() {
+      background(255);
+      
+      push();
+      translate(width/2, height/2);
+      scale(params.zoom);
+      rotate(radians(params.rotation));
+      translate(-width/2, -height/2);
+      
+      // Draw based on view mode
+      switch (params.viewMode) {
+        case 'top':
+          drawTopView();
+          break;
+        case 'perspective':
+          drawPerspectiveView();
+          break;
+        case 'cross-section':
+          drawCrossSection();
+          break;
+        case 'dual':
+          drawDualView();
+          break;
+      }
+      
+      pop();
+      
+      // Capture frame for GIF if recording
+      if (isAnimating && gifExporter && gifExporter.isRecording()) {
+        gifExporter.captureFrame();
+      }
+      
+      if (!isAnimating) {
+        noLoop();
+      }
+    }
+    
+    function drawTopView() {
+      // Draw grid if enabled
+      if (params.showGrid) {
+        stroke(200);
+        strokeWeight(0.5);
+        const gridSize = 50;
+        for (let x = 0; x < width; x += gridSize) {
+          line(x, 0, x, height);
+        }
+        for (let y = 0; y < height; y += gridSize) {
+          line(0, y, width, y);
+        }
+      }
+      
+      // Draw water level if enabled
+      if (params.showWaterLevel) {
+        const waterHeight = params.amplitude * 0.3;
+        fill(100, 150, 200, 50);
+        noStroke();
+        rect(0, 0, width, height);
+      }
+      
+      // Draw contour lines
+      contours.forEach((contour, index) => {
+        applyContourStyle(contour, index);
+        
+        contour.lines.forEach(line => {
+          if (params.smoothing > 1) {
+            // Smooth the line
+            noFill();
+            beginShape();
+            vertex(line.x1, line.y1);
+            bezierVertex(
+              line.x1 + (line.x2 - line.x1) * 0.25, line.y1,
+              line.x1 + (line.x2 - line.x1) * 0.75, line.y2,
+              line.x2, line.y2
+            );
+            endShape();
+          } else {
+            line(line.x1, line.y1, line.x2, line.y2);
+          }
+        });
+        
+        // Draw labels if enabled
+        if (params.showLabels && index % 5 === 0) {
+          fill(0);
+          noStroke();
+          textAlign(CENTER, CENTER);
+          textSize(10);
+          text(Math.round(contour.height), width/2 + index * 10, 20);
+        }
+      });
+    }
+    
+    function drawPerspectiveView() {
+      // Simple 3D-like perspective
+      push();
+      translate(0, height * 0.3);
+      scale(1, 0.5);
+      
+      contours.forEach((contour, index) => {
+        applyContourStyle(contour, index);
+        const yOffset = -index * 5;
+        
+        contour.lines.forEach(line => {
+          line(line.x1, line.y1 + yOffset, line.x2, line.y2 + yOffset);
+        });
+      });
+      
+      pop();
+    }
+    
+    function drawCrossSection() {
+      // Draw a cross-section view
+      const y = height / 2;
+      
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      noFill();
+      
+      beginShape();
+      for (let x = 0; x < gridResolution; x++) {
+        const gridY = floor(y / (height / gridResolution));
+        const elevation = heightMap[gridY][x];
+        const screenX = map(x, 0, gridResolution, 0, width);
+        const screenY = height - elevation;
+        vertex(screenX, screenY);
+      }
+      endShape();
+      
+      // Draw contour intersections
+      contours.forEach(contour => {
+        const screenY = height - contour.height;
+        stroke(150);
+        strokeWeight(1);
+        line(0, screenY, width, screenY);
+      });
+    }
+    
+    function drawDualView() {
+      // Left half: top view
+      push();
+      clip(0, 0, width/2, height);
+      drawTopView();
+      pop();
+      
+      // Right half: cross section
+      push();
+      translate(width/2, 0);
+      clip(0, 0, width/2, height);
+      translate(-width/2, 0);
+      drawCrossSection();
+      pop();
+      
+      // Divider
+      stroke(0);
+      strokeWeight(2);
+      line(width/2, 0, width/2, height);
+    }
+    
+    function applyContourStyle(contour, index) {
+      const weight = params.contourStyle === 'weighted' 
+        ? map(contour.height, 0, params.amplitude, 0.5, params.strokeWeight * 2)
+        : params.strokeWeight;
+      
+      strokeWeight(weight);
+      
+      // Apply color scheme
+      switch (params.colorScheme) {
+        case 'mono':
+          stroke(0);
+          break;
+        case 'elevation':
+          const gray = map(contour.height, 0, params.amplitude, 200, 50);
+          stroke(gray);
+          break;
+        case 'heatmap':
+          colorMode(HSB);
+          const hue = map(contour.height, 0, params.amplitude, 240, 0);
+          stroke(hue, 80, 80);
+          colorMode(RGB);
+          break;
+        case 'topo':
+          const colors = ['#8B4513', '#A0522D', '#D2691E', '#228B22', '#90EE90'];
+          const colorIndex = floor(map(contour.height, 0, params.amplitude, 0, colors.length));
+          stroke(colors[min(colorIndex, colors.length - 1)]);
+          break;
+        case 'blueprint':
+          stroke(0, 50, 150);
+          break;
+      }
+      
+      // Apply dashed style if selected
+      if (params.contourStyle === 'dashed') {
+        drawingContext.setLineDash([5, 5]);
+      } else {
+        drawingContext.setLineDash([]);
+      }
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `perlin-landscape-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `perlin-landscape-${params.viewMode}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`perlin-landscape-${params.viewMode}-${params.seed}.png`);
+    }
+    
+    function exportLayers() {
+      // Export different elevation ranges as separate layers
+      const layers = 5;
+      const interval = params.amplitude / layers;
+      
+      for (let i = 0; i < layers; i++) {
+        let svg = createGraphics(width, height, SVG);
+        
+        const minElev = i * interval;
+        const maxElev = (i + 1) * interval;
+        
+        contours.forEach(contour => {
+          if (contour.height >= minElev && contour.height < maxElev) {
+            svg.stroke(0);
+            svg.strokeWeight(params.strokeWeight);
+            
+            contour.lines.forEach(line => {
+              svg.line(line.x1, line.y1, line.x2, line.y2);
+            });
+          }
+        });
+        
+        save(svg, `perlin-landscape-layer${i+1}-${params.seed}.svg`);
+        svg.remove();
+      }
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+        isAnimating = false;
+        noLoop();
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        
+        // Start animation
+        animationTime = 0;
+        isAnimating = true;
+        loop();
+        
+        gifExporter.start();
+      }
+    }
+    
+    // Helper function for smooth interpolation
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+    
+    // Helper function for clipping (p5.js doesn't have built-in clip)
+    function clip(x, y, w, h) {
+      drawingContext.save();
+      drawingContext.beginPath();
+      drawingContext.rect(x, y, w, h);
+      drawingContext.clip();
+    }
+  </script>
+</body>
+</html>

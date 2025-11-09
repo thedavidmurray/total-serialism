@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Circle Rays Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Circle Rays Controls</h2>
+    
+    <div class="control-group">
+      <h3>Ray Settings</h3>
+      <div class="control">
+        <label>Ray Count: <span class="value" id="rayCount-val">36</span></label>
+        <input type="range" id="rayCount" min="3" max="200" value="36" step="1">
+      </div>
+      <div class="control">
+        <label>Inner Radius: <span class="value" id="innerRadius-val">50</span>px</label>
+        <input type="range" id="innerRadius" min="0" max="300" value="50" step="5">
+      </div>
+      <div class="control">
+        <label>Outer Radius: <span class="value" id="outerRadius-val">250</span>px</label>
+        <input type="range" id="outerRadius" min="50" max="400" value="250" step="5">
+      </div>
+      <div class="control">
+        <label>Ray Pattern:</label>
+        <select id="rayPattern">
+          <option value="straight">Straight Rays</option>
+          <option value="curved">Curved Rays</option>
+          <option value="zigzag">Zigzag</option>
+          <option value="spiral">Spiral</option>
+          <option value="branching">Branching</option>
+          <option value="wavy">Wavy</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Variation</h3>
+      <div class="control">
+        <label>Length Variation: <span class="value" id="lengthVariation-val">0</span></label>
+        <input type="range" id="lengthVariation" min="0" max="1" value="0" step="0.05">
+      </div>
+      <div class="control">
+        <label>Angle Variation: <span class="value" id="angleVariation-val">0</span></label>
+        <input type="range" id="angleVariation" min="0" max="0.5" value="0" step="0.01">
+      </div>
+      <div class="control">
+        <label>Density Pattern:</label>
+        <select id="densityPattern">
+          <option value="uniform">Uniform</option>
+          <option value="clusters">Clusters</option>
+          <option value="gradient">Gradient</option>
+          <option value="noise">Noise-based</option>
+          <option value="fibonacci">Fibonacci</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Ray Segments: <span class="value" id="raySegments-val">1</span></label>
+        <input type="range" id="raySegments" min="1" max="20" value="1" step="1">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Circle Settings</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showCircles" checked>
+        <label for="showCircles">Show Circles</label>
+      </div>
+      <div class="control">
+        <label>Circle Count: <span class="value" id="circleCount-val">3</span></label>
+        <input type="range" id="circleCount" min="0" max="10" value="3" step="1">
+      </div>
+      <div class="control">
+        <label>Circle Spacing: <span class="value" id="circleSpacing-val">50</span>px</label>
+        <input type="range" id="circleSpacing" min="10" max="100" value="50" step="5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Ray Width: <span class="value" id="rayWidth-val">1</span></label>
+        <input type="range" id="rayWidth" min="0.5" max="10" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Circle Width: <span class="value" id="circleWidth-val">1</span></label>
+        <input type="range" id="circleWidth" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="alternate">Alternating</option>
+          <option value="gradient">Gradient</option>
+          <option value="radial">Radial</option>
+          <option value="spectrum">Spectrum</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Cap Style:</label>
+        <select id="capStyle">
+          <option value="round">Round</option>
+          <option value="square">Square</option>
+          <option value="arrow">Arrow</option>
+          <option value="circle">Circle</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportLayers()">Export as Layers</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      rayCount: 36,
+      innerRadius: 50,
+      outerRadius: 250,
+      rayPattern: 'straight',
+      lengthVariation: 0,
+      angleVariation: 0,
+      densityPattern: 'uniform',
+      raySegments: 1,
+      showCircles: true,
+      circleCount: 3,
+      circleSpacing: 50,
+      rayWidth: 1,
+      circleWidth: 1,
+      colorMode: 'mono',
+      capStyle: 'round'
+    };
+    
+    let rays = [];
+    let circles = [];
+    let svgCanvas;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      generateRays();
+      generateCircles();
+      redraw();
+    }
+    
+    function generateRays() {
+      rays = [];
+      
+      // Generate ray angles based on density pattern
+      let angles = [];
+      
+      switch (params.densityPattern) {
+        case 'uniform':
+          for (let i = 0; i < params.rayCount; i++) {
+            angles.push((i / params.rayCount) * TWO_PI);
+          }
+          break;
+          
+        case 'clusters':
+          const clusterCount = 5;
+          const raysPerCluster = floor(params.rayCount / clusterCount);
+          for (let c = 0; c < clusterCount; c++) {
+            const clusterCenter = (c / clusterCount) * TWO_PI;
+            const clusterSpread = 0.3;
+            for (let r = 0; r < raysPerCluster; r++) {
+              angles.push(clusterCenter + random(-clusterSpread, clusterSpread));
+            }
+          }
+          break;
+          
+        case 'gradient':
+          for (let i = 0; i < params.rayCount; i++) {
+            const t = i / params.rayCount;
+            const density = pow(t, 2); // More rays towards the end
+            angles.push(density * TWO_PI);
+          }
+          break;
+          
+        case 'noise':
+          let noiseOffset = 0;
+          for (let i = 0; i < params.rayCount; i++) {
+            angles.push(noise(noiseOffset) * TWO_PI);
+            noiseOffset += 0.1;
+          }
+          break;
+          
+        case 'fibonacci':
+          const phi = (1 + sqrt(5)) / 2;
+          for (let i = 0; i < params.rayCount; i++) {
+            angles.push((i / phi) * TWO_PI % TWO_PI);
+          }
+          break;
+      }
+      
+      // Create rays with variations
+      angles.forEach((baseAngle, index) => {
+        const angleVar = random(-params.angleVariation, params.angleVariation);
+        const angle = baseAngle + angleVar;
+        
+        const lengthVar = random(-params.lengthVariation, params.lengthVariation);
+        const length = params.outerRadius - params.innerRadius;
+        const finalLength = length * (1 + lengthVar);
+        
+        rays.push({
+          angle: angle,
+          length: finalLength,
+          index: index
+        });
+      });
+    }
+    
+    function generateCircles() {
+      circles = [];
+      
+      if (params.showCircles && params.circleCount > 0) {
+        for (let i = 0; i < params.circleCount; i++) {
+          const radius = params.innerRadius + i * params.circleSpacing;
+          if (radius <= params.outerRadius) {
+            circles.push(radius);
+          }
+        }
+      }
+    }
+    
+    function draw() {
+      background(255);
+      translate(width/2, height/2);
+      
+      // Draw circles first (behind rays)
+      if (params.showCircles) {
+        drawCircles();
+      }
+      
+      // Draw rays
+      drawRays();
+      
+      noLoop();
+    }
+    
+    function drawCircles() {
+      push();
+      noFill();
+      strokeWeight(params.circleWidth);
+      
+      circles.forEach((radius, index) => {
+        applyCircleColor(index, circles.length);
+        ellipse(0, 0, radius * 2);
+      });
+      
+      pop();
+    }
+    
+    function drawRays() {
+      rays.forEach((ray, index) => {
+        push();
+        
+        applyRayColor(index, rays.length, ray.angle);
+        strokeWeight(params.rayWidth);
+        
+        rotate(ray.angle);
+        
+        switch (params.rayPattern) {
+          case 'straight':
+            drawStraightRay(ray.length);
+            break;
+          case 'curved':
+            drawCurvedRay(ray.length);
+            break;
+          case 'zigzag':
+            drawZigzagRay(ray.length);
+            break;
+          case 'spiral':
+            drawSpiralRay(ray.length, index);
+            break;
+          case 'branching':
+            drawBranchingRay(ray.length);
+            break;
+          case 'wavy':
+            drawWavyRay(ray.length);
+            break;
+        }
+        
+        // Draw cap
+        drawCap(ray.length);
+        
+        pop();
+      });
+    }
+    
+    function drawStraightRay(length) {
+      line(params.innerRadius, 0, params.innerRadius + length, 0);
+    }
+    
+    function drawCurvedRay(length) {
+      noFill();
+      const curveAmount = length * 0.2;
+      beginShape();
+      vertex(params.innerRadius, 0);
+      bezierVertex(
+        params.innerRadius + length/3, curveAmount,
+        params.innerRadius + 2*length/3, curveAmount,
+        params.innerRadius + length, 0
+      );
+      endShape();
+    }
+    
+    function drawZigzagRay(length) {
+      const segments = params.raySegments * 3;
+      const segmentLength = length / segments;
+      
+      beginShape();
+      vertex(params.innerRadius, 0);
+      
+      for (let i = 1; i <= segments; i++) {
+        const x = params.innerRadius + i * segmentLength;
+        const y = (i % 2 === 0) ? 10 : -10;
+        vertex(x, y);
+      }
+      
+      endShape();
+    }
+    
+    function drawSpiralRay(length, index) {
+      noFill();
+      beginShape();
+      
+      const points = 50;
+      for (let i = 0; i <= points; i++) {
+        const t = i / points;
+        const r = params.innerRadius + t * length;
+        const angle = t * 0.5;
+        const x = r * cos(angle);
+        const y = r * sin(angle);
+        vertex(x, y);
+      }
+      
+      endShape();
+    }
+    
+    function drawBranchingRay(length) {
+      // Main ray
+      line(params.innerRadius, 0, params.innerRadius + length, 0);
+      
+      // Branches
+      const branchCount = params.raySegments;
+      for (let i = 1; i <= branchCount; i++) {
+        const branchPos = params.innerRadius + (i / (branchCount + 1)) * length;
+        const branchLength = length * 0.3;
+        const branchAngle = PI/6;
+        
+        push();
+        translate(branchPos, 0);
+        rotate(branchAngle);
+        line(0, 0, branchLength, 0);
+        pop();
+        
+        push();
+        translate(branchPos, 0);
+        rotate(-branchAngle);
+        line(0, 0, branchLength, 0);
+        pop();
+      }
+    }
+    
+    function drawWavyRay(length) {
+      noFill();
+      beginShape();
+      
+      const points = 50;
+      const waveFreq = params.raySegments * 2;
+      const waveAmp = 10;
+      
+      for (let i = 0; i <= points; i++) {
+        const t = i / points;
+        const x = params.innerRadius + t * length;
+        const y = sin(t * waveFreq * PI) * waveAmp;
+        vertex(x, y);
+      }
+      
+      endShape();
+    }
+    
+    function drawCap(length) {
+      const x = params.innerRadius + length;
+      
+      switch (params.capStyle) {
+        case 'circle':
+          noStroke();
+          fill(0);
+          ellipse(x, 0, params.rayWidth * 3);
+          break;
+          
+        case 'arrow':
+          const arrowSize = params.rayWidth * 3;
+          line(x, 0, x - arrowSize, -arrowSize);
+          line(x, 0, x - arrowSize, arrowSize);
+          break;
+          
+        case 'square':
+          rectMode(CENTER);
+          noStroke();
+          fill(0);
+          rect(x, 0, params.rayWidth * 2, params.rayWidth * 2);
+          break;
+      }
+    }
+    
+    function applyRayColor(index, total, angle) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+          
+        case 'alternate':
+          stroke(index % 2 === 0 ? 0 : 150);
+          break;
+          
+        case 'gradient':
+          const g = map(index, 0, total - 1, 0, 255);
+          stroke(g);
+          break;
+          
+        case 'radial':
+          const normalizedAngle = (angle + TWO_PI) % TWO_PI;
+          colorMode(HSB);
+          stroke(map(normalizedAngle, 0, TWO_PI, 0, 360), 80, 80);
+          colorMode(RGB);
+          break;
+          
+        case 'spectrum':
+          colorMode(HSB);
+          stroke(map(index, 0, total, 0, 360), 80, 80);
+          colorMode(RGB);
+          break;
+      }
+    }
+    
+    function applyCircleColor(index, total) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(100);
+          break;
+          
+        case 'alternate':
+          stroke(index % 2 === 0 ? 100 : 200);
+          break;
+          
+        case 'gradient':
+          stroke(map(index, 0, total - 1, 100, 200));
+          break;
+          
+        default:
+          stroke(150);
+      }
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `circle-rays-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `circle-rays-${params.rayPattern}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`circle-rays-${params.rayPattern}-${params.seed}.png`);
+    }
+    
+    function exportLayers() {
+      // Export rays and circles as separate SVG layers
+      
+      // Layer 1: Rays
+      let svg1 = createGraphics(width, height, SVG);
+      svg1.translate(width/2, height/2);
+      
+      rays.forEach((ray, index) => {
+        svg1.push();
+        svg1.strokeWeight(params.rayWidth);
+        svg1.stroke(0);
+        svg1.rotate(ray.angle);
+        
+        switch (params.rayPattern) {
+          case 'straight':
+            svg1.line(params.innerRadius, 0, params.innerRadius + ray.length, 0);
+            break;
+          // Add other patterns as needed
+        }
+        
+        svg1.pop();
+      });
+      
+      save(svg1, `circle-rays-layer1-rays-${params.seed}.svg`);
+      svg1.remove();
+      
+      // Layer 2: Circles
+      if (params.showCircles && circles.length > 0) {
+        let svg2 = createGraphics(width, height, SVG);
+        svg2.translate(width/2, height/2);
+        svg2.noFill();
+        svg2.strokeWeight(params.circleWidth);
+        svg2.stroke(0);
+        
+        circles.forEach(radius => {
+          svg2.ellipse(0, 0, radius * 2);
+        });
+        
+        save(svg2, `circle-rays-layer2-circles-${params.seed}.svg`);
+        svg2.remove();
+      }
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Generate frames with rotation animation
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Clear and draw frame
+        clear();
+        background(255);
+        push();
+        translate(width/2, height/2);
+        
+        // Animate rotation
+        const rotationAngle = (frame / totalFrames) * TWO_PI;
+        rotate(rotationAngle);
+        
+        // Draw circles first (background)
+        if (params.showCircles) {
+          noFill();
+          strokeWeight(params.circleWidth);
+          stroke(0);
+          circles.forEach(circle => {
+            ellipse(0, 0, circle.radius * 2);
+          });
+        }
+        
+        // Draw rays
+        rays.forEach((ray, index) => {
+          push();
+          
+          // Apply color based on mode
+          if (params.colorMode === 'gradient') {
+            const g = map(index, 0, rays.length - 1, 0, 255);
+            stroke(g, 0, 255 - g);
+          } else if (params.colorMode === 'alternating') {
+            stroke(index % 2 === 0 ? 0 : 200);
+          } else {
+            stroke(0);
+          }
+          
+          strokeWeight(params.rayWidth);
+          strokeCap(params.capStyle === 'round' ? ROUND : SQUARE);
+          
+          rotate(ray.angle);
+          
+          switch (params.rayPattern) {
+            case 'straight':
+              line(params.innerRadius, 0, params.innerRadius + ray.length, 0);
+              break;
+              
+            case 'curved':
+              noFill();
+              beginShape();
+              for (let i = 0; i <= 20; i++) {
+                const t = i / 20;
+                const x = lerp(params.innerRadius, params.innerRadius + ray.length, t);
+                const y = sin(t * PI) * ray.variation * 20;
+                vertex(x, y);
+              }
+              endShape();
+              break;
+              
+            case 'zigzag':
+              beginShape();
+              for (let i = 0; i <= ray.segments; i++) {
+                const t = i / ray.segments;
+                const x = lerp(params.innerRadius, params.innerRadius + ray.length, t);
+                const y = (i % 2 === 0 ? -1 : 1) * ray.variation * 10;
+                vertex(x, y);
+              }
+              endShape();
+              break;
+              
+            case 'spiral':
+              noFill();
+              beginShape();
+              const spiralTurns = 2;
+              for (let i = 0; i <= 50; i++) {
+                const t = i / 50;
+                const r = lerp(params.innerRadius, params.innerRadius + ray.length, t);
+                const a = t * spiralTurns * TWO_PI;
+                const x = r * cos(a);
+                const y = r * sin(a);
+                vertex(x, y);
+              }
+              endShape();
+              break;
+              
+            case 'branching':
+              // Main ray
+              line(params.innerRadius, 0, params.innerRadius + ray.length, 0);
+              // Branches
+              for (let i = 1; i <= 3; i++) {
+                const branchPoint = params.innerRadius + (ray.length * i / 4);
+                push();
+                translate(branchPoint, 0);
+                rotate(PI/6);
+                line(0, 0, ray.length / 4, 0);
+                rotate(-PI/3);
+                line(0, 0, ray.length / 4, 0);
+                pop();
+              }
+              break;
+              
+            case 'wavy':
+              noFill();
+              beginShape();
+              for (let i = 0; i <= 30; i++) {
+                const t = i / 30;
+                const x = lerp(params.innerRadius, params.innerRadius + ray.length, t);
+                const y = sin(t * TWO_PI * 2) * ray.variation * 15;
+                vertex(x, y);
+              }
+              endShape();
+              break;
+          }
+          
+          pop();
+        });
+        
+        pop();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `circle-rays-${params.rayPattern}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

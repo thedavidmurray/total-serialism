@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism V3 - Minimal Working Version</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            color: #fff;
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+        
+        h1 {
+            color: #f39c12;
+            margin-bottom: 20px;
+        }
+        
+        #canvas-container {
+            border: 2px solid #333;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            margin: 0 5px;
+            background: #f39c12;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #e67e22;
+        }
+    </style>
+</head>
+<body>
+    <h1>Total Serialism V3 - Working Demo</h1>
+    
+    <div id="canvas-container"></div>
+    
+    <div class="controls">
+        <button onclick="generateArt()">Generate New</button>
+        <button onclick="changeAlgorithm()">Change Algorithm</button>
+    </div>
+    
+    <script>
+        // Simple Total Serialism implementation
+        const TS = {
+            Gen: {
+                spread: (n) => Array.from({length: n}, (_, i) => i / (n - 1)),
+                fibonacci: (n) => {
+                    const seq = [0, 1];
+                    for (let i = 2; i < n; i++) {
+                        seq.push(seq[i-1] + seq[i-2]);
+                    }
+                    return seq;
+                }
+            },
+            Rand: {
+                pick: (arr) => arr[Math.floor(Math.random() * arr.length)]
+            }
+        };
+        
+        let currentAlgorithm = 'flow';
+        const algorithms = ['flow', 'rings', 'particles'];
+        
+        // Create p5 sketch
+        new p5((p) => {
+            p.setup = () => {
+                const canvas = p.createCanvas(600, 600);
+                canvas.parent('canvas-container');
+                generateArt();
+            };
+            
+            window.generateArt = () => {
+                p.background(20);
+                
+                switch(currentAlgorithm) {
+                    case 'flow':
+                        drawFlowField(p);
+                        break;
+                    case 'rings':
+                        drawRings(p);
+                        break;
+                    case 'particles':
+                        drawParticles(p);
+                        break;
+                }
+            };
+            
+            window.changeAlgorithm = () => {
+                const currentIndex = algorithms.indexOf(currentAlgorithm);
+                currentAlgorithm = algorithms[(currentIndex + 1) % algorithms.length];
+                generateArt();
+            };
+        });
+        
+        function drawFlowField(p) {
+            p.stroke(255, 165, 0, 100);
+            p.strokeWeight(1);
+            
+            const resolution = 20;
+            const cols = p.width / resolution;
+            const rows = p.height / resolution;
+            
+            for (let i = 0; i < 500; i++) {
+                let x = p.random(p.width);
+                let y = p.random(p.height);
+                
+                for (let j = 0; j < 50; j++) {
+                    const col = Math.floor(x / resolution);
+                    const row = Math.floor(y / resolution);
+                    const angle = p.noise(col * 0.1, row * 0.1) * p.TWO_PI * 2;
+                    
+                    const nextX = x + p.cos(angle) * 2;
+                    const nextY = y + p.sin(angle) * 2;
+                    
+                    p.line(x, y, nextX, nextY);
+                    
+                    x = nextX;
+                    y = nextY;
+                    
+                    if (x < 0 || x > p.width || y < 0 || y > p.height) break;
+                }
+            }
+        }
+        
+        function drawRings(p) {
+            p.noFill();
+            
+            const fib = TS.Gen.fibonacci(15);
+            
+            for (let i = 0; i < 20; i++) {
+                const x = p.random(p.width);
+                const y = p.random(p.height);
+                const r = fib[i % fib.length] * 5;
+                const segments = Math.floor(p.random(3, 12));
+                
+                p.stroke(255, 165, 0, p.random(50, 200));
+                p.strokeWeight(p.random(1, 3));
+                
+                if (segments > 8) {
+                    p.ellipse(x, y, r * 2, r * 2);
+                } else {
+                    for (let s = 0; s < segments; s++) {
+                        const a1 = (s / segments) * p.TWO_PI;
+                        const a2 = ((s + 0.8) / segments) * p.TWO_PI;
+                        p.arc(x, y, r * 2, r * 2, a1, a2);
+                    }
+                }
+            }
+        }
+        
+        function drawParticles(p) {
+            const points = TS.Gen.spread(50).map(t => ({
+                x: p.width/2 + p.cos(t * p.TWO_PI * 3) * t * 200,
+                y: p.height/2 + p.sin(t * p.TWO_PI * 3) * t * 200
+            }));
+            
+            p.fill(255, 165, 0);
+            p.noStroke();
+            
+            points.forEach((pt, i) => {
+                const size = 5 + i * 0.2;
+                p.ellipse(pt.x, pt.y, size, size);
+                
+                // Connect to neighbors
+                if (i > 0) {
+                    p.stroke(255, 165, 0, 50);
+                    p.strokeWeight(0.5);
+                    p.line(points[i-1].x, points[i-1].y, pt.x, pt.y);
+                    p.noStroke();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

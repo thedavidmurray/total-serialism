@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>L-System Tree Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+    }
+    #canvas-container {
+      flex: 1;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #f0f0f0;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 15px;
+    }
+    .control-group h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .control {
+      margin-bottom: 10px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .control input[type="range"] {
+      width: 100%;
+    }
+    .control span {
+      font-weight: bold;
+      color: #666;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #555;
+    }
+    #rule-display {
+      font-family: monospace;
+      background: #fff;
+      padding: 5px;
+      border: 1px solid #ddd;
+      font-size: 12px;
+    }
+    .preset-button {
+      background: #666;
+      margin: 2px 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>L-System Tree Controls</h2>
+    
+    <div class="control-group">
+      <h3>L-System Rules</h3>
+      <div class="control">
+        <label>System Type:</label>
+        <select id="systemType">
+          <option value="simple">Simple Binary</option>
+          <option value="stochastic">Stochastic</option>
+          <option value="parametric">Parametric</option>
+          <option value="contextual">Context Sensitive</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Axiom:</label>
+        <input type="text" id="axiom" value="F" style="width: 100%;">
+      </div>
+      <div class="control">
+        <label>Rules:</label>
+        <div id="rule-display">F → FF+[+F-F-F]-[-F+F+F]</div>
+      </div>
+      <div class="control">
+        <label>Iterations: <span id="iterations-value">4</span></label>
+        <input type="range" id="iterations" min="1" max="8" value="4">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Tree Geometry</h3>
+      <div class="control">
+        <label>Branch Length: <span id="branchLength-value">10</span></label>
+        <input type="range" id="branchLength" min="5" max="30" step="0.5" value="10">
+      </div>
+      <div class="control">
+        <label>Length Decay: <span id="lengthDecay-value">0.9</span></label>
+        <input type="range" id="lengthDecay" min="0.5" max="1" step="0.01" value="0.9">
+      </div>
+      <div class="control">
+        <label>Branch Angle: <span id="branchAngle-value">25</span>°</label>
+        <input type="range" id="branchAngle" min="10" max="60" value="25">
+      </div>
+      <div class="control">
+        <label>Angle Variation: <span id="angleVariation-value">0</span>%</label>
+        <input type="range" id="angleVariation" min="0" max="50" value="0">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Appearance</h3>
+      <div class="control">
+        <label>Line Width: <span id="lineWidth-value">1</span></label>
+        <input type="range" id="lineWidth" min="0.1" max="3" step="0.1" value="1">
+      </div>
+      <div class="control">
+        <label>Width Decay: <span id="widthDecay-value">0.7</span></label>
+        <input type="range" id="widthDecay" min="0.4" max="1" step="0.05" value="0.7">
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="drawLeaves"> Draw Leaves
+        </label>
+      </div>
+      <div class="control">
+        <label>Leaf Size: <span id="leafSize-value">5</span></label>
+        <input type="range" id="leafSize" min="2" max="15" value="5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Environment</h3>
+      <div class="control">
+        <label>Wind Strength: <span id="windStrength-value">0</span></label>
+        <input type="range" id="windStrength" min="0" max="20" value="0">
+      </div>
+      <div class="control">
+        <label>Gravity: <span id="gravity-value">0</span></label>
+        <input type="range" id="gravity" min="0" max="10" value="0">
+      </div>
+      <div class="control">
+        <label>Tree Count: <span id="treeCount-value">1</span></label>
+        <input type="range" id="treeCount" min="1" max="10" value="1">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Presets</h3>
+      <button class="preset-button" onclick="loadPreset('willow')">Weeping Willow</button>
+      <button class="preset-button" onclick="loadPreset('pine')">Pine Tree</button>
+      <button class="preset-button" onclick="loadPreset('bonsai')">Bonsai</button>
+      <button class="preset-button" onclick="loadPreset('coral')">Coral Formation</button>
+      <button class="preset-button" onclick="loadPreset('fern')">Fern Fractal</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomizeParams()">Randomize</button>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <button onclick="saveParams()">Save Parameters</button>
+      <button onclick="loadLastParams()">Load Last Saved</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    // L-System parameters
+    let params = {
+      // L-System
+      systemType: 'simple',
+      axiom: 'F',
+      rules: {
+        'F': 'FF+[+F-F-F]-[-F+F+F]'
+      },
+      iterations: 4,
+      // Geometry
+      branchLength: 10,
+      lengthDecay: 0.9,
+      branchAngle: 25,
+      angleVariation: 0,
+      // Appearance
+      lineWidth: 1,
+      widthDecay: 0.7,
+      drawLeaves: false,
+      leafSize: 5,
+      // Environment
+      windStrength: 0,
+      gravity: 0,
+      treeCount: 1,
+      // Random seed
+      seed: Math.floor(Math.random() * 1000000)
+    };
+    
+    // Presets
+    const presets = {
+      willow: {
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-FF-F]-[-F+FF+F]' },
+        iterations: 5,
+        branchAngle: 30,
+        lengthDecay: 0.85,
+        gravity: 8,
+        lineWidth: 0.8
+      },
+      pine: {
+        axiom: 'F',
+        rules: { 'F': 'F[+F]F[-F]F' },
+        iterations: 5,
+        branchAngle: 20,
+        lengthDecay: 0.8,
+        gravity: 0,
+        lineWidth: 1.2
+      },
+      bonsai: {
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-F]-[-F+F]' },
+        iterations: 4,
+        branchAngle: 35,
+        lengthDecay: 0.75,
+        angleVariation: 20,
+        lineWidth: 1.5
+      },
+      coral: {
+        axiom: 'F',
+        rules: { 'F': 'FF-[-F+F+F]+[+F-F-F]' },
+        iterations: 4,
+        branchAngle: 22,
+        lengthDecay: 0.95,
+        windStrength: 10,
+        lineWidth: 0.6
+      },
+      fern: {
+        axiom: 'X',
+        rules: { 
+          'X': 'F+[[X]-X]-F[-FX]+X',
+          'F': 'FF'
+        },
+        iterations: 6,
+        branchAngle: 25,
+        lengthDecay: 0.85,
+        lineWidth: 0.5
+      }
+    };
+    
+    // Paper sizes
+    const paperSizes = {
+      A3: [297, 420],
+      A4: [210, 297]
+    };
+    
+    function setup() {
+      const [w, h] = paperSizes.A3;
+      const scale = Math.min(windowWidth * 0.7 / w, windowHeight / h);
+      
+      let canvas = createCanvas(w * scale, h * scale, SVG);
+      canvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      // Add event listeners
+      document.getElementById('systemType').addEventListener('change', (e) => {
+        params.systemType = e.target.value;
+        regenerate();
+      });
+      document.getElementById('axiom').addEventListener('input', (e) => {
+        params.axiom = e.target.value;
+        regenerate();
+      });
+      document.getElementById('drawLeaves').addEventListener('change', (e) => {
+        params.drawLeaves = e.target.checked;
+        regenerate();
+      });
+      
+      // Range inputs
+      ['iterations', 'branchLength', 'lengthDecay', 'branchAngle', 'angleVariation',
+       'lineWidth', 'widthDecay', 'leafSize', 'windStrength', 'gravity', 'treeCount'].forEach(id => {
+        const element = document.getElementById(id);
+        element.addEventListener('input', (e) => {
+          if (id === 'iterations' || id === 'treeCount') {
+            params[id] = parseInt(e.target.value);
+          } else {
+            params[id] = parseFloat(e.target.value);
+          }
+          document.getElementById(id + '-value').textContent = e.target.value;
+          regenerate();
+        });
+      });
+    }
+    
+    // L-System generation
+    function generateLSystem(axiom, rules, iterations) {
+      let current = axiom;
+      for (let i = 0; i < iterations; i++) {
+        let next = '';
+        for (let char of current) {
+          next += rules[char] || char;
+        }
+        current = next;
+      }
+      return current;
+    }
+    
+    // Turtle graphics interpreter
+    function drawLSystem(system, x, y, angle, length, width) {
+      const stack = [];
+      let currentAngle = angle;
+      let currentLength = length;
+      let currentWidth = width;
+      let currentX = x;
+      let currentY = y;
+      
+      for (let char of system) {
+        switch (char) {
+          case 'F': // Draw forward
+            const angleVar = params.angleVariation ? 
+              random(-params.angleVariation, params.angleVariation) * PI / 180 : 0;
+            const windEffect = params.windStrength * sin(currentY * 0.01) * 0.01;
+            const gravityEffect = params.gravity * 0.002 * (height - currentY) / height;
+            
+            const finalAngle = currentAngle + angleVar + windEffect + gravityEffect;
+            const newX = currentX + cos(finalAngle) * currentLength;
+            const newY = currentY + sin(finalAngle) * currentLength;
+            
+            strokeWeight(currentWidth);
+            line(currentX, currentY, newX, newY);
+            
+            currentX = newX;
+            currentY = newY;
+            break;
+            
+          case '+': // Turn right
+            currentAngle += params.branchAngle * PI / 180;
+            break;
+            
+          case '-': // Turn left
+            currentAngle -= params.branchAngle * PI / 180;
+            break;
+            
+          case '[': // Push state
+            stack.push({
+              x: currentX,
+              y: currentY,
+              angle: currentAngle,
+              length: currentLength,
+              width: currentWidth
+            });
+            currentLength *= params.lengthDecay;
+            currentWidth *= params.widthDecay;
+            break;
+            
+          case ']': // Pop state
+            const state = stack.pop();
+            if (state) {
+              // Draw leaf if at branch tip
+              if (params.drawLeaves && stack.length === 0) {
+                noStroke();
+                fill(0);
+                ellipse(currentX, currentY, params.leafSize);
+                stroke(0);
+                noFill();
+              }
+              
+              currentX = state.x;
+              currentY = state.y;
+              currentAngle = state.angle;
+              currentLength = state.length;
+              currentWidth = state.width;
+            }
+            break;
+        }
+      }
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      
+      // Update rules display
+      document.getElementById('rule-display').textContent = 
+        Object.entries(params.rules).map(([k, v]) => `${k} → ${v}`).join('\n');
+      
+      redraw();
+    }
+    
+    function draw() {
+      background(255);
+      stroke(0);
+      noFill();
+      
+      // Generate L-System
+      const system = generateLSystem(params.axiom, params.rules, params.iterations);
+      
+      // Draw trees
+      for (let i = 0; i < params.treeCount; i++) {
+        const x = lerp(width * 0.2, width * 0.8, i / max(1, params.treeCount - 1));
+        const y = height * 0.9;
+        
+        // Initial angle pointing up with slight variation
+        const angle = -PI / 2 + random(-0.1, 0.1);
+        
+        push();
+        drawLSystem(system, x, y, angle, params.branchLength, params.lineWidth);
+        pop();
+      }
+      
+      noLoop();
+    }
+    
+    // Actions
+    function loadPreset(name) {
+      const preset = presets[name];
+      if (preset) {
+        Object.assign(params, preset);
+        
+        // Update UI
+        Object.keys(preset).forEach(key => {
+          const element = document.getElementById(key);
+          if (element) {
+            if (element.type === 'range') {
+              element.value = preset[key];
+              const valueDisplay = document.getElementById(key + '-value');
+              if (valueDisplay) valueDisplay.textContent = preset[key];
+            } else if (element.type === 'text') {
+              element.value = preset[key];
+            }
+          }
+        });
+        
+        regenerate();
+      }
+    }
+    
+    function randomizeParams() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      params.iterations = Math.floor(random(3, 6));
+      params.branchAngle = random(15, 45);
+      params.lengthDecay = random(0.6, 0.95);
+      params.angleVariation = random(0, 30);
+      
+      // Update UI
+      ['iterations', 'branchAngle', 'lengthDecay', 'angleVariation'].forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          element.value = params[key];
+          const valueDisplay = document.getElementById(key + '-value');
+          if (valueDisplay) valueDisplay.textContent = Math.round(params[key]);
+        }
+      });
+      
+      regenerate();
+    }
+    
+    function exportSVG() {
+      save(`lsystem-tree-${params.seed}.svg`);
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Store original parameters
+      const originalIterations = params.iterations;
+      const originalBranches = params.branches;
+      
+      // Generate frames by varying iterations
+      const totalFrames = 20;
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+        
+        // Vary iterations for growth animation
+        params.iterations = Math.floor((frame + 1) / totalFrames * originalIterations) + 1;
+        
+        // Create offscreen canvas
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const ctx = offscreenCanvas.getContext('2d');
+        
+        // Draw background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw the L-system at current iteration
+        randomSeed(params.seed);
+        let axiom = 'F';
+        let sentence = axiom;
+        
+        // Generate L-system string
+        for (let i = 0; i < params.iterations; i++) {
+          let nextSentence = '';
+          for (let j = 0; j < sentence.length; j++) {
+            const current = sentence.charAt(j);
+            let found = false;
+            
+            for (let r = 0; r < rules.length; r++) {
+              if (current === rules[r].input) {
+                nextSentence += rules[r].output;
+                found = true;
+                break;
+              }
+            }
+            
+            if (!found) {
+              nextSentence += current;
+            }
+          }
+          sentence = nextSentence;
+        }
+        
+        // Draw the L-system
+        ctx.save();
+        ctx.translate(width/2, height);
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = params.strokeWeight;
+        
+        const len = params.len;
+        let currentLen = len;
+        
+        for (let i = 0; i < sentence.length; i++) {
+          const current = sentence.charAt(i);
+          
+          if (current === 'F') {
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -currentLen);
+            ctx.stroke();
+            ctx.translate(0, -currentLen);
+          } else if (current === '+') {
+            ctx.rotate(radians(params.angle + random(-params.angleVariation, params.angleVariation)));
+          } else if (current === '-') {
+            ctx.rotate(radians(-params.angle + random(-params.angleVariation, params.angleVariation)));
+          } else if (current === '[') {
+            ctx.save();
+            currentLen *= params.lenRatio;
+          } else if (current === ']') {
+            ctx.restore();
+            currentLen = len;
+          }
+        }
+        ctx.restore();
+        
+        // Add frame
+        gif.addFrame(ctx, {delay: 150});
+      }
+      
+      // Restore original parameters
+      params.iterations = originalIterations;
+      params.branches = originalBranches;
+      regenerate();
+      
+      statusEl.textContent = 'Encoding GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `lsystem-tree-${params.seed}.gif`;
+        link.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+    
+    function saveParams() {
+      const paramData = {
+        algorithm: 'lsystem-tree',
+        timestamp: new Date().toISOString(),
+        params: { ...params }
+      };
+      
+      localStorage.setItem('lastLSystemParams', JSON.stringify(paramData));
+      
+      const dataStr = JSON.stringify(paramData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `lsystem-params-${params.seed}.json`;
+      link.click();
+      
+      alert('Parameters saved!');
+    }
+    
+    function loadLastParams() {
+      const saved = localStorage.getItem('lastLSystemParams');
+      if (saved) {
+        const data = JSON.parse(saved);
+        params = data.params;
+        
+        // Update all UI elements
+        Object.keys(params).forEach(key => {
+          const element = document.getElementById(key);
+          if (element) {
+            if (element.type === 'range' || element.type === 'text') {
+              element.value = params[key];
+              const valueDisplay = document.getElementById(key + '-value');
+              if (valueDisplay) valueDisplay.textContent = params[key];
+            } else if (element.type === 'checkbox') {
+              element.checked = params[key];
+            }
+          }
+        });
+        
+        regenerate();
+      } else {
+        alert('No saved parameters found');
+      }
+    }
+  </script>
+</body>
+</html>

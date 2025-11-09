@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Elementary Cellular Automata - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .rule-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .rule-btn:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #rule-visualization {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+      padding: 10px;
+      background: #333;
+      border-radius: 4px;
+    }
+    .rule-cell {
+      text-align: center;
+      font-size: 12px;
+    }
+    .rule-pattern {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+    .rule-bit {
+      width: 8px;
+      height: 8px;
+      margin: 1px;
+      background: #666;
+    }
+    .rule-bit.active {
+      background: #4CAF50;
+    }
+    .rule-result {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Elementary CA</h2>
+    
+    <div class="control-group">
+      <h3>Rule Selection</h3>
+      <div class="control">
+        <label>Rule Number: <span class="value" id="rule-val">30</span></label>
+        <input type="range" id="rule" min="0" max="255" value="30">
+      </div>
+      <div class="control">
+        <input type="number" id="ruleInput" min="0" max="255" value="30">
+      </div>
+      <div id="rule-visualization"></div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Famous Rules</h3>
+      <button class="rule-btn" onclick="setRule(30)">Rule 30 (Chaos)</button>
+      <button class="rule-btn" onclick="setRule(90)">Rule 90 (Sierpinski)</button>
+      <button class="rule-btn" onclick="setRule(110)">Rule 110 (Complex)</button>
+      <button class="rule-btn" onclick="setRule(184)">Rule 184 (Traffic)</button>
+      <button class="rule-btn" onclick="setRule(45)">Rule 45 (Texture)</button>
+      <button class="rule-btn" onclick="setRule(73)">Rule 73 (Symmetric)</button>
+      <button class="rule-btn" onclick="setRule(150)">Rule 150 (Triangular)</button>
+      <button class="rule-btn" onclick="setRule(182)">Rule 182 (Patterns)</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Width: <span class="value" id="width-val">200</span> cells</label>
+        <input type="range" id="cellWidth" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Height: <span class="value" id="height-val">200</span> cells</label>
+        <input type="range" id="cellHeight" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">3</span>px</label>
+        <input type="range" id="cellSize" min="1" max="10" value="3">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Initial Condition</h3>
+      <div class="control">
+        <label>Start Pattern:</label>
+        <select id="startPattern">
+          <option value="single">Single Center Cell</option>
+          <option value="random">Random (50%)</option>
+          <option value="random25">Random (25%)</option>
+          <option value="random75">Random (75%)</option>
+          <option value="alternating">Alternating</option>
+          <option value="symmetric">Symmetric Random</option>
+          <option value="custom">Custom Pattern</option>
+        </select>
+      </div>
+      <button onclick="generate()">Generate</button>
+      <button onclick="reset()">Reset</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Color Scheme:</label>
+        <select id="colorScheme">
+          <option value="bw">Black & White</option>
+          <option value="green">Matrix Green</option>
+          <option value="blue">Ocean Blue</option>
+          <option value="heat">Heat Map</option>
+          <option value="rainbow">Rainbow</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showHistory" checked>
+        <label for="showHistory">Show History</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export as SVG</button>
+      <button onclick="exportPNG()">Export as PNG</button>
+      <button onclick="exportGIF()">Export as GIF</button>
+      <div class="control">
+        <label>SVG Style:</label>
+        <select id="svgStyle">
+          <option value="pixels">Pixels</option>
+          <option value="lines">Horizontal Lines</option>
+          <option value="dots">Dots</option>
+          <option value="triangles">Triangles</option>
+        </select>
+      </div>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Elementary CA implementation
+    let cells = [];
+    let generation = 0;
+    let rule = 30;
+    let cellWidth = 200;
+    let cellHeight = 200;
+    let cellSize = 3;
+    let history = [];
+    
+    // Color schemes
+    const colorSchemes = {
+      bw: { 0: [255, 255, 255], 1: [0, 0, 0] },
+      green: { 0: [0, 0, 0], 1: [0, 255, 0] },
+      blue: { 0: [0, 20, 40], 1: [0, 150, 255] },
+      heat: { 0: [0, 0, 50], 1: [255, 100, 0] },
+      rainbow: { 0: [255, 0, 255], 1: [0, 255, 255] }
+    };
+    
+    function setup() {
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      // Initialize
+      initializeCells();
+      setupControls();
+      updateRuleVisualization();
+    }
+    
+    function initializeCells() {
+      cells = new Array(cellWidth).fill(0);
+      history = [];
+      generation = 0;
+      
+      // Set initial condition
+      const pattern = document.getElementById('startPattern').value;
+      switch (pattern) {
+        case 'single':
+          cells[Math.floor(cellWidth / 2)] = 1;
+          break;
+        case 'random':
+          for (let i = 0; i < cellWidth; i++) {
+            cells[i] = random() < 0.5 ? 1 : 0;
+          }
+          break;
+        case 'random25':
+          for (let i = 0; i < cellWidth; i++) {
+            cells[i] = random() < 0.25 ? 1 : 0;
+          }
+          break;
+        case 'random75':
+          for (let i = 0; i < cellWidth; i++) {
+            cells[i] = random() < 0.75 ? 1 : 0;
+          }
+          break;
+        case 'alternating':
+          for (let i = 0; i < cellWidth; i++) {
+            cells[i] = i % 2;
+          }
+          break;
+        case 'symmetric':
+          for (let i = 0; i < cellWidth / 2; i++) {
+            cells[i] = random() < 0.5 ? 1 : 0;
+            cells[cellWidth - 1 - i] = cells[i];
+          }
+          break;
+      }
+      
+      history.push([...cells]);
+    }
+    
+    function setupControls() {
+      // Rule slider
+      document.getElementById('rule').addEventListener('input', (e) => {
+        rule = parseInt(e.target.value);
+        document.getElementById('rule-val').textContent = rule;
+        document.getElementById('ruleInput').value = rule;
+        updateRuleVisualization();
+      });
+      
+      // Rule input
+      document.getElementById('ruleInput').addEventListener('change', (e) => {
+        rule = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
+        document.getElementById('rule').value = rule;
+        document.getElementById('rule-val').textContent = rule;
+        document.getElementById('ruleInput').value = rule;
+        updateRuleVisualization();
+      });
+      
+      // Other controls
+      document.getElementById('cellWidth').addEventListener('input', (e) => {
+        cellWidth = parseInt(e.target.value);
+        document.getElementById('width-val').textContent = cellWidth;
+      });
+      
+      document.getElementById('cellHeight').addEventListener('input', (e) => {
+        cellHeight = parseInt(e.target.value);
+        document.getElementById('height-val').textContent = cellHeight;
+      });
+      
+      document.getElementById('cellSize').addEventListener('input', (e) => {
+        cellSize = parseInt(e.target.value);
+        document.getElementById('cellSize-val').textContent = cellSize;
+      });
+    }
+    
+    function updateRuleVisualization() {
+      const container = document.getElementById('rule-visualization');
+      container.innerHTML = '';
+      
+      // Show all 8 possible neighborhood configurations
+      for (let i = 7; i >= 0; i--) {
+        const div = document.createElement('div');
+        div.className = 'rule-cell';
+        
+        // Show pattern
+        const pattern = document.createElement('div');
+        pattern.className = 'rule-pattern';
+        for (let j = 2; j >= 0; j--) {
+          const bit = document.createElement('div');
+          bit.className = 'rule-bit' + ((i >> j) & 1 ? ' active' : '');
+          pattern.appendChild(bit);
+        }
+        div.appendChild(pattern);
+        
+        // Show result
+        const result = document.createElement('div');
+        result.className = 'rule-result';
+        result.textContent = (rule >> i) & 1;
+        div.appendChild(result);
+        
+        container.appendChild(div);
+      }
+    }
+    
+    function draw() {
+      background(30);
+      
+      const scheme = colorSchemes[document.getElementById('colorScheme').value];
+      const showHistory = document.getElementById('showHistory').checked;
+      
+      // Calculate offset to center the CA
+      const totalWidth = cellWidth * cellSize;
+      const totalHeight = Math.min(history.length, cellHeight) * cellSize;
+      const offsetX = (width - totalWidth) / 2;
+      const offsetY = (height - totalHeight) / 2;
+      
+      // Draw cells
+      noStroke();
+      if (showHistory) {
+        // Draw full history
+        for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
+          for (let x = 0; x < cellWidth; x++) {
+            const state = history[y][x];
+            fill(scheme[state]);
+            rect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          }
+        }
+      } else {
+        // Draw only current generation
+        const y = Math.min(generation, cellHeight - 1);
+        for (let x = 0; x < cellWidth; x++) {
+          const state = cells[x];
+          fill(scheme[state]);
+          rect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+    
+    function generate() {
+      initializeCells();
+      
+      // Generate all generations
+      for (let g = 0; g < cellHeight - 1; g++) {
+        stepGeneration();
+      }
+    }
+    
+    function stepGeneration() {
+      const newCells = new Array(cellWidth);
+      
+      for (let i = 0; i < cellWidth; i++) {
+        // Get neighborhood
+        const left = cells[(i - 1 + cellWidth) % cellWidth];
+        const center = cells[i];
+        const right = cells[(i + 1) % cellWidth];
+        
+        // Calculate neighborhood index
+        const neighborhood = (left << 2) | (center << 1) | right;
+        
+        // Apply rule
+        newCells[i] = (rule >> neighborhood) & 1;
+      }
+      
+      cells = newCells;
+      history.push([...cells]);
+      generation++;
+    }
+    
+    function reset() {
+      initializeCells();
+      generation = 0;
+    }
+    
+    function setRule(r) {
+      rule = r;
+      document.getElementById('rule').value = r;
+      document.getElementById('rule-val').textContent = r;
+      document.getElementById('ruleInput').value = r;
+      updateRuleVisualization();
+      generate();
+    }
+    
+    function exportSVG() {
+      const svgStyle = document.getElementById('svgStyle').value;
+      let svg = createGraphics(cellWidth * 10, Math.min(history.length, cellHeight) * 10, SVG);
+      
+      svg.background(255);
+      
+      for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
+        for (let x = 0; x < cellWidth; x++) {
+          if (history[y][x] === 1) {
+            svg.fill(0);
+            svg.noStroke();
+            
+            switch (svgStyle) {
+              case 'pixels':
+                svg.rect(x * 10, y * 10, 10, 10);
+                break;
+              case 'lines':
+                svg.stroke(0);
+                svg.strokeWeight(1);
+                svg.line(x * 10, y * 10 + 5, (x + 1) * 10, y * 10 + 5);
+                break;
+              case 'dots':
+                svg.ellipse(x * 10 + 5, y * 10 + 5, 5, 5);
+                break;
+              case 'triangles':
+                svg.triangle(x * 10, y * 10 + 10, 
+                           x * 10 + 5, y * 10,
+                           x * 10 + 10, y * 10 + 10);
+                break;
+            }
+          }
+        }
+      }
+      
+      save(svg, `elementary-ca-rule${rule}.svg`);
+      svg.remove();
+    }
+    
+    function exportPNG() {
+      saveCanvas(`elementary-ca-rule${rule}`, 'png');
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Store original state
+      const originalHistory = history.map(row => [...row]);
+      
+      // Clear and regenerate for animation
+      history = [];
+      cells = new Array(cellWidth).fill(0);
+      cells[Math.floor(cellWidth / 2)] = 1;
+      history.push([...cells]);
+      
+      // Generate frames
+      const totalFrames = 30;
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+        
+        // Create offscreen canvas
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const ctx = offscreenCanvas.getContext('2d');
+        
+        // Draw background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw current history state
+        ctx.fillStyle = 'black';
+        const cellSize = width / cellWidth;
+        
+        for (let row = 0; row < history.length; row++) {
+          for (let col = 0; col < cellWidth; col++) {
+            if (history[row][col] === 1) {
+              ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+        
+        // Add frame
+        gif.addFrame(ctx, {delay: 100});
+        
+        // Generate next generation
+        if (history.length < cellHeight) {
+          const nextGen = new Array(cellWidth).fill(0);
+          const currentGen = history[history.length - 1];
+          
+          for (let i = 0; i < cellWidth; i++) {
+            const left = currentGen[(i - 1 + cellWidth) % cellWidth];
+            const center = currentGen[i];
+            const right = currentGen[(i + 1) % cellWidth];
+            const index = left * 4 + center * 2 + right;
+            nextGen[i] = (rule >> index) & 1;
+          }
+          
+          cells = nextGen;
+          history.push([...cells]);
+        }
+      }
+      
+      // Restore original state
+      history = originalHistory;
+      
+      statusEl.textContent = 'Encoding GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `elementary-ca-rule${rule}.gif`;
+        link.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

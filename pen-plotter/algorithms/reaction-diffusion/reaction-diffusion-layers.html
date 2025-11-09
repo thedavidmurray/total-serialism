@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Multi-Layer Reaction-Diffusion - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: relative;
+    }
+    #controls {
+      width: 420px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:active {
+      background: #3d8b40;
+    }
+    .secondary {
+      background: #555;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .preset-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .preset-btn:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    .system-btn {
+      background: #9C27B0;
+      margin: 2px 0;
+    }
+    .system-btn:hover {
+      background: #7B1FA2;
+    }
+    .layer-control {
+      background: #333;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+    .layer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .layer-color {
+      width: 30px;
+      height: 20px;
+      border: 1px solid #fff;
+      cursor: pointer;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background: #333;
+      margin-right: 5px;
+      border-radius: 4px 4px 0 0;
+    }
+    .tab.active {
+      background: #4CAF50;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Iteration: <span id="iteration-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+      <div>Active Layers: <span id="active-layers">1</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Multi-Layer Reaction-Diffusion</h2>
+    
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('simulation')">Simulation</div>
+      <div class="tab" onclick="switchTab('layers')">Layers</div>
+      <div class="tab" onclick="switchTab('export')">Export</div>
+    </div>
+    
+    <div id="simulation-tab" class="tab-content active">
+      <div class="control-group">
+        <h3>Simulation Control</h3>
+        <button id="play-pause">⏸ Pause</button>
+        <button id="reset" class="secondary">Reset All Layers</button>
+        <button id="clear" class="secondary">Clear All</button>
+        <div class="control">
+          <label>Speed: <span class="value" id="speed-val">5</span> iterations/frame</label>
+          <input type="range" id="speed" min="1" max="20" value="5">
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Chemical Systems</h3>
+        <button class="system-btn" onclick="loadSystem('gray-scott')">Gray-Scott Model</button>
+        <button class="system-btn" onclick="loadSystem('fitzhugh-nagumo')">FitzHugh-Nagumo</button>
+        <button class="system-btn" onclick="loadSystem('turing')">Turing Patterns</button>
+        <button class="system-btn" onclick="loadSystem('belousov')">Belousov-Zhabotinsky</button>
+        <button class="system-btn" onclick="loadSystem('custom')">Custom 3-Chemical</button>
+      </div>
+      
+      <div class="control-group">
+        <h3>Display Options</h3>
+        <div class="control">
+          <label>Layer Blend Mode:</label>
+          <select id="blendMode">
+            <option value="normal">Normal</option>
+            <option value="multiply">Multiply</option>
+            <option value="screen">Screen</option>
+            <option value="overlay">Overlay</option>
+            <option value="difference">Difference</option>
+          </select>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="showGrid" checked>
+          <label for="showGrid">Show Grid Lines</label>
+        </div>
+        <div class="control">
+          <label>Grid Size: <span class="value" id="gridSize-val">150</span></label>
+          <input type="range" id="gridSize" min="50" max="300" value="150">
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Pattern Seeds</h3>
+        <button onclick="addPattern('dots')">Random Dots</button>
+        <button onclick="addPattern('stripes')">Stripes</button>
+        <button onclick="addPattern('waves')">Wave Front</button>
+        <button onclick="addPattern('voronoi')">Voronoi Seeds</button>
+        <button onclick="addPattern('fractal')">Fractal Pattern</button>
+      </div>
+    </div>
+    
+    <div id="layers-tab" class="tab-content">
+      <div class="control-group">
+        <h3>Layer Management</h3>
+        <button onclick="addLayer()">+ Add New Layer</button>
+        <div id="layers-container"></div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Layer Interaction</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="enableInteraction">
+          <label for="enableInteraction">Enable Cross-Layer Interaction</label>
+        </div>
+        <div class="control">
+          <label>Interaction Strength: <span class="value" id="interactionStrength-val">0.1</span></label>
+          <input type="range" id="interactionStrength" min="0" max="1" step="0.01" value="0.1">
+        </div>
+      </div>
+    </div>
+    
+    <div id="export-tab" class="tab-content">
+      <div class="control-group">
+        <h3>Export Options</h3>
+        <button onclick="exportAllLayers()">Export All Layers (Separate SVGs)</button>
+        <button onclick="exportCombined()">Export Combined SVG</button>
+        <button onclick="exportByThreshold()">Export Threshold Patterns</button>
+        <button onclick="exportAnimation()">Export Frame Sequence</button>
+        <button class="export-btn" onclick="toggleGifRecording()">
+          <span id="gif-record-text">Record GIF</span>
+        </button>
+        <div id="gif-progress">
+          <div>Recording: <span id="gif-status">Preparing...</span></div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="gif-progress-bar"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>Export Settings</h3>
+        <div class="control">
+          <label>Scale Factor: <span class="value" id="scaleFactor-val">10</span>x</label>
+          <input type="range" id="scaleFactor" min="5" max="20" value="10">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="includeMetadata" checked>
+          <label for="includeMetadata">Include Metadata</label>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="includeRegistration" checked>
+          <label for="includeRegistration">Include Registration Marks</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Multi-layer reaction-diffusion system
+    class Layer {
+      constructor(id, name, color, system = 'gray-scott') {
+        this.id = id;
+        this.name = name;
+        this.color = color;
+        this.system = system;
+        this.visible = true;
+        this.opacity = 1.0;
+        this.threshold = 0.5;
+        
+        // Chemical concentrations
+        this.chemicals = [];
+        this.next = [];
+        
+        // System-specific parameters
+        this.params = this.getDefaultParams(system);
+        
+        this.initializeGrid();
+      }
+      
+      getDefaultParams(system) {
+        switch (system) {
+          case 'gray-scott':
+            return {
+              feedRate: 0.055,
+              killRate: 0.062,
+              dA: 1.0,
+              dB: 0.5
+            };
+          case 'fitzhugh-nagumo':
+            return {
+              a: 0.7,
+              b: 0.8,
+              tau: 12.5,
+              dU: 1.0,
+              dV: 0.05
+            };
+          case 'turing':
+            return {
+              a: 2.8e-4,
+              b: 5e-3,
+              tau: 0.1,
+              k: -0.005
+            };
+          case 'belousov':
+            return {
+              alpha: 1.2,
+              beta: 1.0,
+              gamma: 1.0
+            };
+          case 'custom':
+            return {
+              rates: [0.1, 0.05, 0.02],
+              diffusion: [1.0, 0.5, 0.25]
+            };
+          default:
+            return {};
+        }
+      }
+      
+      initializeGrid() {
+        this.chemicals = [];
+        this.next = [];
+        
+        const numChemicals = this.system === 'custom' ? 3 : 2;
+        
+        for (let c = 0; c < numChemicals; c++) {
+          this.chemicals[c] = [];
+          this.next[c] = [];
+          
+          for (let x = 0; x < gridSize; x++) {
+            this.chemicals[c][x] = [];
+            this.next[c][x] = [];
+            
+            for (let y = 0; y < gridSize; y++) {
+              // Initialize with default concentrations
+              if (c === 0) {
+                this.chemicals[c][x][y] = 1.0; // Chemical A
+              } else {
+                this.chemicals[c][x][y] = 0.0; // Chemical B, C, etc.
+              }
+              this.next[c][x][y] = 0;
+            }
+          }
+        }
+      }
+      
+      update() {
+        switch (this.system) {
+          case 'gray-scott':
+            this.updateGrayScott();
+            break;
+          case 'fitzhugh-nagumo':
+            this.updateFitzHughNagumo();
+            break;
+          case 'turing':
+            this.updateTuring();
+            break;
+          case 'belousov':
+            this.updateBelousov();
+            break;
+          case 'custom':
+            this.updateCustom();
+            break;
+        }
+        
+        // Swap grids
+        [this.chemicals, this.next] = [this.next, this.chemicals];
+      }
+      
+      updateGrayScott() {
+        const { feedRate, killRate, dA, dB } = this.params;
+        
+        for (let x = 1; x < gridSize - 1; x++) {
+          for (let y = 1; y < gridSize - 1; y++) {
+            const a = this.chemicals[0][x][y];
+            const b = this.chemicals[1][x][y];
+            
+            // Calculate laplacian
+            const laplaceA = this.laplacian(0, x, y);
+            const laplaceB = this.laplacian(1, x, y);
+            
+            // Gray-Scott equations
+            const abb = a * b * b;
+            this.next[0][x][y] = a + (dA * laplaceA - abb + feedRate * (1 - a));
+            this.next[1][x][y] = b + (dB * laplaceB + abb - (killRate + feedRate) * b);
+            
+            // Constrain values
+            this.next[0][x][y] = constrain(this.next[0][x][y], 0, 1);
+            this.next[1][x][y] = constrain(this.next[1][x][y], 0, 1);
+          }
+        }
+      }
+      
+      updateFitzHughNagumo() {
+        const { a, b, tau, dU, dV } = this.params;
+        
+        for (let x = 1; x < gridSize - 1; x++) {
+          for (let y = 1; y < gridSize - 1; y++) {
+            const u = this.chemicals[0][x][y];
+            const v = this.chemicals[1][x][y];
+            
+            const laplaceU = this.laplacian(0, x, y);
+            const laplaceV = this.laplacian(1, x, y);
+            
+            // FitzHugh-Nagumo equations
+            const du = dU * laplaceU + u - u * u * u / 3 - v;
+            const dv = dV * laplaceV + (u + a - b * v) / tau;
+            
+            this.next[0][x][y] = u + du * 0.01;
+            this.next[1][x][y] = v + dv * 0.01;
+            
+            this.next[0][x][y] = constrain(this.next[0][x][y], -2, 2);
+            this.next[1][x][y] = constrain(this.next[1][x][y], -2, 2);
+          }
+        }
+      }
+      
+      updateTuring() {
+        const { a, b, tau, k } = this.params;
+        
+        for (let x = 1; x < gridSize - 1; x++) {
+          for (let y = 1; y < gridSize - 1; y++) {
+            const u = this.chemicals[0][x][y];
+            const v = this.chemicals[1][x][y];
+            
+            const laplaceU = this.laplacian(0, x, y);
+            const laplaceV = this.laplacian(1, x, y);
+            
+            // Simplified Turing system
+            const du = a * laplaceU + u * (1 - u) - v;
+            const dv = b * laplaceV + u - v - k;
+            
+            this.next[0][x][y] = u + du;
+            this.next[1][x][y] = v + dv * tau;
+            
+            this.next[0][x][y] = constrain(this.next[0][x][y], 0, 2);
+            this.next[1][x][y] = constrain(this.next[1][x][y], 0, 2);
+          }
+        }
+      }
+      
+      updateBelousov() {
+        const { alpha, beta, gamma } = this.params;
+        
+        for (let x = 1; x < gridSize - 1; x++) {
+          for (let y = 1; y < gridSize - 1; y++) {
+            const a = this.chemicals[0][x][y];
+            const b = this.chemicals[1][x][y];
+            
+            const laplaceA = this.laplacian(0, x, y);
+            const laplaceB = this.laplacian(1, x, y);
+            
+            // Simplified BZ reaction
+            const da = laplaceA + alpha * (a - a * a - beta * b * (a - gamma));
+            const db = laplaceB * 0.5 + a - b;
+            
+            this.next[0][x][y] = a + da * 0.01;
+            this.next[1][x][y] = b + db * 0.01;
+            
+            this.next[0][x][y] = constrain(this.next[0][x][y], 0, 1);
+            this.next[1][x][y] = constrain(this.next[1][x][y], 0, 1);
+          }
+        }
+      }
+      
+      updateCustom() {
+        const { rates, diffusion } = this.params;
+        
+        for (let x = 1; x < gridSize - 1; x++) {
+          for (let y = 1; y < gridSize - 1; y++) {
+            const a = this.chemicals[0][x][y];
+            const b = this.chemicals[1][x][y];
+            const c = this.chemicals[2][x][y];
+            
+            // Three-chemical system with cyclic reactions
+            const laplaceA = this.laplacian(0, x, y);
+            const laplaceB = this.laplacian(1, x, y);
+            const laplaceC = this.laplacian(2, x, y);
+            
+            // A + B -> 2B, B + C -> 2C, C + A -> 2A
+            const da = diffusion[0] * laplaceA + rates[0] * (c * a - a * b);
+            const db = diffusion[1] * laplaceB + rates[1] * (a * b - b * c);
+            const dc = diffusion[2] * laplaceC + rates[2] * (b * c - c * a);
+            
+            this.next[0][x][y] = constrain(a + da, 0, 1);
+            this.next[1][x][y] = constrain(b + db, 0, 1);
+            this.next[2][x][y] = constrain(c + dc, 0, 1);
+          }
+        }
+      }
+      
+      laplacian(chemical, x, y) {
+        let sum = 0;
+        const weights = [
+          [0.05, 0.2, 0.05],
+          [0.2, -1, 0.2],
+          [0.05, 0.2, 0.05]
+        ];
+        
+        for (let i = -1; i <= 1; i++) {
+          for (let j = -1; j <= 1; j++) {
+            sum += this.chemicals[chemical][x + i][y + j] * weights[i + 1][j + 1];
+          }
+        }
+        
+        return sum;
+      }
+      
+      addSeed(x, y, radius = 5) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          for (let dy = -radius; dy <= radius; dy++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) {
+              const dist = sqrt(dx * dx + dy * dy);
+              if (dist <= radius) {
+                // Set chemical B (or second chemical) to high concentration
+                this.chemicals[1][nx][ny] = 1.0;
+                
+                // For 3-chemical systems, also seed the third
+                if (this.system === 'custom') {
+                  this.chemicals[2][nx][ny] = 0.5;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Global variables
+    let layers = [];
+    let gridSize = 150;
+    let cellSize = 4;
+    let iteration = 0;
+    let isPaused = false;
+    let gifExporter;
+    let currentTab = 'simulation';
+    
+    function setup() {
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      // Initialize with one layer
+      layers.push(new Layer(0, 'Layer 1', '#4CAF50'));
+      layers[0].addSeed(gridSize / 2, gridSize / 2);
+      
+      setupControls();
+      updateLayerControls();
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 5,
+        quality: 10,
+        width: 800,
+        height: 600
+      });
+      
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          document.getElementById('gif-status').textContent = data.status;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+        }
+      });
+    }
+    
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? '▶ Play' : '⏸ Pause';
+      });
+      
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        layers.forEach(layer => layer.initializeGrid());
+        iteration = 0;
+      });
+      
+      // Speed control
+      document.getElementById('speed').addEventListener('input', (e) => {
+        document.getElementById('speed-val').textContent = e.target.value;
+      });
+      
+      // Grid size
+      document.getElementById('gridSize').addEventListener('input', (e) => {
+        gridSize = parseInt(e.target.value);
+        document.getElementById('gridSize-val').textContent = gridSize;
+        layers.forEach(layer => layer.initializeGrid());
+      });
+      
+      // Layer interaction
+      document.getElementById('interactionStrength').addEventListener('input', (e) => {
+        document.getElementById('interactionStrength-val').textContent = e.target.value;
+      });
+      
+      // Export scale
+      document.getElementById('scaleFactor').addEventListener('input', (e) => {
+        document.getElementById('scaleFactor-val').textContent = e.target.value;
+      });
+    }
+    
+    function draw() {
+      background(30);
+      
+      // Update simulation
+      if (!isPaused) {
+        const speed = parseInt(document.getElementById('speed').value);
+        for (let i = 0; i < speed; i++) {
+          updateLayers();
+          iteration++;
+        }
+      }
+      
+      // Render layers
+      push();
+      const totalSize = gridSize * cellSize;
+      translate((width - totalSize) / 2, (height - totalSize) / 2);
+      
+      // Draw background
+      fill(255);
+      rect(0, 0, totalSize, totalSize);
+      
+      // Set blend mode
+      const selectedBlendMode = document.getElementById('blendMode').value;
+      if (selectedBlendMode !== 'normal') {
+        switch (selectedBlendMode) {
+          case 'multiply': blendMode(MULTIPLY); break;
+          case 'screen': blendMode(SCREEN); break;
+          case 'overlay': blendMode(OVERLAY); break;
+          case 'difference': blendMode(DIFFERENCE); break;
+        }
+      }
+      
+      // Draw each layer
+      layers.forEach(layer => {
+        if (layer.visible) {
+          drawLayer(layer);
+        }
+      });
+      
+      // Reset blend mode
+      blendMode(BLEND);
+      
+      // Draw grid if enabled
+      if (document.getElementById('showGrid').checked) {
+        stroke(200, 50);
+        strokeWeight(0.5);
+        for (let i = 0; i <= gridSize; i += 10) {
+          line(i * cellSize, 0, i * cellSize, totalSize);
+          line(0, i * cellSize, totalSize, i * cellSize);
+        }
+      }
+      
+      pop();
+      
+      // Update info
+      document.getElementById('iteration-count').textContent = iteration;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+      document.getElementById('active-layers').textContent = 
+        layers.filter(l => l.visible).length;
+      
+      // Capture GIF frame
+      if (gifExporter.isRecording) {
+        gifExporter.captureFrame();
+      }
+    }
+    
+    function updateLayers() {
+      // Update each layer
+      layers.forEach(layer => {
+        layer.update();
+      });
+      
+      // Apply cross-layer interaction if enabled
+      if (document.getElementById('enableInteraction').checked) {
+        const strength = parseFloat(document.getElementById('interactionStrength').value);
+        
+        for (let i = 0; i < layers.length - 1; i++) {
+          for (let j = i + 1; j < layers.length; j++) {
+            applyLayerInteraction(layers[i], layers[j], strength);
+          }
+        }
+      }
+    }
+    
+    function applyLayerInteraction(layer1, layer2, strength) {
+      for (let x = 1; x < gridSize - 1; x++) {
+        for (let y = 1; y < gridSize - 1; y++) {
+          // Simple diffusive coupling between layers
+          const diff1 = layer2.chemicals[1][x][y] - layer1.chemicals[1][x][y];
+          const diff2 = layer1.chemicals[1][x][y] - layer2.chemicals[1][x][y];
+          
+          layer1.chemicals[1][x][y] += diff1 * strength * 0.01;
+          layer2.chemicals[1][x][y] += diff2 * strength * 0.01;
+        }
+      }
+    }
+    
+    function drawLayer(layer) {
+      noStroke();
+      
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          let value;
+          
+          // Get concentration value based on system
+          if (layer.system === 'custom') {
+            // For 3-chemical system, combine concentrations
+            value = (layer.chemicals[0][x][y] + 
+                    layer.chemicals[1][x][y] + 
+                    layer.chemicals[2][x][y]) / 3;
+          } else {
+            // For 2-chemical systems, use difference or second chemical
+            value = layer.chemicals[1][x][y];
+          }
+          
+          // Apply threshold
+          if (value > layer.threshold) {
+            const c = color(layer.color);
+            c.setAlpha(layer.opacity * 255);
+            fill(c);
+            rect(x * cellSize, y * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+    
+    function addLayer() {
+      const id = layers.length;
+      const colors = ['#4CAF50', '#2196F3', '#FF5722', '#9C27B0', '#FFC107'];
+      const color = colors[id % colors.length];
+      const layer = new Layer(id, `Layer ${id + 1}`, color);
+      
+      // Add random seed
+      const x = floor(random(gridSize));
+      const y = floor(random(gridSize));
+      layer.addSeed(x, y);
+      
+      layers.push(layer);
+      updateLayerControls();
+    }
+    
+    function updateLayerControls() {
+      const container = document.getElementById('layers-container');
+      container.innerHTML = '';
+      
+      layers.forEach((layer, idx) => {
+        const div = document.createElement('div');
+        div.className = 'layer-control';
+        div.innerHTML = `
+          <div class="layer-header">
+            <strong>${layer.name}</strong>
+            <div style="display: flex; align-items: center;">
+              <input type="color" value="${layer.color}" 
+                     onchange="updateLayerColor(${idx}, this.value)"
+                     style="width: 40px; height: 25px; margin-right: 10px;">
+              <input type="checkbox" ${layer.visible ? 'checked' : ''} 
+                     onchange="toggleLayerVisibility(${idx})">
+              <button onclick="removeLayer(${idx})" 
+                      style="width: auto; padding: 5px 10px; margin-left: 10px;">×</button>
+            </div>
+          </div>
+          <div class="control">
+            <label>Opacity: <span class="value">${layer.opacity.toFixed(2)}</span></label>
+            <input type="range" min="0" max="1" step="0.01" value="${layer.opacity}" 
+                   onchange="updateLayerOpacity(${idx}, this.value)">
+          </div>
+          <div class="control">
+            <label>Threshold: <span class="value">${layer.threshold.toFixed(2)}</span></label>
+            <input type="range" min="0" max="1" step="0.01" value="${layer.threshold}" 
+                   onchange="updateLayerThreshold(${idx}, this.value)">
+          </div>
+          <div class="control">
+            <label>System: ${layer.system}</label>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+    
+    function toggleLayerVisibility(idx) {
+      layers[idx].visible = !layers[idx].visible;
+    }
+    
+    function updateLayerColor(idx, color) {
+      layers[idx].color = color;
+    }
+    
+    function updateLayerOpacity(idx, value) {
+      layers[idx].opacity = parseFloat(value);
+      updateLayerControls();
+    }
+    
+    function updateLayerThreshold(idx, value) {
+      layers[idx].threshold = parseFloat(value);
+      updateLayerControls();
+    }
+    
+    function removeLayer(idx) {
+      if (layers.length > 1) {
+        layers.splice(idx, 1);
+        updateLayerControls();
+      }
+    }
+    
+    function loadSystem(system) {
+      // Apply system to all layers
+      layers.forEach(layer => {
+        layer.system = system;
+        layer.params = layer.getDefaultParams(system);
+        layer.initializeGrid();
+        
+        // Add seed
+        const x = floor(random(gridSize));
+        const y = floor(random(gridSize));
+        layer.addSeed(x, y);
+      });
+      
+      iteration = 0;
+    }
+    
+    function addPattern(type) {
+      layers.forEach(layer => {
+        switch (type) {
+          case 'dots':
+            for (let i = 0; i < 10; i++) {
+              const x = floor(random(gridSize));
+              const y = floor(random(gridSize));
+              layer.addSeed(x, y, 3);
+            }
+            break;
+            
+          case 'stripes':
+            for (let x = 0; x < gridSize; x += 20) {
+              for (let y = 0; y < gridSize; y++) {
+                layer.chemicals[1][x][y] = 1;
+              }
+            }
+            break;
+            
+          case 'waves':
+            for (let x = 0; x < gridSize; x++) {
+              const y = floor(gridSize / 2 + sin(x * 0.1) * 20);
+              if (y >= 0 && y < gridSize) {
+                layer.addSeed(x, y, 2);
+              }
+            }
+            break;
+            
+          case 'voronoi':
+            // Create Voronoi-like seed pattern
+            const seeds = [];
+            for (let i = 0; i < 15; i++) {
+              seeds.push({
+                x: floor(random(gridSize)),
+                y: floor(random(gridSize))
+              });
+            }
+            
+            for (let x = 0; x < gridSize; x++) {
+              for (let y = 0; y < gridSize; y++) {
+                let minDist = Infinity;
+                seeds.forEach(seed => {
+                  const d = dist(x, y, seed.x, seed.y);
+                  if (d < minDist) minDist = d;
+                });
+                
+                if (minDist < 3) {
+                  layer.chemicals[1][x][y] = 1;
+                }
+              }
+            }
+            break;
+            
+          case 'fractal':
+            // Sierpinski-like pattern
+            function sierpinski(x, y, size) {
+              if (size < 2) return;
+              
+              if (size < 10) {
+                layer.addSeed(x, y, 1);
+              } else {
+                const half = floor(size / 2);
+                sierpinski(x, y, half);
+                sierpinski(x + half, y, half);
+                sierpinski(x + half/2, y + half, half);
+              }
+            }
+            sierpinski(gridSize / 4, gridSize / 4, gridSize / 2);
+            break;
+        }
+      });
+    }
+    
+    function switchTab(tab) {
+      currentTab = tab;
+      
+      // Update tab buttons
+      document.querySelectorAll('.tab').forEach(t => {
+        t.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      // Update tab content
+      document.querySelectorAll('.tab-content').forEach(t => {
+        t.classList.remove('active');
+      });
+      document.getElementById(tab + '-tab').classList.add('active');
+    }
+    
+    // Export functions
+    function exportAllLayers() {
+      const scale = parseInt(document.getElementById('scaleFactor').value);
+      
+      layers.forEach((layer, idx) => {
+        if (!layer.visible) return;
+        
+        let svg = createGraphics(gridSize * scale + 40, gridSize * scale + 40, SVG);
+        svg.background(255);
+        
+        // Registration marks
+        if (document.getElementById('includeRegistration').checked) {
+          drawRegistrationMarks(svg, scale);
+        }
+        
+        // Draw layer pattern
+        svg.noStroke();
+        svg.fill(0);
+        
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            const value = layer.chemicals[1][x][y];
+            if (value > layer.threshold) {
+              svg.rect(20 + x * scale, 20 + y * scale, scale, scale);
+            }
+          }
+        }
+        
+        // Metadata
+        if (document.getElementById('includeMetadata').checked) {
+          svg.push();
+          svg.stroke(0);
+          svg.strokeWeight(0.5);
+          svg.textSize(8);
+          svg.text(`Layer ${idx + 1} - ${layer.name}`, 20, svg.height - 20);
+          svg.text(`System: ${layer.system}`, 20, svg.height - 10);
+          svg.text(`Iteration: ${iteration}`, 200, svg.height - 10);
+          svg.pop();
+        }
+        
+        save(svg, `reaction-diffusion-layer${idx + 1}-${iteration}.svg`);
+        svg.remove();
+      });
+    }
+    
+    function exportCombined() {
+      const scale = parseInt(document.getElementById('scaleFactor').value);
+      let svg = createGraphics(gridSize * scale + 40, gridSize * scale + 40, SVG);
+      svg.background(255);
+      
+      if (document.getElementById('includeRegistration').checked) {
+        drawRegistrationMarks(svg, scale);
+      }
+      
+      // Draw all visible layers
+      layers.forEach(layer => {
+        if (!layer.visible) return;
+        
+        svg.fill(layer.color);
+        svg.noStroke();
+        
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            const value = layer.chemicals[1][x][y];
+            if (value > layer.threshold) {
+              svg.rect(20 + x * scale, 20 + y * scale, scale, scale);
+            }
+          }
+        }
+      });
+      
+      save(svg, `reaction-diffusion-combined-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function exportByThreshold() {
+      const scale = parseInt(document.getElementById('scaleFactor').value);
+      const thresholds = [0.2, 0.4, 0.6, 0.8];
+      
+      layers.forEach((layer, layerIdx) => {
+        if (!layer.visible) return;
+        
+        thresholds.forEach((threshold, threshIdx) => {
+          let svg = createGraphics(gridSize * scale + 40, gridSize * scale + 40, SVG);
+          svg.background(255);
+          
+          if (document.getElementById('includeRegistration').checked) {
+            drawRegistrationMarks(svg, scale);
+          }
+          
+          svg.noStroke();
+          svg.fill(0);
+          
+          for (let x = 0; x < gridSize; x++) {
+            for (let y = 0; y < gridSize; y++) {
+              const value = layer.chemicals[1][x][y];
+              if (value > threshold) {
+                svg.rect(20 + x * scale, 20 + y * scale, scale, scale);
+              }
+            }
+          }
+          
+          save(svg, `rd-layer${layerIdx + 1}-threshold${threshIdx + 1}.svg`);
+          svg.remove();
+        });
+      });
+    }
+    
+    function exportAnimation() {
+      // Export current frame as part of an animation sequence
+      const scale = parseInt(document.getElementById('scaleFactor').value);
+      
+      let svg = createGraphics(gridSize * scale, gridSize * scale, SVG);
+      svg.background(255);
+      
+      layers.forEach(layer => {
+        if (!layer.visible) return;
+        
+        svg.fill(layer.color);
+        svg.noStroke();
+        
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            const value = layer.chemicals[1][x][y];
+            if (value > layer.threshold) {
+              svg.rect(x * scale, y * scale, scale, scale);
+            }
+          }
+        }
+      });
+      
+      save(svg, `rd-frame-${String(iteration).padStart(5, '0')}.svg`);
+      svg.remove();
+    }
+    
+    function drawRegistrationMarks(svg, scale) {
+      svg.stroke(0);
+      svg.strokeWeight(1);
+      svg.noFill();
+      
+      // Corner marks
+      const marks = [
+        [10, 10], 
+        [svg.width - 10, 10], 
+        [10, svg.height - 10], 
+        [svg.width - 10, svg.height - 10]
+      ];
+      
+      marks.forEach(([x, y]) => {
+        svg.line(x - 5, y, x + 5, y);
+        svg.line(x, y - 5, x, y + 5);
+        svg.circle(x, y, 8);
+      });
+      
+      // Center marks
+      svg.line(svg.width / 2 - 10, 10, svg.width / 2 + 10, 10);
+      svg.line(svg.width / 2 - 10, svg.height - 10, svg.width / 2 + 10, svg.height - 10);
+      svg.line(10, svg.height / 2 - 10, 10, svg.height / 2 + 10);
+      svg.line(svg.width - 10, svg.height / 2 - 10, svg.width - 10, svg.height / 2 + 10);
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter.isRecording) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        gifExporter.start();
+      }
+    }
+    
+    // Mouse interaction
+    function mousePressed() {
+      const totalSize = gridSize * cellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      const x = floor((mouseX - offsetX) / cellSize);
+      const y = floor((mouseY - offsetY) / cellSize);
+      
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        // Add seed to all visible layers
+        layers.forEach(layer => {
+          if (layer.visible) {
+            layer.addSeed(x, y);
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>

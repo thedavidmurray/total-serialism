@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hash Tiles Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Hash Tiles Controls</h2>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">10</span></label>
+        <input type="range" id="gridSize" min="5" max="30" value="10" step="1">
+      </div>
+      <div class="control">
+        <label>Tile Size: <span class="value" id="tileSize-val">50</span>px</label>
+        <input type="range" id="tileSize" min="20" max="100" value="50" step="5">
+      </div>
+      <div class="control">
+        <label>Gap Size: <span class="value" id="gapSize-val">2</span>px</label>
+        <input type="range" id="gapSize" min="0" max="10" value="2" step="1">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Line Density: <span class="value" id="lineDensity-val">5</span></label>
+        <input type="range" id="lineDensity" min="2" max="15" value="5" step="1">
+      </div>
+      <div class="control">
+        <label>Hash Method:</label>
+        <select id="hashMethod">
+          <option value="simple">Simple Hash</option>
+          <option value="perlin">Perlin Noise</option>
+          <option value="distance">Distance-based</option>
+          <option value="spiral">Spiral</option>
+          <option value="wave">Wave</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Pattern Style:</label>
+        <select id="patternStyle">
+          <option value="parallel">Parallel Lines</option>
+          <option value="crosshatch">Cross Hatch</option>
+          <option value="radial">Radial</option>
+          <option value="dots">Dots</option>
+          <option value="arcs">Arcs</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Variation</h3>
+      <div class="control">
+        <label>Rotation Variance: <span class="value" id="rotationVariance-val">0</span>°</label>
+        <input type="range" id="rotationVariance" min="0" max="180" value="0" step="5">
+      </div>
+      <div class="control">
+        <label>Density Variance: <span class="value" id="densityVariance-val">0</span></label>
+        <input type="range" id="densityVariance" min="0" max="1" value="0" step="0.1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="varyTileSize">
+        <label for="varyTileSize">Variable Tile Sizes</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showGrid">
+        <label for="showGrid">Show Grid Lines</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Corner Style:</label>
+        <select id="cornerStyle">
+          <option value="square">Square</option>
+          <option value="rounded">Rounded</option>
+          <option value="beveled">Beveled</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Gradient</option>
+          <option value="random">Random</option>
+          <option value="hash">Hash-based</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      gridSize: 10,
+      tileSize: 50,
+      gapSize: 2,
+      lineDensity: 5,
+      hashMethod: 'simple',
+      patternStyle: 'parallel',
+      rotationVariance: 0,
+      densityVariance: 0,
+      varyTileSize: false,
+      showGrid: false,
+      strokeWeight: 1,
+      cornerStyle: 'square',
+      colorMode: 'mono'
+    };
+    
+    let tiles = [];
+    let svgCanvas;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      document.getElementById('seed-display').textContent = params.seed;
+      
+      generateTiles();
+      redraw();
+      noLoop();
+    }
+    
+    function generateTiles() {
+      tiles = [];
+      const effectiveTileSize = params.tileSize + params.gapSize;
+      const startX = (width - params.gridSize * effectiveTileSize) / 2 + params.gapSize / 2;
+      const startY = (height - params.gridSize * effectiveTileSize) / 2 + params.gapSize / 2;
+      
+      for (let row = 0; row < params.gridSize; row++) {
+        for (let col = 0; col < params.gridSize; col++) {
+          const x = startX + col * effectiveTileSize;
+          const y = startY + row * effectiveTileSize;
+          
+          // Calculate hash value for this tile
+          const hashValue = calculateHash(col, row);
+          
+          // Determine tile size (with variance if enabled)
+          let tileWidth = params.tileSize;
+          let tileHeight = params.tileSize;
+          
+          if (params.varyTileSize) {
+            const sizeVar = 0.3;
+            tileWidth *= (1 - sizeVar + random() * sizeVar * 2);
+            tileHeight *= (1 - sizeVar + random() * sizeVar * 2);
+          }
+          
+          // Determine pattern parameters
+          const rotation = hashValue * 180 + random(-params.rotationVariance, params.rotationVariance);
+          const density = params.lineDensity * (1 - params.densityVariance + hashValue * params.densityVariance * 2);
+          
+          tiles.push({
+            x, y,
+            width: tileWidth,
+            height: tileHeight,
+            row, col,
+            hashValue,
+            rotation,
+            density,
+            pattern: generateTilePattern(tileWidth, tileHeight, hashValue, density)
+          });
+        }
+      }
+    }
+    
+    function calculateHash(x, y) {
+      switch (params.hashMethod) {
+        case 'simple':
+          // Simple pseudo-random hash
+          const h = (x * 73856093 ^ y * 19349663) & 0xFFFFFF;
+          return (h % 1000) / 1000;
+          
+        case 'perlin':
+          return noise(x * 0.1, y * 0.1);
+          
+        case 'distance':
+          // Distance from center
+          const cx = params.gridSize / 2;
+          const cy = params.gridSize / 2;
+          const maxDist = dist(0, 0, cx, cy);
+          return 1 - dist(x, y, cx, cy) / maxDist;
+          
+        case 'spiral':
+          // Spiral pattern
+          const dx = x - params.gridSize / 2;
+          const dy = y - params.gridSize / 2;
+          const angle = atan2(dy, dx) + PI;
+          const radius = sqrt(dx * dx + dy * dy);
+          return (angle / TWO_PI + radius * 0.1) % 1;
+          
+        case 'wave':
+          // Wave pattern
+          return (sin(x * 0.5) * sin(y * 0.5) + 1) / 2;
+          
+        default:
+          return random();
+      }
+    }
+    
+    function generateTilePattern(w, h, hashValue, density) {
+      const pattern = [];
+      
+      switch (params.patternStyle) {
+        case 'parallel':
+          // Parallel lines
+          const lineCount = floor(density);
+          for (let i = 0; i < lineCount; i++) {
+            const y = map(i, 0, lineCount - 1, 0, h);
+            pattern.push({
+              type: 'line',
+              x1: 0, y1: y,
+              x2: w, y2: y
+            });
+          }
+          break;
+          
+        case 'crosshatch':
+          // Cross hatch pattern
+          const halfDensity = floor(density / 2);
+          // Horizontal lines
+          for (let i = 0; i < halfDensity; i++) {
+            const y = map(i, 0, halfDensity - 1, 0, h);
+            pattern.push({
+              type: 'line',
+              x1: 0, y1: y,
+              x2: w, y2: y
+            });
+          }
+          // Vertical lines
+          for (let i = 0; i < halfDensity; i++) {
+            const x = map(i, 0, halfDensity - 1, 0, w);
+            pattern.push({
+              type: 'line',
+              x1: x, y1: 0,
+              x2: x, y2: h
+            });
+          }
+          break;
+          
+        case 'radial':
+          // Radial lines from center
+          const rayCount = floor(density * 2);
+          for (let i = 0; i < rayCount; i++) {
+            const angle = (i / rayCount) * TWO_PI;
+            pattern.push({
+              type: 'line',
+              x1: w/2, y1: h/2,
+              x2: w/2 + cos(angle) * w/2,
+              y2: h/2 + sin(angle) * h/2
+            });
+          }
+          break;
+          
+        case 'dots':
+          // Dot pattern
+          const dotRows = floor(sqrt(density * 4));
+          const dotCols = dotRows;
+          for (let r = 0; r < dotRows; r++) {
+            for (let c = 0; c < dotCols; c++) {
+              const x = map(c, 0, dotCols - 1, w * 0.2, w * 0.8);
+              const y = map(r, 0, dotRows - 1, h * 0.2, h * 0.8);
+              pattern.push({
+                type: 'circle',
+                x, y, r: 2
+              });
+            }
+          }
+          break;
+          
+        case 'arcs':
+          // Arc pattern
+          const arcCount = floor(density);
+          for (let i = 0; i < arcCount; i++) {
+            const r = map(i, 0, arcCount - 1, min(w, h) * 0.1, min(w, h) * 0.4);
+            pattern.push({
+              type: 'arc',
+              x: w/2, y: h/2, r,
+              start: hashValue * PI,
+              stop: hashValue * PI + PI
+            });
+          }
+          break;
+          
+        case 'mixed':
+          // Mix different patterns based on hash
+          if (hashValue < 0.33) {
+            // Lines
+            for (let i = 0; i < density; i++) {
+              const y = random(h);
+              pattern.push({
+                type: 'line',
+                x1: 0, y1: y,
+                x2: w, y2: y
+              });
+            }
+          } else if (hashValue < 0.66) {
+            // Circles
+            for (let i = 0; i < density / 2; i++) {
+              pattern.push({
+                type: 'circle',
+                x: random(w * 0.2, w * 0.8),
+                y: random(h * 0.2, h * 0.8),
+                r: random(5, 15)
+              });
+            }
+          } else {
+            // Diagonals
+            for (let i = 0; i < density; i++) {
+              const offset = map(i, 0, density - 1, -w, w);
+              pattern.push({
+                type: 'line',
+                x1: 0, y1: offset,
+                x2: w, y2: offset + h
+              });
+            }
+          }
+          break;
+      }
+      
+      return pattern;
+    }
+    
+    function draw() {
+      background(255);
+      
+      // Draw grid lines if enabled
+      if (params.showGrid) {
+        stroke(200);
+        strokeWeight(0.5);
+        const effectiveTileSize = params.tileSize + params.gapSize;
+        const startX = (width - params.gridSize * effectiveTileSize) / 2;
+        const startY = (height - params.gridSize * effectiveTileSize) / 2;
+        
+        for (let i = 0; i <= params.gridSize; i++) {
+          const x = startX + i * effectiveTileSize;
+          const y = startY + i * effectiveTileSize;
+          line(x, startY, x, startY + params.gridSize * effectiveTileSize);
+          line(startX, y, startX + params.gridSize * effectiveTileSize, y);
+        }
+      }
+      
+      // Draw tiles
+      tiles.forEach(tile => {
+        push();
+        translate(tile.x + tile.width/2, tile.y + tile.height/2);
+        rotate(radians(tile.rotation));
+        translate(-tile.width/2, -tile.height/2);
+        
+        // Apply color
+        applyTileColor(tile);
+        strokeWeight(params.strokeWeight);
+        noFill();
+        
+        // Draw tile border if no gap
+        if (params.gapSize === 0) {
+          drawTileBorder(0, 0, tile.width, tile.height);
+        }
+        
+        // Draw pattern
+        push();
+        // Clip to tile bounds
+        if (params.cornerStyle !== 'square') {
+          // For rounded/beveled corners, we'd need to implement clipping
+          // For now, just draw within bounds
+        }
+        
+        tile.pattern.forEach(element => {
+          switch (element.type) {
+            case 'line':
+              line(element.x1, element.y1, element.x2, element.y2);
+              break;
+              
+            case 'circle':
+              if (element.r) {
+                ellipse(element.x, element.y, element.r * 2);
+              } else {
+                fill(0);
+                ellipse(element.x, element.y, 4);
+                noFill();
+              }
+              break;
+              
+            case 'arc':
+              arc(element.x, element.y, element.r * 2, element.r * 2, 
+                  element.start, element.stop);
+              break;
+          }
+        });
+        pop();
+        
+        pop();
+      });
+    }
+    
+    function drawTileBorder(x, y, w, h) {
+      switch (params.cornerStyle) {
+        case 'square':
+          rect(x, y, w, h);
+          break;
+          
+        case 'rounded':
+          rect(x, y, w, h, 5);
+          break;
+          
+        case 'beveled':
+          const bevel = 5;
+          beginShape();
+          vertex(x + bevel, y);
+          vertex(x + w - bevel, y);
+          vertex(x + w, y + bevel);
+          vertex(x + w, y + h - bevel);
+          vertex(x + w - bevel, y + h);
+          vertex(x + bevel, y + h);
+          vertex(x, y + h - bevel);
+          vertex(x, y + bevel);
+          endShape(CLOSE);
+          break;
+      }
+    }
+    
+    function applyTileColor(tile) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+          
+        case 'gradient':
+          const g = map(tile.col + tile.row, 0, params.gridSize * 2 - 2, 0, 255);
+          stroke(g, 0, 255 - g);
+          break;
+          
+        case 'random':
+          stroke(
+            tile.hashValue * 255,
+            (1 - tile.hashValue) * 255,
+            128
+          );
+          break;
+          
+        case 'hash':
+          colorMode(HSB);
+          stroke(tile.hashValue * 360, 80, 80);
+          colorMode(RGB);
+          break;
+      }
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hash-tiles-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `hash-tiles-${params.hashMethod}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`hash-tiles-${params.hashMethod}-${params.seed}.png`);
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Generate frames with animated tile appearance
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Clear canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Calculate which tiles to show (wave effect)
+        const progress = frame / totalFrames;
+        const wavePosition = progress * (params.gridSize * 2);
+        
+        // Draw tiles
+        tiles.forEach(tile => {
+          const tileProgress = (tile.row + tile.col) / (params.gridSize * 2);
+          const distFromWave = Math.abs(wavePosition - (tile.row + tile.col));
+          
+          if (distFromWave < 3) {
+            ctx.save();
+            ctx.translate(tile.x + tile.width/2, tile.y + tile.height/2);
+            
+            // Scale animation
+            const scale = 1 - distFromWave * 0.1;
+            ctx.scale(scale, scale);
+            
+            ctx.rotate(tile.rotation * Math.PI / 180);
+            ctx.translate(-tile.width/2, -tile.height/2);
+            
+            ctx.strokeStyle = 'black';
+            ctx.lineWidth = params.strokeWeight;
+            
+            // Draw pattern
+            tile.pattern.forEach(element => {
+              switch (element.type) {
+                case 'line':
+                  ctx.beginPath();
+                  ctx.moveTo(element.x1, element.y1);
+                  ctx.lineTo(element.x2, element.y2);
+                  ctx.stroke();
+                  break;
+                  
+                case 'circle':
+                  ctx.beginPath();
+                  ctx.arc(element.x, element.y, element.r || 2, 0, Math.PI * 2);
+                  if (element.r) {
+                    ctx.stroke();
+                  } else {
+                    ctx.fill();
+                  }
+                  break;
+                  
+                case 'arc':
+                  ctx.beginPath();
+                  ctx.arc(element.x, element.y, element.r, 
+                         element.start, element.stop);
+                  ctx.stroke();
+                  break;
+              }
+            });
+            
+            ctx.restore();
+          }
+        });
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progressPercent = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progressPercent}%`;
+      }
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hash-tiles-${params.hashMethod}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

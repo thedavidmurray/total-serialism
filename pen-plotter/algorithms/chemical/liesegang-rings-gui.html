@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liesegang Rings - Chemical Engineering Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            height: fit-content;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        canvas {
+            border: 1px solid #333;
+            background-color: #ffffff;
+            cursor: crosshair;
+        }
+        
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        
+        h3 {
+            margin-bottom: 10px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 5px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a3a3a;
+            border-color: #666;
+        }
+        
+        button:active {
+            background-color: #1a1a1a;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        #animationProgress {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>Liesegang Rings</h1>
+            
+            <div class="control-group">
+                <h3>Pattern Type</h3>
+                <select id="patternType">
+                    <option value="radial">Radial Rings</option>
+                    <option value="linear">Linear Bands</option>
+                    <option value="spiral">Spiral Pattern</option>
+                    <option value="fractal">Fractal Precipitation</option>
+                    <option value="3d">3D Projection</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Chemical Parameters</h3>
+                <label>Concentration A (M): <span id="concAValue">0.1</span></label>
+                <input type="range" id="concentrationA" min="0.01" max="1.0" step="0.01" value="0.1">
+                
+                <label>Concentration B (M): <span id="concBValue">0.05</span></label>
+                <input type="range" id="concentrationB" min="0.01" max="1.0" step="0.01" value="0.05">
+                
+                <label>Solubility Product (Ksp): <span id="kspValue">1e-8</span></label>
+                <input type="range" id="ksp" min="-12" max="-4" step="0.5" value="-8">
+                
+                <label>Supersaturation Ratio: <span id="supersatValue">10</span></label>
+                <input type="range" id="supersaturation" min="2" max="50" step="1" value="10">
+            </div>
+            
+            <div class="control-group">
+                <h3>Diffusion Parameters</h3>
+                <label>Diffusion Coeff A (×10⁻⁹ m²/s): <span id="diffAValue">1.0</span></label>
+                <input type="range" id="diffusionA" min="0.1" max="5.0" step="0.1" value="1.0">
+                
+                <label>Diffusion Coeff B (×10⁻⁹ m²/s): <span id="diffBValue">0.5</span></label>
+                <input type="range" id="diffusionB" min="0.1" max="5.0" step="0.1" value="0.5">
+                
+                <label>Time Steps: <span id="timeValue">100</span></label>
+                <input type="range" id="timeSteps" min="10" max="500" step="10" value="100">
+                
+                <label>Gel Viscosity: <span id="viscValue">1.0</span></label>
+                <input type="range" id="viscosity" min="0.1" max="10" step="0.1" value="1.0">
+            </div>
+            
+            <div class="control-group">
+                <h3>Ring Properties</h3>
+                <label>Spacing Law Exponent: <span id="spacingValue">1.15</span></label>
+                <input type="range" id="spacingExponent" min="1.0" max="1.5" step="0.01" value="1.15">
+                
+                <label>Width Ratio: <span id="widthValue">0.3</span></label>
+                <input type="range" id="widthRatio" min="0.1" max="0.8" step="0.05" value="0.3">
+                
+                <label>Nucleation Threshold: <span id="nucleationValue">0.8</span></label>
+                <input type="range" id="nucleationThreshold" min="0.5" max="1.0" step="0.05" value="0.8">
+            </div>
+            
+            <div class="control-group">
+                <h3>Visualization</h3>
+                <label>
+                    <input type="checkbox" id="showConcentration" checked> Show Concentration Field
+                </label>
+                <label>
+                    <input type="checkbox" id="showPrecipitate" checked> Show Precipitate
+                </label>
+                <label>
+                    <input type="checkbox" id="showGradient"> Show Concentration Gradient
+                </label>
+                <label>
+                    <input type="checkbox" id="showSpacingRule"> Show Spacing Rule
+                </label>
+                
+                <label>Color Scheme:</label>
+                <select id="colorScheme">
+                    <option value="classic">Classic</option>
+                    <option value="chemical">Chemical</option>
+                    <option value="mineral">Mineral</option>
+                    <option value="artistic">Artistic</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Actions</h3>
+                <button id="generateBtn">Generate Pattern</button>
+                <button id="animateBtn">Animate Formation</button>
+                <div class="button-group">
+                    <button id="exportSVG">Export SVG</button>
+                    <button id="exportPNG">Export PNG</button>
+                </div>
+                <button id="exportGIF">Export Animation GIF</button>
+                <progress id="animationProgress" value="0" max="100" style="display: none;"></progress>
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        let concentrationFieldA = [];
+        let concentrationFieldB = [];
+        let precipitateField = [];
+        let rings = [];
+        let isAnimating = false;
+        let animationId = null;
+        let currentTime = 0;
+        let gif = null;
+        
+        // UI Elements
+        const patternType = document.getElementById('patternType');
+        const concentrationA = document.getElementById('concentrationA');
+        const concentrationB = document.getElementById('concentrationB');
+        const ksp = document.getElementById('ksp');
+        const supersaturation = document.getElementById('supersaturation');
+        const diffusionA = document.getElementById('diffusionA');
+        const diffusionB = document.getElementById('diffusionB');
+        const timeSteps = document.getElementById('timeSteps');
+        const viscosity = document.getElementById('viscosity');
+        const spacingExponent = document.getElementById('spacingExponent');
+        const widthRatio = document.getElementById('widthRatio');
+        const nucleationThreshold = document.getElementById('nucleationThreshold');
+        const showConcentration = document.getElementById('showConcentration');
+        const showPrecipitate = document.getElementById('showPrecipitate');
+        const showGradient = document.getElementById('showGradient');
+        const showSpacingRule = document.getElementById('showSpacingRule');
+        const colorScheme = document.getElementById('colorScheme');
+        const generateBtn = document.getElementById('generateBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const exportSVGBtn = document.getElementById('exportSVG');
+        const exportPNGBtn = document.getElementById('exportPNG');
+        const exportGIFBtn = document.getElementById('exportGIF');
+        const status = document.getElementById('status');
+        const animationProgress = document.getElementById('animationProgress');
+        
+        // Update value displays
+        concentrationA.oninput = () => document.getElementById('concAValue').textContent = concentrationA.value;
+        concentrationB.oninput = () => document.getElementById('concBValue').textContent = concentrationB.value;
+        ksp.oninput = () => {
+            const value = Math.pow(10, parseFloat(ksp.value));
+            document.getElementById('kspValue').textContent = value.toExponential(0);
+        };
+        supersaturation.oninput = () => document.getElementById('supersatValue').textContent = supersaturation.value;
+        diffusionA.oninput = () => document.getElementById('diffAValue').textContent = diffusionA.value;
+        diffusionB.oninput = () => document.getElementById('diffBValue').textContent = diffusionB.value;
+        timeSteps.oninput = () => document.getElementById('timeValue').textContent = timeSteps.value;
+        viscosity.oninput = () => document.getElementById('viscValue').textContent = viscosity.value;
+        spacingExponent.oninput = () => document.getElementById('spacingValue').textContent = spacingExponent.value;
+        widthRatio.oninput = () => document.getElementById('widthValue').textContent = widthRatio.value;
+        nucleationThreshold.oninput = () => document.getElementById('nucleationValue').textContent = nucleationThreshold.value;
+        
+        function initializeFields() {
+            const gridSize = 100;
+            concentrationFieldA = [];
+            concentrationFieldB = [];
+            precipitateField = [];
+            rings = [];
+            
+            for (let i = 0; i < gridSize; i++) {
+                concentrationFieldA[i] = [];
+                concentrationFieldB[i] = [];
+                precipitateField[i] = [];
+                
+                for (let j = 0; j < gridSize; j++) {
+                    concentrationFieldA[i][j] = 0;
+                    concentrationFieldB[i][j] = 0;
+                    precipitateField[i][j] = 0;
+                }
+            }
+            
+            // Set initial conditions based on pattern type
+            const cA = parseFloat(concentrationA.value);
+            const cB = parseFloat(concentrationB.value);
+            
+            switch (patternType.value) {
+                case 'radial':
+                    // Central source of A
+                    concentrationFieldA[50][50] = cA;
+                    // B throughout medium
+                    for (let i = 0; i < gridSize; i++) {
+                        for (let j = 0; j < gridSize; j++) {
+                            concentrationFieldB[i][j] = cB;
+                        }
+                    }
+                    break;
+                    
+                case 'linear':
+                    // A on left edge
+                    for (let j = 0; j < gridSize; j++) {
+                        concentrationFieldA[0][j] = cA;
+                    }
+                    // B throughout
+                    for (let i = 0; i < gridSize; i++) {
+                        for (let j = 0; j < gridSize; j++) {
+                            concentrationFieldB[i][j] = cB;
+                        }
+                    }
+                    break;
+                    
+                case 'spiral':
+                case 'fractal':
+                    // Multiple sources
+                    const sources = patternType.value === 'spiral' ? 3 : 5;
+                    for (let s = 0; s < sources; s++) {
+                        const angle = (s / sources) * 2 * Math.PI;
+                        const r = 30;
+                        const x = Math.floor(50 + r * Math.cos(angle));
+                        const y = Math.floor(50 + r * Math.sin(angle));
+                        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+                            concentrationFieldA[x][y] = cA;
+                        }
+                    }
+                    for (let i = 0; i < gridSize; i++) {
+                        for (let j = 0; j < gridSize; j++) {
+                            concentrationFieldB[i][j] = cB;
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        function diffuse() {
+            const gridSize = 100;
+            const DA = parseFloat(diffusionA.value) * 1e-9;
+            const DB = parseFloat(diffusionB.value) * 1e-9;
+            const visc = parseFloat(viscosity.value);
+            const dt = 0.01;
+            const dx = 1e-3;
+            
+            // Temporary arrays for new values
+            const newA = [];
+            const newB = [];
+            
+            for (let i = 0; i < gridSize; i++) {
+                newA[i] = [];
+                newB[i] = [];
+                for (let j = 0; j < gridSize; j++) {
+                    newA[i][j] = concentrationFieldA[i][j];
+                    newB[i][j] = concentrationFieldB[i][j];
+                }
+            }
+            
+            // Apply diffusion equation
+            for (let i = 1; i < gridSize - 1; i++) {
+                for (let j = 1; j < gridSize - 1; j++) {
+                    // Laplacian
+                    const laplacianA = (
+                        concentrationFieldA[i+1][j] + concentrationFieldA[i-1][j] +
+                        concentrationFieldA[i][j+1] + concentrationFieldA[i][j-1] -
+                        4 * concentrationFieldA[i][j]
+                    ) / (dx * dx);
+                    
+                    const laplacianB = (
+                        concentrationFieldB[i+1][j] + concentrationFieldB[i-1][j] +
+                        concentrationFieldB[i][j+1] + concentrationFieldB[i][j-1] -
+                        4 * concentrationFieldB[i][j]
+                    ) / (dx * dx);
+                    
+                    // Update concentrations
+                    newA[i][j] += dt * DA * laplacianA / visc;
+                    newB[i][j] += dt * DB * laplacianB / visc;
+                    
+                    // Check for precipitation
+                    const ionProduct = newA[i][j] * newB[i][j];
+                    const Ksp = Math.pow(10, parseFloat(ksp.value));
+                    const S = parseFloat(supersaturation.value);
+                    const threshold = parseFloat(nucleationThreshold.value);
+                    
+                    if (ionProduct > Ksp * S && Math.random() < threshold) {
+                        // Precipitation occurs
+                        const precipitateAmount = (ionProduct - Ksp) * 0.1;
+                        precipitateField[i][j] += precipitateAmount;
+                        
+                        // Deplete concentrations
+                        const depletion = Math.sqrt(precipitateAmount);
+                        newA[i][j] = Math.max(0, newA[i][j] - depletion);
+                        newB[i][j] = Math.max(0, newB[i][j] - depletion);
+                    }
+                }
+            }
+            
+            // Update fields
+            concentrationFieldA = newA;
+            concentrationFieldB = newB;
+        }
+        
+        function detectRings() {
+            rings = [];
+            const gridSize = 100;
+            const centerX = gridSize / 2;
+            const centerY = gridSize / 2;
+            
+            if (patternType.value === 'radial' || patternType.value === 'spiral') {
+                // Radial ring detection
+                const radialProfile = [];
+                const maxRadius = Math.sqrt(2) * gridSize / 2;
+                
+                for (let r = 0; r < maxRadius; r++) {
+                    let sum = 0;
+                    let count = 0;
+                    
+                    for (let theta = 0; theta < 2 * Math.PI; theta += 0.1) {
+                        const x = Math.floor(centerX + r * Math.cos(theta));
+                        const y = Math.floor(centerY + r * Math.sin(theta));
+                        
+                        if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+                            sum += precipitateField[x][y];
+                            count++;
+                        }
+                    }
+                    
+                    radialProfile[r] = count > 0 ? sum / count : 0;
+                }
+                
+                // Find peaks in radial profile
+                for (let r = 1; r < radialProfile.length - 1; r++) {
+                    if (radialProfile[r] > radialProfile[r-1] && 
+                        radialProfile[r] > radialProfile[r+1] &&
+                        radialProfile[r] > 0.01) {
+                        rings.push({
+                            radius: r,
+                            intensity: radialProfile[r],
+                            width: r * parseFloat(widthRatio.value)
+                        });
+                    }
+                }
+            } else if (patternType.value === 'linear') {
+                // Linear band detection
+                for (let x = 1; x < gridSize - 1; x++) {
+                    let columnSum = 0;
+                    for (let y = 0; y < gridSize; y++) {
+                        columnSum += precipitateField[x][y];
+                    }
+                    
+                    if (columnSum > 0.1 * gridSize) {
+                        rings.push({
+                            position: x,
+                            intensity: columnSum / gridSize,
+                            width: parseFloat(widthRatio.value) * 10
+                        });
+                    }
+                }
+            }
+        }
+        
+        function getColor(value, type) {
+            const schemes = {
+                classic: {
+                    precipitate: `rgba(139, 69, 19, ${value})`,
+                    concentrationA: `rgba(255, 0, 0, ${value * 0.5})`,
+                    concentrationB: `rgba(0, 0, 255, ${value * 0.5})`
+                },
+                chemical: {
+                    precipitate: `rgba(255, 215, 0, ${value})`,
+                    concentrationA: `rgba(0, 255, 0, ${value * 0.5})`,
+                    concentrationB: `rgba(255, 0, 255, ${value * 0.5})`
+                },
+                mineral: {
+                    precipitate: `rgba(70, 130, 180, ${value})`,
+                    concentrationA: `rgba(255, 140, 0, ${value * 0.5})`,
+                    concentrationB: `rgba(147, 112, 219, ${value * 0.5})`
+                },
+                artistic: {
+                    precipitate: `rgba(${255 * value}, ${100 * (1-value)}, ${200 * value}, ${value})`,
+                    concentrationA: `rgba(255, 20, 147, ${value * 0.5})`,
+                    concentrationB: `rgba(0, 191, 255, ${value * 0.5})`
+                }
+            };
+            
+            return schemes[colorScheme.value][type];
+        }
+        
+        function drawPattern() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            const gridSize = 100;
+            const cellSize = width / gridSize;
+            
+            // Draw concentration fields
+            if (showConcentration.checked) {
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        const x = i * cellSize;
+                        const y = j * cellSize;
+                        
+                        // Draw concentration A
+                        const cA = concentrationFieldA[i][j];
+                        if (cA > 0.001) {
+                            ctx.fillStyle = getColor(Math.min(cA * 10, 1), 'concentrationA');
+                            ctx.fillRect(x, y, cellSize, cellSize);
+                        }
+                        
+                        // Draw concentration B
+                        const cB = concentrationFieldB[i][j];
+                        if (cB > 0.001) {
+                            ctx.fillStyle = getColor(Math.min(cB * 10, 1), 'concentrationB');
+                            ctx.fillRect(x, y, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+            
+            // Draw precipitate
+            if (showPrecipitate.checked) {
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        const p = precipitateField[i][j];
+                        if (p > 0.001) {
+                            const x = i * cellSize;
+                            const y = j * cellSize;
+                            
+                            ctx.fillStyle = getColor(Math.min(p * 5, 1), 'precipitate');
+                            ctx.fillRect(x, y, cellSize, cellSize);
+                        }
+                    }
+                }
+            }
+            
+            // Draw concentration gradient vectors
+            if (showGradient.checked) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                ctx.lineWidth = 1;
+                
+                for (let i = 5; i < gridSize - 5; i += 10) {
+                    for (let j = 5; j < gridSize - 5; j += 10) {
+                        const x = i * cellSize + cellSize / 2;
+                        const y = j * cellSize + cellSize / 2;
+                        
+                        // Calculate gradient
+                        const gradX = (concentrationFieldA[i+1][j] - concentrationFieldA[i-1][j]) / 2;
+                        const gradY = (concentrationFieldA[i][j+1] - concentrationFieldA[i][j-1]) / 2;
+                        
+                        const mag = Math.sqrt(gradX * gradX + gradY * gradY);
+                        if (mag > 0.001) {
+                            const scale = 50;
+                            ctx.beginPath();
+                            ctx.moveTo(x, y);
+                            ctx.lineTo(x + gradX * scale / mag, y + gradY * scale / mag);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+            
+            // Draw spacing rule visualization
+            if (showSpacingRule.checked && rings.length > 1) {
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                
+                const exp = parseFloat(spacingExponent.value);
+                
+                if (patternType.value === 'radial') {
+                    // Draw theoretical ring positions
+                    const r0 = rings[0].radius;
+                    for (let n = 1; n < 10; n++) {
+                        const r = r0 * Math.pow(n, exp);
+                        if (r * cellSize < width / 2) {
+                            ctx.beginPath();
+                            ctx.arc(width / 2, height / 2, r * cellSize, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                } else if (patternType.value === 'linear') {
+                    // Draw theoretical band positions
+                    const x0 = rings[0].position;
+                    for (let n = 1; n < 20; n++) {
+                        const x = x0 * Math.pow(n, exp);
+                        if (x * cellSize < width) {
+                            ctx.beginPath();
+                            ctx.moveTo(x * cellSize, 0);
+                            ctx.lineTo(x * cellSize, height);
+                            ctx.stroke();
+                        }
+                    }
+                }
+                
+                ctx.setLineDash([]);
+            }
+            
+            // Add pattern-specific overlays
+            if (patternType.value === '3d') {
+                // Add 3D projection effect
+                ctx.save();
+                ctx.globalAlpha = 0.3;
+                ctx.translate(width / 2, height / 2);
+                ctx.scale(1, 0.5);
+                ctx.translate(-width / 2, -height / 2);
+                
+                // Redraw precipitate with perspective
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        const p = precipitateField[i][j];
+                        if (p > 0.001) {
+                            const x = i * cellSize;
+                            const y = j * cellSize;
+                            ctx.fillStyle = getColor(Math.min(p * 5, 1), 'precipitate');
+                            ctx.fillRect(x, y + height / 2, cellSize, cellSize);
+                        }
+                    }
+                }
+                ctx.restore();
+            }
+            
+            // Display time and ring count
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px monospace';
+            ctx.fillText(`Time: ${currentTime.toFixed(1)}`, 20, 30);
+            ctx.fillText(`Rings: ${rings.length}`, 20, 50);
+        }
+        
+        function simulate() {
+            for (let step = 0; step < 10; step++) {
+                diffuse();
+                currentTime += 0.1;
+            }
+            detectRings();
+        }
+        
+        function animate() {
+            if (!isAnimating) return;
+            
+            simulate();
+            drawPattern();
+            
+            if (currentTime < parseInt(timeSteps.value)) {
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isAnimating = false;
+                animateBtn.textContent = 'Animate Formation';
+                status.textContent = 'Animation complete';
+            }
+        }
+        
+        generateBtn.addEventListener('click', () => {
+            currentTime = 0;
+            initializeFields();
+            
+            // Run full simulation
+            const steps = parseInt(timeSteps.value);
+            for (let t = 0; t < steps; t++) {
+                simulate();
+            }
+            
+            drawPattern();
+            status.textContent = 'Pattern generated';
+        });
+        
+        animateBtn.addEventListener('click', () => {
+            if (isAnimating) {
+                isAnimating = false;
+                cancelAnimationFrame(animationId);
+                animateBtn.textContent = 'Animate Formation';
+                status.textContent = 'Animation paused';
+            } else {
+                currentTime = 0;
+                initializeFields();
+                isAnimating = true;
+                animateBtn.textContent = 'Pause Animation';
+                status.textContent = 'Animating...';
+                animate();
+            }
+        });
+        
+        exportSVGBtn.addEventListener('click', () => {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            // White background
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', width);
+            bg.setAttribute('height', height);
+            bg.setAttribute('fill', 'white');
+            svg.appendChild(bg);
+            
+            // Add rings as circles or lines
+            if (patternType.value === 'radial') {
+                rings.forEach(ring => {
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', width / 2);
+                    circle.setAttribute('cy', height / 2);
+                    circle.setAttribute('r', ring.radius * width / 100);
+                    circle.setAttribute('fill', 'none');
+                    circle.setAttribute('stroke', getColor(ring.intensity, 'precipitate'));
+                    circle.setAttribute('stroke-width', ring.width);
+                    svg.appendChild(circle);
+                });
+            } else if (patternType.value === 'linear') {
+                rings.forEach(ring => {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', ring.position * width / 100);
+                    line.setAttribute('y1', 0);
+                    line.setAttribute('x2', ring.position * width / 100);
+                    line.setAttribute('y2', height);
+                    line.setAttribute('stroke', getColor(ring.intensity, 'precipitate'));
+                    line.setAttribute('stroke-width', ring.width);
+                    svg.appendChild(line);
+                });
+            }
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'liesegang-rings.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            status.textContent = 'SVG exported';
+        });
+        
+        exportPNGBtn.addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'liesegang-rings.png';
+            a.click();
+            status.textContent = 'PNG exported';
+        });
+        
+        exportGIFBtn.addEventListener('click', () => {
+            status.textContent = 'Creating GIF...';
+            animationProgress.style.display = 'block';
+            animationProgress.value = 0;
+            
+            gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: width,
+                height: height
+            });
+            
+            currentTime = 0;
+            initializeFields();
+            
+            const frames = 30;
+            const stepsPerFrame = parseInt(timeSteps.value) / frames;
+            
+            for (let frame = 0; frame < frames; frame++) {
+                for (let s = 0; s < stepsPerFrame; s++) {
+                    simulate();
+                }
+                drawPattern();
+                
+                gif.addFrame(ctx, {copy: true, delay: 100});
+                animationProgress.value = (frame / frames) * 100;
+            }
+            
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'liesegang-animation.gif';
+                a.click();
+                URL.revokeObjectURL(url);
+                status.textContent = 'GIF exported';
+                animationProgress.style.display = 'none';
+            });
+            
+            gif.render();
+        });
+        
+        // Initialize
+        initializeFields();
+        drawPattern();
+    </script>
+</body>
+</html>

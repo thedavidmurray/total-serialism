@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism × Fidenza v2 - Enhanced Controls</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            display: flex;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #e0e0e0;
+        }
+        #controls {
+            width: 320px;
+            background: rgba(20,20,20,0.95);
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border-right: 1px solid #333;
+        }
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #canvas-container canvas {
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            background: white;
+        }
+        
+        /* Control Styles */
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #ffa500;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .control {
+            margin-bottom: 12px;
+        }
+        .control label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #999;
+        }
+        .control input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #333;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .control input[type="range"]:hover {
+            opacity: 1;
+        }
+        .control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ffa500;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .control input[type="range"]::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #ffa500;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+        }
+        .control select {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .control .value {
+            display: inline-block;
+            float: right;
+            color: #ffa500;
+            font-size: 12px;
+        }
+        button {
+            background: #ffa500;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px 5px 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #ffb520;
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,165,0,0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .keyboard-hint {
+            display: inline-block;
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 2px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h2 style="color: #ffa500; margin-top: 0;">Total Serialism × Fidenza v2</h2>
+        
+        <div class="control-group">
+            <h3>Actions</h3>
+            <button onclick="regenerate()">Regenerate (R)</button>
+            <button onclick="saveAsPNG()">Save PNG (P)</button>
+            <button onclick="saveAsSVG()">Save SVG (S)</button>
+            <button onclick="togglePause()">Pause/Play (Space)</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Presets</h3>
+            <button onclick="savePreset()">Save Current Settings</button>
+            <button onclick="loadPreset()">Load Settings</button>
+            <button onclick="randomizeAll()">Randomize All</button>
+            <input type="file" id="presetFile" style="display: none;" accept=".json" onchange="loadPresetFile(event)">
+        </div>
+
+        <div class="control-group">
+            <h3>Particles</h3>
+            <div class="control">
+                <label>Particle Count <span class="value" id="particleCount-value">168</span></label>
+                <input type="range" id="particleCount" min="50" max="500" value="168" step="1">
+            </div>
+            <div class="control">
+                <label>Min Size <span class="value" id="minSize-value">1</span></label>
+                <input type="range" id="minSize" min="0.5" max="5" value="1" step="0.5">
+            </div>
+            <div class="control">
+                <label>Max Size <span class="value" id="maxSize-value">8</span></label>
+                <input type="range" id="maxSize" min="2" max="20" value="8" step="1">
+            </div>
+            <div class="control">
+                <label>Speed Range <span class="value" id="speedRange-value">2</span></label>
+                <input type="range" id="speedRange" min="0.5" max="5" value="2" step="0.5">
+            </div>
+            <div class="control">
+                <label>Life Range <span class="value" id="lifeRange-value">500</span></label>
+                <input type="range" id="lifeRange" min="100" max="1000" value="500" step="50">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Flow Field</h3>
+            <div class="control">
+                <label>Flow Strength <span class="value" id="flowStrength-value">1</span></label>
+                <input type="range" id="flowStrength" min="0" max="3" value="1" step="0.1">
+            </div>
+            <div class="control">
+                <label>Flow Complexity <span class="value" id="flowComplexity-value">3</span></label>
+                <input type="range" id="flowComplexity" min="1" max="7" value="3" step="1">
+            </div>
+            <div class="control">
+                <label>Turbulence <span class="value" id="turbulence-value">0.5</span></label>
+                <input type="range" id="turbulence" min="0" max="2" value="0.5" step="0.1">
+            </div>
+            <div class="control">
+                <label>Field Resolution <span class="value" id="fieldResolution-value">15</span></label>
+                <input type="range" id="fieldResolution" min="5" max="30" value="15" step="5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Colors</h3>
+            <div class="control">
+                <label>Color Scheme</label>
+                <select id="colorScheme">
+                    <option value="0">Complementary</option>
+                    <option value="1">Analogous</option>
+                    <option value="2">Triadic</option>
+                    <option value="3">Square</option>
+                    <option value="4">Split Complementary</option>
+                    <option value="5">Monochromatic</option>
+                    <option value="6">Random Harmonic</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Saturation <span class="value" id="saturation-value">60</span></label>
+                <input type="range" id="saturation" min="0" max="100" value="60" step="5">
+            </div>
+            <div class="control">
+                <label>Brightness <span class="value" id="brightness-value">50</span></label>
+                <input type="range" id="brightness" min="20" max="80" value="50" step="5">
+            </div>
+            <div class="control">
+                <label>Alpha Range <span class="value" id="alphaRange-value">40</span></label>
+                <input type="range" id="alphaRange" min="10" max="100" value="40" step="5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Rhythms</h3>
+            <div class="control">
+                <label>Main Rhythm <span class="value" id="mainRhythm-value">16/7</span></label>
+                <input type="range" id="mainRhythm" min="8" max="32" value="16" step="1">
+            </div>
+            <div class="control">
+                <label>Accent Pattern <span class="value" id="accentPattern-value">23/9</span></label>
+                <input type="range" id="accentPattern" min="13" max="34" value="23" step="1">
+            </div>
+            <div class="control">
+                <label>Rhythm Influence <span class="value" id="rhythmInfluence-value">0.5</span></label>
+                <input type="range" id="rhythmInfluence" min="0" max="1" value="0.5" step="0.1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Background</h3>
+            <div class="control">
+                <label>Background Density <span class="value" id="bgDensity-value">0.3</span></label>
+                <input type="range" id="bgDensity" min="0" max="1" value="0.3" step="0.1">
+            </div>
+            <div class="control">
+                <label>Texture Scale <span class="value" id="textureScale-value">40</span></label>
+                <input type="range" id="textureScale" min="10" max="100" value="40" step="10">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Drawing Mode</h3>
+            <div class="control">
+                <label>Render Mode</label>
+                <select id="renderMode">
+                    <option value="flow">Flow Lines</option>
+                    <option value="dots">Dot Field</option>
+                    <option value="ribbons">Ribbons</option>
+                    <option value="curves">Bezier Curves</option>
+                    <option value="mixed">Mixed</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Blend Mode</label>
+                <select id="blendMode">
+                    <option value="normal">Normal</option>
+                    <option value="multiply">Multiply</option>
+                    <option value="screen">Screen</option>
+                    <option value="overlay">Overlay</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="info">
+            <strong>Keyboard Shortcuts:</strong><br>
+            <span class="keyboard-hint">R</span> Regenerate<br>
+            <span class="keyboard-hint">P</span> Save PNG<br>
+            <span class="keyboard-hint">S</span> Save SVG<br>
+            <span class="keyboard-hint">Space</span> Pause/Play<br>
+            <span class="keyboard-hint">1-7</span> Color Presets<br>
+            <span class="keyboard-hint">D</span> Toggle Debug
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script src="total-serialism-enhanced.js"></script>
+</body>
+</html>

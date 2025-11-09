@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Perlin Spiral Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Perlin Spiral Controls</h2>
+    
+    <div class="control-group">
+      <h3>Spiral Settings</h3>
+      <div class="control">
+        <label>Spiral Type:</label>
+        <select id="spiralType">
+          <option value="archimedean">Archimedean</option>
+          <option value="logarithmic">Logarithmic</option>
+          <option value="fermat">Fermat's Spiral</option>
+          <option value="hyperbolic">Hyperbolic</option>
+          <option value="lituus">Lituus</option>
+          <option value="clothoid">Clothoid (Euler)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Turns: <span class="value" id="turns-val">10</span></label>
+        <input type="range" id="turns" min="1" max="50" value="10" step="0.5">
+      </div>
+      <div class="control">
+        <label>Tightness: <span class="value" id="tightness-val">5</span></label>
+        <input type="range" id="tightness" min="0.5" max="20" value="5" step="0.5">
+      </div>
+      <div class="control">
+        <label>Segments: <span class="value" id="segments-val">1000</span></label>
+        <input type="range" id="segments" min="100" max="5000" value="1000" step="100">
+      </div>
+      <div class="control">
+        <label>Start Radius: <span class="value" id="startRadius-val">10</span></label>
+        <input type="range" id="startRadius" min="0" max="50" value="10" step="1">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Noise Settings</h3>
+      <div class="control">
+        <label>Noise Scale: <span class="value" id="noiseScale-val">0.005</span></label>
+        <input type="range" id="noiseScale" min="0.001" max="0.05" value="0.005" step="0.001">
+      </div>
+      <div class="control">
+        <label>Noise Amplitude: <span class="value" id="noiseAmplitude-val">30</span></label>
+        <input type="range" id="noiseAmplitude" min="0" max="100" value="30" step="1">
+      </div>
+      <div class="control">
+        <label>Radial Noise: <span class="value" id="radialNoise-val">0.5</span></label>
+        <input type="range" id="radialNoise" min="0" max="2" value="0.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Angular Noise: <span class="value" id="angularNoise-val">0.2</span></label>
+        <input type="range" id="angularNoise" min="0" max="2" value="0.2" step="0.1">
+      </div>
+      <div class="control">
+        <label>Time Speed: <span class="value" id="timeSpeed-val">0.001</span></label>
+        <input type="range" id="timeSpeed" min="0" max="0.01" value="0.001" step="0.0001">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animateNoise">
+        <label for="animateNoise">Animate Noise</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Multiple Spirals</h3>
+      <div class="control">
+        <label>Spiral Count: <span class="value" id="spiralCount-val">1</span></label>
+        <input type="range" id="spiralCount" min="1" max="10" value="1" step="1">
+      </div>
+      <div class="control">
+        <label>Phase Offset: <span class="value" id="phaseOffset-val">0</span>°</label>
+        <input type="range" id="phaseOffset" min="0" max="360" value="0" step="10">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="alternateDirection">
+        <label for="alternateDirection">Alternate Direction</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="connectSpirals">
+        <label for="connectSpirals">Connect Spirals</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Line Density: <span class="value" id="lineDensity-val">1</span></label>
+        <input type="range" id="lineDensity" min="0.1" max="2" value="1" step="0.1">
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Gradient Along Path</option>
+          <option value="radial">Radial Gradient</option>
+          <option value="noise">Noise-based</option>
+          <option value="rainbow">Rainbow Spectrum</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showPoints">
+        <label for="showPoints">Show Control Points</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="smoothPath" checked>
+        <label for="smoothPath">Smooth Path</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="resetAnimation()">Reset Animation</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportAnimatedSVG()">Export Animated SVG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      spiralType: 'archimedean',
+      turns: 10,
+      tightness: 5,
+      segments: 1000,
+      startRadius: 10,
+      noiseScale: 0.005,
+      noiseAmplitude: 30,
+      radialNoise: 0.5,
+      angularNoise: 0.2,
+      timeSpeed: 0.001,
+      animateNoise: false,
+      spiralCount: 1,
+      phaseOffset: 0,
+      alternateDirection: false,
+      connectSpirals: false,
+      strokeWeight: 1,
+      lineDensity: 1,
+      colorMode: 'mono',
+      showPoints: false,
+      smoothPath: true
+    };
+    
+    let spirals = [];
+    let svgCanvas;
+    let timeOffset = 0;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              if (key === 'animateNoise' && !params[key]) {
+                noLoop();
+              } else if (key === 'animateNoise' && params[key]) {
+                loop();
+              }
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+      
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      generateSpirals();
+      if (!params.animateNoise) {
+        redraw();
+        noLoop();
+      } else {
+        loop();
+      }
+    }
+    
+    function generateSpirals() {
+      spirals = [];
+      
+      for (let i = 0; i < params.spiralCount; i++) {
+        const spiral = {
+          points: [],
+          phase: (i * params.phaseOffset * PI / 180),
+          direction: params.alternateDirection && i % 2 === 1 ? -1 : 1,
+          colorOffset: i / params.spiralCount
+        };
+        
+        // Generate points based on spiral type
+        const segmentCount = Math.floor(params.segments * params.lineDensity);
+        for (let j = 0; j <= segmentCount; j++) {
+          const t = (j / segmentCount) * params.turns * TWO_PI;
+          const point = getSpiralPoint(t, spiral.phase, spiral.direction);
+          spiral.points.push(point);
+        }
+        
+        spirals.push(spiral);
+      }
+    }
+    
+    function getSpiralPoint(t, phase, direction) {
+      let r, x, y;
+      const adjustedT = t * direction + phase;
+      
+      switch (params.spiralType) {
+        case 'archimedean':
+          // r = a + b * θ
+          r = params.startRadius + params.tightness * adjustedT;
+          break;
+          
+        case 'logarithmic':
+          // r = a * e^(b * θ)
+          r = params.startRadius * Math.exp(params.tightness * 0.1 * adjustedT);
+          break;
+          
+        case 'fermat':
+          // r = a * √θ
+          r = params.tightness * 10 * Math.sqrt(Math.abs(adjustedT));
+          break;
+          
+        case 'hyperbolic':
+          // r = a / θ
+          r = params.tightness * 50 / (adjustedT + 0.1);
+          break;
+          
+        case 'lituus':
+          // r = a / √θ
+          r = params.tightness * 30 / Math.sqrt(Math.abs(adjustedT) + 0.1);
+          break;
+          
+        case 'clothoid':
+          // Euler spiral - parametric form
+          const a = params.tightness * 0.5;
+          const s = adjustedT * 10;
+          x = a * fresnel_c(s);
+          y = a * fresnel_s(s);
+          return { x, y, t: adjustedT, r: Math.sqrt(x * x + y * y) };
+      }
+      
+      // Convert polar to Cartesian (except for clothoid which is already Cartesian)
+      if (params.spiralType !== 'clothoid') {
+        x = r * cos(adjustedT);
+        y = r * sin(adjustedT);
+      }
+      
+      return { x, y, t: adjustedT, r };
+    }
+    
+    // Fresnel integrals approximation for clothoid spiral
+    function fresnel_c(t) {
+      let sum = 0;
+      for (let n = 0; n < 10; n++) {
+        sum += Math.pow(-1, n) * Math.pow(t, 4 * n + 1) / (factorial(2 * n) * (4 * n + 1));
+      }
+      return sum;
+    }
+    
+    function fresnel_s(t) {
+      let sum = 0;
+      for (let n = 0; n < 10; n++) {
+        sum += Math.pow(-1, n) * Math.pow(t, 4 * n + 3) / (factorial(2 * n + 1) * (4 * n + 3));
+      }
+      return sum;
+    }
+    
+    function factorial(n) {
+      if (n <= 1) return 1;
+      return n * factorial(n - 1);
+    }
+    
+    function draw() {
+      background(255);
+      translate(width/2, height/2);
+      
+      if (params.animateNoise) {
+        timeOffset += params.timeSpeed;
+      }
+      
+      // Draw each spiral
+      spirals.forEach((spiral, spiralIndex) => {
+        push();
+        
+        strokeWeight(params.strokeWeight);
+        noFill();
+        
+        if (params.smoothPath) {
+          beginShape();
+        }
+        
+        spiral.points.forEach((point, pointIndex) => {
+          if (pointIndex === 0) return;
+          
+          const prevPoint = spiral.points[pointIndex - 1];
+          
+          // Apply noise distortion
+          const currentDistorted = applyNoiseDistortion(point, pointIndex, spiralIndex);
+          const prevDistorted = applyNoiseDistortion(prevPoint, pointIndex - 1, spiralIndex);
+          
+          // Apply color
+          applyColor(pointIndex, spiral.points.length, spiralIndex, spiral.colorOffset);
+          
+          if (params.smoothPath) {
+            vertex(currentDistorted.x, currentDistorted.y);
+          } else {
+            line(prevDistorted.x, prevDistorted.y, currentDistorted.x, currentDistorted.y);
+          }
+          
+          // Show control points if enabled
+          if (params.showPoints && pointIndex % 10 === 0) {
+            push();
+            fill(0);
+            noStroke();
+            ellipse(currentDistorted.x, currentDistorted.y, 3);
+            pop();
+          }
+        });
+        
+        if (params.smoothPath) {
+          endShape();
+        }
+        
+        pop();
+      });
+      
+      // Connect spirals if enabled
+      if (params.connectSpirals && params.spiralCount > 1) {
+        push();
+        strokeWeight(params.strokeWeight * 0.5);
+        stroke(100);
+        
+        for (let i = 0; i < spirals[0].points.length; i += 20) {
+          beginShape();
+          spirals.forEach(spiral => {
+            if (i < spiral.points.length) {
+              const distorted = applyNoiseDistortion(spiral.points[i], i, 0);
+              vertex(distorted.x, distorted.y);
+            }
+          });
+          endShape();
+        }
+        
+        pop();
+      }
+    }
+    
+    function applyNoiseDistortion(point, index, spiralIndex) {
+      // Calculate noise values
+      const noiseX = noise(
+        point.x * params.noiseScale,
+        point.y * params.noiseScale,
+        timeOffset + spiralIndex * 100
+      ) * 2 - 1;
+      
+      const noiseY = noise(
+        point.x * params.noiseScale + 1000,
+        point.y * params.noiseScale + 1000,
+        timeOffset + spiralIndex * 100
+      ) * 2 - 1;
+      
+      // Apply radial and angular noise
+      const angle = atan2(point.y, point.x);
+      const radius = point.r || sqrt(point.x * point.x + point.y * point.y);
+      
+      const radialOffset = noiseX * params.noiseAmplitude * params.radialNoise;
+      const angularOffset = noiseY * params.angularNoise * 0.1;
+      
+      const newRadius = radius + radialOffset;
+      const newAngle = angle + angularOffset;
+      
+      return {
+        x: cos(newAngle) * newRadius,
+        y: sin(newAngle) * newRadius
+      };
+    }
+    
+    function applyColor(index, total, spiralIndex, colorOffset) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+          
+        case 'gradient':
+          const g = map(index, 0, total - 1, 0, 255);
+          stroke(g);
+          break;
+          
+        case 'radial':
+          const r = map(index, 0, total - 1, 255, 0);
+          stroke(r, 0, 255 - r);
+          break;
+          
+        case 'noise':
+          const n = noise(index * 0.01, timeOffset * 10, spiralIndex) * 255;
+          stroke(n, 255 - n, 128);
+          break;
+          
+        case 'rainbow':
+          colorMode(HSB);
+          const hue = (map(index, 0, total, 0, 360) + colorOffset * 360) % 360;
+          stroke(hue, 80, 80);
+          colorMode(RGB);
+          break;
+      }
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function resetAnimation() {
+      timeOffset = 0;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `perlin-spiral-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `perlin-spiral-${params.spiralType}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`perlin-spiral-${params.spiralType}-${params.seed}.png`);
+    }
+    
+    function exportAnimatedSVG() {
+      // Create animated SVG with multiple frames
+      const frames = 60;
+      const originalTime = timeOffset;
+      
+      let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(${width/2}, ${height/2})">`;
+      
+      // Generate frames
+      for (let frame = 0; frame < frames; frame++) {
+        timeOffset = frame * params.timeSpeed * 10;
+        
+        spirals.forEach((spiral, spiralIndex) => {
+          svgContent += `<path d="M `;
+          
+          spiral.points.forEach((point, pointIndex) => {
+            const distorted = applyNoiseDistortion(point, pointIndex, spiralIndex);
+            
+            if (pointIndex === 0) {
+              svgContent += `${distorted.x} ${distorted.y} `;
+            } else {
+              svgContent += `L ${distorted.x} ${distorted.y} `;
+            }
+          });
+          
+          svgContent += `" fill="none" stroke="black" stroke-width="${params.strokeWeight}" opacity="0">
+            <animate attributeName="opacity" values="0;1;0" dur="${frames/30}s" begin="${frame/30}s" repeatCount="indefinite" />
+          </path>`;
+        });
+      }
+      
+      svgContent += `</g></svg>`;
+      
+      // Download the animated SVG
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `perlin-spiral-animated-${params.seed}.svg`;
+      a.click();
+      
+      // Restore original time
+      timeOffset = originalTime;
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Store original animation state
+      const originalAnimate = params.animateNoise;
+      const originalTime = timeOffset;
+      params.animateNoise = false;
+      
+      // Generate frames
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Update time for animation
+        timeOffset = originalTime + frame * params.timeSpeed * 10;
+        
+        // Clear and draw frame
+        clear();
+        draw();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      // Restore original state
+      params.animateNoise = originalAnimate;
+      timeOffset = originalTime;
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `perlin-spiral-${params.spiralType}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

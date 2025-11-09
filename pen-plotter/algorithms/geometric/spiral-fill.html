@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spiral Fill - Shape Filling with Spirals</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../src/path-optimizer.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #processing-status.processing {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    .preview-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .preview-options label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .preview-options input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .shape-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .shape-buttons button {
+      padding: 8px;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>Spiral Fill</h2>
+    <p style="margin-top: 0; color: #666; font-size: 14px;">Fill shapes with various spiral patterns for pen plotting</p>
+    
+    <div class="control-group">
+      <h3>🔷 Shape Selection</h3>
+      <div class="shape-buttons">
+        <button onclick="setShape('circle')">Circle</button>
+        <button onclick="setShape('square')">Square</button>
+        <button onclick="setShape('triangle')">Triangle</button>
+        <button onclick="setShape('hexagon')">Hexagon</button>
+        <button onclick="setShape('star')">Star</button>
+        <button onclick="setShape('heart')">Heart</button>
+      </div>
+      <div class="control">
+        <label>Shape Size: <span id="shapeSize-value">300</span>px</label>
+        <input type="range" id="shapeSize" min="100" max="500" step="10" value="300">
+      </div>
+      <div class="control">
+        <label>Rotation: <span id="rotation-value">0</span>°</label>
+        <input type="range" id="rotation" min="0" max="360" step="15" value="0">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>🌀 Spiral Parameters</h3>
+      <div class="control">
+        <label>Spiral Type:</label>
+        <select id="spiralType">
+          <option value="archimedean">Archimedean</option>
+          <option value="logarithmic">Logarithmic</option>
+          <option value="fermat">Fermat's Spiral</option>
+          <option value="hyperbolic">Hyperbolic</option>
+          <option value="square">Square Spiral</option>
+          <option value="polygonal">Polygonal Spiral</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Spacing: <span id="spacing-value">5</span>px</label>
+        <input type="range" id="spacing" min="2" max="20" step="0.5" value="5">
+      </div>
+      <div class="control">
+        <label>Total Turns: <span id="turns-value">20</span></label>
+        <input type="range" id="turns" min="5" max="50" step="1" value="20">
+      </div>
+      <div class="control">
+        <label>Inner Radius: <span id="innerRadius-value">5</span>px</label>
+        <input type="range" id="innerRadius" min="0" max="50" step="1" value="5">
+      </div>
+      <div class="control">
+        <label>Growth Rate: <span id="growthRate-value">1.0</span></label>
+        <input type="range" id="growthRate" min="0.5" max="2.0" step="0.1" value="1.0">
+      </div>
+      <div class="control">
+        <label>Direction:</label>
+        <select id="direction">
+          <option value="outward">Outward</option>
+          <option value="inward">Inward</option>
+          <option value="both">Both (Double Spiral)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Display Options</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="showShape" checked> Show Shape Outline
+        </label>
+        <label>
+          <input type="checkbox" id="showSpiral" checked> Show Spiral
+        </label>
+      </div>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="clipToShape" checked> Clip to Shape
+        </label>
+        <label>
+          <input type="checkbox" id="smoothTransition"> Smooth Transitions
+        </label>
+      </div>
+      <div class="control">
+        <label>Canvas Size: <span id="canvasSize-value">600</span>px</label>
+        <input type="range" id="canvasSize" min="300" max="1200" step="50" value="600">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚡ Path Optimization</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="optimizePaths" checked> Optimize Paths
+        </label>
+        <label>
+          <input type="checkbox" id="connectSpirals"> Connect Spirals
+        </label>
+      </div>
+      <div class="control">
+        <label>Simplify Tolerance: <span id="simplifyTolerance-value">0.5</span>px</label>
+        <input type="range" id="simplifyTolerance" min="0.1" max="2.0" step="0.1" value="0.5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>💾 Export</h3>
+      <button onclick="generateSpiral()">Generate Spiral Fill</button>
+      <div class="button-group">
+        <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
+        <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
+      </div>
+      <button onclick="randomizeParams()">Randomize Parameters</button>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats" style="display: none;">
+        <div>Path Points: <strong id="pointCountStat">0</strong></div>
+        <div>Path Length: <strong id="pathLengthStat">0</strong>mm</div>
+        <div>Turns: <strong id="turnsCountStat">0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let canvas;
+    let svgCanvas;
+    let spiralPath = [];
+    let shapePath = [];
+    let currentShape = 'circle';
+    let optimizer = new PathOptimizer();
+    let processing = false;
+
+    // P5.js setup
+    function setup() {
+      const canvasSize = parseInt(document.getElementById('canvasSize').value);
+      canvas = createCanvas(canvasSize, canvasSize);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
+      
+      background(255);
+      strokeWeight(1);
+      noFill();
+      
+      // Generate initial shape
+      generateSpiral();
+    }
+
+    function draw() {
+      background(255);
+      
+      push();
+      translate(width / 2, height / 2);
+      rotate(radians(parseInt(document.getElementById('rotation').value)));
+      
+      // Draw shape outline
+      if (document.getElementById('showShape').checked && shapePath.length > 0) {
+        stroke(200);
+        strokeWeight(1);
+        noFill();
+        
+        beginShape();
+        shapePath.forEach(point => {
+          vertex(point.x, point.y);
+        });
+        endShape(CLOSE);
+      }
+      
+      // Draw spiral
+      if (document.getElementById('showSpiral').checked && spiralPath.length > 1) {
+        stroke(0);
+        strokeWeight(1);
+        noFill();
+        
+        if (document.getElementById('clipToShape').checked) {
+          // Create clipping mask (p5.js doesn't support true clipping, so we'll simulate)
+          drawClippedSpiral();
+        } else {
+          beginShape();
+          spiralPath.forEach(point => {
+            vertex(point.x, point.y);
+          });
+          endShape();
+        }
+      }
+      
+      pop();
+    }
+
+    function drawClippedSpiral() {
+      // Draw only the parts of the spiral that are inside the shape
+      let drawing = false;
+      
+      for (let i = 0; i < spiralPath.length - 1; i++) {
+        const p1 = spiralPath[i];
+        const p2 = spiralPath[i + 1];
+        
+        const inside1 = isPointInShape(p1, shapePath);
+        const inside2 = isPointInShape(p2, shapePath);
+        
+        if (inside1 && inside2) {
+          line(p1.x, p1.y, p2.x, p2.y);
+        } else if (inside1 || inside2) {
+          // Handle edge intersection
+          const intersection = getLineShapeIntersection(p1, p2, shapePath);
+          if (intersection) {
+            if (inside1) {
+              line(p1.x, p1.y, intersection.x, intersection.y);
+            } else {
+              line(intersection.x, intersection.y, p2.x, p2.y);
+            }
+          }
+        }
+      }
+    }
+
+    function isPointInShape(point, shape) {
+      // Ray casting algorithm for point-in-polygon test
+      let inside = false;
+      
+      for (let i = 0, j = shape.length - 1; i < shape.length; j = i++) {
+        const xi = shape[i].x, yi = shape[i].y;
+        const xj = shape[j].x, yj = shape[j].y;
+        
+        const intersect = ((yi > point.y) != (yj > point.y))
+            && (point.x < (xj - xi) * (point.y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      
+      return inside;
+    }
+
+    function getLineShapeIntersection(p1, p2, shape) {
+      // Find intersection point between line segment and shape
+      for (let i = 0; i < shape.length; i++) {
+        const p3 = shape[i];
+        const p4 = shape[(i + 1) % shape.length];
+        
+        const intersection = lineIntersection(p1, p2, p3, p4);
+        if (intersection) return intersection;
+      }
+      return null;
+    }
+
+    function lineIntersection(p1, p2, p3, p4) {
+      const x1 = p1.x, y1 = p1.y;
+      const x2 = p2.x, y2 = p2.y;
+      const x3 = p3.x, y3 = p3.y;
+      const x4 = p4.x, y4 = p4.y;
+      
+      const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+      if (abs(denom) < 0.0001) return null;
+      
+      const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+      const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+      
+      if (t >= 0 && t <= 1 && u >= 0 && u <= 1) {
+        return {
+          x: x1 + t * (x2 - x1),
+          y: y1 + t * (y2 - y1)
+        };
+      }
+      
+      return null;
+    }
+
+    function setShape(shape) {
+      currentShape = shape;
+      generateSpiral();
+    }
+
+    function generateSpiral() {
+      if (processing) return;
+      
+      processing = true;
+      showStatus('Generating spiral fill...', 'processing');
+      
+      // Generate shape path
+      shapePath = generateShapePath(currentShape);
+      
+      // Generate spiral path
+      spiralPath = generateSpiralPath();
+      
+      // Apply optimization if enabled
+      if (document.getElementById('optimizePaths').checked && spiralPath.length > 0) {
+        optimizeSpiral();
+      }
+      
+      // Update stats
+      updateStats();
+      
+      processing = false;
+      showStatus('Spiral generated successfully!', 'success');
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('exportPNGBtn').disabled = false;
+      
+      redraw();
+    }
+
+    function generateShapePath(shape) {
+      const size = parseInt(document.getElementById('shapeSize').value);
+      const points = [];
+      
+      switch (shape) {
+        case 'circle':
+          const steps = 64;
+          for (let i = 0; i < steps; i++) {
+            const angle = (i / steps) * TWO_PI;
+            points.push({
+              x: cos(angle) * size / 2,
+              y: sin(angle) * size / 2
+            });
+          }
+          break;
+          
+        case 'square':
+          const half = size / 2;
+          points.push({ x: -half, y: -half });
+          points.push({ x: half, y: -half });
+          points.push({ x: half, y: half });
+          points.push({ x: -half, y: half });
+          break;
+          
+        case 'triangle':
+          for (let i = 0; i < 3; i++) {
+            const angle = (i / 3) * TWO_PI - PI / 2;
+            points.push({
+              x: cos(angle) * size / 2,
+              y: sin(angle) * size / 2
+            });
+          }
+          break;
+          
+        case 'hexagon':
+          for (let i = 0; i < 6; i++) {
+            const angle = (i / 6) * TWO_PI;
+            points.push({
+              x: cos(angle) * size / 2,
+              y: sin(angle) * size / 2
+            });
+          }
+          break;
+          
+        case 'star':
+          const outerRadius = size / 2;
+          const innerRadius = size / 4;
+          for (let i = 0; i < 10; i++) {
+            const angle = (i / 10) * TWO_PI - PI / 2;
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            points.push({
+              x: cos(angle) * radius,
+              y: sin(angle) * radius
+            });
+          }
+          break;
+          
+        case 'heart':
+          const scale = size / 32;
+          for (let t = 0; t < TWO_PI; t += 0.1) {
+            const x = 16 * pow(sin(t), 3);
+            const y = -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t));
+            points.push({
+              x: x * scale,
+              y: y * scale
+            });
+          }
+          break;
+      }
+      
+      return points;
+    }
+
+    function generateSpiralPath() {
+      const type = document.getElementById('spiralType').value;
+      const spacing = parseFloat(document.getElementById('spacing').value);
+      const turns = parseInt(document.getElementById('turns').value);
+      const innerRadius = parseInt(document.getElementById('innerRadius').value);
+      const growthRate = parseFloat(document.getElementById('growthRate').value);
+      const direction = document.getElementById('direction').value;
+      const smoothTransition = document.getElementById('smoothTransition').checked;
+      
+      const points = [];
+      const maxRadius = parseInt(document.getElementById('shapeSize').value) / 2;
+      let totalAngle = turns * TWO_PI;
+      
+      // Generate based on direction
+      if (direction === 'outward' || direction === 'both') {
+        const outwardPoints = generateSpiralPoints(
+          type, innerRadius, maxRadius, totalAngle, spacing, growthRate, false
+        );
+        points.push(...outwardPoints);
+      }
+      
+      if (direction === 'inward') {
+        const inwardPoints = generateSpiralPoints(
+          type, innerRadius, maxRadius, totalAngle, spacing, growthRate, true
+        );
+        points.push(...inwardPoints);
+      }
+      
+      if (direction === 'both') {
+        // Add connecting arc
+        if (smoothTransition && points.length > 0) {
+          const lastPoint = points[points.length - 1];
+          const firstInward = generateSpiralPoints(
+            type, innerRadius, maxRadius, totalAngle, spacing, growthRate, true
+          )[0];
+          
+          // Add smooth transition
+          const transitionSteps = 20;
+          for (let i = 1; i < transitionSteps; i++) {
+            const t = i / transitionSteps;
+            points.push({
+              x: lerp(lastPoint.x, firstInward.x, t),
+              y: lerp(lastPoint.y, firstInward.y, t)
+            });
+          }
+        }
+        
+        const inwardPoints = generateSpiralPoints(
+          type, innerRadius, maxRadius, totalAngle, spacing, growthRate, true
+        );
+        points.push(...inwardPoints);
+      }
+      
+      return points;
+    }
+
+    function generateSpiralPoints(type, innerR, maxR, totalAngle, spacing, growth, reverse) {
+      const points = [];
+      const steps = 500;
+      
+      for (let i = 0; i <= steps; i++) {
+        const t = reverse ? (1 - i / steps) : (i / steps);
+        const angle = t * totalAngle;
+        let r;
+        
+        switch (type) {
+          case 'archimedean':
+            // r = a + b * θ
+            r = innerR + (spacing * growth * angle) / TWO_PI;
+            break;
+            
+          case 'logarithmic':
+            // r = a * e^(b * θ)
+            const a = innerR;
+            const b = log(maxR / innerR) / totalAngle;
+            r = a * exp(b * angle * growth);
+            break;
+            
+          case 'fermat':
+            // r = a * √θ
+            r = innerR + spacing * sqrt(angle / TWO_PI) * growth * 10;
+            break;
+            
+          case 'hyperbolic':
+            // r = a / θ
+            const minAngle = 0.1;
+            r = (innerR + spacing * 10) / (angle + minAngle) * growth;
+            break;
+            
+          case 'square':
+            // Square spiral
+            const side = floor(angle / (PI / 2));
+            const angleInQuadrant = angle % (PI / 2);
+            const baseR = innerR + side * spacing * growth;
+            
+            if (side % 4 === 0) {
+              r = baseR / cos(angleInQuadrant);
+            } else if (side % 4 === 1) {
+              r = baseR / sin(angleInQuadrant);
+            } else if (side % 4 === 2) {
+              r = baseR / abs(cos(angleInQuadrant));
+            } else {
+              r = baseR / abs(sin(angleInQuadrant));
+            }
+            break;
+            
+          case 'polygonal':
+            // Polygonal spiral (hexagonal)
+            const sides = 6;
+            const sectorAngle = TWO_PI / sides;
+            const sector = floor(angle / sectorAngle);
+            const angleInSector = angle % sectorAngle;
+            const baseRadius = innerR + sector * spacing * growth / sides;
+            r = baseRadius / cos(angleInSector - sectorAngle / 2);
+            break;
+            
+          default:
+            r = innerR + (spacing * growth * angle) / TWO_PI;
+        }
+        
+        // Limit to max radius
+        r = min(r, maxR);
+        
+        points.push({
+          x: cos(angle) * r,
+          y: sin(angle) * r
+        });
+      }
+      
+      return points;
+    }
+
+    function optimizeSpiral() {
+      if (spiralPath.length === 0) return;
+      
+      // Convert to path segment
+      const segment = {
+        points: spiralPath,
+        closed: false
+      };
+      
+      // Simplify path
+      const tolerance = parseFloat(document.getElementById('simplifyTolerance').value);
+      const simplified = optimizer.simplifyPath(segment.points, tolerance);
+      
+      spiralPath = simplified;
+    }
+
+    function exportSVG() {
+      if (spiralPath.length === 0) {
+        showStatus('No spiral to export', 'error');
+        return;
+      }
+      
+      // Create SVG content
+      svgCanvas.clear();
+      svgCanvas.push();
+      svgCanvas.translate(svgCanvas.width / 2, svgCanvas.height / 2);
+      svgCanvas.rotate(radians(parseInt(document.getElementById('rotation').value)));
+      
+      // Draw shape outline
+      if (document.getElementById('showShape').checked) {
+        svgCanvas.stroke(200);
+        svgCanvas.strokeWeight(1);
+        svgCanvas.noFill();
+        
+        svgCanvas.beginShape();
+        shapePath.forEach(point => {
+          svgCanvas.vertex(point.x, point.y);
+        });
+        svgCanvas.endShape(CLOSE);
+      }
+      
+      // Draw spiral
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(1);
+      svgCanvas.noFill();
+      
+      if (document.getElementById('clipToShape').checked) {
+        // Export only clipped portions
+        for (let i = 0; i < spiralPath.length - 1; i++) {
+          const p1 = spiralPath[i];
+          const p2 = spiralPath[i + 1];
+          
+          const inside1 = isPointInShape(p1, shapePath);
+          const inside2 = isPointInShape(p2, shapePath);
+          
+          if (inside1 && inside2) {
+            svgCanvas.line(p1.x, p1.y, p2.x, p2.y);
+          }
+        }
+      } else {
+        svgCanvas.beginShape();
+        spiralPath.forEach(point => {
+          svgCanvas.vertex(point.x, point.y);
+        });
+        svgCanvas.endShape();
+      }
+      
+      svgCanvas.pop();
+      
+      // Save SVG
+      save(svgCanvas, 'spiral-fill.svg');
+      showStatus('SVG exported successfully!', 'success');
+    }
+
+    function exportPNG() {
+      if (spiralPath.length === 0) {
+        showStatus('No spiral to export', 'error');
+        return;
+      }
+      
+      // Save current canvas as PNG
+      save(canvas, 'spiral-fill.png');
+      showStatus('PNG exported successfully!', 'success');
+    }
+
+    function randomizeParams() {
+      // Randomize shape
+      const shapes = ['circle', 'square', 'triangle', 'hexagon', 'star', 'heart'];
+      currentShape = random(shapes);
+      
+      // Randomize spiral type
+      const types = ['archimedean', 'logarithmic', 'fermat', 'hyperbolic', 'square', 'polygonal'];
+      document.getElementById('spiralType').value = random(types);
+      
+      // Randomize other parameters
+      document.getElementById('spacing').value = random(2, 15);
+      document.getElementById('turns').value = random(10, 40);
+      document.getElementById('innerRadius').value = random(0, 20);
+      document.getElementById('growthRate').value = random(0.5, 1.5);
+      document.getElementById('rotation').value = random(0, 360);
+      
+      // Update displays
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        const valueSpan = document.getElementById(input.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = input.value;
+        }
+      });
+      
+      generateSpiral();
+    }
+
+    function updateStats() {
+      let totalLength = 0;
+      let pointCount = spiralPath.length;
+      
+      // Calculate path length
+      for (let i = 1; i < spiralPath.length; i++) {
+        const dx = spiralPath[i].x - spiralPath[i-1].x;
+        const dy = spiralPath[i].y - spiralPath[i-1].y;
+        totalLength += Math.sqrt(dx * dx + dy * dy);
+      }
+      
+      // Convert pixels to mm (assuming 96 DPI)
+      const lengthMM = (totalLength * 25.4 / 96).toFixed(1);
+      
+      document.getElementById('pointCountStat').textContent = pointCount;
+      document.getElementById('pathLengthStat').textContent = lengthMM;
+      document.getElementById('turnsCountStat').textContent = document.getElementById('turns').value;
+      document.getElementById('stats').style.display = 'block';
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Update value displays
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const valueSpan = document.getElementById(e.target.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = e.target.value;
+        }
+        
+        // Regenerate on parameter change
+        if (['shapeSize', 'rotation', 'spacing', 'turns', 'innerRadius', 'growthRate'].includes(e.target.id)) {
+          generateSpiral();
+        }
+        
+        // Resize canvas if needed
+        if (e.target.id === 'canvasSize') {
+          const size = parseInt(e.target.value);
+          resizeCanvas(size, size);
+          svgCanvas = createGraphics(size, size, SVG);
+          generateSpiral();
+        }
+      });
+    });
+
+    // Select handlers
+    document.getElementById('spiralType').addEventListener('change', () => generateSpiral());
+    document.getElementById('direction').addEventListener('change', () => generateSpiral());
+
+    // Checkbox handlers
+    document.getElementById('showShape').addEventListener('change', () => redraw());
+    document.getElementById('showSpiral').addEventListener('change', () => redraw());
+    document.getElementById('clipToShape').addEventListener('change', () => redraw());
+    document.getElementById('smoothTransition').addEventListener('change', () => generateSpiral());
+  </script>
+</body>
+</html>

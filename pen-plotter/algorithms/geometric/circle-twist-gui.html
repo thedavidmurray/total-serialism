@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Circle Twist Layers</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Circle Twist Controls</h2>
+    
+    <div class="control-group">
+      <h3>Layer Settings</h3>
+      <div class="control">
+        <label>Layer Count: <span class="value" id="layerCount-val">10</span></label>
+        <input type="range" id="layerCount" min="1" max="30" value="10" step="1">
+      </div>
+      <div class="control">
+        <label>Base Radius: <span class="value" id="baseRadius-val">20</span>px</label>
+        <input type="range" id="baseRadius" min="5" max="100" value="20" step="5">
+      </div>
+      <div class="control">
+        <label>Layer Spacing: <span class="value" id="layerSpacing-val">15</span>px</label>
+        <input type="range" id="layerSpacing" min="2" max="50" value="15" step="1">
+      </div>
+      <div class="control">
+        <label>Points per Circle: <span class="value" id="pointsPerCircle-val">60</span></label>
+        <input type="range" id="pointsPerCircle" min="20" max="200" value="60" step="5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Twist Settings</h3>
+      <div class="control">
+        <label>Twist Amount: <span class="value" id="twistAmount-val">180</span>°</label>
+        <input type="range" id="twistAmount" min="-720" max="720" value="180" step="10">
+      </div>
+      <div class="control">
+        <label>Twist Distribution:</label>
+        <select id="twistDistribution">
+          <option value="linear">Linear</option>
+          <option value="exponential">Exponential</option>
+          <option value="logarithmic">Logarithmic</option>
+          <option value="sine">Sine Wave</option>
+          <option value="cosine">Cosine Wave</option>
+          <option value="bounce">Bounce</option>
+          <option value="elastic">Elastic</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Twist Center X: <span class="value" id="twistCenterX-val">0</span>%</label>
+        <input type="range" id="twistCenterX" min="-50" max="50" value="0" step="5">
+      </div>
+      <div class="control">
+        <label>Twist Center Y: <span class="value" id="twistCenterY-val">0</span>%</label>
+        <input type="range" id="twistCenterY" min="-50" max="50" value="0" step="5">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="reverseTwist">
+        <label for="reverseTwist">Reverse Twist Direction</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Pattern Variations</h3>
+      <div class="control">
+        <label>Pattern Type:</label>
+        <select id="patternType">
+          <option value="circle">Perfect Circles</option>
+          <option value="polygon">Polygons</option>
+          <option value="star">Stars</option>
+          <option value="flower">Flower Pattern</option>
+          <option value="gear">Gear Pattern</option>
+          <option value="wave">Wave Distortion</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Pattern Intensity: <span class="value" id="patternIntensity-val">0.5</span></label>
+        <input type="range" id="patternIntensity" min="0" max="2" value="0.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Polygon Sides: <span class="value" id="polygonSides-val">6</span></label>
+        <input type="range" id="polygonSides" min="3" max="12" value="6" step="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animateTwist">
+        <label for="animateTwist">Animate Twist</label>
+      </div>
+      <div class="control">
+        <label>Animation Speed: <span class="value" id="animationSpeed-val">0.01</span></label>
+        <input type="range" id="animationSpeed" min="0.001" max="0.05" value="0.01" step="0.001">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Layer Styling</h3>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Weight Variation: <span class="value" id="weightVariation-val">0</span></label>
+        <input type="range" id="weightVariation" min="0" max="2" value="0" step="0.1">
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Layer Gradient</option>
+          <option value="alternating">Alternating Colors</option>
+          <option value="rainbow">Rainbow Spectrum</option>
+          <option value="depth">Depth Shading</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Opacity: <span class="value" id="opacity-val">100</span>%</label>
+        <input type="range" id="opacity" min="10" max="100" value="100" step="10">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="connectLayers">
+        <label for="connectLayers">Connect Layers</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showCenterPoint">
+        <label for="showCenterPoint">Show Center Points</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="resetAnimation()">Reset Animation</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportAnimatedSVG()">Export Animated SVG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      layerCount: 10,
+      baseRadius: 20,
+      layerSpacing: 15,
+      pointsPerCircle: 60,
+      twistAmount: 180,
+      twistDistribution: 'linear',
+      twistCenterX: 0,
+      twistCenterY: 0,
+      reverseTwist: false,
+      patternType: 'circle',
+      patternIntensity: 0.5,
+      polygonSides: 6,
+      animateTwist: false,
+      animationSpeed: 0.01,
+      strokeWeight: 1,
+      weightVariation: 0,
+      colorMode: 'mono',
+      opacity: 100,
+      connectLayers: false,
+      showCenterPoint: false
+    };
+    
+    let layers = [];
+    let svgCanvas;
+    let animationTime = 0;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              if (key === 'animateTwist' && !params[key]) {
+                noLoop();
+              } else if (key === 'animateTwist' && params[key]) {
+                loop();
+              }
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+      
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      generateLayers();
+      if (!params.animateTwist) {
+        redraw();
+        noLoop();
+      } else {
+        loop();
+      }
+    }
+    
+    function generateLayers() {
+      layers = [];
+      
+      for (let i = 0; i < params.layerCount; i++) {
+        const radius = params.baseRadius + i * params.layerSpacing;
+        const layer = {
+          radius: radius,
+          points: [],
+          index: i,
+          twistOffset: getTwistForLayer(i),
+          strokeWeight: params.strokeWeight + (random(-1, 1) * params.weightVariation)
+        };
+        
+        // Generate points for this layer
+        for (let j = 0; j < params.pointsPerCircle; j++) {
+          const angle = (j / params.pointsPerCircle) * TWO_PI;
+          const point = getPatternPoint(angle, radius, i);
+          layer.points.push(point);
+        }
+        
+        layers.push(layer);
+      }
+    }
+    
+    function getTwistForLayer(layerIndex) {
+      const t = layerIndex / (params.layerCount - 1); // 0 to 1
+      let twistFactor;
+      
+      switch (params.twistDistribution) {
+        case 'linear':
+          twistFactor = t;
+          break;
+          
+        case 'exponential':
+          twistFactor = Math.pow(t, 2);
+          break;
+          
+        case 'logarithmic':
+          twistFactor = Math.log(1 + t * 9) / Math.log(10);
+          break;
+          
+        case 'sine':
+          twistFactor = Math.sin(t * PI / 2);
+          break;
+          
+        case 'cosine':
+          twistFactor = 1 - Math.cos(t * PI / 2);
+          break;
+          
+        case 'bounce':
+          twistFactor = Math.abs(Math.sin(t * PI * 3)) * t;
+          break;
+          
+        case 'elastic':
+          twistFactor = Math.pow(2, -10 * t) * Math.sin((t - 0.1) * (2 * PI) / 0.4) + 1;
+          break;
+          
+        default:
+          twistFactor = t;
+      }
+      
+      const twist = params.twistAmount * PI / 180 * twistFactor;
+      return params.reverseTwist ? -twist : twist;
+    }
+    
+    function getPatternPoint(angle, radius, layerIndex) {
+      let x, y;
+      
+      switch (params.patternType) {
+        case 'circle':
+          x = cos(angle) * radius;
+          y = sin(angle) * radius;
+          break;
+          
+        case 'polygon':
+          const sides = params.polygonSides;
+          const segment = Math.floor((angle / TWO_PI) * sides);
+          const segmentAngle = (segment / sides) * TWO_PI;
+          const nextSegmentAngle = ((segment + 1) / sides) * TWO_PI;
+          const t = (angle - segmentAngle) / (nextSegmentAngle - segmentAngle);
+          
+          const x1 = cos(segmentAngle) * radius;
+          const y1 = sin(segmentAngle) * radius;
+          const x2 = cos(nextSegmentAngle) * radius;
+          const y2 = sin(nextSegmentAngle) * radius;
+          
+          x = lerp(x1, x2, t);
+          y = lerp(y1, y2, t);
+          break;
+          
+        case 'star':
+          const starPoints = 5;
+          const innerRadius = radius * 0.5;
+          const starAngle = angle * starPoints;
+          const starRadius = (Math.floor(starAngle / PI) % 2 === 0) ? radius : innerRadius;
+          x = cos(angle) * starRadius;
+          y = sin(angle) * starRadius;
+          break;
+          
+        case 'flower':
+          const petalCount = 6;
+          const petalDepth = radius * params.patternIntensity * 0.3;
+          const petalRadius = radius + sin(angle * petalCount) * petalDepth;
+          x = cos(angle) * petalRadius;
+          y = sin(angle) * petalRadius;
+          break;
+          
+        case 'gear':
+          const teeth = 12;
+          const toothDepth = radius * params.patternIntensity * 0.2;
+          const toothAngle = angle * teeth;
+          const gearRadius = radius + (Math.floor(toothAngle / PI) % 2 === 0 ? toothDepth : 0);
+          x = cos(angle) * gearRadius;
+          y = sin(angle) * gearRadius;
+          break;
+          
+        case 'wave':
+          const waveFreq = 8;
+          const waveAmp = radius * params.patternIntensity * 0.2;
+          const waveRadius = radius + sin(angle * waveFreq + layerIndex * 0.5) * waveAmp;
+          x = cos(angle) * waveRadius;
+          y = sin(angle) * waveRadius;
+          break;
+          
+        default:
+          x = cos(angle) * radius;
+          y = sin(angle) * radius;
+      }
+      
+      return { x, y, angle };
+    }
+    
+    function draw() {
+      background(255);
+      translate(width/2, height/2);
+      
+      if (params.animateTwist) {
+        animationTime += params.animationSpeed;
+      }
+      
+      // Apply twist center offset
+      const centerOffsetX = (params.twistCenterX / 100) * width;
+      const centerOffsetY = (params.twistCenterY / 100) * height;
+      translate(centerOffsetX, centerOffsetY);
+      
+      // Draw each layer
+      layers.forEach((layer, layerIndex) => {
+        push();
+        
+        // Apply twist rotation
+        const totalTwist = layer.twistOffset + (params.animateTwist ? sin(animationTime) * PI / 4 : 0);
+        rotate(totalTwist);
+        
+        // Apply styling
+        applyLayerStyle(layerIndex, params.layerCount);
+        strokeWeight(layer.strokeWeight);
+        noFill();
+        
+        // Set opacity
+        const alpha = map(params.opacity, 0, 100, 0, 255);
+        stroke(red(g.strokeColor), green(g.strokeColor), blue(g.strokeColor), alpha);
+        
+        // Draw the layer shape
+        beginShape();
+        layer.points.forEach(point => {
+          vertex(point.x, point.y);
+        });
+        endShape(CLOSE);
+        
+        // Show center point if enabled
+        if (params.showCenterPoint) {
+          push();
+          fill(0);
+          noStroke();
+          ellipse(0, 0, 3);
+          pop();
+        }
+        
+        pop();
+      });
+      
+      // Connect layers if enabled
+      if (params.connectLayers) {
+        push();
+        strokeWeight(params.strokeWeight * 0.5);
+        stroke(150, map(params.opacity, 0, 100, 0, 255));
+        
+        // Draw radial connections
+        for (let i = 0; i < params.pointsPerCircle; i += Math.floor(params.pointsPerCircle / 12)) {
+          beginShape();
+          layers.forEach(layer => {
+            push();
+            rotate(layer.twistOffset + (params.animateTwist ? sin(animationTime) * PI / 4 : 0));
+            const point = layer.points[i];
+            vertex(point.x, point.y);
+            pop();
+          });
+          endShape();
+        }
+        
+        pop();
+      }
+      
+      // Reset translation
+      translate(-centerOffsetX, -centerOffsetY);
+    }
+    
+    function applyLayerStyle(index, total) {
+      const g = drawingContext;
+      
+      switch (params.colorMode) {
+        case 'mono':
+          g.strokeColor = color(0);
+          break;
+          
+        case 'gradient':
+          const gray = map(index, 0, total - 1, 0, 200);
+          g.strokeColor = color(gray);
+          break;
+          
+        case 'alternating':
+          g.strokeColor = index % 2 === 0 ? color(0) : color(100, 100, 200);
+          break;
+          
+        case 'rainbow':
+          colorMode(HSB);
+          g.strokeColor = color(map(index, 0, total, 0, 360), 80, 80);
+          colorMode(RGB);
+          break;
+          
+        case 'depth':
+          const depth = map(index, 0, total - 1, 255, 50);
+          g.strokeColor = color(depth, depth * 0.8, depth * 0.6);
+          break;
+          
+        default:
+          g.strokeColor = color(0);
+      }
+      
+      stroke(g.strokeColor);
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function resetAnimation() {
+      animationTime = 0;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `circle-twist-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `circle-twist-${params.patternType}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`circle-twist-${params.patternType}-${params.seed}.png`);
+    }
+    
+    function exportAnimatedSVG() {
+      // Create animated SVG with rotation animation
+      let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(${width/2}, ${height/2})">`;
+      
+      const centerOffsetX = (params.twistCenterX / 100) * width;
+      const centerOffsetY = (params.twistCenterY / 100) * height;
+      
+      svgContent += `<g transform="translate(${centerOffsetX}, ${centerOffsetY})">`;
+      
+      layers.forEach((layer, layerIndex) => {
+        const pathData = layer.points.map((point, i) => 
+          `${i === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
+        ).join(' ') + ' Z';
+        
+        const strokeColor = params.colorMode === 'mono' ? '#000000' : '#' + Math.floor(Math.random()*16777215).toString(16);
+        
+        svgContent += `
+          <path d="${pathData}" 
+                fill="none" 
+                stroke="${strokeColor}" 
+                stroke-width="${layer.strokeWeight}"
+                opacity="${params.opacity / 100}">
+            <animateTransform
+              attributeName="transform"
+              attributeType="XML"
+              type="rotate"
+              from="0 0 0"
+              to="${layer.twistOffset * 180 / PI} 0 0"
+              dur="4s"
+              repeatCount="indefinite" />
+          </path>`;
+      });
+      
+      svgContent += `</g></g></svg>`;
+      
+      // Download the animated SVG
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `circle-twist-animated-${params.seed}.svg`;
+      a.click();
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Store original animation state
+      const originalAnimate = params.animateTwist;
+      const originalTime = animationTime;
+      params.animateTwist = false;
+      
+      // Generate frames
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Update animation time
+        animationTime = (frame / totalFrames) * TWO_PI;
+        params.animateTwist = true;
+        
+        // Clear and draw frame
+        clear();
+        draw();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      // Restore original state
+      params.animateTwist = originalAnimate;
+      animationTime = originalTime;
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `circle-twist-${params.patternType}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

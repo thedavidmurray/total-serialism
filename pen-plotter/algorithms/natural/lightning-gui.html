@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lightning Generator - Pen Plotter Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        .controls {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            height: fit-content;
+        }
+        
+        .canvas-container {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        canvas {
+            background-color: #000000;
+            border: 1px solid #333;
+            cursor: crosshair;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a3a3a;
+            border-color: #666;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .value-display {
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+        
+        h3 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h3>Lightning Parameters</h3>
+            
+            <div class="control-group">
+                <label for="lightningType">Lightning Type</label>
+                <select id="lightningType">
+                    <option value="cloud-to-ground">Cloud to Ground</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="ball">Ball Lightning</option>
+                    <option value="upward">Upward Lightning</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="branchProb">Branch Probability</label>
+                <input type="range" id="branchProb" min="0" max="1" step="0.01" value="0.05">
+                <div class="value-display" id="branchProbValue">0.05</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="branchAngle">Branch Angle Range</label>
+                <input type="range" id="branchAngle" min="10" max="90" value="45">
+                <div class="value-display" id="branchAngleValue">45°</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="stepSize">Step Size</label>
+                <input type="range" id="stepSize" min="1" max="20" value="5">
+                <div class="value-display" id="stepSizeValue">5</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="maxSteps">Max Steps</label>
+                <input type="range" id="maxSteps" min="50" max="1000" value="200">
+                <div class="value-display" id="maxStepsValue">200</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="lineWidth">Line Width</label>
+                <input type="range" id="lineWidth" min="0.5" max="5" step="0.5" value="1.5">
+                <div class="value-display" id="lineWidthValue">1.5</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="fadeout">Branch Fadeout</label>
+                <input type="checkbox" id="fadeout" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="glow">Add Glow Effect</label>
+                <input type="checkbox" id="glow" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="multiStrike">Multi-Strike Mode</label>
+                <input type="checkbox" id="multiStrike">
+            </div>
+            
+            <div class="control-group">
+                <label for="strikeCount">Strike Count</label>
+                <input type="number" id="strikeCount" min="1" max="10" value="3">
+            </div>
+            
+            <div class="button-group">
+                <button onclick="generateLightning()">Generate</button>
+                <button onclick="clearCanvas()">Clear</button>
+            </div>
+            
+            <h3>Animation</h3>
+            <div class="control-group">
+                <label for="animationSpeed">Animation Speed (ms)</label>
+                <input type="range" id="animationSpeed" min="10" max="200" value="50">
+                <div class="value-display" id="animationSpeedValue">50ms</div>
+            </div>
+            
+            <button onclick="animateLightning()">Animate Strike</button>
+            
+            <h3>Export Options</h3>
+            <div class="export-buttons">
+                <button onclick="exportSVG()">SVG</button>
+                <button onclick="exportPNG()">PNG</button>
+                <button onclick="exportGIF()">GIF</button>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <h1>LIGHTNING GENERATOR</h1>
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentPaths = [];
+        let animationFrames = [];
+        
+        // Update value displays
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const valueDisplay = document.getElementById(e.target.id + 'Value');
+                if (valueDisplay) {
+                    let value = e.target.value;
+                    if (e.target.id === 'branchAngle') value += '°';
+                    else if (e.target.id === 'animationSpeed') value += 'ms';
+                    valueDisplay.textContent = value;
+                }
+            });
+        });
+        
+        class LightningBolt {
+            constructor(startX, startY, type) {
+                this.paths = [];
+                this.type = type;
+                this.startX = startX;
+                this.startY = startY;
+            }
+            
+            generate() {
+                const branchProb = parseFloat(document.getElementById('branchProb').value);
+                const branchAngle = parseInt(document.getElementById('branchAngle').value);
+                const stepSize = parseInt(document.getElementById('stepSize').value);
+                const maxSteps = parseInt(document.getElementById('maxSteps').value);
+                
+                this.paths = [];
+                
+                switch(this.type) {
+                    case 'cloud-to-ground':
+                        this.generateVertical(this.startX, this.startY, -90, 0, maxSteps);
+                        break;
+                    case 'horizontal':
+                        this.generateHorizontal(this.startX, this.startY, 0, 0, maxSteps);
+                        break;
+                    case 'ball':
+                        this.generateBall(this.startX, this.startY, maxSteps);
+                        break;
+                    case 'upward':
+                        this.generateVertical(this.startX, this.startY, 90, 0, maxSteps);
+                        break;
+                }
+            }
+            
+            generateVertical(x, y, baseAngle, depth, remainingSteps) {
+                if (remainingSteps <= 0 || y >= canvas.height - 20 || y <= 20) return;
+                
+                const path = [{x, y}];
+                const branchProb = parseFloat(document.getElementById('branchProb').value);
+                const branchAngle = parseInt(document.getElementById('branchAngle').value);
+                const stepSize = parseInt(document.getElementById('stepSize').value);
+                
+                let currentX = x;
+                let currentY = y;
+                let steps = 0;
+                
+                while (steps < remainingSteps && currentY < canvas.height - 20 && currentY > 20) {
+                    // Add some randomness to the path
+                    const angleVariation = (Math.random() - 0.5) * 30;
+                    const angle = (baseAngle + angleVariation) * Math.PI / 180;
+                    
+                    currentX += Math.cos(angle) * stepSize + (Math.random() - 0.5) * stepSize;
+                    currentY -= Math.sin(angle) * stepSize;
+                    
+                    path.push({x: currentX, y: currentY});
+                    
+                    // Branch occasionally
+                    if (Math.random() < branchProb && depth < 3) {
+                        const branchDir = Math.random() > 0.5 ? 1 : -1;
+                        const newAngle = baseAngle + branchDir * (Math.random() * branchAngle);
+                        this.generateVertical(currentX, currentY, newAngle, depth + 1, 
+                            Math.floor(remainingSteps * 0.7));
+                    }
+                    
+                    steps++;
+                }
+                
+                this.paths.push({path, depth});
+            }
+            
+            generateHorizontal(x, y, baseAngle, depth, remainingSteps) {
+                if (remainingSteps <= 0) return;
+                
+                const path = [{x, y}];
+                const branchProb = parseFloat(document.getElementById('branchProb').value);
+                const branchAngle = parseInt(document.getElementById('branchAngle').value);
+                const stepSize = parseInt(document.getElementById('stepSize').value);
+                
+                let currentX = x;
+                let currentY = y;
+                let steps = 0;
+                
+                while (steps < remainingSteps && currentX < canvas.width - 20 && currentX > 20) {
+                    const angleVariation = (Math.random() - 0.5) * 20;
+                    const angle = (baseAngle + angleVariation) * Math.PI / 180;
+                    
+                    currentX += Math.cos(angle) * stepSize;
+                    currentY += Math.sin(angle) * stepSize * 0.3;
+                    
+                    path.push({x: currentX, y: currentY});
+                    
+                    if (Math.random() < branchProb && depth < 3) {
+                        const newAngle = baseAngle + (Math.random() - 0.5) * branchAngle;
+                        this.generateHorizontal(currentX, currentY, newAngle, depth + 1, 
+                            Math.floor(remainingSteps * 0.6));
+                    }
+                    
+                    steps++;
+                }
+                
+                this.paths.push({path, depth});
+            }
+            
+            generateBall(centerX, centerY, maxSteps) {
+                const numStrands = 8 + Math.floor(Math.random() * 8);
+                
+                for (let i = 0; i < numStrands; i++) {
+                    const angle = (i / numStrands) * Math.PI * 2;
+                    const path = [{x: centerX, y: centerY}];
+                    
+                    let currentX = centerX;
+                    let currentY = centerY;
+                    let currentAngle = angle;
+                    
+                    const stepSize = parseInt(document.getElementById('stepSize').value);
+                    const steps = maxSteps / 2 + Math.random() * maxSteps / 2;
+                    
+                    for (let j = 0; j < steps; j++) {
+                        currentAngle += (Math.random() - 0.5) * 0.5;
+                        const radius = j * stepSize * 0.5;
+                        
+                        currentX = centerX + Math.cos(currentAngle) * radius;
+                        currentY = centerY + Math.sin(currentAngle) * radius;
+                        
+                        // Add crackling effect
+                        currentX += (Math.random() - 0.5) * stepSize;
+                        currentY += (Math.random() - 0.5) * stepSize;
+                        
+                        path.push({x: currentX, y: currentY});
+                    }
+                    
+                    this.paths.push({path, depth: 0});
+                }
+            }
+            
+            draw(ctx, alpha = 1) {
+                const lineWidth = parseFloat(document.getElementById('lineWidth').value);
+                const fadeout = document.getElementById('fadeout').checked;
+                const glow = document.getElementById('glow').checked;
+                
+                this.paths.forEach(({path, depth}) => {
+                    if (path.length < 2) return;
+                    
+                    const depthAlpha = fadeout ? Math.max(0.3, 1 - depth * 0.3) : 1;
+                    const finalAlpha = alpha * depthAlpha;
+                    
+                    // Draw glow effect
+                    if (glow) {
+                        ctx.strokeStyle = `rgba(150, 200, 255, ${finalAlpha * 0.3})`;
+                        ctx.lineWidth = lineWidth * 4;
+                        ctx.beginPath();
+                        ctx.moveTo(path[0].x, path[0].y);
+                        path.forEach(point => ctx.lineTo(point.x, point.y));
+                        ctx.stroke();
+                    }
+                    
+                    // Draw main lightning
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${finalAlpha})`;
+                    ctx.lineWidth = lineWidth * (1 - depth * 0.2);
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(path[0].x, path[0].y);
+                    path.forEach(point => ctx.lineTo(point.x, point.y));
+                    ctx.stroke();
+                });
+            }
+        }
+        
+        function generateLightning() {
+            clearCanvas();
+            currentPaths = [];
+            
+            const type = document.getElementById('lightningType').value;
+            const multiStrike = document.getElementById('multiStrike').checked;
+            const strikeCount = multiStrike ? parseInt(document.getElementById('strikeCount').value) : 1;
+            
+            for (let i = 0; i < strikeCount; i++) {
+                let startX, startY;
+                
+                if (type === 'cloud-to-ground' || type === 'upward') {
+                    startX = canvas.width * (0.3 + Math.random() * 0.4);
+                    startY = type === 'cloud-to-ground' ? 50 : canvas.height - 50;
+                } else if (type === 'horizontal') {
+                    startX = 50;
+                    startY = canvas.height * (0.3 + Math.random() * 0.4);
+                } else {
+                    startX = canvas.width / 2;
+                    startY = canvas.height / 2;
+                }
+                
+                const bolt = new LightningBolt(startX, startY, type);
+                bolt.generate();
+                bolt.draw(ctx);
+                currentPaths.push(bolt);
+            }
+        }
+        
+        function animateLightning() {
+            if (currentPaths.length === 0) {
+                generateLightning();
+            }
+            
+            const speed = parseInt(document.getElementById('animationSpeed').value);
+            let frame = 0;
+            const maxFrames = 20;
+            
+            animationFrames = [];
+            
+            const animate = () => {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const alpha = frame < 5 ? frame / 5 : 
+                              frame > 15 ? (20 - frame) / 5 : 1;
+                
+                currentPaths.forEach(bolt => {
+                    bolt.draw(ctx, alpha);
+                });
+                
+                // Capture frame for GIF
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                animationFrames.push(imageData);
+                
+                frame++;
+                if (frame < maxFrames) {
+                    setTimeout(animate, speed);
+                }
+            };
+            
+            animate();
+        }
+        
+        function clearCanvas() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            currentPaths = [];
+            animationFrames = [];
+        }
+        
+        function exportSVG() {
+            if (currentPaths.length === 0) return;
+            
+            let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="#000000"/>`;
+            
+            const lineWidth = parseFloat(document.getElementById('lineWidth').value);
+            const fadeout = document.getElementById('fadeout').checked;
+            
+            currentPaths.forEach(bolt => {
+                bolt.paths.forEach(({path, depth}) => {
+                    if (path.length < 2) return;
+                    
+                    const opacity = fadeout ? Math.max(0.3, 1 - depth * 0.3) : 1;
+                    const strokeWidth = lineWidth * (1 - depth * 0.2);
+                    
+                    let d = `M ${path[0].x} ${path[0].y}`;
+                    path.slice(1).forEach(point => {
+                        d += ` L ${point.x} ${point.y}`;
+                    });
+                    
+                    svg += `<path d="${d}" stroke="white" stroke-width="${strokeWidth}" `;
+                    svg += `fill="none" opacity="${opacity}" stroke-linecap="round" stroke-linejoin="round"/>`;
+                });
+            });
+            
+            svg += '</svg>';
+            
+            const blob = new Blob([svg], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lightning.svg';
+            a.click();
+        }
+        
+        function exportPNG() {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'lightning.png';
+                a.click();
+            });
+        }
+        
+        function exportGIF() {
+            if (animationFrames.length === 0) {
+                alert('Please animate the lightning first!');
+                return;
+            }
+            
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height
+            });
+            
+            animationFrames.forEach((frame, i) => {
+                gif.addFrame(frame, {delay: parseInt(document.getElementById('animationSpeed').value)});
+            });
+            
+            gif.on('finished', blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'lightning.gif';
+                a.click();
+            });
+            
+            gif.render();
+        }
+        
+        // Click to set lightning origin
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            clearCanvas();
+            const type = document.getElementById('lightningType').value;
+            const bolt = new LightningBolt(x, y, type);
+            bolt.generate();
+            bolt.draw(ctx);
+            currentPaths = [bolt];
+        });
+        
+        // Initial generation
+        generateLightning();
+    </script>
+</body>
+</html>

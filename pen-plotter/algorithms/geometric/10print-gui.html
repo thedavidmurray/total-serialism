@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>10PRINT Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>10PRINT Pattern Controls</h2>
+    
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">20</span></label>
+        <input type="range" id="gridSize" min="5" max="100" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">20</span>px</label>
+        <input type="range" id="cellSize" min="5" max="50" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Line Type:</label>
+        <select id="lineType">
+          <option value="diagonal">Diagonal (Classic)</option>
+          <option value="straight">Straight (+ pattern)</option>
+          <option value="curved">Curved</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Probability: <span class="value" id="probability-val">0.5</span></label>
+        <input type="range" id="probability" min="0" max="1" value="0.5" step="0.01">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">2</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="10" value="2" step="0.5">
+      </div>
+      <div class="control">
+        <label>Line Cap:</label>
+        <select id="lineCap">
+          <option value="round">Round</option>
+          <option value="square">Square</option>
+          <option value="project">Project</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Gradient</option>
+          <option value="random">Random</option>
+          <option value="zones">Color Zones</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Variations</h3>
+      <div class="control">
+        <label>Pattern Variation:</label>
+        <select id="variation">
+          <option value="classic">Classic 10PRINT</option>
+          <option value="triangular">Triangular</option>
+          <option value="hexagonal">Hexagonal</option>
+          <option value="truchet">Truchet Tiles</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Rotation: <span class="value" id="rotation-val">0</span>°</label>
+        <input type="range" id="rotation" min="0" max="90" value="0" step="15">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      gridSize: 20,
+      cellSize: 20,
+      lineType: 'diagonal',
+      probability: 0.5,
+      strokeWeight: 2,
+      lineCap: 'round',
+      colorMode: 'mono',
+      variation: 'classic',
+      rotation: 0
+    };
+    
+    let grid = [];
+    let svgCanvas;
+    let gifExporter;
+    let animationFrame = 0;
+    let isAnimating = false;
+    
+    function setup() {
+      // Create canvas with A3 proportions
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 3,
+        quality: 10,
+        width: w,
+        height: h,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+      
+      gifExporter.init(svgCanvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording' 
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          isAnimating = false;
+          noLoop();
+          
+          // Auto-download
+          const link = document.createElement('a');
+          link.href = result.url;
+          link.download = `10print-${params.variation}-${Date.now()}.gif`;
+          link.click();
+        }
+      });
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      // Setup all control event listeners
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = element.type === 'range' ? parseFloat(e.target.value) : e.target.value;
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              if (!isAnimating) regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              if (!isAnimating) regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      generatePattern();
+      redraw();
+    }
+    
+    function generatePattern() {
+      grid = [];
+      const cols = Math.floor(width / params.cellSize);
+      const rows = Math.floor(height / params.cellSize);
+      
+      for (let y = 0; y < rows; y++) {
+        grid[y] = [];
+        for (let x = 0; x < cols; x++) {
+          grid[y][x] = random() < params.probability ? 1 : 0;
+        }
+      }
+    }
+    
+    function draw() {
+      background(255);
+      
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      
+      // Set line cap
+      switch (params.lineCap) {
+        case 'round': strokeCap(ROUND); break;
+        case 'square': strokeCap(SQUARE); break;
+        case 'project': strokeCap(PROJECT); break;
+      }
+      
+      push();
+      
+      // Apply rotation if needed
+      if (params.rotation > 0) {
+        translate(width/2, height/2);
+        rotate(radians(params.rotation));
+        translate(-width/2, -height/2);
+      }
+      
+      // Animate pattern generation for GIF
+      if (isAnimating) {
+        const cellsPerFrame = 5;
+        const totalCells = grid.length * (grid[0] ? grid[0].length : 0);
+        const currentCell = animationFrame * cellsPerFrame;
+        
+        let cellCount = 0;
+        for (let y = 0; y < grid.length; y++) {
+          for (let x = 0; x < grid[y].length; x++) {
+            if (cellCount < currentCell) {
+              drawCell(x, y, grid[y][x]);
+            }
+            cellCount++;
+          }
+        }
+        
+        animationFrame++;
+        
+        // Capture frame for GIF
+        if (gifExporter && gifExporter.isRecording()) {
+          gifExporter.captureFrame();
+        }
+        
+        // Stop when complete
+        if (currentCell >= totalCells) {
+          setTimeout(() => {
+            if (gifExporter && gifExporter.isRecording()) {
+              gifExporter.stop();
+            }
+          }, 500);
+        }
+      } else {
+        // Draw all cells at once
+        for (let y = 0; y < grid.length; y++) {
+          for (let x = 0; x < grid[y].length; x++) {
+            drawCell(x, y, grid[y][x]);
+          }
+        }
+      }
+      
+      pop();
+      
+      if (!isAnimating) {
+        noLoop();
+      }
+    }
+    
+    function drawCell(x, y, value) {
+      const px = x * params.cellSize;
+      const py = y * params.cellSize;
+      const s = params.cellSize;
+      
+      // Apply color based on mode
+      applyColor(x, y);
+      
+      switch (params.variation) {
+        case 'classic':
+          drawClassic10Print(px, py, s, value);
+          break;
+        case 'triangular':
+          drawTriangular(px, py, s, value);
+          break;
+        case 'hexagonal':
+          drawHexagonal(px, py, s, value);
+          break;
+        case 'truchet':
+          drawTruchet(px, py, s, value);
+          break;
+      }
+    }
+    
+    function drawClassic10Print(x, y, size, value) {
+      switch (params.lineType) {
+        case 'diagonal':
+          if (value === 1) {
+            line(x, y, x + size, y + size); // \
+          } else {
+            line(x + size, y, x, y + size); // /
+          }
+          break;
+        case 'straight':
+          if (value === 1) {
+            line(x + size/2, y, x + size/2, y + size); // |
+          } else {
+            line(x, y + size/2, x + size, y + size/2); // -
+          }
+          break;
+        case 'curved':
+          noFill();
+          if (value === 1) {
+            arc(x, y, size*2, size*2, 0, HALF_PI);
+          } else {
+            arc(x + size, y, size*2, size*2, HALF_PI, PI);
+          }
+          break;
+        case 'mixed':
+          const type = floor(random(3));
+          if (type === 0) {
+            drawClassic10Print(x, y, size, value);
+          } else if (type === 1) {
+            params.lineType = 'straight';
+            drawClassic10Print(x, y, size, value);
+            params.lineType = 'mixed';
+          } else {
+            params.lineType = 'curved';
+            drawClassic10Print(x, y, size, value);
+            params.lineType = 'mixed';
+          }
+          break;
+      }
+    }
+    
+    function drawTriangular(x, y, size, value) {
+      if (value === 1) {
+        triangle(x, y + size, x + size/2, y, x + size, y + size);
+      } else {
+        triangle(x, y, x + size, y, x + size/2, y + size);
+      }
+    }
+    
+    function drawHexagonal(x, y, size, value) {
+      // Simplified hex pattern
+      push();
+      translate(x + size/2, y + size/2);
+      if (value === 1) {
+        rotate(0);
+      } else {
+        rotate(PI/3);
+      }
+      
+      noFill();
+      beginShape();
+      for (let i = 0; i < 6; i++) {
+        const angle = i * PI/3;
+        const px = cos(angle) * size/2;
+        const py = sin(angle) * size/2;
+        vertex(px, py);
+      }
+      endShape(CLOSE);
+      pop();
+    }
+    
+    function drawTruchet(x, y, size, value) {
+      noFill();
+      if (value === 1) {
+        arc(x, y, size, size, 0, HALF_PI);
+        arc(x + size, y + size, size, size, PI, PI + HALF_PI);
+      } else {
+        arc(x + size, y, size, size, HALF_PI, PI);
+        arc(x, y + size, size, size, PI + HALF_PI, TWO_PI);
+      }
+    }
+    
+    function applyColor(x, y) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+        case 'gradient':
+          const g = map(y, 0, grid.length, 0, 255);
+          stroke(g, 0, 255-g);
+          break;
+        case 'random':
+          stroke(random(255), random(255), random(255));
+          break;
+        case 'zones':
+          const zone = floor(map(x + y, 0, grid[0].length + grid.length, 0, 4));
+          const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+          stroke(colors[zone]);
+          break;
+      }
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `10print-params-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `10print-${params.variation}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`10print-${params.variation}-${params.seed}.png`);
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+        isAnimating = false;
+        noLoop();
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        
+        // Reset and start animation
+        animationFrame = 0;
+        isAnimating = true;
+        regenerate();
+        loop();
+        
+        gifExporter.start();
+      }
+    }
+  </script>
+</body>
+</html>

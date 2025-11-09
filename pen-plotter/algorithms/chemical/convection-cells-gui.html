@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convection Cells - Chemical Engineering Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            height: fit-content;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        canvas {
+            border: 1px solid #333;
+            background-color: #ffffff;
+            cursor: crosshair;
+        }
+        
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        
+        h3 {
+            margin-bottom: 10px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 5px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a3a3a;
+            border-color: #666;
+        }
+        
+        button:active {
+            background-color: #1a1a1a;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        #animationProgress {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>Convection Cells</h1>
+            
+            <div class="control-group">
+                <h3>Convection Type</h3>
+                <select id="convectionType">
+                    <option value="rayleigh-benard">Rayleigh-Bénard</option>
+                    <option value="marangoni">Marangoni</option>
+                    <option value="double-diffusive">Double Diffusive</option>
+                    <option value="hadley">Hadley Circulation</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Dimensionless Parameters</h3>
+                <label>Rayleigh Number: <span id="rayleighValue">1e4</span></label>
+                <input type="range" id="rayleigh" min="3" max="6" step="0.1" value="4">
+                
+                <label>Prandtl Number: <span id="prandtlValue">7.0</span></label>
+                <input type="range" id="prandtl" min="0.1" max="100" step="0.1" value="7.0">
+                
+                <label>Aspect Ratio: <span id="aspectValue">2.0</span></label>
+                <input type="range" id="aspectRatio" min="0.5" max="5" step="0.1" value="2.0">
+            </div>
+            
+            <div class="control-group">
+                <h3>Boundary Conditions</h3>
+                <select id="topBoundary">
+                    <option value="cold">Cold (Fixed T)</option>
+                    <option value="adiabatic">Adiabatic</option>
+                    <option value="free">Free Surface</option>
+                </select>
+                
+                <select id="bottomBoundary">
+                    <option value="hot">Hot (Fixed T)</option>
+                    <option value="flux">Constant Heat Flux</option>
+                </select>
+                
+                <label>Temperature Difference (K): <span id="deltaTValue">50</span></label>
+                <input type="range" id="deltaT" min="10" max="200" step="10" value="50">
+            </div>
+            
+            <div class="control-group">
+                <h3>Visualization</h3>
+                <label>
+                    <input type="checkbox" id="showStreamlines" checked> Show Streamlines
+                </label>
+                <label>
+                    <input type="checkbox" id="showTemperature" checked> Show Temperature Field
+                </label>
+                <label>
+                    <input type="checkbox" id="showVelocityVectors"> Show Velocity Vectors
+                </label>
+                <label>
+                    <input type="checkbox" id="showNusselt"> Show Nusselt Number
+                </label>
+                
+                <label>Grid Resolution: <span id="gridValue">50</span></label>
+                <input type="range" id="gridResolution" min="20" max="100" step="10" value="50">
+            </div>
+            
+            <div class="control-group">
+                <h3>Actions</h3>
+                <button id="generateBtn">Generate Pattern</button>
+                <button id="animateBtn">Animate Flow</button>
+                <div class="button-group">
+                    <button id="exportSVG">Export SVG</button>
+                    <button id="exportPNG">Export PNG</button>
+                </div>
+                <button id="exportGIF">Export Animation GIF</button>
+                <progress id="animationProgress" value="0" max="100" style="display: none;"></progress>
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        let temperatureField = [];
+        let velocityField = [];
+        let streamFunction = [];
+        let isAnimating = false;
+        let animationId = null;
+        let time = 0;
+        let gif = null;
+        
+        // UI Elements
+        const convectionType = document.getElementById('convectionType');
+        const rayleigh = document.getElementById('rayleigh');
+        const prandtl = document.getElementById('prandtl');
+        const aspectRatio = document.getElementById('aspectRatio');
+        const topBoundary = document.getElementById('topBoundary');
+        const bottomBoundary = document.getElementById('bottomBoundary');
+        const deltaT = document.getElementById('deltaT');
+        const showStreamlines = document.getElementById('showStreamlines');
+        const showTemperature = document.getElementById('showTemperature');
+        const showVelocityVectors = document.getElementById('showVelocityVectors');
+        const showNusselt = document.getElementById('showNusselt');
+        const gridResolution = document.getElementById('gridResolution');
+        const generateBtn = document.getElementById('generateBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const exportSVGBtn = document.getElementById('exportSVG');
+        const exportPNGBtn = document.getElementById('exportPNG');
+        const exportGIFBtn = document.getElementById('exportGIF');
+        const status = document.getElementById('status');
+        const animationProgress = document.getElementById('animationProgress');
+        
+        // Update value displays
+        rayleigh.oninput = () => {
+            const value = Math.pow(10, parseFloat(rayleigh.value));
+            document.getElementById('rayleighValue').textContent = value.toExponential(1);
+        };
+        prandtl.oninput = () => document.getElementById('prandtlValue').textContent = prandtl.value;
+        aspectRatio.oninput = () => document.getElementById('aspectValue').textContent = aspectRatio.value;
+        deltaT.oninput = () => document.getElementById('deltaTValue').textContent = deltaT.value;
+        gridResolution.oninput = () => document.getElementById('gridValue').textContent = gridResolution.value;
+        
+        function initializeFields() {
+            const gridSize = parseInt(gridResolution.value);
+            temperatureField = [];
+            velocityField = [];
+            streamFunction = [];
+            
+            for (let i = 0; i < gridSize; i++) {
+                temperatureField[i] = [];
+                velocityField[i] = [];
+                streamFunction[i] = [];
+                
+                for (let j = 0; j < gridSize; j++) {
+                    // Initialize temperature with linear profile + small perturbation
+                    const y = j / (gridSize - 1);
+                    const perturbation = 0.01 * Math.sin(2 * Math.PI * i / gridSize);
+                    temperatureField[i][j] = 1 - y + perturbation;
+                    
+                    velocityField[i][j] = {vx: 0, vy: 0};
+                    streamFunction[i][j] = 0;
+                }
+            }
+        }
+        
+        function solveConvection() {
+            const gridSize = parseInt(gridResolution.value);
+            const Ra = Math.pow(10, parseFloat(rayleigh.value));
+            const Pr = parseFloat(prandtl.value);
+            const AR = parseFloat(aspectRatio.value);
+            const dt = 0.0001;
+            
+            // Solve using simplified spectral method
+            for (let n = 1; n <= 5; n++) {
+                for (let m = 1; m <= 5; m++) {
+                    const kx = n * Math.PI / AR;
+                    const ky = m * Math.PI;
+                    const k2 = kx * kx + ky * ky;
+                    
+                    // Growth rate for linear stability
+                    const sigma = (Ra * kx * kx / k2 - k2 * k2) / (Pr + 1);
+                    
+                    if (sigma > 0) {
+                        // Unstable mode - add to solution
+                        const amplitude = Math.exp(sigma * time * 0.01) * 0.1;
+                        const phase = Math.random() * 2 * Math.PI;
+                        
+                        for (let i = 0; i < gridSize; i++) {
+                            for (let j = 0; j < gridSize; j++) {
+                                const x = i / (gridSize - 1) * AR;
+                                const y = j / (gridSize - 1);
+                                
+                                // Stream function
+                                const psi = amplitude * Math.sin(kx * x + phase) * Math.sin(ky * y);
+                                streamFunction[i][j] += psi;
+                                
+                                // Velocity from stream function
+                                velocityField[i][j].vx += amplitude * ky * Math.sin(kx * x + phase) * Math.cos(ky * y);
+                                velocityField[i][j].vy += -amplitude * kx * Math.cos(kx * x + phase) * Math.sin(ky * y);
+                                
+                                // Temperature perturbation
+                                temperatureField[i][j] += amplitude * 0.5 * Math.sin(kx * x + phase) * Math.sin(ky * y);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Apply boundary conditions
+            for (let i = 0; i < gridSize; i++) {
+                // Bottom boundary
+                if (bottomBoundary.value === 'hot') {
+                    temperatureField[i][gridSize - 1] = 1;
+                }
+                
+                // Top boundary
+                if (topBoundary.value === 'cold') {
+                    temperatureField[i][0] = 0;
+                } else if (topBoundary.value === 'adiabatic') {
+                    temperatureField[i][0] = temperatureField[i][1];
+                }
+                
+                // No-slip walls
+                velocityField[i][0] = {vx: 0, vy: 0};
+                velocityField[i][gridSize - 1] = {vx: 0, vy: 0};
+                velocityField[0][i] = {vx: 0, vy: 0};
+                velocityField[gridSize - 1][i] = {vx: 0, vy: 0};
+            }
+        }
+        
+        function calculateNusseltNumber() {
+            const gridSize = parseInt(gridResolution.value);
+            let heatFlux = 0;
+            
+            for (let i = 1; i < gridSize - 1; i++) {
+                const dTdy = (temperatureField[i][1] - temperatureField[i][0]) * gridSize;
+                heatFlux += Math.abs(dTdy);
+            }
+            
+            heatFlux /= (gridSize - 2);
+            const Nu = heatFlux / (parseFloat(deltaT.value) / height);
+            return Nu;
+        }
+        
+        function drawPattern() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            const gridSize = parseInt(gridResolution.value);
+            const cellWidth = width / gridSize;
+            const cellHeight = height / gridSize;
+            
+            // Draw temperature field
+            if (showTemperature.checked) {
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        const temp = temperatureField[i][j];
+                        const normalizedTemp = Math.max(0, Math.min(1, temp));
+                        
+                        // Use temperature colormap (blue to red)
+                        const hue = 240 - normalizedTemp * 240;
+                        ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+                        ctx.fillRect(i * cellWidth, j * cellHeight, cellWidth, cellHeight);
+                    }
+                }
+            }
+            
+            // Draw streamlines
+            if (showStreamlines.checked) {
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+                ctx.lineWidth = 1;
+                
+                // Find min and max stream function values
+                let minPsi = Infinity, maxPsi = -Infinity;
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        minPsi = Math.min(minPsi, streamFunction[i][j]);
+                        maxPsi = Math.max(maxPsi, streamFunction[i][j]);
+                    }
+                }
+                
+                // Draw contour lines
+                const numContours = 15;
+                for (let n = 0; n < numContours; n++) {
+                    const psiValue = minPsi + (maxPsi - minPsi) * n / (numContours - 1);
+                    
+                    ctx.beginPath();
+                    for (let i = 0; i < gridSize - 1; i++) {
+                        for (let j = 0; j < gridSize - 1; j++) {
+                            const x = i * cellWidth;
+                            const y = j * cellHeight;
+                            
+                            // Marching squares algorithm
+                            const corners = [
+                                streamFunction[i][j],
+                                streamFunction[i + 1][j],
+                                streamFunction[i + 1][j + 1],
+                                streamFunction[i][j + 1]
+                            ];
+                            
+                            const config = 
+                                (corners[0] > psiValue ? 1 : 0) +
+                                (corners[1] > psiValue ? 2 : 0) +
+                                (corners[2] > psiValue ? 4 : 0) +
+                                (corners[3] > psiValue ? 8 : 0);
+                            
+                            // Draw contour segments based on configuration
+                            switch (config) {
+                                case 1:
+                                case 14:
+                                    ctx.moveTo(x, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth * 0.5, y);
+                                    break;
+                                case 2:
+                                case 13:
+                                    ctx.moveTo(x + cellWidth * 0.5, y);
+                                    ctx.lineTo(x + cellWidth, y + cellHeight * 0.5);
+                                    break;
+                                case 3:
+                                case 12:
+                                    ctx.moveTo(x, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth, y + cellHeight * 0.5);
+                                    break;
+                                case 4:
+                                case 11:
+                                    ctx.moveTo(x + cellWidth, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth * 0.5, y + cellHeight);
+                                    break;
+                                case 5:
+                                    ctx.moveTo(x, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth * 0.5, y);
+                                    ctx.moveTo(x + cellWidth, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth * 0.5, y + cellHeight);
+                                    break;
+                                case 6:
+                                case 9:
+                                    ctx.moveTo(x + cellWidth * 0.5, y);
+                                    ctx.lineTo(x + cellWidth * 0.5, y + cellHeight);
+                                    break;
+                                case 7:
+                                case 8:
+                                    ctx.moveTo(x, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth * 0.5, y + cellHeight);
+                                    break;
+                                case 10:
+                                    ctx.moveTo(x + cellWidth * 0.5, y);
+                                    ctx.lineTo(x + cellWidth, y + cellHeight * 0.5);
+                                    ctx.moveTo(x, y + cellHeight * 0.5);
+                                    ctx.lineTo(x + cellWidth * 0.5, y + cellHeight);
+                                    break;
+                            }
+                        }
+                    }
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw velocity vectors
+            if (showVelocityVectors.checked) {
+                ctx.strokeStyle = 'rgba(0, 0, 255, 0.6)';
+                ctx.lineWidth = 1;
+                
+                const vectorSpacing = 5;
+                const vectorScale = 20;
+                
+                for (let i = 0; i < gridSize; i += vectorSpacing) {
+                    for (let j = 0; j < gridSize; j += vectorSpacing) {
+                        const x = i * cellWidth + cellWidth / 2;
+                        const y = j * cellHeight + cellHeight / 2;
+                        const v = velocityField[i][j];
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(x, y);
+                        ctx.lineTo(x + v.vx * vectorScale, y + v.vy * vectorScale);
+                        ctx.stroke();
+                        
+                        // Arrowhead
+                        const angle = Math.atan2(v.vy, v.vx);
+                        const arrowLength = 5;
+                        ctx.beginPath();
+                        ctx.moveTo(x + v.vx * vectorScale, y + v.vy * vectorScale);
+                        ctx.lineTo(
+                            x + v.vx * vectorScale - arrowLength * Math.cos(angle - Math.PI / 6),
+                            y + v.vy * vectorScale - arrowLength * Math.sin(angle - Math.PI / 6)
+                        );
+                        ctx.moveTo(x + v.vx * vectorScale, y + v.vy * vectorScale);
+                        ctx.lineTo(
+                            x + v.vx * vectorScale - arrowLength * Math.cos(angle + Math.PI / 6),
+                            y + v.vy * vectorScale - arrowLength * Math.sin(angle + Math.PI / 6)
+                        );
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Draw container outline
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(0, 0, width, height);
+            
+            // Show Nusselt number
+            if (showNusselt.checked) {
+                const Nu = calculateNusseltNumber();
+                ctx.fillStyle = '#000000';
+                ctx.font = '16px monospace';
+                ctx.fillText(`Nu = ${Nu.toFixed(2)}`, 20, 30);
+                ctx.fillText(`Ra = ${Math.pow(10, parseFloat(rayleigh.value)).toExponential(1)}`, 20, 50);
+            }
+        }
+        
+        function animate() {
+            if (!isAnimating) return;
+            
+            time += 0.1;
+            initializeFields();
+            solveConvection();
+            drawPattern();
+            
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        generateBtn.addEventListener('click', () => {
+            time = 0;
+            initializeFields();
+            solveConvection();
+            drawPattern();
+            status.textContent = 'Pattern generated';
+        });
+        
+        animateBtn.addEventListener('click', () => {
+            if (isAnimating) {
+                isAnimating = false;
+                cancelAnimationFrame(animationId);
+                animateBtn.textContent = 'Animate Flow';
+                status.textContent = 'Animation paused';
+            } else {
+                isAnimating = true;
+                animateBtn.textContent = 'Pause Animation';
+                status.textContent = 'Animating...';
+                animate();
+            }
+        });
+        
+        exportSVGBtn.addEventListener('click', () => {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            // White background
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', width);
+            bg.setAttribute('height', height);
+            bg.setAttribute('fill', 'white');
+            svg.appendChild(bg);
+            
+            const gridSize = parseInt(gridResolution.value);
+            const cellWidth = width / gridSize;
+            const cellHeight = height / gridSize;
+            
+            // Add temperature field as rectangles
+            if (showTemperature.checked) {
+                for (let i = 0; i < gridSize; i++) {
+                    for (let j = 0; j < gridSize; j++) {
+                        const temp = temperatureField[i][j];
+                        const normalizedTemp = Math.max(0, Math.min(1, temp));
+                        const hue = 240 - normalizedTemp * 240;
+                        
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        rect.setAttribute('x', i * cellWidth);
+                        rect.setAttribute('y', j * cellHeight);
+                        rect.setAttribute('width', cellWidth);
+                        rect.setAttribute('height', cellHeight);
+                        rect.setAttribute('fill', `hsl(${hue}, 70%, 50%)`);
+                        svg.appendChild(rect);
+                    }
+                }
+            }
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'convection-cells.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            status.textContent = 'SVG exported';
+        });
+        
+        exportPNGBtn.addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'convection-cells.png';
+            a.click();
+            status.textContent = 'PNG exported';
+        });
+        
+        exportGIFBtn.addEventListener('click', () => {
+            status.textContent = 'Creating GIF...';
+            animationProgress.style.display = 'block';
+            animationProgress.value = 0;
+            
+            gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: width,
+                height: height
+            });
+            
+            time = 0;
+            const frames = 30;
+            
+            for (let frame = 0; frame < frames; frame++) {
+                time = frame * 0.5;
+                initializeFields();
+                solveConvection();
+                drawPattern();
+                
+                gif.addFrame(ctx, {copy: true, delay: 100});
+                animationProgress.value = (frame / frames) * 100;
+            }
+            
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'convection-animation.gif';
+                a.click();
+                URL.revokeObjectURL(url);
+                status.textContent = 'GIF exported';
+                animationProgress.style.display = 'none';
+            });
+            
+            gif.render();
+        });
+        
+        // Initialize
+        initializeFields();
+        solveConvection();
+        drawPattern();
+    </script>
+</body>
+</html>

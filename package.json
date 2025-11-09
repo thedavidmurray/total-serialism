@@ -1,0 +1,23 @@
+{
+  "name": "total-serialism",
+  "version": "1.0.0",
+  "description": "Total Serialism - Generative art tools for pen plotting and creative coding",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8080",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "generative-art",
+    "pen-plotter",
+    "p5js",
+    "creative-coding",
+    "total-serialism",
+    "algorithmic-art"
+  ],
+  "author": "David Murray",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {}
+}

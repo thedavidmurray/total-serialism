@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Perlin Circle Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Perlin Circle Controls</h2>
+    
+    <div class="control-group">
+      <h3>Circle Settings</h3>
+      <div class="control">
+        <label>Circle Count: <span class="value" id="circleCount-val">5</span></label>
+        <input type="range" id="circleCount" min="1" max="20" value="5" step="1">
+      </div>
+      <div class="control">
+        <label>Base Radius: <span class="value" id="baseRadius-val">50</span>px</label>
+        <input type="range" id="baseRadius" min="10" max="200" value="50" step="5">
+      </div>
+      <div class="control">
+        <label>Radius Spacing: <span class="value" id="radiusSpacing-val">30</span>px</label>
+        <input type="range" id="radiusSpacing" min="5" max="100" value="30" step="5">
+      </div>
+      <div class="control">
+        <label>Points per Circle: <span class="value" id="pointsPerCircle-val">100</span></label>
+        <input type="range" id="pointsPerCircle" min="20" max="500" value="100" step="10">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Noise Settings</h3>
+      <div class="control">
+        <label>Noise Scale: <span class="value" id="noiseScale-val">0.02</span></label>
+        <input type="range" id="noiseScale" min="0.001" max="0.1" value="0.02" step="0.001">
+      </div>
+      <div class="control">
+        <label>Noise Amplitude: <span class="value" id="noiseAmplitude-val">0.3</span></label>
+        <input type="range" id="noiseAmplitude" min="0" max="2" value="0.3" step="0.05">
+      </div>
+      <div class="control">
+        <label>Time Speed: <span class="value" id="timeSpeed-val">0.001</span></label>
+        <input type="range" id="timeSpeed" min="0" max="0.01" value="0.001" step="0.0001">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animateNoise" checked>
+        <label for="animateNoise">Animate Noise</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Variation</h3>
+      <div class="control">
+        <label>Pattern Type:</label>
+        <select id="patternType">
+          <option value="concentric">Concentric Circles</option>
+          <option value="spiral">Spiral</option>
+          <option value="flower">Flower Pattern</option>
+          <option value="ripple">Ripple Effect</option>
+          <option value="vortex">Vortex</option>
+          <option value="turbulence">Turbulence</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Noise Type:</label>
+        <select id="noiseType">
+          <option value="perlin">Perlin Noise</option>
+          <option value="simplex">Simplex-like</option>
+          <option value="ridged">Ridged Noise</option>
+          <option value="turbulent">Turbulent</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Octaves: <span class="value" id="octaves-val">1</span></label>
+        <input type="range" id="octaves" min="1" max="5" value="1" step="1">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Radial Gradient</option>
+          <option value="noise">Noise-based</option>
+          <option value="rainbow">Rainbow</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showPoints">
+        <label for="showPoints">Show Points</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="closePaths" checked>
+        <label for="closePaths">Close Paths</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="resetAnimation()">Reset Animation</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportAnimatedSVG()">Export Animated SVG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      circleCount: 5,
+      baseRadius: 50,
+      radiusSpacing: 30,
+      pointsPerCircle: 100,
+      noiseScale: 0.02,
+      noiseAmplitude: 0.3,
+      timeSpeed: 0.001,
+      animateNoise: true,
+      patternType: 'concentric',
+      noiseType: 'perlin',
+      octaves: 1,
+      strokeWeight: 1,
+      colorMode: 'mono',
+      showPoints: false,
+      closePaths: true
+    };
+    
+    let circles = [];
+    let svgCanvas;
+    let timeOffset = 0;
+    let noiseOffset = 0;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              if (key === 'animateNoise' && !params[key]) {
+                noLoop();
+              } else if (key === 'animateNoise' && params[key]) {
+                loop();
+              }
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      generateCircles();
+      if (!params.animateNoise) {
+        redraw();
+        noLoop();
+      } else {
+        loop();
+      }
+    }
+    
+    function generateCircles() {
+      circles = [];
+      
+      for (let i = 0; i < params.circleCount; i++) {
+        const radius = params.baseRadius + i * params.radiusSpacing;
+        const circle = {
+          radius: radius,
+          points: [],
+          phase: i * TWO_PI / params.circleCount
+        };
+        
+        for (let j = 0; j < params.pointsPerCircle; j++) {
+          const angle = (j / params.pointsPerCircle) * TWO_PI;
+          circle.points.push({ angle: angle, baseRadius: radius });
+        }
+        
+        circles.push(circle);
+      }
+    }
+    
+    function draw() {
+      background(255);
+      translate(width/2, height/2);
+      
+      if (params.animateNoise) {
+        timeOffset += params.timeSpeed;
+      }
+      
+      // Draw each circle
+      circles.forEach((circle, circleIndex) => {
+        push();
+        
+        // Apply color based on mode
+        applyColor(circleIndex, circles.length);
+        
+        strokeWeight(params.strokeWeight);
+        noFill();
+        
+        // Begin shape
+        beginShape();
+        
+        circle.points.forEach((point, pointIndex) => {
+          const coords = getDistortedPoint(
+            point.angle, 
+            point.baseRadius, 
+            circleIndex, 
+            pointIndex
+          );
+          
+          // Draw line
+          vertex(coords.x, coords.y);
+          
+          // Show points if enabled
+          if (params.showPoints) {
+            push();
+            fill(0);
+            noStroke();
+            ellipse(coords.x, coords.y, 3);
+            pop();
+          }
+        });
+        
+        // Close path if enabled
+        if (params.closePaths) {
+          endShape(CLOSE);
+        } else {
+          endShape();
+        }
+        
+        pop();
+      });
+    }
+    
+    function getDistortedPoint(angle, baseRadius, circleIndex, pointIndex) {
+      let x = cos(angle) * baseRadius;
+      let y = sin(angle) * baseRadius;
+      
+      // Calculate noise value based on pattern type
+      let noiseValue = 0;
+      
+      switch (params.patternType) {
+        case 'concentric':
+          noiseValue = getNoiseValue(x, y, timeOffset);
+          break;
+          
+        case 'spiral':
+          const spiralAngle = angle + circleIndex * 0.5;
+          noiseValue = getNoiseValue(
+            cos(spiralAngle) * baseRadius, 
+            sin(spiralAngle) * baseRadius, 
+            timeOffset
+          );
+          angle += circleIndex * 0.2;
+          break;
+          
+        case 'flower':
+          const petalCount = 5;
+          const petalNoise = sin(angle * petalCount) * 0.3;
+          noiseValue = getNoiseValue(x, y, timeOffset) + petalNoise;
+          break;
+          
+        case 'ripple':
+          const rippleDistance = sqrt(x * x + y * y);
+          noiseValue = getNoiseValue(
+            rippleDistance * 0.05, 
+            angle, 
+            timeOffset
+          ) * sin(rippleDistance * 0.1 - timeOffset * 50);
+          break;
+          
+        case 'vortex':
+          const vortexAngle = angle + baseRadius * 0.01;
+          x = cos(vortexAngle) * baseRadius;
+          y = sin(vortexAngle) * baseRadius;
+          noiseValue = getNoiseValue(x, y, timeOffset) * (1 + circleIndex * 0.1);
+          break;
+          
+        case 'turbulence':
+          const turbX = x + getNoiseValue(x * 0.1, y * 0.1, timeOffset) * 50;
+          const turbY = y + getNoiseValue(x * 0.1 + 100, y * 0.1 + 100, timeOffset) * 50;
+          noiseValue = getNoiseValue(turbX * 0.01, turbY * 0.01, timeOffset + 200);
+          break;
+      }
+      
+      // Apply noise to radius
+      const distortedRadius = baseRadius * (1 + noiseValue * params.noiseAmplitude);
+      
+      return {
+        x: cos(angle) * distortedRadius,
+        y: sin(angle) * distortedRadius
+      };
+    }
+    
+    function getNoiseValue(x, y, z) {
+      let value = 0;
+      let amplitude = 1;
+      let frequency = params.noiseScale;
+      let maxValue = 0;
+      
+      // Apply octaves
+      for (let i = 0; i < params.octaves; i++) {
+        let n;
+        
+        switch (params.noiseType) {
+          case 'perlin':
+            n = noise(x * frequency, y * frequency, z) * 2 - 1;
+            break;
+            
+          case 'simplex':
+            // Simulate simplex-like noise using perlin
+            n = noise(x * frequency + 1000, y * frequency + 1000, z) * 2 - 1;
+            n = n * 0.8 + noise(x * frequency * 2.1, y * frequency * 2.1, z * 2) * 0.2;
+            break;
+            
+          case 'ridged':
+            n = noise(x * frequency, y * frequency, z) * 2 - 1;
+            n = 1 - abs(n);
+            n = n * n;
+            break;
+            
+          case 'turbulent':
+            n = abs(noise(x * frequency, y * frequency, z) * 2 - 1);
+            break;
+        }
+        
+        value += n * amplitude;
+        maxValue += amplitude;
+        
+        amplitude *= 0.5;
+        frequency *= 2;
+      }
+      
+      return value / maxValue;
+    }
+    
+    function applyColor(index, total) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+          
+        case 'gradient':
+          const g = map(index, 0, total - 1, 0, 255);
+          stroke(g, 0, 255 - g);
+          break;
+          
+        case 'noise':
+          const n = noise(index * 0.5, timeOffset * 10) * 255;
+          stroke(n, 255 - n, 128);
+          break;
+          
+        case 'rainbow':
+          colorMode(HSB);
+          stroke(map(index, 0, total, 0, 360), 80, 80);
+          colorMode(RGB);
+          break;
+      }
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function resetAnimation() {
+      timeOffset = 0;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `perlin-circles-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `perlin-circles-${params.patternType}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`perlin-circles-${params.patternType}-${params.seed}.png`);
+    }
+    
+    function exportAnimatedSVG() {
+      // Create animated SVG with multiple frames
+      const frames = 60;
+      const originalTime = timeOffset;
+      
+      let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate(${width/2}, ${height/2})">`;
+      
+      for (let frame = 0; frame < frames; frame++) {
+        timeOffset = frame * params.timeSpeed * 10;
+        
+        circles.forEach((circle, circleIndex) => {
+          svgContent += `<path d="M `;
+          
+          circle.points.forEach((point, pointIndex) => {
+            const coords = getDistortedPoint(
+              point.angle, 
+              point.baseRadius, 
+              circleIndex, 
+              pointIndex
+            );
+            
+            if (pointIndex === 0) {
+              svgContent += `${coords.x} ${coords.y} `;
+            } else {
+              svgContent += `L ${coords.x} ${coords.y} `;
+            }
+          });
+          
+          if (params.closePaths) {
+            svgContent += `Z`;
+          }
+          
+          svgContent += `" fill="none" stroke="black" stroke-width="${params.strokeWeight}" opacity="0">
+            <animate attributeName="opacity" values="0;1;0" dur="${frames/30}s" begin="${frame/30}s" repeatCount="indefinite" />
+          </path>`;
+        });
+      }
+      
+      svgContent += `</g></svg>`;
+      
+      // Download the animated SVG
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `perlin-circles-animated-${params.seed}.svg`;
+      a.click();
+      
+      // Restore original time
+      timeOffset = originalTime;
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Store original animation state
+      const originalAnimate = params.animateNoise;
+      const originalTime = timeOffset;
+      params.animateNoise = false;
+      
+      // Generate frames
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Update time for animation
+        timeOffset = originalTime + frame * params.timeSpeed * 10;
+        
+        // Clear and draw frame
+        clear();
+        background(255);
+        push();
+        translate(width/2, height/2);
+        
+        // Draw each circle
+        circles.forEach((circle, circleIndex) => {
+          push();
+          applyColor(circleIndex, circles.length);
+          strokeWeight(params.strokeWeight);
+          noFill();
+          
+          beginShape();
+          circle.points.forEach((point, pointIndex) => {
+            const coords = getDistortedPoint(
+              point.angle, 
+              point.baseRadius, 
+              circleIndex, 
+              pointIndex
+            );
+            vertex(coords.x, coords.y);
+          });
+          
+          if (params.closePaths) {
+            endShape(CLOSE);
+          } else {
+            endShape();
+          }
+          pop();
+        });
+        
+        pop();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      // Restore original state
+      params.animateNoise = originalAnimate;
+      timeOffset = originalTime;
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `perlin-circles-${params.patternType}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

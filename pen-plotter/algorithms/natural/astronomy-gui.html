@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astronomy - Pen Plotter Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        
+        .controls {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            height: fit-content;
+        }
+        
+        .canvas-container {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        canvas {
+            background-color: #000000;
+            border: 1px solid #333;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        input[type="number"], input[type="date"], input[type="time"], select {
+            width: 100%;
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a3a3a;
+            border-color: #666;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .export-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .value-display {
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+        }
+        
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            font-weight: normal;
+            letter-spacing: 2px;
+        }
+        
+        h3 {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .info-display {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #0a0a0a;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h3>Visualization Type</h3>
+            
+            <div class="control-group">
+                <label for="viewType">View Type</label>
+                <select id="viewType">
+                    <option value="starmap">Star Map</option>
+                    <option value="constellations">Constellations</option>
+                    <option value="solar-system">Solar System</option>
+                    <option value="moon-phases">Moon Phases</option>
+                    <option value="eclipse">Eclipse Diagram</option>
+                </select>
+            </div>
+            
+            <h3>Time & Location</h3>
+            
+            <div class="control-group">
+                <label for="viewDate">Date</label>
+                <input type="date" id="viewDate">
+            </div>
+            
+            <div class="control-group">
+                <label for="viewTime">Time</label>
+                <input type="time" id="viewTime">
+            </div>
+            
+            <div class="control-group">
+                <label for="latitude">Latitude</label>
+                <input type="range" id="latitude" min="-90" max="90" value="40">
+                <div class="value-display" id="latitudeValue">40°</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="longitude">Longitude</label>
+                <input type="range" id="longitude" min="-180" max="180" value="-74">
+                <div class="value-display" id="longitudeValue">-74°</div>
+            </div>
+            
+            <h3>Display Options</h3>
+            
+            <div class="control-group">
+                <label for="projection">Projection Type</label>
+                <select id="projection">
+                    <option value="stereographic">Stereographic</option>
+                    <option value="orthographic">Orthographic</option>
+                    <option value="mercator">Mercator</option>
+                    <option value="azimuthal">Azimuthal</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="magnitude">Star Magnitude Limit</label>
+                <input type="range" id="magnitude" min="1" max="6" step="0.5" value="4">
+                <div class="value-display" id="magnitudeValue">4.0</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="starSize">Star Size</label>
+                <input type="range" id="starSize" min="0.5" max="5" step="0.5" value="2">
+                <div class="value-display" id="starSizeValue">2.0</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="showGrid">Show Grid</label>
+                <input type="checkbox" id="showGrid" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="showLabels">Show Labels</label>
+                <input type="checkbox" id="showLabels" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="showConstellationLines">Show Constellation Lines</label>
+                <input type="checkbox" id="showConstellationLines" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="showPlanets">Show Planets</label>
+                <input type="checkbox" id="showPlanets" checked>
+            </div>
+            
+            <div class="button-group">
+                <button onclick="generateView()">Generate</button>
+                <button onclick="clearCanvas()">Clear</button>
+            </div>
+            
+            <h3>Animation</h3>
+            <div class="control-group">
+                <label for="animationSpeed">Animation Speed</label>
+                <input type="range" id="animationSpeed" min="1" max="100" value="10">
+                <div class="value-display" id="animationSpeedValue">10</div>
+            </div>
+            
+            <button onclick="animateView()">Animate</button>
+            
+            <div class="info-display" id="infoDisplay">
+                Click on objects for information
+            </div>
+            
+            <h3>Export Options</h3>
+            <div class="export-buttons">
+                <button onclick="exportSVG()">SVG</button>
+                <button onclick="exportPNG()">PNG</button>
+                <button onclick="exportGIF()">GIF</button>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <h1>ASTRONOMY</h1>
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentView = null;
+        let animationFrames = [];
+        let animationId = null;
+        
+        // Set current date/time
+        const now = new Date();
+        document.getElementById('viewDate').value = now.toISOString().split('T')[0];
+        document.getElementById('viewTime').value = now.toTimeString().slice(0, 5);
+        
+        // Update value displays
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const valueDisplay = document.getElementById(e.target.id + 'Value');
+                if (valueDisplay) {
+                    let value = e.target.value;
+                    if (e.target.id === 'latitude' || e.target.id === 'longitude') {
+                        value += '°';
+                    } else if (e.target.id === 'magnitude') {
+                        value = parseFloat(value).toFixed(1);
+                    }
+                    valueDisplay.textContent = value;
+                }
+            });
+        });
+        
+        // Simplified star catalog (normally would load from external source)
+        const starCatalog = [
+            // Bright stars with constellation info
+            {name: 'Sirius', ra: 101.287, dec: -16.716, mag: -1.46, constellation: 'CMa'},
+            {name: 'Vega', ra: 279.234, dec: 38.784, mag: 0.03, constellation: 'Lyr'},
+            {name: 'Arcturus', ra: 213.915, dec: 19.182, mag: -0.05, constellation: 'Boo'},
+            {name: 'Rigel', ra: 78.634, dec: -8.202, mag: 0.13, constellation: 'Ori'},
+            {name: 'Betelgeuse', ra: 88.793, dec: 7.407, mag: 0.42, constellation: 'Ori'},
+            {name: 'Altair', ra: 297.696, dec: 8.868, mag: 0.77, constellation: 'Aql'},
+            {name: 'Polaris', ra: 37.954, dec: 89.264, mag: 1.98, constellation: 'UMi'},
+            // Add more stars...
+        ];
+        
+        // Constellation lines (simplified)
+        const constellations = {
+            'Ori': [ // Orion
+                ['Betelgeuse', 'Bellatrix'],
+                ['Betelgeuse', 'Alnitak'],
+                ['Rigel', 'Saiph'],
+                ['Rigel', 'Alnitak'],
+                // Add more connections...
+            ],
+            'UMa': [ // Ursa Major (Big Dipper)
+                ['Dubhe', 'Merak'],
+                ['Merak', 'Phecda'],
+                ['Phecda', 'Megrez'],
+                // Add more connections...
+            ]
+        };
+        
+        class AstronomyView {
+            constructor(type) {
+                this.type = type;
+                this.objects = [];
+                this.time = this.getDateTime();
+            }
+            
+            getDateTime() {
+                const date = document.getElementById('viewDate').value;
+                const time = document.getElementById('viewTime').value;
+                return new Date(`${date}T${time}`);
+            }
+            
+            generateStarMap() {
+                const magnitude = parseFloat(document.getElementById('magnitude').value);
+                const lat = parseFloat(document.getElementById('latitude').value);
+                const lon = parseFloat(document.getElementById('longitude').value);
+                const projection = document.getElementById('projection').value;
+                
+                this.objects = [];
+                
+                // Calculate local sidereal time
+                const lst = this.calculateLST(this.time, lon);
+                
+                // Generate random stars for demonstration
+                for (let i = 0; i < 1000; i++) {
+                    const ra = Math.random() * 360;
+                    const dec = (Math.random() - 0.5) * 180;
+                    const mag = Math.random() * 6;
+                    
+                    if (mag <= magnitude) {
+                        const coords = this.projectCoordinates(ra, dec, lat, lst, projection);
+                        if (coords && coords.visible) {
+                            this.objects.push({
+                                type: 'star',
+                                x: coords.x,
+                                y: coords.y,
+                                mag: mag,
+                                ra: ra,
+                                dec: dec
+                            });
+                        }
+                    }
+                }
+                
+                // Add catalog stars
+                starCatalog.forEach(star => {
+                    if (star.mag <= magnitude) {
+                        const coords = this.projectCoordinates(star.ra, star.dec, lat, lst, projection);
+                        if (coords && coords.visible) {
+                            this.objects.push({
+                                type: 'catalogStar',
+                                x: coords.x,
+                                y: coords.y,
+                                mag: star.mag,
+                                name: star.name,
+                                constellation: star.constellation,
+                                ra: star.ra,
+                                dec: star.dec
+                            });
+                        }
+                    }
+                });
+            }
+            
+            generateSolarSystem() {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const scale = 50;
+                
+                this.objects = [];
+                
+                // Sun
+                this.objects.push({
+                    type: 'sun',
+                    x: centerX,
+                    y: centerY,
+                    radius: 20
+                });
+                
+                // Planets (simplified orbits)
+                const planets = [
+                    {name: 'Mercury', distance: 0.39, radius: 3, period: 88, color: '#8C7853'},
+                    {name: 'Venus', distance: 0.72, radius: 5, period: 225, color: '#FFC649'},
+                    {name: 'Earth', distance: 1.0, radius: 5, period: 365, color: '#4169E1'},
+                    {name: 'Mars', distance: 1.52, radius: 4, period: 687, color: '#CD5C5C'},
+                    {name: 'Jupiter', distance: 5.20, radius: 12, period: 4333, color: '#DAA520'},
+                    {name: 'Saturn', distance: 9.58, radius: 10, period: 10759, color: '#F4A460'},
+                    {name: 'Uranus', distance: 19.22, radius: 7, period: 30687, color: '#4FD0E0'},
+                    {name: 'Neptune', distance: 30.05, radius: 7, period: 60190, color: '#4169E1'}
+                ];
+                
+                const dayOfYear = Math.floor((this.time - new Date(this.time.getFullYear(), 0, 0)) / 86400000);
+                
+                planets.forEach(planet => {
+                    const angle = (dayOfYear / planet.period) * Math.PI * 2;
+                    const orbitRadius = planet.distance * scale;
+                    
+                    this.objects.push({
+                        type: 'planet',
+                        name: planet.name,
+                        x: centerX + Math.cos(angle) * orbitRadius,
+                        y: centerY + Math.sin(angle) * orbitRadius,
+                        radius: planet.radius,
+                        color: planet.color,
+                        orbitRadius: orbitRadius,
+                        orbitCenter: {x: centerX, y: centerY}
+                    });
+                });
+            }
+            
+            generateMoonPhases() {
+                const phases = 30;
+                const radius = 50;
+                const spacing = 150;
+                const startX = 100;
+                const startY = 100;
+                
+                this.objects = [];
+                
+                for (let i = 0; i < phases; i++) {
+                    const phase = i / phases;
+                    const row = Math.floor(i / 5);
+                    const col = i % 5;
+                    
+                    this.objects.push({
+                        type: 'moonPhase',
+                        x: startX + col * spacing,
+                        y: startY + row * spacing,
+                        radius: radius,
+                        phase: phase,
+                        day: i
+                    });
+                }
+            }
+            
+            calculateLST(date, longitude) {
+                // Simplified LST calculation
+                const J2000 = new Date('2000-01-01T12:00:00Z');
+                const daysSinceJ2000 = (date - J2000) / 86400000;
+                const lst = (280.16 + 360.9856235 * daysSinceJ2000 + longitude) % 360;
+                return lst;
+            }
+            
+            projectCoordinates(ra, dec, lat, lst, projection) {
+                // Convert to local coordinates
+                const ha = (lst - ra + 360) % 360;
+                const alt = Math.asin(
+                    Math.sin(dec * Math.PI / 180) * Math.sin(lat * Math.PI / 180) +
+                    Math.cos(dec * Math.PI / 180) * Math.cos(lat * Math.PI / 180) * 
+                    Math.cos(ha * Math.PI / 180)
+                );
+                const az = Math.atan2(
+                    -Math.cos(dec * Math.PI / 180) * Math.sin(ha * Math.PI / 180),
+                    Math.sin(dec * Math.PI / 180) * Math.cos(lat * Math.PI / 180) -
+                    Math.cos(dec * Math.PI / 180) * Math.cos(ha * Math.PI / 180) * 
+                    Math.sin(lat * Math.PI / 180)
+                );
+                
+                if (alt < 0) return {visible: false};
+                
+                let x, y;
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                const radius = canvas.width / 2 - 50;
+                
+                switch (projection) {
+                    case 'stereographic':
+                        const r = radius * Math.tan((Math.PI / 2 - alt) / 2);
+                        x = centerX + r * Math.sin(az);
+                        y = centerY - r * Math.cos(az);
+                        break;
+                    case 'orthographic':
+                        x = centerX + radius * Math.cos(alt) * Math.sin(az);
+                        y = centerY - radius * Math.cos(alt) * Math.cos(az);
+                        break;
+                    default:
+                        x = centerX + (az * 180 / Math.PI) * radius / 180;
+                        y = centerY - (alt * 180 / Math.PI) * radius / 90;
+                }
+                
+                return {x, y, visible: true};
+            }
+            
+            draw(ctx) {
+                ctx.fillStyle = '#000000';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const viewType = document.getElementById('viewType').value;
+                
+                switch (viewType) {
+                    case 'starmap':
+                    case 'constellations':
+                        this.drawStarMap(ctx);
+                        break;
+                    case 'solar-system':
+                        this.drawSolarSystem(ctx);
+                        break;
+                    case 'moon-phases':
+                        this.drawMoonPhases(ctx);
+                        break;
+                    case 'eclipse':
+                        this.drawEclipse(ctx);
+                        break;
+                }
+            }
+            
+            drawStarMap(ctx) {
+                const showGrid = document.getElementById('showGrid').checked;
+                const showLabels = document.getElementById('showLabels').checked;
+                const showConstellationLines = document.getElementById('showConstellationLines').checked;
+                const starSize = parseFloat(document.getElementById('starSize').value);
+                
+                // Draw grid
+                if (showGrid) {
+                    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                    ctx.lineWidth = 0.5;
+                    
+                    // Altitude circles
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    for (let alt = 0; alt <= 90; alt += 15) {
+                        const r = (canvas.width / 2 - 50) * (1 - alt / 90);
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, r, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+                    
+                    // Azimuth lines
+                    for (let az = 0; az < 360; az += 30) {
+                        const angle = az * Math.PI / 180;
+                        ctx.beginPath();
+                        ctx.moveTo(centerX, centerY);
+                        ctx.lineTo(
+                            centerX + Math.sin(angle) * (canvas.width / 2 - 50),
+                            centerY - Math.cos(angle) * (canvas.width / 2 - 50)
+                        );
+                        ctx.stroke();
+                    }
+                }
+                
+                // Draw stars
+                this.objects.forEach(obj => {
+                    if (obj.type === 'star' || obj.type === 'catalogStar') {
+                        const size = starSize * (1 + (6 - obj.mag) / 6);
+                        
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, size, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw star rays for bright stars
+                        if (obj.mag < 2) {
+                            ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                            ctx.lineWidth = 0.5;
+                            const rayLength = size * 3;
+                            for (let i = 0; i < 4; i++) {
+                                const angle = i * Math.PI / 2;
+                                ctx.beginPath();
+                                ctx.moveTo(
+                                    obj.x + Math.cos(angle) * size,
+                                    obj.y + Math.sin(angle) * size
+                                );
+                                ctx.lineTo(
+                                    obj.x + Math.cos(angle) * rayLength,
+                                    obj.y + Math.sin(angle) * rayLength
+                                );
+                                ctx.stroke();
+                            }
+                        }
+                        
+                        // Labels for named stars
+                        if (showLabels && obj.name) {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                            ctx.font = '10px Monaco';
+                            ctx.fillText(obj.name, obj.x + size + 5, obj.y + 3);
+                        }
+                    }
+                });
+                
+                // Draw constellation lines
+                if (showConstellationLines) {
+                    ctx.strokeStyle = 'rgba(100, 150, 255, 0.5)';
+                    ctx.lineWidth = 1;
+                    
+                    // This would connect stars based on constellation data
+                    // Simplified for demonstration
+                }
+                
+                // Draw compass
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '14px Monaco';
+                ctx.fillText('N', canvas.width / 2 - 5, 30);
+                ctx.fillText('S', canvas.width / 2 - 5, canvas.height - 20);
+                ctx.fillText('E', canvas.width - 30, canvas.height / 2 + 5);
+                ctx.fillText('W', 20, canvas.height / 2 + 5);
+            }
+            
+            drawSolarSystem(ctx) {
+                const showLabels = document.getElementById('showLabels').checked;
+                
+                this.objects.forEach(obj => {
+                    if (obj.type === 'sun') {
+                        // Draw sun
+                        const gradient = ctx.createRadialGradient(obj.x, obj.y, 0, obj.x, obj.y, obj.radius);
+                        gradient.addColorStop(0, '#FFFF00');
+                        gradient.addColorStop(0.7, '#FFA500');
+                        gradient.addColorStop(1, '#FF6347');
+                        ctx.fillStyle = gradient;
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (obj.type === 'planet') {
+                        // Draw orbit
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+                        ctx.lineWidth = 0.5;
+                        ctx.beginPath();
+                        ctx.arc(obj.orbitCenter.x, obj.orbitCenter.y, obj.orbitRadius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Draw planet
+                        ctx.fillStyle = obj.color;
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                        ctx.fill();
+                        
+                        // Draw rings for Saturn
+                        if (obj.name === 'Saturn') {
+                            ctx.strokeStyle = obj.color;
+                            ctx.lineWidth = 2;
+                            ctx.beginPath();
+                            ctx.ellipse(obj.x, obj.y, obj.radius * 1.8, obj.radius * 0.5, 0, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                        
+                        // Labels
+                        if (showLabels) {
+                            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                            ctx.font = '12px Monaco';
+                            ctx.fillText(obj.name, obj.x + obj.radius + 5, obj.y + 3);
+                        }
+                    }
+                });
+            }
+            
+            drawMoonPhases(ctx) {
+                this.objects.forEach(obj => {
+                    if (obj.type === 'moonPhase') {
+                        // Draw moon circle
+                        ctx.strokeStyle = '#ffffff';
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                        ctx.stroke();
+                        
+                        // Draw phase
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(obj.x, obj.y, obj.radius, 0, Math.PI * 2);
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        // Create phase shadow
+                        ctx.fillStyle = '#000000';
+                        ctx.beginPath();
+                        
+                        if (obj.phase < 0.5) {
+                            // Waxing
+                            const width = obj.radius * 2 * (0.5 - obj.phase) * 2;
+                            ctx.ellipse(obj.x - obj.radius + width / 2, obj.y, width / 2, obj.radius, 0, -Math.PI / 2, Math.PI / 2);
+                        } else {
+                            // Waning
+                            const width = obj.radius * 2 * (obj.phase - 0.5) * 2;
+                            ctx.ellipse(obj.x + obj.radius - width / 2, obj.y, width / 2, obj.radius, 0, Math.PI / 2, -Math.PI / 2);
+                        }
+                        
+                        ctx.closePath();
+                        ctx.fill();
+                        
+                        // Label
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                        ctx.font = '10px Monaco';
+                        ctx.fillText(`Day ${obj.day}`, obj.x - 15, obj.y + obj.radius + 20);
+                    }
+                });
+            }
+            
+            drawEclipse(ctx) {
+                const centerX = canvas.width / 2;
+                const centerY = canvas.height / 2;
+                
+                // Draw sun
+                ctx.fillStyle = '#FFFF00';
+                ctx.beginPath();
+                ctx.arc(centerX - 50, centerY, 60, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw moon shadow
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(centerX + 30, centerY, 55, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Draw corona
+                ctx.strokeStyle = '#FFA500';
+                ctx.lineWidth = 3;
+                for (let i = 0; i < 20; i++) {
+                    const angle = (i / 20) * Math.PI * 2;
+                    const innerR = 60;
+                    const outerR = 80 + Math.random() * 20;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(
+                        centerX - 50 + Math.cos(angle) * innerR,
+                        centerY + Math.sin(angle) * innerR
+                    );
+                    ctx.lineTo(
+                        centerX - 50 + Math.cos(angle) * outerR,
+                        centerY + Math.sin(angle) * outerR
+                    );
+                    ctx.stroke();
+                }
+                
+                // Labels
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.font = '14px Monaco';
+                ctx.fillText('Total Solar Eclipse', centerX - 70, centerY + 120);
+            }
+        }
+        
+        function generateView() {
+            const viewType = document.getElementById('viewType').value;
+            currentView = new AstronomyView(viewType);
+            
+            switch (viewType) {
+                case 'starmap':
+                case 'constellations':
+                    currentView.generateStarMap();
+                    break;
+                case 'solar-system':
+                    currentView.generateSolarSystem();
+                    break;
+                case 'moon-phases':
+                    currentView.generateMoonPhases();
+                    break;
+            }
+            
+            currentView.draw(ctx);
+        }
+        
+        function animateView() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+                return;
+            }
+            
+            animationFrames = [];
+            const viewType = document.getElementById('viewType').value;
+            const speed = parseInt(document.getElementById('animationSpeed').value);
+            
+            let frame = 0;
+            const animate = () => {
+                if (viewType === 'solar-system') {
+                    // Animate planet positions
+                    const date = new Date(currentView.time);
+                    date.setDate(date.getDate() + frame * speed);
+                    document.getElementById('viewDate').value = date.toISOString().split('T')[0];
+                    
+                    generateView();
+                    
+                    // Capture frame
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    animationFrames.push(imageData);
+                    
+                    frame++;
+                    if (frame < 365 / speed) {
+                        animationId = requestAnimationFrame(animate);
+                    } else {
+                        animationId = null;
+                    }
+                } else if (viewType === 'starmap') {
+                    // Animate star positions through the night
+                    const date = new Date(currentView.time);
+                    date.setHours(date.getHours() + frame * speed / 60);
+                    document.getElementById('viewTime').value = date.toTimeString().slice(0, 5);
+                    
+                    generateView();
+                    
+                    // Capture frame
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    animationFrames.push(imageData);
+                    
+                    frame++;
+                    if (frame < 24 * 60 / speed) {
+                        animationId = requestAnimationFrame(animate);
+                    } else {
+                        animationId = null;
+                    }
+                }
+            };
+            
+            animate();
+        }
+        
+        function clearCanvas() {
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            currentView = null;
+            animationFrames = [];
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        }
+        
+        function exportSVG() {
+            if (!currentView) return;
+            
+            let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="#000000"/>`;
+            
+            const starSize = parseFloat(document.getElementById('starSize').value);
+            
+            currentView.objects.forEach(obj => {
+                if (obj.type === 'star' || obj.type === 'catalogStar') {
+                    const size = starSize * (1 + (6 - obj.mag) / 6);
+                    svg += `<circle cx="${obj.x}" cy="${obj.y}" r="${size}" fill="white"/>`;
+                    
+                    if (obj.name) {
+                        svg += `<text x="${obj.x + size + 5}" y="${obj.y + 3}" fill="white" `;
+                        svg += `font-family="Monaco" font-size="10" opacity="0.7">${obj.name}</text>`;
+                    }
+                } else if (obj.type === 'planet') {
+                    svg += `<circle cx="${obj.orbitCenter.x}" cy="${obj.orbitCenter.y}" `;
+                    svg += `r="${obj.orbitRadius}" fill="none" stroke="white" stroke-width="0.5" opacity="0.2"/>`;
+                    svg += `<circle cx="${obj.x}" cy="${obj.y}" r="${obj.radius}" fill="${obj.color}"/>`;
+                    
+                    if (obj.name) {
+                        svg += `<text x="${obj.x + obj.radius + 5}" y="${obj.y + 3}" fill="white" `;
+                        svg += `font-family="Monaco" font-size="12" opacity="0.8">${obj.name}</text>`;
+                    }
+                }
+            });
+            
+            svg += '</svg>';
+            
+            const blob = new Blob([svg], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'astronomy.svg';
+            a.click();
+        }
+        
+        function exportPNG() {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'astronomy.png';
+                a.click();
+            });
+        }
+        
+        function exportGIF() {
+            if (animationFrames.length === 0) {
+                alert('Please animate the view first!');
+                return;
+            }
+            
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height
+            });
+            
+            animationFrames.forEach(frame => {
+                gif.addFrame(frame, {delay: 100});
+            });
+            
+            gif.on('finished', blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'astronomy.gif';
+                a.click();
+            });
+            
+            gif.render();
+        }
+        
+        // Click interaction
+        canvas.addEventListener('click', (e) => {
+            if (!currentView) return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // Find clicked object
+            let clicked = null;
+            let minDist = Infinity;
+            
+            currentView.objects.forEach(obj => {
+                const dist = Math.sqrt((obj.x - x) ** 2 + (obj.y - y) ** 2);
+                const threshold = obj.radius || 5;
+                
+                if (dist < threshold && dist < minDist) {
+                    minDist = dist;
+                    clicked = obj;
+                }
+            });
+            
+            if (clicked) {
+                let info = '';
+                if (clicked.name) {
+                    info = `${clicked.name}`;
+                    if (clicked.constellation) info += ` (${clicked.constellation})`;
+                    if (clicked.mag !== undefined) info += `\nMagnitude: ${clicked.mag.toFixed(2)}`;
+                    if (clicked.ra !== undefined) info += `\nRA: ${clicked.ra.toFixed(2)}°`;
+                    if (clicked.dec !== undefined) info += `\nDec: ${clicked.dec.toFixed(2)}°`;
+                }
+                
+                document.getElementById('infoDisplay').textContent = info || 'Object selected';
+            }
+        });
+        
+        // Initial generation
+        generateView();
+    </script>
+</body>
+</html>

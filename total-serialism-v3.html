@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism × Generative Art v3 - Maximum Variety</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+        
+        #container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #0a0a0a;
+        }
+        
+        #controls {
+            width: 360px;
+            background: rgba(10, 10, 10, 0.95);
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid #222;
+        }
+        
+        h1 {
+            font-size: 20px;
+            color: #f39c12;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        
+        .stats {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            line-height: 1.8;
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .stats-label {
+            color: #888;
+        }
+        
+        .stats-value {
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        .control-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .control-section:last-child {
+            border-bottom: none;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            color: #f39c12;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #f39c12;
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #e67e22;
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .parameter {
+            margin-bottom: 20px;
+        }
+        
+        .parameter-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .parameter-label {
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        .parameter-value {
+            font-size: 12px;
+            color: #f39c12;
+            font-weight: 600;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+            border-radius: 2px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #f39c12;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        select {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a1a;
+            color: #fff;
+            border: 1px solid #333;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        select:focus {
+            outline: none;
+            border-color: #f39c12;
+        }
+        
+        .feature-indicators {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .feature-badge {
+            padding: 4px 12px;
+            background: rgba(243, 156, 18, 0.2);
+            color: #f39c12;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .feature-badge.rare {
+            background: rgba(155, 89, 182, 0.2);
+            color: #9b59b6;
+        }
+        
+        .feature-badge.epic {
+            background: rgba(52, 152, 219, 0.2);
+            color: #3498db;
+        }
+        
+        .keyboard-shortcuts {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 11px;
+            line-height: 1.8;
+        }
+        
+        .shortcut {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        
+        .key {
+            background: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Initializing algorithms...</div>
+    
+    <div id="container" style="display: none;">
+        <div id="canvas-container"></div>
+        
+        <div id="controls">
+            <h1>TOTAL SERIALISM V3</h1>
+            
+            <div class="stats">
+                <div class="stats-row">
+                    <span class="stats-label">Algorithm</span>
+                    <span class="stats-value" id="current-algorithm">-</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">Palette</span>
+                    <span class="stats-value" id="current-palette">-</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">Complexity</span>
+                    <span class="stats-value" id="complexity-score">-</span>
+                </div>
+                <div class="stats-row">
+                    <span class="stats-label">Seed</span>
+                    <span class="stats-value" id="current-seed">-</span>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-title">Actions</div>
+                <div class="button-group">
+                    <button id="btn-generate">Generate</button>
+                    <button id="btn-mutate">Mutate</button>
+                </div>
+                <div class="button-group">
+                    <button id="btn-save-png">Save PNG</button>
+                    <button id="btn-save-svg">Save SVG</button>
+                </div>
+                <button id="btn-surprise">Surprise Me!</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-title">Algorithm</div>
+                <select id="algorithm-select">
+                    <option value="auto">Auto Select</option>
+                    <option value="flow">Flow Fields</option>
+                    <option value="rings">Ring Systems</option>
+                    <option value="particles">Particle Swarms</option>
+                    <option value="tessellation">Tessellations</option>
+                    <option value="waves">Wave Interference</option>
+                    <option value="hybrid">Hybrid Mode</option>
+                </select>
+                
+                <div class="feature-indicators" id="active-features">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-title">Core Parameters</div>
+                
+                <div class="parameter">
+                    <div class="parameter-header">
+                        <span class="parameter-label">Complexity</span>
+                        <span class="parameter-value" id="complexity-value">0.5</span>
+                    </div>
+                    <input type="range" id="complexity" min="0" max="1" step="0.01" value="0.5">
+                </div>
+                
+                <div class="parameter">
+                    <div class="parameter-header">
+                        <span class="parameter-label">Density</span>
+                        <span class="parameter-value" id="density-value">0.5</span>
+                    </div>
+                    <input type="range" id="density" min="0" max="1" step="0.01" value="0.5">
+                </div>
+                
+                <div class="parameter">
+                    <div class="parameter-header">
+                        <span class="parameter-label">Chaos</span>
+                        <span class="parameter-value" id="chaos-value">0.3</span>
+                    </div>
+                    <input type="range" id="chaos" min="0" max="1" step="0.01" value="0.3">
+                </div>
+                
+                <div class="parameter">
+                    <div class="parameter-header">
+                        <span class="parameter-label">Scale</span>
+                        <span class="parameter-value" id="scale-value">1</span>
+                    </div>
+                    <input type="range" id="scale" min="0.1" max="3" step="0.1" value="1">
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="section-title">Color System</div>
+                
+                <select id="palette-select">
+                    <option value="auto">Auto Select</option>
+                    <option value="luxe">Luxe (Common)</option>
+                    <option value="vintage">Vintage</option>
+                    <option value="neon">Neon Dreams</option>
+                    <option value="earth">Earth Tones</option>
+                    <option value="ocean">Deep Ocean</option>
+                    <option value="sunset">Sunset</option>
+                    <option value="monochrome">Monochrome</option>
+                    <option value="candy">Candy Shop</option>
+                    <option value="forest">Forest</option>
+                    <option value="cosmic">Cosmic</option>
+                    <option value="pastel">Soft Pastel</option>
+                    <option value="jazz">Jazz Club</option>
+                    <option value="matrix">Matrix</option>
+                    <option value="fire">Fire</option>
+                    <option value="ice">Ice Crystal</option>
+                    <option value="royal">Royal</option>
+                    <option value="punk">Cyberpunk</option>
+                    <option value="derived">Derived (Rare)</option>
+                    <option value="glitch">Glitch (Epic)</option>
+                </select>
+                
+                <div class="parameter">
+                    <div class="parameter-header">
+                        <span class="parameter-label">Saturation</span>
+                        <span class="parameter-value" id="saturation-value">0.7</span>
+                    </div>
+                    <input type="range" id="saturation" min="0" max="1" step="0.01" value="0.7">
+                </div>
+                
+                <div class="parameter">
+                    <div class="parameter-header">
+                        <span class="parameter-label">Brightness</span>
+                        <span class="parameter-value" id="brightness-value">0.5</span>
+                    </div>
+                    <input type="range" id="brightness" min="0" max="1" step="0.01" value="0.5">
+                </div>
+            </div>
+            
+            <div class="keyboard-shortcuts">
+                <div class="section-title">Shortcuts</div>
+                <div class="shortcut">
+                    <span>Generate</span>
+                    <span class="key">R</span>
+                </div>
+                <div class="shortcut">
+                    <span>Save PNG</span>
+                    <span class="key">P</span>
+                </div>
+                <div class="shortcut">
+                    <span>Save SVG</span>
+                    <span class="key">S</span>
+                </div>
+                <div class="shortcut">
+                    <span>Surprise</span>
+                    <span class="key">Space</span>
+                </div>
+                <div class="shortcut">
+                    <span>Mutate</span>
+                    <span class="key">M</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="collision-detection.js"></script>
+    <script src="golden-ratio-composition.js"></script>
+    <script src="total-serialism-v3-engine.js"></script>
+    
+    <script>
+        // Add event listeners after everything loads
+        window.addEventListener('load', function() {
+            console.log('Page loaded, setting up event listeners...');
+            
+            // Wait a bit for artwork to initialize
+            setTimeout(function() {
+                if (window.artwork) {
+                    console.log('Artwork found, attaching event listeners');
+                    
+                    // Button events
+                    const btnGenerate = document.getElementById('btn-generate');
+                    const btnMutate = document.getElementById('btn-mutate');
+                    const btnSavePng = document.getElementById('btn-save-png');
+                    const btnSaveSvg = document.getElementById('btn-save-svg');
+                    const btnSurprise = document.getElementById('btn-surprise');
+                    
+                    if (btnGenerate) btnGenerate.addEventListener('click', () => artwork.generate());
+                    if (btnMutate) btnMutate.addEventListener('click', () => artwork.mutate());
+                    if (btnSavePng) btnSavePng.addEventListener('click', () => artwork.saveImage());
+                    if (btnSaveSvg) btnSaveSvg.addEventListener('click', () => artwork.saveSVG());
+                    if (btnSurprise) btnSurprise.addEventListener('click', () => artwork.surprise());
+                    
+                    // Select events
+                    const algorithmSelect = document.getElementById('algorithm-select');
+                    const paletteSelect = document.getElementById('palette-select');
+                    
+                    if (algorithmSelect) {
+                        algorithmSelect.addEventListener('change', (e) => artwork.setAlgorithm(e.target.value));
+                    }
+                    if (paletteSelect) {
+                        paletteSelect.addEventListener('change', (e) => artwork.setPalette(e.target.value));
+                    }
+                    
+                    console.log('Event listeners attached successfully');
+                } else {
+                    console.error('Artwork object not found after timeout');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

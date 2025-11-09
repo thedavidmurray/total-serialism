@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Grid Landscape Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Grid Landscape</h2>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">40</span></label>
+        <input type="range" id="gridSize" min="10" max="100" value="40" step="5">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">15</span>px</label>
+        <input type="range" id="cellSize" min="5" max="30" value="15" step="1">
+      </div>
+      <div class="control">
+        <label>Height Range: <span class="value" id="heightRange-val">100</span></label>
+        <input type="range" id="heightRange" min="20" max="300" value="100" step="10">
+      </div>
+      <div class="control">
+        <label>Height Source:</label>
+        <select id="heightSource">
+          <option value="perlin">Perlin Noise</option>
+          <option value="simplex">Simplex-like</option>
+          <option value="diamond">Diamond Square</option>
+          <option value="fault">Fault Lines</option>
+          <option value="erosion">Erosion</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Terrain</h3>
+      <div class="control">
+        <label>Roughness: <span class="value" id="roughness-val">0.5</span></label>
+        <input type="range" id="roughness" min="0" max="1" value="0.5" step="0.05">
+      </div>
+      <div class="control">
+        <label>Noise Scale: <span class="value" id="noiseScale-val">0.05</span></label>
+        <input type="range" id="noiseScale" min="0.01" max="0.2" value="0.05" step="0.01">
+      </div>
+      <div class="control">
+        <label>Terrain Type:</label>
+        <select id="terrainType">
+          <option value="mountains">Mountains</option>
+          <option value="hills">Rolling Hills</option>
+          <option value="plateau">Plateau</option>
+          <option value="canyon">Canyon</option>
+          <option value="islands">Islands</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="addRivers">
+        <label for="addRivers">Add Rivers</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Visualization</h3>
+      <div class="control">
+        <label>View Style:</label>
+        <select id="viewStyle">
+          <option value="wireframe">Wireframe</option>
+          <option value="contours">Contour Lines</option>
+          <option value="dots">Height Dots</option>
+          <option value="columns">3D Columns</option>
+          <option value="isometric">Isometric</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Connection Type:</label>
+        <select id="connectionType">
+          <option value="all">All Connections</option>
+          <option value="orthogonal">Orthogonal Only</option>
+          <option value="diagonal">Diagonal Only</option>
+          <option value="delaunay">Delaunay</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Perspective: <span class="value" id="perspective-val">0.5</span></label>
+        <input type="range" id="perspective" min="0" max="1" value="0.5" step="0.05">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="lineWeight-val">1</span></label>
+        <input type="range" id="lineWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="height">Height-based</option>
+          <option value="gradient">Gradient</option>
+          <option value="terrain">Terrain Colors</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showGrid" checked>
+        <label for="showGrid">Show Grid Lines</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="hiddenLines">
+        <label for="hiddenLines">Hide Back Lines</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="smoothTerrain()">Smooth Terrain</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportHeightMap()">Export Height Data</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      gridSize: 40,
+      cellSize: 15,
+      heightRange: 100,
+      heightSource: 'perlin',
+      roughness: 0.5,
+      noiseScale: 0.05,
+      terrainType: 'mountains',
+      addRivers: false,
+      viewStyle: 'wireframe',
+      connectionType: 'all',
+      perspective: 0.5,
+      lineWeight: 1,
+      colorMode: 'mono',
+      showGrid: true,
+      hiddenLines: false
+    };
+    
+    let heightGrid = [];
+    let riverPaths = [];
+    let svgCanvas;
+    let gifExporter;
+    let rotationAngle = 0;
+    let isAnimating = false;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 3,
+        quality: 10,
+        width: w,
+        height: h,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+      
+      gifExporter.init(svgCanvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording' 
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          isAnimating = false;
+          noLoop();
+          
+          const link = document.createElement('a');
+          link.href = result.url;
+          link.download = `grid-landscape-${Date.now()}.gif`;
+          link.click();
+        }
+      });
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      generateHeightGrid();
+      if (params.addRivers) {
+        generateRivers();
+      }
+      redraw();
+    }
+    
+    function generateHeightGrid() {
+      heightGrid = [];
+      
+      // Apply terrain type modifiers
+      applyTerrainType();
+      
+      switch (params.heightSource) {
+        case 'perlin':
+          generatePerlinHeights();
+          break;
+        case 'simplex':
+          generateSimplexLikeHeights();
+          break;
+        case 'diamond':
+          generateDiamondSquare();
+          break;
+        case 'fault':
+          generateFaultLines();
+          break;
+        case 'erosion':
+          generateWithErosion();
+          break;
+      }
+    }
+    
+    function generatePerlinHeights() {
+      for (let y = 0; y < params.gridSize; y++) {
+        heightGrid[y] = [];
+        for (let x = 0; x < params.gridSize; x++) {
+          let height = 0;
+          let amplitude = 1;
+          let frequency = params.noiseScale;
+          
+          // Multiple octaves for detail
+          for (let i = 0; i < 4; i++) {
+            height += noise(x * frequency, y * frequency) * amplitude;
+            amplitude *= params.roughness;
+            frequency *= 2;
+          }
+          
+          heightGrid[y][x] = height * params.heightRange;
+        }
+      }
+    }
+    
+    function generateSimplexLikeHeights() {
+      for (let y = 0; y < params.gridSize; y++) {
+        heightGrid[y] = [];
+        for (let x = 0; x < params.gridSize; x++) {
+          // Simulate simplex-like noise with offset perlin
+          const n1 = noise(x * params.noiseScale, y * params.noiseScale);
+          const n2 = noise(x * params.noiseScale + 100, y * params.noiseScale + 100);
+          const height = (n1 * 0.7 + n2 * 0.3) * params.heightRange;
+          heightGrid[y][x] = height;
+        }
+      }
+    }
+    
+    function generateDiamondSquare() {
+      // Initialize corners
+      const size = params.gridSize;
+      for (let y = 0; y < size; y++) {
+        heightGrid[y] = new Array(size).fill(0);
+      }
+      
+      heightGrid[0][0] = random(params.heightRange);
+      heightGrid[0][size-1] = random(params.heightRange);
+      heightGrid[size-1][0] = random(params.heightRange);
+      heightGrid[size-1][size-1] = random(params.heightRange);
+      
+      // Diamond-square algorithm
+      let stepSize = size - 1;
+      let scale = params.heightRange * params.roughness;
+      
+      while (stepSize > 1) {
+        const halfStep = stepSize / 2;
+        
+        // Diamond step
+        for (let y = halfStep; y < size; y += stepSize) {
+          for (let x = halfStep; x < size; x += stepSize) {
+            const avg = (
+              getHeight(x - halfStep, y - halfStep) +
+              getHeight(x + halfStep, y - halfStep) +
+              getHeight(x - halfStep, y + halfStep) +
+              getHeight(x + halfStep, y + halfStep)
+            ) / 4;
+            heightGrid[floor(y)][floor(x)] = avg + random(-scale, scale);
+          }
+        }
+        
+        // Square step
+        for (let y = 0; y < size; y += halfStep) {
+          for (let x = (y + halfStep) % stepSize; x < size; x += stepSize) {
+            const avg = (
+              getHeight(x, y - halfStep) +
+              getHeight(x - halfStep, y) +
+              getHeight(x + halfStep, y) +
+              getHeight(x, y + halfStep)
+            ) / 4;
+            if (floor(y) < size && floor(x) < size) {
+              heightGrid[floor(y)][floor(x)] = avg + random(-scale, scale);
+            }
+          }
+        }
+        
+        stepSize = floor(stepSize / 2);
+        scale *= params.roughness;
+      }
+    }
+    
+    function generateFaultLines() {
+      // Initialize flat terrain
+      for (let y = 0; y < params.gridSize; y++) {
+        heightGrid[y] = new Array(params.gridSize).fill(params.heightRange / 2);
+      }
+      
+      // Create fault lines
+      const faults = floor(params.gridSize / 4);
+      for (let i = 0; i < faults; i++) {
+        const angle = random(TWO_PI);
+        const distance = random(-params.gridSize/2, params.gridSize/2);
+        const displacement = random(-params.heightRange/10, params.heightRange/10);
+        
+        for (let y = 0; y < params.gridSize; y++) {
+          for (let x = 0; x < params.gridSize; x++) {
+            const cx = x - params.gridSize/2;
+            const cy = y - params.gridSize/2;
+            const d = cx * cos(angle) + cy * sin(angle);
+            
+            if (d > distance) {
+              heightGrid[y][x] += displacement;
+            }
+          }
+        }
+      }
+      
+      // Smooth
+      smoothTerrain();
+    }
+    
+    function generateWithErosion() {
+      // Start with perlin noise
+      generatePerlinHeights();
+      
+      // Apply erosion simulation
+      const iterations = 20;
+      for (let i = 0; i < iterations; i++) {
+        const newGrid = [];
+        
+        for (let y = 0; y < params.gridSize; y++) {
+          newGrid[y] = [];
+          for (let x = 0; x < params.gridSize; x++) {
+            const neighbors = [
+              getHeight(x-1, y), getHeight(x+1, y),
+              getHeight(x, y-1), getHeight(x, y+1)
+            ];
+            const avgNeighbor = neighbors.reduce((a, b) => a + b) / 4;
+            const current = heightGrid[y][x];
+            
+            // Erosion formula
+            newGrid[y][x] = current * 0.7 + avgNeighbor * 0.3;
+          }
+        }
+        
+        heightGrid = newGrid;
+      }
+    }
+    
+    function applyTerrainType() {
+      // Modify generation parameters based on terrain type
+      switch (params.terrainType) {
+        case 'mountains':
+          params.roughness = max(params.roughness, 0.7);
+          break;
+        case 'hills':
+          params.roughness = min(params.roughness, 0.4);
+          params.noiseScale *= 2;
+          break;
+        case 'plateau':
+          // Will be applied after generation
+          break;
+        case 'canyon':
+          // Will be applied after generation
+          break;
+        case 'islands':
+          // Will be applied after generation
+          break;
+      }
+    }
+    
+    function getHeight(x, y) {
+      x = constrain(floor(x), 0, params.gridSize - 1);
+      y = constrain(floor(y), 0, params.gridSize - 1);
+      return heightGrid[y][x];
+    }
+    
+    function generateRivers() {
+      riverPaths = [];
+      
+      // Find high points to start rivers
+      for (let i = 0; i < 3; i++) {
+        let startX = floor(random(params.gridSize));
+        let startY = floor(random(params.gridSize));
+        
+        // Find local maximum
+        for (let j = 0; j < 10; j++) {
+          const neighbors = [
+            {x: startX-1, y: startY},
+            {x: startX+1, y: startY},
+            {x: startX, y: startY-1},
+            {x: startX, y: startY+1}
+          ];
+          
+          let highest = getHeight(startX, startY);
+          let nextX = startX, nextY = startY;
+          
+          neighbors.forEach(n => {
+            if (n.x >= 0 && n.x < params.gridSize && 
+                n.y >= 0 && n.y < params.gridSize) {
+              const h = getHeight(n.x, n.y);
+              if (h > highest) {
+                highest = h;
+                nextX = n.x;
+                nextY = n.y;
+              }
+            }
+          });
+          
+          startX = nextX;
+          startY = nextY;
+        }
+        
+        // Flow downhill
+        const path = [{x: startX, y: startY}];
+        let x = startX, y = startY;
+        
+        for (let step = 0; step < params.gridSize * 2; step++) {
+          const neighbors = [
+            {x: x-1, y: y},
+            {x: x+1, y: y},
+            {x: x, y: y-1},
+            {x: x, y: y+1}
+          ];
+          
+          let lowest = getHeight(x, y);
+          let nextX = x, nextY = y;
+          
+          neighbors.forEach(n => {
+            if (n.x >= 0 && n.x < params.gridSize && 
+                n.y >= 0 && n.y < params.gridSize) {
+              const h = getHeight(n.x, n.y);
+              if (h < lowest) {
+                lowest = h;
+                nextX = n.x;
+                nextY = n.y;
+              }
+            }
+          });
+          
+          if (nextX === x && nextY === y) break; // Local minimum
+          
+          x = nextX;
+          y = nextY;
+          path.push({x, y});
+          
+          // Carve river
+          heightGrid[y][x] *= 0.8;
+        }
+        
+        if (path.length > 5) {
+          riverPaths.push(path);
+        }
+      }
+    }
+    
+    function draw() {
+      background(255);
+      
+      push();
+      translate(width/2, height/2);
+      
+      if (isAnimating) {
+        rotationAngle += 0.02;
+        rotate(rotationAngle);
+      }
+      
+      switch (params.viewStyle) {
+        case 'wireframe':
+          drawWireframe();
+          break;
+        case 'contours':
+          drawContours();
+          break;
+        case 'dots':
+          drawHeightDots();
+          break;
+        case 'columns':
+          draw3DColumns();
+          break;
+        case 'isometric':
+          drawIsometric();
+          break;
+      }
+      
+      // Draw rivers
+      if (params.addRivers) {
+        drawRivers();
+      }
+      
+      pop();
+      
+      // Capture frame for GIF
+      if (isAnimating && gifExporter && gifExporter.isRecording()) {
+        gifExporter.captureFrame();
+      }
+      
+      if (!isAnimating) {
+        noLoop();
+      }
+    }
+    
+    function drawWireframe() {
+      const offsetX = -(params.gridSize * params.cellSize) / 2;
+      const offsetY = -(params.gridSize * params.cellSize) / 2;
+      
+      noFill();
+      
+      for (let y = 0; y < params.gridSize - 1; y++) {
+        for (let x = 0; x < params.gridSize - 1; x++) {
+          const x1 = offsetX + x * params.cellSize;
+          const y1 = offsetY + y * params.cellSize;
+          const x2 = x1 + params.cellSize;
+          const y2 = y1 + params.cellSize;
+          
+          const h00 = heightGrid[y][x];
+          const h10 = heightGrid[y][x + 1];
+          const h01 = heightGrid[y + 1][x];
+          const h11 = heightGrid[y + 1][x + 1];
+          
+          // Apply perspective
+          const p = params.perspective;
+          const z00 = -h00 * p;
+          const z10 = -h10 * p;
+          const z01 = -h01 * p;
+          const z11 = -h11 * p;
+          
+          applyColorForHeight((h00 + h10 + h01 + h11) / 4);
+          strokeWeight(params.lineWeight);
+          
+          // Draw connections based on type
+          if (params.connectionType === 'all' || params.connectionType === 'orthogonal') {
+            line(x1, y1 + z00, x2, y1 + z10);
+            line(x1, y1 + z00, x1, y2 + z01);
+          }
+          
+          if (params.connectionType === 'all' || params.connectionType === 'diagonal') {
+            line(x1, y1 + z00, x2, y2 + z11);
+          }
+          
+          // Complete the grid
+          if (x === params.gridSize - 2) {
+            line(x2, y1 + z10, x2, y2 + z11);
+          }
+          if (y === params.gridSize - 2) {
+            line(x1, y2 + z01, x2, y2 + z11);
+          }
+        }
+      }
+    }
+    
+    function drawContours() {
+      const levels = 10;
+      const interval = params.heightRange / levels;
+      
+      noFill();
+      
+      for (let level = 1; level < levels; level++) {
+        const targetHeight = level * interval;
+        
+        strokeWeight(params.lineWeight);
+        applyColorForHeight(targetHeight);
+        
+        // Simple contour lines
+        beginShape();
+        for (let y = 0; y < params.gridSize; y++) {
+          for (let x = 0; x < params.gridSize; x++) {
+            if (abs(heightGrid[y][x] - targetHeight) < interval / 2) {
+              const px = (x - params.gridSize/2) * params.cellSize;
+              const py = (y - params.gridSize/2) * params.cellSize;
+              vertex(px, py);
+            }
+          }
+        }
+        endShape();
+      }
+    }
+    
+    function drawHeightDots() {
+      for (let y = 0; y < params.gridSize; y++) {
+        for (let x = 0; x < params.gridSize; x++) {
+          const px = (x - params.gridSize/2) * params.cellSize;
+          const py = (y - params.gridSize/2) * params.cellSize;
+          const h = heightGrid[y][x];
+          
+          const size = map(h, 0, params.heightRange, 1, params.cellSize);
+          
+          applyColorForHeight(h);
+          noStroke();
+          fill(0);
+          ellipse(px, py, size);
+        }
+      }
+    }
+    
+    function draw3DColumns() {
+      const offsetX = -(params.gridSize * params.cellSize) / 2;
+      const offsetY = -(params.gridSize * params.cellSize) / 2;
+      
+      for (let y = params.gridSize - 1; y >= 0; y--) {
+        for (let x = 0; x < params.gridSize; x++) {
+          const px = offsetX + x * params.cellSize;
+          const py = offsetY + y * params.cellSize;
+          const h = heightGrid[y][x];
+          
+          applyColorForHeight(h);
+          strokeWeight(params.lineWeight);
+          
+          // Draw column
+          const colHeight = h * params.perspective;
+          
+          // Front face
+          fill(255);
+          rect(px, py - colHeight, params.cellSize, colHeight);
+          
+          // Top face
+          noFill();
+          quad(
+            px, py - colHeight,
+            px + params.cellSize, py - colHeight,
+            px + params.cellSize * 0.7, py - colHeight - params.cellSize * 0.3,
+            px - params.cellSize * 0.3, py - colHeight - params.cellSize * 0.3
+          );
+        }
+      }
+    }
+    
+    function drawIsometric() {
+      const iso = {
+        x: (x, y) => (x - y) * params.cellSize * 0.866,
+        y: (x, y, z) => (x + y) * params.cellSize * 0.5 - z
+      };
+      
+      noFill();
+      strokeWeight(params.lineWeight);
+      
+      // Draw grid lines
+      for (let y = 0; y < params.gridSize - 1; y++) {
+        for (let x = 0; x < params.gridSize - 1; x++) {
+          const h = heightGrid[y][x];
+          applyColorForHeight(h);
+          
+          const x1 = iso.x(x, y);
+          const y1 = iso.y(x, y, h);
+          const x2 = iso.x(x + 1, y);
+          const y2 = iso.y(x + 1, y, heightGrid[y][x + 1]);
+          const x3 = iso.x(x, y + 1);
+          const y3 = iso.y(x, y + 1, heightGrid[y + 1][x]);
+          
+          line(x1, y1, x2, y2);
+          line(x1, y1, x3, y3);
+        }
+      }
+    }
+    
+    function drawRivers() {
+      stroke(100, 150, 200);
+      strokeWeight(params.lineWeight * 2);
+      noFill();
+      
+      riverPaths.forEach(path => {
+        beginShape();
+        path.forEach(point => {
+          const px = (point.x - params.gridSize/2) * params.cellSize;
+          const py = (point.y - params.gridSize/2) * params.cellSize;
+          const h = heightGrid[point.y][point.x];
+          const z = -h * params.perspective;
+          vertex(px, py + z);
+        });
+        endShape();
+      });
+    }
+    
+    function applyColorForHeight(height) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+        case 'height':
+          const gray = map(height, 0, params.heightRange, 200, 50);
+          stroke(gray);
+          break;
+        case 'gradient':
+          colorMode(HSB);
+          const hue = map(height, 0, params.heightRange, 200, 0);
+          stroke(hue, 50, 80);
+          colorMode(RGB);
+          break;
+        case 'terrain':
+          if (height < params.heightRange * 0.3) {
+            stroke(34, 139, 34); // Green
+          } else if (height < params.heightRange * 0.6) {
+            stroke(139, 90, 43); // Brown
+          } else if (height < params.heightRange * 0.8) {
+            stroke(128, 128, 128); // Gray
+          } else {
+            stroke(255); // White (snow)
+          }
+          break;
+      }
+    }
+    
+    function smoothTerrain() {
+      const newGrid = [];
+      
+      for (let y = 0; y < params.gridSize; y++) {
+        newGrid[y] = [];
+        for (let x = 0; x < params.gridSize; x++) {
+          let sum = 0;
+          let count = 0;
+          
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx >= 0 && nx < params.gridSize && 
+                  ny >= 0 && ny < params.gridSize) {
+                sum += heightGrid[ny][nx];
+                count++;
+              }
+            }
+          }
+          
+          newGrid[y][x] = sum / count;
+        }
+      }
+      
+      heightGrid = newGrid;
+      redraw();
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `grid-landscape-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `grid-landscape-${params.viewStyle}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`grid-landscape-${params.viewStyle}-${params.seed}.png`);
+    }
+    
+    function exportHeightMap() {
+      // Export height data as CSV
+      let csv = 'Grid Landscape Height Map\n';
+      csv += `Seed: ${params.seed}\n`;
+      csv += `Grid Size: ${params.gridSize}\n\n`;
+      
+      for (let y = 0; y < params.gridSize; y++) {
+        for (let x = 0; x < params.gridSize; x++) {
+          csv += heightGrid[y][x].toFixed(2);
+          if (x < params.gridSize - 1) csv += ',';
+        }
+        csv += '\n';
+      }
+      
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `grid-landscape-heights-${params.seed}.csv`;
+      a.click();
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+        isAnimating = false;
+        noLoop();
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        
+        // Start rotation animation
+        rotationAngle = 0;
+        isAnimating = true;
+        loop();
+        
+        gifExporter.start();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chromatography Patterns - Chemical Engineering Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            height: fit-content;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        canvas {
+            border: 1px solid #333;
+            background-color: #ffffff;
+            cursor: crosshair;
+        }
+        
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        
+        h3 {
+            margin-bottom: 10px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 5px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a3a3a;
+            border-color: #666;
+        }
+        
+        button:active {
+            background-color: #1a1a1a;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        #animationProgress {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        .component-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .component-input input {
+            flex: 1;
+        }
+        
+        .component-input button {
+            width: auto;
+            padding: 5px 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>Chromatography Patterns</h1>
+            
+            <div class="control-group">
+                <h3>Chromatography Type</h3>
+                <select id="chromType">
+                    <option value="tlc">Thin Layer (TLC)</option>
+                    <option value="column">Column</option>
+                    <option value="hplc">HPLC</option>
+                    <option value="gc">Gas Chromatography</option>
+                    <option value="2d">2D Chromatography</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Components</h3>
+                <div id="componentsList"></div>
+                <div class="component-input">
+                    <input type="text" id="newComponentName" placeholder="Component name">
+                    <button id="addComponentBtn">Add</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <h3>Column Parameters</h3>
+                <label>Plate Count (N): <span id="platesValue">5000</span></label>
+                <input type="range" id="plateCount" min="100" max="10000" step="100" value="5000">
+                
+                <label>Column Length (cm): <span id="lengthValue">25</span></label>
+                <input type="range" id="columnLength" min="5" max="100" step="5" value="25">
+                
+                <label>Flow Rate (mL/min): <span id="flowValue">1.0</span></label>
+                <input type="range" id="flowRate" min="0.1" max="5" step="0.1" value="1.0">
+            </div>
+            
+            <div class="control-group">
+                <h3>Mobile Phase</h3>
+                <select id="mobilePhase">
+                    <option value="isocratic">Isocratic</option>
+                    <option value="gradient">Gradient</option>
+                    <option value="step">Step Gradient</option>
+                </select>
+                
+                <label>Solvent Strength: <span id="solventValue">50</span>%</label>
+                <input type="range" id="solventStrength" min="0" max="100" step="5" value="50">
+                
+                <label>Temperature (°C): <span id="tempValue">25</span></label>
+                <input type="range" id="temperature" min="20" max="80" step="5" value="25">
+            </div>
+            
+            <div class="control-group">
+                <h3>Visualization</h3>
+                <label>
+                    <input type="checkbox" id="showPeaks" checked> Show Gaussian Peaks
+                </label>
+                <label>
+                    <input type="checkbox" id="showBands" checked> Show Separation Bands
+                </label>
+                <label>
+                    <input type="checkbox" id="showBaseline"> Show Baseline Noise
+                </label>
+                <label>
+                    <input type="checkbox" id="showResolution"> Show Resolution Values
+                </label>
+                <label>
+                    <input type="checkbox" id="showTailing"> Show Peak Tailing
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <h3>Actions</h3>
+                <button id="generateBtn">Generate Pattern</button>
+                <button id="animateBtn">Animate Elution</button>
+                <div class="button-group">
+                    <button id="exportSVG">Export SVG</button>
+                    <button id="exportPNG">Export PNG</button>
+                </div>
+                <button id="exportGIF">Export Animation GIF</button>
+                <progress id="animationProgress" value="0" max="100" style="display: none;"></progress>
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        let components = [
+            {name: 'Component A', Rf: 0.3, color: '#FF6B6B', k: 2.0},
+            {name: 'Component B', Rf: 0.5, color: '#4ECDC4', k: 3.5},
+            {name: 'Component C', Rf: 0.7, color: '#45B7D1', k: 5.0}
+        ];
+        
+        let isAnimating = false;
+        let animationId = null;
+        let elutionTime = 0;
+        let gif = null;
+        
+        // UI Elements
+        const chromType = document.getElementById('chromType');
+        const plateCount = document.getElementById('plateCount');
+        const columnLength = document.getElementById('columnLength');
+        const flowRate = document.getElementById('flowRate');
+        const mobilePhase = document.getElementById('mobilePhase');
+        const solventStrength = document.getElementById('solventStrength');
+        const temperature = document.getElementById('temperature');
+        const showPeaks = document.getElementById('showPeaks');
+        const showBands = document.getElementById('showBands');
+        const showBaseline = document.getElementById('showBaseline');
+        const showResolution = document.getElementById('showResolution');
+        const showTailing = document.getElementById('showTailing');
+        const generateBtn = document.getElementById('generateBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const exportSVGBtn = document.getElementById('exportSVG');
+        const exportPNGBtn = document.getElementById('exportPNG');
+        const exportGIFBtn = document.getElementById('exportGIF');
+        const status = document.getElementById('status');
+        const animationProgress = document.getElementById('animationProgress');
+        const componentsList = document.getElementById('componentsList');
+        const newComponentName = document.getElementById('newComponentName');
+        const addComponentBtn = document.getElementById('addComponentBtn');
+        
+        // Update value displays
+        plateCount.oninput = () => document.getElementById('platesValue').textContent = plateCount.value;
+        columnLength.oninput = () => document.getElementById('lengthValue').textContent = columnLength.value;
+        flowRate.oninput = () => document.getElementById('flowValue').textContent = flowRate.value;
+        solventStrength.oninput = () => document.getElementById('solventValue').textContent = solventStrength.value;
+        temperature.oninput = () => document.getElementById('tempValue').textContent = temperature.value;
+        
+        function updateComponentsList() {
+            componentsList.innerHTML = '';
+            components.forEach((comp, index) => {
+                const div = document.createElement('div');
+                div.className = 'component-input';
+                div.innerHTML = `
+                    <span style="color: ${comp.color}">●</span>
+                    <span style="flex: 1">${comp.name}</span>
+                    <button onclick="removeComponent(${index})">Remove</button>
+                `;
+                componentsList.appendChild(div);
+            });
+        }
+        
+        function removeComponent(index) {
+            components.splice(index, 1);
+            updateComponentsList();
+            drawPattern();
+        }
+        
+        addComponentBtn.addEventListener('click', () => {
+            const name = newComponentName.value.trim();
+            if (name) {
+                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3'];
+                components.push({
+                    name: name,
+                    Rf: Math.random() * 0.6 + 0.2,
+                    color: colors[components.length % colors.length],
+                    k: Math.random() * 5 + 1
+                });
+                newComponentName.value = '';
+                updateComponentsList();
+                drawPattern();
+            }
+        });
+        
+        function gaussian(x, mean, sigma) {
+            return Math.exp(-0.5 * Math.pow((x - mean) / sigma, 2)) / (sigma * Math.sqrt(2 * Math.PI));
+        }
+        
+        function calculateRetentionTime(k, t0) {
+            return t0 * (1 + k);
+        }
+        
+        function calculatePeakWidth(N, tR) {
+            return 4 * tR / Math.sqrt(N);
+        }
+        
+        function calculateResolution(tR1, tR2, w1, w2) {
+            return 2 * Math.abs(tR2 - tR1) / (w1 + w2);
+        }
+        
+        function drawPattern() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            const N = parseInt(plateCount.value);
+            const L = parseInt(columnLength.value);
+            const v = parseFloat(flowRate.value);
+            const t0 = L / v; // void time
+            
+            if (chromType.value === 'tlc' || chromType.value === '2d') {
+                // TLC or 2D visualization
+                drawTLC();
+            } else {
+                // Column chromatography visualization
+                drawChromatogram();
+            }
+        }
+        
+        function drawTLC() {
+            // Draw TLC plate
+            ctx.strokeStyle = '#333333';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(width * 0.1, height * 0.1, width * 0.8, height * 0.8);
+            
+            // Draw baseline
+            const baseline = height * 0.85;
+            ctx.strokeStyle = '#666666';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(width * 0.1, baseline);
+            ctx.lineTo(width * 0.9, baseline);
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Draw solvent front
+            const solventFront = height * 0.15 + (baseline - height * 0.15) * elutionTime / 100;
+            ctx.strokeStyle = '#0066CC';
+            ctx.beginPath();
+            ctx.moveTo(width * 0.1, solventFront);
+            ctx.lineTo(width * 0.9, solventFront);
+            ctx.stroke();
+            
+            // Draw spots
+            components.forEach((comp, index) => {
+                const spotX = width * 0.2 + index * width * 0.2;
+                const spotY = baseline - (baseline - height * 0.15) * comp.Rf * elutionTime / 100;
+                
+                if (showBands.checked) {
+                    // Draw band/streak
+                    ctx.strokeStyle = comp.color;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(spotX, baseline);
+                    ctx.lineTo(spotX, spotY);
+                    ctx.stroke();
+                }
+                
+                // Draw spot
+                const spotSize = 15 + Math.random() * 5;
+                const gradient = ctx.createRadialGradient(spotX, spotY, 0, spotX, spotY, spotSize);
+                gradient.addColorStop(0, comp.color);
+                gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(spotX, spotY, spotSize, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Label
+                ctx.fillStyle = '#000000';
+                ctx.font = '12px monospace';
+                ctx.fillText(comp.name, spotX - 20, baseline + 20);
+                
+                // Rf value
+                if (showResolution.checked && elutionTime > 0) {
+                    const currentRf = (baseline - spotY) / (baseline - solventFront);
+                    ctx.fillText(`Rf: ${currentRf.toFixed(2)}`, spotX - 20, spotY - 20);
+                }
+            });
+            
+            if (chromType.value === '2d') {
+                // Add second dimension separation
+                ctx.save();
+                ctx.translate(width / 2, height / 2);
+                ctx.rotate(Math.PI / 2);
+                ctx.translate(-width / 2, -height / 2);
+                
+                components.forEach((comp, index) => {
+                    const spotX = width * 0.2 + index * width * 0.2;
+                    const spotY = baseline - (baseline - height * 0.15) * (comp.Rf * 0.7 + Math.random() * 0.3) * elutionTime / 100;
+                    
+                    const gradient = ctx.createRadialGradient(spotX, spotY, 0, spotX, spotY, 10);
+                    gradient.addColorStop(0, comp.color);
+                    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(spotX, spotY, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                
+                ctx.restore();
+            }
+        }
+        
+        function drawChromatogram() {
+            const N = parseInt(plateCount.value);
+            const L = parseInt(columnLength.value);
+            const v = parseFloat(flowRate.value);
+            const t0 = L / v;
+            
+            // Draw axes
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(width * 0.1, height * 0.9);
+            ctx.lineTo(width * 0.9, height * 0.9);
+            ctx.moveTo(width * 0.1, height * 0.9);
+            ctx.lineTo(width * 0.1, height * 0.1);
+            ctx.stroke();
+            
+            // Axis labels
+            ctx.fillStyle = '#000000';
+            ctx.font = '14px monospace';
+            ctx.fillText('Time (min)', width * 0.45, height * 0.98);
+            ctx.save();
+            ctx.translate(width * 0.03, height * 0.5);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Signal Intensity', -50, 0);
+            ctx.restore();
+            
+            // Draw baseline noise if enabled
+            if (showBaseline.checked) {
+                ctx.strokeStyle = 'rgba(200, 200, 200, 0.5)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let x = width * 0.1; x < width * 0.9; x += 2) {
+                    const noise = (Math.random() - 0.5) * 5;
+                    ctx.lineTo(x, height * 0.9 + noise);
+                }
+                ctx.stroke();
+            }
+            
+            // Calculate and draw peaks
+            const timeRange = t0 * 10;
+            const xScale = (width * 0.8) / timeRange;
+            const yScale = height * 0.7;
+            
+            let previousPeaks = [];
+            
+            components.forEach((comp, index) => {
+                const tR = calculateRetentionTime(comp.k, t0);
+                const peakWidth = calculatePeakWidth(N, tR);
+                const sigma = peakWidth / 4;
+                
+                // Only draw if peak has eluted
+                if (elutionTime >= tR / timeRange * 100) {
+                    ctx.strokeStyle = comp.color;
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    
+                    for (let t = 0; t < timeRange; t += 0.1) {
+                        const x = width * 0.1 + t * xScale;
+                        let y = gaussian(t, tR, sigma) * yScale * 1000;
+                        
+                        // Add tailing if enabled
+                        if (showTailing.checked && t > tR) {
+                            const tailingFactor = 1.2;
+                            y *= Math.exp(-(t - tR) / (sigma * tailingFactor));
+                        }
+                        
+                        ctx.lineTo(x, height * 0.9 - y);
+                    }
+                    ctx.stroke();
+                    
+                    // Draw peak fill
+                    if (showPeaks.checked) {
+                        ctx.fillStyle = comp.color + '30';
+                        ctx.fill();
+                    }
+                    
+                    // Label peaks
+                    const peakX = width * 0.1 + tR * xScale;
+                    const peakY = height * 0.9 - gaussian(tR, tR, sigma) * yScale * 1000;
+                    
+                    ctx.fillStyle = comp.color;
+                    ctx.font = '12px monospace';
+                    ctx.fillText(comp.name, peakX - 20, peakY - 10);
+                    ctx.fillText(`tR: ${tR.toFixed(1)} min`, peakX - 25, peakY - 25);
+                    
+                    // Calculate and show resolution
+                    if (showResolution.checked && previousPeaks.length > 0) {
+                        const prevPeak = previousPeaks[previousPeaks.length - 1];
+                        const Rs = calculateResolution(prevPeak.tR, tR, prevPeak.width, peakWidth);
+                        
+                        ctx.fillStyle = '#666666';
+                        ctx.font = '10px monospace';
+                        const midX = (prevPeak.x + peakX) / 2;
+                        ctx.fillText(`Rs: ${Rs.toFixed(2)}`, midX - 15, height * 0.85);
+                    }
+                    
+                    previousPeaks.push({tR: tR, width: peakWidth, x: peakX});
+                }
+            });
+            
+            // Draw gradient profile if gradient elution
+            if (mobilePhase.value === 'gradient') {
+                ctx.strokeStyle = 'rgba(0, 0, 255, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                
+                const startStrength = 10;
+                const endStrength = parseInt(solventStrength.value);
+                
+                for (let t = 0; t < timeRange; t += 0.5) {
+                    const x = width * 0.1 + t * xScale;
+                    const strength = startStrength + (endStrength - startStrength) * (t / timeRange);
+                    const y = height * 0.9 - (strength / 100) * height * 0.3;
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+                
+                // Gradient label
+                ctx.fillStyle = 'rgba(0, 0, 255, 0.5)';
+                ctx.font = '10px monospace';
+                ctx.fillText('Solvent B %', width * 0.85, height * 0.6);
+            }
+        }
+        
+        function animate() {
+            if (!isAnimating) return;
+            
+            elutionTime += 1;
+            if (elutionTime > 100) {
+                elutionTime = 0;
+            }
+            
+            drawPattern();
+            animationId = requestAnimationFrame(animate);
+        }
+        
+        generateBtn.addEventListener('click', () => {
+            elutionTime = 100;
+            drawPattern();
+            status.textContent = 'Pattern generated';
+        });
+        
+        animateBtn.addEventListener('click', () => {
+            if (isAnimating) {
+                isAnimating = false;
+                cancelAnimationFrame(animationId);
+                animateBtn.textContent = 'Animate Elution';
+                status.textContent = 'Animation paused';
+            } else {
+                isAnimating = true;
+                elutionTime = 0;
+                animateBtn.textContent = 'Pause Animation';
+                status.textContent = 'Animating...';
+                animate();
+            }
+        });
+        
+        exportSVGBtn.addEventListener('click', () => {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            // White background
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', width);
+            bg.setAttribute('height', height);
+            bg.setAttribute('fill', 'white');
+            svg.appendChild(bg);
+            
+            // Add chromatogram elements
+            if (chromType.value === 'tlc') {
+                // TLC plate
+                const plate = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                plate.setAttribute('x', width * 0.1);
+                plate.setAttribute('y', height * 0.1);
+                plate.setAttribute('width', width * 0.8);
+                plate.setAttribute('height', height * 0.8);
+                plate.setAttribute('fill', 'none');
+                plate.setAttribute('stroke', '#333333');
+                plate.setAttribute('stroke-width', '2');
+                svg.appendChild(plate);
+                
+                // Add spots
+                components.forEach((comp, index) => {
+                    const spotX = width * 0.2 + index * width * 0.2;
+                    const baseline = height * 0.85;
+                    const spotY = baseline - (baseline - height * 0.15) * comp.Rf;
+                    
+                    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    circle.setAttribute('cx', spotX);
+                    circle.setAttribute('cy', spotY);
+                    circle.setAttribute('r', '15');
+                    circle.setAttribute('fill', comp.color);
+                    circle.setAttribute('opacity', '0.7');
+                    svg.appendChild(circle);
+                });
+            }
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'chromatography-pattern.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            status.textContent = 'SVG exported';
+        });
+        
+        exportPNGBtn.addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'chromatography-pattern.png';
+            a.click();
+            status.textContent = 'PNG exported';
+        });
+        
+        exportGIFBtn.addEventListener('click', () => {
+            status.textContent = 'Creating GIF...';
+            animationProgress.style.display = 'block';
+            animationProgress.value = 0;
+            
+            gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: width,
+                height: height
+            });
+            
+            const frames = 50;
+            
+            for (let frame = 0; frame < frames; frame++) {
+                elutionTime = (frame / frames) * 100;
+                drawPattern();
+                
+                gif.addFrame(ctx, {copy: true, delay: 100});
+                animationProgress.value = (frame / frames) * 100;
+            }
+            
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'chromatography-animation.gif';
+                a.click();
+                URL.revokeObjectURL(url);
+                status.textContent = 'GIF exported';
+                animationProgress.style.display = 'none';
+            });
+            
+            gif.render();
+        });
+        
+        // Event listeners for parameter changes
+        chromType.addEventListener('change', drawPattern);
+        plateCount.addEventListener('input', drawPattern);
+        columnLength.addEventListener('input', drawPattern);
+        flowRate.addEventListener('input', drawPattern);
+        mobilePhase.addEventListener('change', drawPattern);
+        solventStrength.addEventListener('input', drawPattern);
+        temperature.addEventListener('input', drawPattern);
+        showPeaks.addEventListener('change', drawPattern);
+        showBands.addEventListener('change', drawPattern);
+        showBaseline.addEventListener('change', drawPattern);
+        showResolution.addEventListener('change', drawPattern);
+        showTailing.addEventListener('change', drawPattern);
+        
+        // Initialize
+        updateComponentsList();
+        elutionTime = 100;
+        drawPattern();
+    </script>
+</body>
+</html>

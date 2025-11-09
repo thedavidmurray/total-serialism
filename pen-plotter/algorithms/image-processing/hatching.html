@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hatching - Image to Hatching Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../src/path-optimizer.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #image-upload-area {
+      border: 2px dashed #4a90e2;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+    #image-upload-area:hover {
+      background: #f0f7ff;
+      border-color: #357abd;
+    }
+    #image-upload-area.dragover {
+      background: #e6f2ff;
+      border-color: #2563eb;
+    }
+    .upload-text {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .upload-icon {
+      font-size: 48px;
+      color: #4a90e2;
+      margin-bottom: 10px;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #processing-status.processing {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    .preview-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .preview-options label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .preview-options input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>Hatching Converter</h2>
+    <p style="margin-top: 0; color: #666; font-size: 14px;">Convert images to hatching patterns for pen plotting</p>
+    
+    <div class="control-group">
+      <h3>📷 Image Input</h3>
+      <div id="image-upload-area">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Drop image here or click to browse</div>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>🔲 Hatching Parameters</h3>
+      <div class="control">
+        <label>Hatching Style:</label>
+        <select id="hatchStyle">
+          <option value="linear">Linear Hatching</option>
+          <option value="crosshatch">Cross-Hatching</option>
+          <option value="contour">Contour Hatching</option>
+          <option value="stipple">Stipple Hatching</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Spacing: <span id="spacing-value">5</span>px</label>
+        <input type="range" id="spacing" min="2" max="20" step="1" value="5">
+      </div>
+      <div class="control">
+        <label>Base Angle: <span id="angle-value">45</span>°</label>
+        <input type="range" id="angle" min="0" max="180" step="15" value="45">
+      </div>
+      <div class="control">
+        <label>Density Levels: <span id="levels-value">5</span></label>
+        <input type="range" id="levels" min="2" max="10" step="1" value="5">
+      </div>
+      <div class="control">
+        <label>Minimum Line Length: <span id="minLength-value">10</span>px</label>
+        <input type="range" id="minLength" min="2" max="50" step="2" value="10">
+      </div>
+      <div class="control">
+        <label>Brightness Threshold: <span id="threshold-value">128</span></label>
+        <input type="range" id="threshold" min="0" max="255" step="1" value="128">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Display Options</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="showOriginal" checked> Show Original
+        </label>
+        <label>
+          <input type="checkbox" id="showHatching" checked> Show Hatching
+        </label>
+      </div>
+      <div class="control">
+        <label>Canvas Size: <span id="canvasSize-value">600</span>px</label>
+        <input type="range" id="canvasSize" min="300" max="1200" step="50" value="600">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚡ Path Optimization</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="optimizePaths" checked> Optimize Paths
+        </label>
+        <label>
+          <input type="checkbox" id="joinPaths"> Join Nearby Paths
+        </label>
+      </div>
+      <div class="control">
+        <label>Join Threshold: <span id="joinThreshold-value">5</span>px</label>
+        <input type="range" id="joinThreshold" min="1" max="20" step="1" value="5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>💾 Export</h3>
+      <button onclick="generateHatching()">Generate Hatching</button>
+      <div class="button-group">
+        <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
+        <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
+      </div>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats" style="display: none;">
+        <div>Lines: <strong id="lineCountStat">0</strong></div>
+        <div>Points: <strong id="pointCountStat">0</strong></div>
+        <div>Path Length: <strong id="pathLengthStat">0</strong>mm</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let img = null;
+    let canvas;
+    let svgCanvas;
+    let hatchLines = [];
+    let optimizer = new PathOptimizer();
+    let processing = false;
+
+    // P5.js setup
+    function setup() {
+      const canvasSize = parseInt(document.getElementById('canvasSize').value);
+      canvas = createCanvas(canvasSize, canvasSize);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
+      
+      background(255);
+      strokeWeight(1);
+      noFill();
+      
+      // Setup image upload
+      setupImageUpload();
+      
+      // Setup control listeners
+      setupControlListeners();
+    }
+
+    function draw() {
+      background(255);
+      
+      if (img && document.getElementById('showOriginal').checked) {
+        // Draw original image faded
+        push();
+        tint(255, 100);
+        image(img, 0, 0, width, height);
+        pop();
+      }
+      
+      if (hatchLines.length > 0 && document.getElementById('showHatching').checked) {
+        // Draw hatching lines
+        stroke(0);
+        strokeWeight(1);
+        noFill();
+        
+        hatchLines.forEach(line => {
+          if (line.points && line.points.length >= 2) {
+            beginShape();
+            line.points.forEach(point => {
+              vertex(point.x, point.y);
+            });
+            endShape();
+          } else if (line.x !== undefined && line.y !== undefined && line.r !== undefined) {
+            // Stipple points
+            circle(line.x, line.y, line.r * 2);
+          }
+        });
+      }
+    }
+
+    function setupImageUpload() {
+      const uploadArea = document.getElementById('image-upload-area');
+      const fileInput = document.getElementById('imageUpload');
+      
+      uploadArea.addEventListener('click', () => fileInput.click());
+      
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          loadImageFile(e.target.files[0]);
+        }
+      });
+      
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+          loadImageFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function setupControlListeners() {
+      // Add change listener to hatching style
+      document.getElementById('hatchStyle').addEventListener('change', () => {
+        const style = document.getElementById('hatchStyle').value;
+        // Show/hide relevant controls based on style
+        document.getElementById('angle').parentElement.style.display = 
+          (style === 'linear' || style === 'crosshatch') ? 'block' : 'none';
+      });
+    }
+
+    function loadImageFile(file) {
+      if (!file.type.match('image.*')) {
+        showStatus('Please upload an image file', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (loadedImg) => {
+          img = loadedImg;
+          hatchLines = [];
+          showStatus('Image loaded successfully', 'success');
+          document.getElementById('exportBtn').disabled = true;
+          document.getElementById('exportPNGBtn').disabled = true;
+          redraw();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function generateHatching() {
+      if (!img) {
+        showStatus('Please upload an image first', 'error');
+        return;
+      }
+      
+      if (processing) {
+        showStatus('Already processing...', 'error');
+        return;
+      }
+      
+      processing = true;
+      showStatus('Generating hatching...', 'processing');
+      
+      // Clear previous lines
+      hatchLines = [];
+      
+      // Get parameters
+      const style = document.getElementById('hatchStyle').value;
+      const spacing = parseInt(document.getElementById('spacing').value);
+      const angle = parseInt(document.getElementById('angle').value);
+      const levels = parseInt(document.getElementById('levels').value);
+      const minLength = parseInt(document.getElementById('minLength').value);
+      const threshold = parseInt(document.getElementById('threshold').value);
+      
+      // Process image
+      img.loadPixels();
+      
+      // Generate hatching based on style
+      switch (style) {
+        case 'linear':
+          generateLinearHatching(spacing, angle, levels, minLength, threshold);
+          break;
+        case 'crosshatch':
+          generateCrosshatch(spacing, angle, levels, minLength, threshold);
+          break;
+        case 'contour':
+          generateContourHatching(spacing, levels, minLength, threshold);
+          break;
+        case 'stipple':
+          generateStippleHatching(spacing, levels, threshold);
+          break;
+      }
+      
+      // Apply path optimization if enabled
+      if (document.getElementById('optimizePaths').checked && style !== 'stipple') {
+        optimizeHatchingPaths();
+      }
+      
+      // Update stats
+      updateStats();
+      
+      processing = false;
+      showStatus('Hatching generated successfully!', 'success');
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('exportPNGBtn').disabled = false;
+      
+      redraw();
+    }
+
+    function generateLinearHatching(spacing, angle, levels, minLength, threshold) {
+      const angleRad = radians(angle);
+      const dx = cos(angleRad);
+      const dy = sin(angleRad);
+      
+      // Calculate diagonal length
+      const diagonal = sqrt(width * width + height * height);
+      
+      // Generate parallel lines
+      for (let offset = -diagonal; offset <= diagonal; offset += spacing) {
+        const lines = [];
+        
+        // Find intersections with image bounds
+        const perpX = -dy;
+        const perpY = dx;
+        const baseX = width / 2 + perpX * offset;
+        const baseY = height / 2 + perpY * offset;
+        
+        // Scan along the line
+        const scanLength = diagonal * 2;
+        let currentLine = null;
+        
+        for (let t = -scanLength / 2; t <= scanLength / 2; t += 2) {
+          const x = baseX + dx * t;
+          const y = baseY + dy * t;
+          
+          if (x >= 0 && x < width && y >= 0 && y < height) {
+            // Sample brightness at this point
+            const brightness = sampleBrightness(x, y);
+            const level = Math.floor((255 - brightness) / (255 / levels));
+            
+            if (level > 0 && brightness < threshold) {
+              if (!currentLine) {
+                currentLine = { points: [] };
+              }
+              currentLine.points.push({ x, y });
+            } else if (currentLine) {
+              if (currentLine.points.length * 2 >= minLength) {
+                lines.push(currentLine);
+              }
+              currentLine = null;
+            }
+          }
+        }
+        
+        if (currentLine && currentLine.points.length * 2 >= minLength) {
+          lines.push(currentLine);
+        }
+        
+        hatchLines.push(...lines);
+      }
+    }
+
+    function generateCrosshatch(spacing, angle, levels, minLength, threshold) {
+      // Generate first set of lines
+      generateLinearHatching(spacing, angle, levels, minLength, threshold);
+      
+      // Generate perpendicular lines
+      const perpAngle = angle + 90;
+      generateLinearHatching(spacing, perpAngle, levels, minLength, threshold);
+    }
+
+    function generateContourHatching(spacing, levels, minLength, threshold) {
+      // Create brightness map
+      const brightnessMap = [];
+      for (let y = 0; y < height; y += 2) {
+        brightnessMap[y] = [];
+        for (let x = 0; x < width; x += 2) {
+          brightnessMap[y][x] = sampleBrightness(x, y);
+        }
+      }
+      
+      // Generate contour lines at different brightness levels
+      for (let level = 1; level < levels; level++) {
+        const targetBrightness = (level / levels) * 255;
+        
+        // Find contour lines using marching squares
+        for (let y = 0; y < height - spacing; y += spacing) {
+          for (let x = 0; x < width - spacing; x += spacing) {
+            const contour = marchingSquares(
+              x, y, spacing, targetBrightness, brightnessMap
+            );
+            
+            if (contour && contour.length >= minLength / 2) {
+              hatchLines.push({
+                points: contour.map(p => ({ x: p[0], y: p[1] }))
+              });
+            }
+          }
+        }
+      }
+    }
+
+    function generateStippleHatching(spacing, levels, threshold) {
+      // Generate stipple points based on brightness
+      for (let y = spacing / 2; y < height; y += spacing) {
+        for (let x = spacing / 2; x < width; x += spacing) {
+          const brightness = sampleBrightness(x, y);
+          
+          if (brightness < threshold) {
+            const level = Math.floor((255 - brightness) / (255 / levels));
+            const radius = map(level, 0, levels, 0.5, spacing / 3);
+            
+            // Add some randomness
+            const offsetX = random(-spacing / 4, spacing / 4);
+            const offsetY = random(-spacing / 4, spacing / 4);
+            
+            hatchLines.push({
+              x: x + offsetX,
+              y: y + offsetY,
+              r: radius
+            });
+          }
+        }
+      }
+    }
+
+    function marchingSquares(x, y, size, threshold, brightnessMap) {
+      // Simple marching squares implementation
+      const points = [];
+      
+      const tl = brightnessMap[y] && brightnessMap[y][x] || 255;
+      const tr = brightnessMap[y] && brightnessMap[y][x + size] || 255;
+      const bl = brightnessMap[y + size] && brightnessMap[y + size][x] || 255;
+      const br = brightnessMap[y + size] && brightnessMap[y + size][x + size] || 255;
+      
+      // Calculate case
+      let caseIndex = 0;
+      if (tl < threshold) caseIndex |= 8;
+      if (tr < threshold) caseIndex |= 4;
+      if (br < threshold) caseIndex |= 2;
+      if (bl < threshold) caseIndex |= 1;
+      
+      // Generate line segments based on case
+      switch (caseIndex) {
+        case 1:
+        case 14:
+          points.push([x, y + size / 2], [x + size / 2, y + size]);
+          break;
+        case 2:
+        case 13:
+          points.push([x + size / 2, y + size], [x + size, y + size / 2]);
+          break;
+        case 3:
+        case 12:
+          points.push([x, y + size / 2], [x + size, y + size / 2]);
+          break;
+        case 4:
+        case 11:
+          points.push([x + size / 2, y], [x + size, y + size / 2]);
+          break;
+        case 5:
+          points.push([x, y + size / 2], [x + size / 2, y]);
+          points.push([x + size / 2, y + size], [x + size, y + size / 2]);
+          break;
+        case 6:
+        case 9:
+          points.push([x + size / 2, y], [x + size / 2, y + size]);
+          break;
+        case 7:
+        case 8:
+          points.push([x, y + size / 2], [x + size / 2, y]);
+          break;
+        case 10:
+          points.push([x + size / 2, y], [x + size, y + size / 2]);
+          points.push([x, y + size / 2], [x + size / 2, y + size]);
+          break;
+      }
+      
+      return points;
+    }
+
+    function sampleBrightness(x, y) {
+      const imgX = Math.floor(map(x, 0, width, 0, img.width));
+      const imgY = Math.floor(map(y, 0, height, 0, img.height));
+      const pixelIndex = (imgY * img.width + imgX) * 4;
+      
+      const r = img.pixels[pixelIndex];
+      const g = img.pixels[pixelIndex + 1];
+      const b = img.pixels[pixelIndex + 2];
+      
+      return (r + g + b) / 3;
+    }
+
+    function optimizeHatchingPaths() {
+      // Convert lines to path segments
+      let segments = hatchLines
+        .filter(line => line.points && line.points.length > 0)
+        .map(line => ({
+          points: line.points,
+          closed: false
+        }));
+      
+      // Simplify paths
+      segments = segments.map(seg => ({
+        ...seg,
+        points: optimizer.simplifyPath(seg.points, 0.5)
+      }));
+      
+      // Join nearby paths if enabled
+      if (document.getElementById('joinPaths').checked) {
+        const threshold = parseInt(document.getElementById('joinThreshold').value);
+        segments = optimizer.joinPaths(segments, threshold);
+      }
+      
+      // Optimize order
+      segments = optimizer.optimizeOrder(segments);
+      
+      // Convert back to hatch lines
+      hatchLines = segments.map(seg => ({ points: seg.points }));
+    }
+
+    function exportSVG() {
+      if (hatchLines.length === 0) {
+        showStatus('No hatching to export', 'error');
+        return;
+      }
+      
+      // Create SVG content
+      svgCanvas.clear();
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(1);
+      svgCanvas.noFill();
+      
+      hatchLines.forEach(line => {
+        if (line.points && line.points.length >= 2) {
+          svgCanvas.beginShape();
+          line.points.forEach(point => {
+            svgCanvas.vertex(point.x, point.y);
+          });
+          svgCanvas.endShape();
+        } else if (line.x !== undefined && line.y !== undefined && line.r !== undefined) {
+          svgCanvas.circle(line.x, line.y, line.r * 2);
+        }
+      });
+      
+      // Save SVG
+      save(svgCanvas, 'hatching-output.svg');
+      showStatus('SVG exported successfully!', 'success');
+    }
+
+    function exportPNG() {
+      if (hatchLines.length === 0) {
+        showStatus('No hatching to export', 'error');
+        return;
+      }
+      
+      // Save current canvas as PNG
+      save(canvas, 'hatching-output.png');
+      showStatus('PNG exported successfully!', 'success');
+    }
+
+    function updateStats() {
+      let totalLines = 0;
+      let totalPoints = 0;
+      let totalLength = 0;
+      
+      hatchLines.forEach(line => {
+        if (line.points && line.points.length > 0) {
+          totalLines++;
+          totalPoints += line.points.length;
+          
+          // Calculate path length
+          for (let i = 1; i < line.points.length; i++) {
+            const dx = line.points[i].x - line.points[i-1].x;
+            const dy = line.points[i].y - line.points[i-1].y;
+            totalLength += Math.sqrt(dx * dx + dy * dy);
+          }
+        } else if (line.x !== undefined) {
+          // Count stipple points
+          totalLines++;
+          totalPoints++;
+        }
+      });
+      
+      // Convert pixels to mm (assuming 96 DPI)
+      const lengthMM = (totalLength * 25.4 / 96).toFixed(1);
+      
+      document.getElementById('lineCountStat').textContent = totalLines;
+      document.getElementById('pointCountStat').textContent = totalPoints;
+      document.getElementById('pathLengthStat').textContent = lengthMM;
+      document.getElementById('stats').style.display = 'block';
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Update value displays
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const valueSpan = document.getElementById(e.target.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = e.target.value;
+        }
+        
+        // Resize canvas if needed
+        if (e.target.id === 'canvasSize') {
+          const size = parseInt(e.target.value);
+          resizeCanvas(size, size);
+          svgCanvas = createGraphics(size, size, SVG);
+          if (img) {
+            redraw();
+          }
+        }
+      });
+    });
+
+    // Checkbox handlers
+    document.getElementById('showOriginal').addEventListener('change', () => redraw());
+    document.getElementById('showHatching').addEventListener('change', () => redraw());
+  </script>
+</body>
+</html>

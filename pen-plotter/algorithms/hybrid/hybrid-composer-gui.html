@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hybrid Algorithm Composer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f0f0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Left Panel - Controls */
+        .control-panel {
+            width: 400px;
+            background: #fff;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin: 20px 0 10px 0;
+            color: #555;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .layer {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .layer.disabled {
+            opacity: 0.5;
+        }
+
+        .layer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .layer-title {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .layer-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #545b62;
+        }
+
+        button.danger {
+            background: #dc3545;
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .parameter-group {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+
+        .parameter-group h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #555;
+        }
+
+        .range-value {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* Right Panel - Canvas */
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        #preview-canvas {
+            background: white;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .canvas-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #666;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        /* Preset selector */
+        .preset-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .preset-section select {
+            flex: 1;
+        }
+
+        .preset-section button {
+            width: auto;
+        }
+
+        /* Export options */
+        .export-options {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+
+        .export-options.active {
+            display: block;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <h1>Hybrid Algorithm Composer</h1>
+
+        <div class="section">
+            <h2>Presets</h2>
+            <div class="preset-section">
+                <select id="preset-selector">
+                    <option value="">Select a preset...</option>
+                    <option value="flow-cellular">Flow Fields + Cellular Automata</option>
+                    <option value="reaction-geometric">Reaction-Diffusion + Geometric</option>
+                    <option value="tree-noise">Tree Systems + Perlin Noise</option>
+                    <option value="physics-hash">Physics Particles + Hash Tiles</option>
+                </select>
+                <button onclick="loadPreset()">Load</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Layers</h2>
+            <div id="layers-container"></div>
+            <button onclick="addLayer()">+ Add Layer</button>
+        </div>
+
+        <div class="section">
+            <h2>Global Settings</h2>
+            <label>
+                Canvas Width:
+                <input type="number" id="canvas-width" value="800" min="100" max="2000">
+            </label>
+            <label>
+                Canvas Height:
+                <input type="number" id="canvas-height" value="800" min="100" max="2000">
+            </label>
+        </div>
+
+        <div class="section">
+            <button onclick="generate()" style="width: 100%; padding: 12px; font-size: 16px;">
+                Generate Hybrid
+            </button>
+        </div>
+    </div>
+
+    <div class="canvas-container">
+        <div class="canvas-controls">
+            <button onclick="exportSVG()">Export SVG</button>
+            <button onclick="exportPNG()">Export PNG</button>
+            <button onclick="saveConfiguration()" class="secondary">Save Config</button>
+            <button onclick="loadConfiguration()" class="secondary">Load Config</button>
+        </div>
+        
+        <canvas id="preview-canvas" width="800" height="800"></canvas>
+        
+        <div class="loading" id="loading">Generating...</div>
+        <div class="status" id="status">Ready</div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closeExportOptions()"></div>
+    <div class="export-options" id="export-options">
+        <h2>Export Options</h2>
+        <div style="margin: 20px 0;">
+            <label>
+                Include layer information:
+                <input type="checkbox" id="include-layers" checked>
+            </label>
+            <label>
+                Optimize for pen plotter:
+                <input type="checkbox" id="optimize-plotter" checked>
+            </label>
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button onclick="closeExportOptions()" class="secondary">Cancel</button>
+            <button onclick="confirmExport()">Export</button>
+        </div>
+    </div>
+
+    <script src="../../src/hybridization/hybrid-engine.js"></script>
+    <script>
+        // Initialize the hybrid engine
+        const engine = new HybridEngine();
+        const canvas = document.getElementById('preview-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Algorithm implementations
+        const algorithms = {
+            flowField: {
+                name: 'Flow Field',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, resolution = 20, strength = 5, particles = 100 } = params;
+                    
+                    // Create flow field
+                    const field = [];
+                    for (let x = 0; x < width; x += resolution) {
+                        for (let y = 0; y < height; y += resolution) {
+                            const angle = (Math.sin(x * 0.01) + Math.cos(y * 0.01)) * Math.PI;
+                            field.push({ x, y, angle });
+                        }
+                    }
+                    
+                    // Generate particle paths
+                    for (let i = 0; i < particles; i++) {
+                        const path = [];
+                        let x = Math.random() * width;
+                        let y = Math.random() * height;
+                        
+                        for (let step = 0; step < 50; step++) {
+                            path.push([x, y]);
+                            
+                            // Find nearest field point
+                            let minDist = Infinity;
+                            let nearestField = null;
+                            
+                            for (const f of field) {
+                                const dist = Math.hypot(f.x - x, f.y - y);
+                                if (dist < minDist) {
+                                    minDist = dist;
+                                    nearestField = f;
+                                }
+                            }
+                            
+                            if (nearestField) {
+                                x += Math.cos(nearestField.angle) * strength;
+                                y += Math.sin(nearestField.angle) * strength;
+                            }
+                            
+                            // Bounds check
+                            if (x < 0 || x > width || y < 0 || y > height) break;
+                        }
+                        
+                        if (path.length > 1) paths.push(path);
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    resolution: { type: 'range', min: 10, max: 50, default: 20, label: 'Field Resolution' },
+                    strength: { type: 'range', min: 1, max: 20, default: 5, label: 'Flow Strength' },
+                    particles: { type: 'range', min: 10, max: 500, default: 100, label: 'Particle Count' }
+                }
+            },
+            
+            cellularAutomata: {
+                name: 'Cellular Automata',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, cellSize = 10, generations = 50, density = 0.3 } = params;
+                    
+                    const gridWidth = Math.floor(width / cellSize);
+                    const gridHeight = Math.floor(height / cellSize);
+                    
+                    // Initialize grid
+                    let grid = Array(gridWidth).fill(null).map(() => 
+                        Array(gridHeight).fill(null).map(() => Math.random() < density)
+                    );
+                    
+                    // Run generations
+                    for (let gen = 0; gen < generations; gen++) {
+                        const newGrid = grid.map(row => [...row]);
+                        
+                        for (let x = 1; x < gridWidth - 1; x++) {
+                            for (let y = 1; y < gridHeight - 1; y++) {
+                                let neighbors = 0;
+                                for (let dx = -1; dx <= 1; dx++) {
+                                    for (let dy = -1; dy <= 1; dy++) {
+                                        if (dx === 0 && dy === 0) continue;
+                                        if (grid[x + dx][y + dy]) neighbors++;
+                                    }
+                                }
+                                
+                                // Conway's rules
+                                if (grid[x][y]) {
+                                    newGrid[x][y] = neighbors === 2 || neighbors === 3;
+                                } else {
+                                    newGrid[x][y] = neighbors === 3;
+                                }
+                            }
+                        }
+                        
+                        grid = newGrid;
+                    }
+                    
+                    // Convert to paths
+                    for (let x = 0; x < gridWidth; x++) {
+                        for (let y = 0; y < gridHeight; y++) {
+                            if (grid[x][y]) {
+                                const cx = x * cellSize + cellSize / 2;
+                                const cy = y * cellSize + cellSize / 2;
+                                
+                                // Draw cell as small square
+                                const path = [
+                                    [cx - cellSize/3, cy - cellSize/3],
+                                    [cx + cellSize/3, cy - cellSize/3],
+                                    [cx + cellSize/3, cy + cellSize/3],
+                                    [cx - cellSize/3, cy + cellSize/3],
+                                    [cx - cellSize/3, cy - cellSize/3]
+                                ];
+                                paths.push(path);
+                            }
+                        }
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    cellSize: { type: 'range', min: 5, max: 30, default: 10, label: 'Cell Size' },
+                    generations: { type: 'range', min: 10, max: 100, default: 50, label: 'Generations' },
+                    density: { type: 'range', min: 0.1, max: 0.9, default: 0.3, step: 0.1, label: 'Initial Density' }
+                }
+            },
+            
+            reactionDiffusion: {
+                name: 'Reaction-Diffusion',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, scale = 2, iterations = 100, threshold = 0.5 } = params;
+                    
+                    const gridSize = Math.floor(width / scale);
+                    const gridA = Array(gridSize).fill(null).map(() => Array(gridSize).fill(1));
+                    const gridB = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+                    
+                    // Seed pattern
+                    const centerX = Math.floor(gridSize / 2);
+                    const centerY = Math.floor(gridSize / 2);
+                    for (let x = centerX - 10; x < centerX + 10; x++) {
+                        for (let y = centerY - 10; y < centerY + 10; y++) {
+                            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+                                gridB[x][y] = 1;
+                            }
+                        }
+                    }
+                    
+                    // Gray-Scott parameters
+                    const dA = 1.0;
+                    const dB = 0.5;
+                    const feed = 0.055;
+                    const kill = 0.062;
+                    const dt = 1.0;
+                    
+                    // Run simulation
+                    for (let iter = 0; iter < iterations; iter++) {
+                        const nextA = gridA.map(row => [...row]);
+                        const nextB = gridB.map(row => [...row]);
+                        
+                        for (let x = 1; x < gridSize - 1; x++) {
+                            for (let y = 1; y < gridSize - 1; y++) {
+                                const a = gridA[x][y];
+                                const b = gridB[x][y];
+                                
+                                const laplaceA = 
+                                    gridA[x+1][y] + gridA[x-1][y] + 
+                                    gridA[x][y+1] + gridA[x][y-1] - 4 * a;
+                                    
+                                const laplaceB = 
+                                    gridB[x+1][y] + gridB[x-1][y] + 
+                                    gridB[x][y+1] + gridB[x][y-1] - 4 * b;
+                                
+                                nextA[x][y] = a + dt * (dA * laplaceA - a * b * b + feed * (1 - a));
+                                nextB[x][y] = b + dt * (dB * laplaceB + a * b * b - (kill + feed) * b);
+                            }
+                        }
+                        
+                        gridA.forEach((row, x) => row.forEach((_, y) => gridA[x][y] = nextA[x][y]));
+                        gridB.forEach((row, x) => row.forEach((_, y) => gridB[x][y] = nextB[x][y]));
+                    }
+                    
+                    // Convert to contour paths
+                    for (let x = 0; x < gridSize - 1; x++) {
+                        for (let y = 0; y < gridSize - 1; y++) {
+                            const val = gridB[x][y];
+                            if (val > threshold) {
+                                const px = x * scale;
+                                const py = y * scale;
+                                
+                                // Check neighbors for edges
+                                if (x > 0 && gridB[x-1][y] <= threshold) {
+                                    paths.push([[px, py], [px, py + scale]]);
+                                }
+                                if (y > 0 && gridB[x][y-1] <= threshold) {
+                                    paths.push([[px, py], [px + scale, py]]);
+                                }
+                            }
+                        }
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    scale: { type: 'range', min: 1, max: 5, default: 2, label: 'Grid Scale' },
+                    iterations: { type: 'range', min: 50, max: 500, default: 100, label: 'Iterations' },
+                    threshold: { type: 'range', min: 0.1, max: 0.9, default: 0.5, step: 0.1, label: 'Contour Threshold' }
+                }
+            },
+            
+            geometric: {
+                name: 'Geometric Patterns',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, pattern = 'hexagon', size = 30, rotation = 0 } = params;
+                    
+                    const rad = rotation * Math.PI / 180;
+                    
+                    if (pattern === 'hexagon') {
+                        const hexHeight = size * Math.sqrt(3);
+                        const hexWidth = size * 2;
+                        
+                        for (let row = 0; row < height / hexHeight + 1; row++) {
+                            for (let col = 0; col < width / (hexWidth * 0.75) + 1; col++) {
+                                const x = col * hexWidth * 0.75;
+                                const y = row * hexHeight + (col % 2) * hexHeight / 2;
+                                
+                                const hex = [];
+                                for (let i = 0; i < 6; i++) {
+                                    const angle = i * Math.PI / 3 + rad;
+                                    hex.push([
+                                        x + size * Math.cos(angle),
+                                        y + size * Math.sin(angle)
+                                    ]);
+                                }
+                                hex.push(hex[0]);
+                                paths.push(hex);
+                            }
+                        }
+                    } else if (pattern === 'triangle') {
+                        const triHeight = size * Math.sqrt(3) / 2;
+                        
+                        for (let row = 0; row < height / triHeight + 1; row++) {
+                            for (let col = 0; col < width / size + 1; col++) {
+                                const x = col * size + (row % 2) * size / 2;
+                                const y = row * triHeight;
+                                
+                                const tri = [];
+                                for (let i = 0; i < 3; i++) {
+                                    const angle = i * Math.PI * 2 / 3 + Math.PI / 2 + rad;
+                                    tri.push([
+                                        x + size / 2 * Math.cos(angle),
+                                        y + size / 2 * Math.sin(angle)
+                                    ]);
+                                }
+                                tri.push(tri[0]);
+                                paths.push(tri);
+                            }
+                        }
+                    } else if (pattern === 'square') {
+                        for (let x = size/2; x < width; x += size) {
+                            for (let y = size/2; y < height; y += size) {
+                                const square = [];
+                                for (let i = 0; i < 4; i++) {
+                                    const angle = i * Math.PI / 2 + Math.PI / 4 + rad;
+                                    square.push([
+                                        x + size / Math.sqrt(2) * Math.cos(angle),
+                                        y + size / Math.sqrt(2) * Math.sin(angle)
+                                    ]);
+                                }
+                                square.push(square[0]);
+                                paths.push(square);
+                            }
+                        }
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    pattern: { 
+                        type: 'select', 
+                        options: ['hexagon', 'triangle', 'square'], 
+                        default: 'hexagon',
+                        label: 'Pattern Type'
+                    },
+                    size: { type: 'range', min: 10, max: 100, default: 30, label: 'Pattern Size' },
+                    rotation: { type: 'range', min: 0, max: 360, default: 0, label: 'Rotation (degrees)' }
+                }
+            },
+            
+            treeSystem: {
+                name: 'Tree System',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, branches = 5, depth = 5, angle = 25, decay = 0.7 } = params;
+                    
+                    function drawBranch(x1, y1, len, angle, depth) {
+                        if (depth <= 0) return;
+                        
+                        const x2 = x1 + len * Math.cos(angle * Math.PI / 180);
+                        const y2 = y1 - len * Math.sin(angle * Math.PI / 180);
+                        
+                        paths.push([[x1, y1], [x2, y2]]);
+                        
+                        const angleVariation = (Math.random() - 0.5) * 10;
+                        
+                        for (let i = 0; i < branches; i++) {
+                            const branchAngle = angle + (i - branches/2) * angle + angleVariation;
+                            drawBranch(x2, y2, len * decay, branchAngle, depth - 1);
+                        }
+                    }
+                    
+                    // Draw multiple trees
+                    const treeCount = Math.floor(width / 150);
+                    for (let i = 0; i < treeCount; i++) {
+                        const x = (i + 0.5) * width / treeCount;
+                        const y = height - 50;
+                        const initialLength = 50 + Math.random() * 30;
+                        
+                        drawBranch(x, y, initialLength, 90, depth);
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    branches: { type: 'range', min: 2, max: 8, default: 5, label: 'Branches per Node' },
+                    depth: { type: 'range', min: 3, max: 8, default: 5, label: 'Tree Depth' },
+                    angle: { type: 'range', min: 10, max: 45, default: 25, label: 'Branch Angle' },
+                    decay: { type: 'range', min: 0.5, max: 0.9, default: 0.7, step: 0.1, label: 'Length Decay' }
+                }
+            },
+            
+            perlinNoise: {
+                name: 'Perlin Noise Field',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, scale = 0.01, lines = 50, segments = 100 } = params;
+                    
+                    // Simple noise function (not true Perlin, but similar effect)
+                    function noise(x, y) {
+                        const n = Math.sin(x * 12.9898 + y * 78.233) * 43758.5453;
+                        return n - Math.floor(n);
+                    }
+                    
+                    function smoothNoise(x, y) {
+                        const intX = Math.floor(x);
+                        const intY = Math.floor(y);
+                        const fracX = x - intX;
+                        const fracY = y - intY;
+                        
+                        const a = noise(intX, intY);
+                        const b = noise(intX + 1, intY);
+                        const c = noise(intX, intY + 1);
+                        const d = noise(intX + 1, intY + 1);
+                        
+                        const i1 = a * (1 - fracX) + b * fracX;
+                        const i2 = c * (1 - fracX) + d * fracX;
+                        
+                        return i1 * (1 - fracY) + i2 * fracY;
+                    }
+                    
+                    // Generate contour lines
+                    for (let i = 0; i < lines; i++) {
+                        const y = (i + 0.5) * height / lines;
+                        const path = [];
+                        
+                        for (let j = 0; j < segments; j++) {
+                            const x = j * width / segments;
+                            const noiseVal = smoothNoise(x * scale, y * scale);
+                            const offsetY = y + noiseVal * 50 - 25;
+                            
+                            path.push([x, offsetY]);
+                        }
+                        
+                        paths.push(path);
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    scale: { type: 'range', min: 0.005, max: 0.05, default: 0.01, step: 0.005, label: 'Noise Scale' },
+                    lines: { type: 'range', min: 20, max: 100, default: 50, label: 'Line Count' },
+                    segments: { type: 'range', min: 50, max: 200, default: 100, label: 'Line Segments' }
+                }
+            },
+            
+            physicsParticles: {
+                name: 'Physics Particles',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, particles = 50, gravity = 0.1, steps = 100 } = params;
+                    
+                    const particleList = [];
+                    
+                    // Initialize particles
+                    for (let i = 0; i < particles; i++) {
+                        particleList.push({
+                            x: Math.random() * width,
+                            y: Math.random() * height / 2,
+                            vx: (Math.random() - 0.5) * 5,
+                            vy: Math.random() * 2,
+                            path: []
+                        });
+                    }
+                    
+                    // Simulate
+                    for (let step = 0; step < steps; step++) {
+                        for (const p of particleList) {
+                            p.path.push([p.x, p.y]);
+                            
+                            // Update physics
+                            p.vy += gravity;
+                            p.x += p.vx;
+                            p.y += p.vy;
+                            
+                            // Bounce off walls
+                            if (p.x < 0 || p.x > width) {
+                                p.vx *= -0.8;
+                                p.x = Math.max(0, Math.min(width, p.x));
+                            }
+                            
+                            if (p.y > height) {
+                                p.vy *= -0.8;
+                                p.y = height;
+                            }
+                            
+                            // Air resistance
+                            p.vx *= 0.99;
+                            p.vy *= 0.99;
+                        }
+                    }
+                    
+                    // Convert to paths
+                    for (const p of particleList) {
+                        if (p.path.length > 1) {
+                            paths.push(p.path);
+                        }
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    particles: { type: 'range', min: 10, max: 200, default: 50, label: 'Particle Count' },
+                    gravity: { type: 'range', min: 0, max: 0.5, default: 0.1, step: 0.05, label: 'Gravity' },
+                    steps: { type: 'range', min: 50, max: 300, default: 100, label: 'Simulation Steps' }
+                }
+            },
+            
+            hashTiles: {
+                name: 'Hash Tiles',
+                generate: async (params) => {
+                    const paths = [];
+                    const { width, height, tileSize = 40, density = 0.7, variation = 5 } = params;
+                    
+                    const cols = Math.ceil(width / tileSize);
+                    const rows = Math.ceil(height / tileSize);
+                    
+                    // Hash function for deterministic randomness
+                    function hash(x, y) {
+                        let h = x * 374761393 + y * 668265263;
+                        h = (h ^ (h >>> 13)) * 1274126177;
+                        return h ^ (h >>> 16);
+                    }
+                    
+                    for (let col = 0; col < cols; col++) {
+                        for (let row = 0; row < rows; row++) {
+                            const h = hash(col, row);
+                            
+                            if ((h & 0xFFFF) / 0xFFFF > density) continue;
+                            
+                            const x = col * tileSize;
+                            const y = row * tileSize;
+                            
+                            const pattern = (h >>> 16) % variation;
+                            
+                            switch (pattern) {
+                                case 0: // Diagonal lines
+                                    for (let i = 0; i < tileSize; i += 5) {
+                                        paths.push([
+                                            [x + i, y],
+                                            [x, y + i]
+                                        ]);
+                                    }
+                                    break;
+                                    
+                                case 1: // Cross
+                                    paths.push([
+                                        [x, y],
+                                        [x + tileSize, y + tileSize]
+                                    ]);
+                                    paths.push([
+                                        [x + tileSize, y],
+                                        [x, y + tileSize]
+                                    ]);
+                                    break;
+                                    
+                                case 2: // Circle
+                                    const circle = [];
+                                    const cx = x + tileSize / 2;
+                                    const cy = y + tileSize / 2;
+                                    const r = tileSize / 3;
+                                    
+                                    for (let a = 0; a <= Math.PI * 2; a += 0.1) {
+                                        circle.push([
+                                            cx + r * Math.cos(a),
+                                            cy + r * Math.sin(a)
+                                        ]);
+                                    }
+                                    paths.push(circle);
+                                    break;
+                                    
+                                case 3: // Horizontal lines
+                                    for (let i = 0; i < tileSize; i += 5) {
+                                        paths.push([
+                                            [x, y + i],
+                                            [x + tileSize, y + i]
+                                        ]);
+                                    }
+                                    break;
+                                    
+                                case 4: // Square spiral
+                                    const spiral = [];
+                                    let sx = x + 2;
+                                    let sy = y + 2;
+                                    let step = 2;
+                                    
+                                    while (step < tileSize - 4) {
+                                        spiral.push([sx, sy]);
+                                        spiral.push([sx + step, sy]);
+                                        spiral.push([sx + step, sy + step]);
+                                        spiral.push([sx, sy + step]);
+                                        spiral.push([sx, sy + 2]);
+                                        
+                                        sx += 2;
+                                        sy += 2;
+                                        step += 4;
+                                    }
+                                    
+                                    if (spiral.length > 1) paths.push(spiral);
+                                    break;
+                            }
+                        }
+                    }
+                    
+                    return { paths };
+                },
+                parameters: {
+                    tileSize: { type: 'range', min: 20, max: 80, default: 40, label: 'Tile Size' },
+                    density: { type: 'range', min: 0.1, max: 1, default: 0.7, step: 0.1, label: 'Tile Density' },
+                    variation: { type: 'range', min: 2, max: 8, default: 5, label: 'Pattern Variations' }
+                }
+            }
+        };
+
+        // Register all algorithms with the engine
+        for (const [key, algo] of Object.entries(algorithms)) {
+            engine.registerAlgorithm(key, algo);
+        }
+
+        // Layer management
+        let layerIdCounter = 0;
+
+        function addLayer(algorithmKey = null) {
+            const layerId = `layer-${layerIdCounter++}`;
+            const layerElement = document.createElement('div');
+            layerElement.className = 'layer';
+            layerElement.id = layerId;
+            
+            const algorithmKeys = Object.keys(algorithms);
+            const selectedAlgorithm = algorithmKey || algorithmKeys[0];
+            
+            layerElement.innerHTML = `
+                <div class="layer-header">
+                    <span class="layer-title">Layer ${layerIdCounter}</span>
+                    <div class="layer-controls">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked onchange="toggleLayer('${layerId}')">
+                            Enabled
+                        </label>
+                        <button class="danger" onclick="removeLayer('${layerId}')">×</button>
+                    </div>
+                </div>
+                
+                <label>
+                    Algorithm:
+                    <select onchange="updateAlgorithm('${layerId}', this.value)">
+                        ${algorithmKeys.map(key => 
+                            `<option value="${key}" ${key === selectedAlgorithm ? 'selected' : ''}>
+                                ${algorithms[key].name}
+                            </option>`
+                        ).join('')}
+                    </select>
+                </label>
+                
+                <label>
+                    Blend Mode:
+                    <select onchange="updateBlendMode('${layerId}', this.value)">
+                        <option value="overlay">Overlay</option>
+                        <option value="mask">Mask</option>
+                        <option value="modulate">Modulate</option>
+                        <option value="intersect">Intersect</option>
+                        <option value="add">Add</option>
+                        <option value="multiply">Multiply</option>
+                        <option value="difference">Difference</option>
+                    </select>
+                </label>
+                
+                <label>
+                    Opacity: <span class="range-value">1.0</span>
+                    <input type="range" min="0" max="1" step="0.1" value="1" 
+                           onchange="updateOpacity('${layerId}', this.value)"
+                           oninput="this.previousElementSibling.textContent = this.value">
+                </label>
+                
+                <div class="parameter-group" id="${layerId}-params">
+                    <h3>Algorithm Parameters</h3>
+                </div>
+            `;
+            
+            document.getElementById('layers-container').appendChild(layerElement);
+            
+            // Add layer to engine
+            const engineLayerId = engine.addLayer({
+                algorithm: selectedAlgorithm,
+                blendMode: 'overlay',
+                opacity: 1.0
+            });
+            
+            layerElement.dataset.engineLayerId = engineLayerId;
+            
+            // Update parameters
+            updateAlgorithmParameters(layerId, selectedAlgorithm);
+        }
+
+        function removeLayer(layerId) {
+            const layerElement = document.getElementById(layerId);
+            if (layerElement) {
+                const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+                engine.removeLayer(engineLayerId);
+                layerElement.remove();
+            }
+        }
+
+        function toggleLayer(layerId) {
+            const layerElement = document.getElementById(layerId);
+            const checkbox = layerElement.querySelector('input[type="checkbox"]');
+            const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+            
+            engine.updateLayer(engineLayerId, { enabled: checkbox.checked });
+            layerElement.classList.toggle('disabled', !checkbox.checked);
+        }
+
+        function updateAlgorithm(layerId, algorithmKey) {
+            const layerElement = document.getElementById(layerId);
+            const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+            
+            engine.updateLayer(engineLayerId, { algorithm: algorithmKey });
+            updateAlgorithmParameters(layerId, algorithmKey);
+        }
+
+        function updateBlendMode(layerId, blendMode) {
+            const layerElement = document.getElementById(layerId);
+            const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+            
+            engine.updateLayer(engineLayerId, { blendMode });
+        }
+
+        function updateOpacity(layerId, opacity) {
+            const layerElement = document.getElementById(layerId);
+            const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+            
+            engine.updateLayer(engineLayerId, { opacity: parseFloat(opacity) });
+        }
+
+        function updateAlgorithmParameters(layerId, algorithmKey) {
+            const paramsContainer = document.getElementById(`${layerId}-params`);
+            const algorithm = algorithms[algorithmKey];
+            
+            let html = '<h3>Algorithm Parameters</h3>';
+            
+            for (const [paramKey, param] of Object.entries(algorithm.parameters)) {
+                const inputId = `${layerId}-${paramKey}`;
+                
+                if (param.type === 'range') {
+                    html += `
+                        <label>
+                            ${param.label}: <span class="range-value">${param.default}</span>
+                            <input type="range" 
+                                   id="${inputId}"
+                                   min="${param.min}" 
+                                   max="${param.max}" 
+                                   step="${param.step || 1}"
+                                   value="${param.default}"
+                                   onchange="updateParameter('${layerId}', '${paramKey}', this.value)"
+                                   oninput="this.previousElementSibling.textContent = this.value">
+                        </label>
+                    `;
+                } else if (param.type === 'select') {
+                    html += `
+                        <label>
+                            ${param.label}:
+                            <select id="${inputId}" onchange="updateParameter('${layerId}', '${paramKey}', this.value)">
+                                ${param.options.map(opt => 
+                                    `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`
+                                ).join('')}
+                            </select>
+                        </label>
+                    `;
+                }
+            }
+            
+            paramsContainer.innerHTML = html;
+        }
+
+        function updateParameter(layerId, paramKey, value) {
+            const layerElement = document.getElementById(layerId);
+            const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+            
+            const layer = engine.layers.find(l => l.id === engineLayerId);
+            if (layer) {
+                if (!layer.parameters) layer.parameters = {};
+                
+                // Convert value to appropriate type
+                const numValue = parseFloat(value);
+                layer.parameters[paramKey] = isNaN(numValue) ? value : numValue;
+            }
+        }
+
+        // Preset configurations
+        const presets = {
+            'flow-cellular': {
+                layers: [
+                    {
+                        algorithm: 'flowField',
+                        blendMode: 'overlay',
+                        opacity: 1.0,
+                        parameters: { resolution: 25, strength: 8, particles: 150 }
+                    },
+                    {
+                        algorithm: 'cellularAutomata',
+                        blendMode: 'mask',
+                        opacity: 0.8,
+                        parameters: { cellSize: 15, generations: 60, density: 0.35 }
+                    }
+                ]
+            },
+            'reaction-geometric': {
+                layers: [
+                    {
+                        algorithm: 'reactionDiffusion',
+                        blendMode: 'overlay',
+                        opacity: 1.0,
+                        parameters: { scale: 3, iterations: 200, threshold: 0.4 }
+                    },
+                    {
+                        algorithm: 'geometric',
+                        blendMode: 'modulate',
+                        opacity: 0.6,
+                        parameters: { pattern: 'hexagon', size: 25, rotation: 15 }
+                    }
+                ]
+            },
+            'tree-noise': {
+                layers: [
+                    {
+                        algorithm: 'treeSystem',
+                        blendMode: 'overlay',
+                        opacity: 1.0,
+                        parameters: { branches: 4, depth: 6, angle: 30, decay: 0.75 }
+                    },
+                    {
+                        algorithm: 'perlinNoise',
+                        blendMode: 'modulate',
+                        opacity: 0.5,
+                        parameters: { scale: 0.02, lines: 60, segments: 120 }
+                    }
+                ]
+            },
+            'physics-hash': {
+                layers: [
+                    {
+                        algorithm: 'physicsParticles',
+                        blendMode: 'overlay',
+                        opacity: 1.0,
+                        parameters: { particles: 80, gravity: 0.15, steps: 150 }
+                    },
+                    {
+                        algorithm: 'hashTiles',
+                        blendMode: 'intersect',
+                        opacity: 0.7,
+                        parameters: { tileSize: 50, density: 0.6, variation: 6 }
+                    }
+                ]
+            }
+        };
+
+        function loadPreset() {
+            const selector = document.getElementById('preset-selector');
+            const presetKey = selector.value;
+            
+            if (!presetKey || !presets[presetKey]) return;
+            
+            // Clear existing layers
+            document.getElementById('layers-container').innerHTML = '';
+            engine.layers = [];
+            
+            // Load preset configuration
+            const preset = presets[presetKey];
+            
+            for (const layerConfig of preset.layers) {
+                addLayer(layerConfig.algorithm);
+                
+                // Get the last added layer
+                const layerElements = document.querySelectorAll('.layer');
+                const layerElement = layerElements[layerElements.length - 1];
+                const layerId = layerElement.id;
+                const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+                
+                // Update layer settings
+                engine.updateLayer(engineLayerId, layerConfig);
+                
+                // Update UI
+                layerElement.querySelector('select').value = layerConfig.algorithm;
+                layerElement.querySelectorAll('select')[1].value = layerConfig.blendMode;
+                layerElement.querySelector('input[type="range"]').value = layerConfig.opacity;
+                layerElement.querySelector('.range-value').textContent = layerConfig.opacity;
+                
+                // Update parameters
+                for (const [paramKey, value] of Object.entries(layerConfig.parameters)) {
+                    const paramInput = document.getElementById(`${layerId}-${paramKey}`);
+                    if (paramInput) {
+                        paramInput.value = value;
+                        if (paramInput.type === 'range') {
+                            paramInput.previousElementSibling.textContent = value;
+                        }
+                        updateParameter(layerId, paramKey, value);
+                    }
+                }
+            }
+            
+            // Reset selector
+            selector.value = '';
+        }
+
+        // Generation and rendering
+        async function generate() {
+            const loading = document.getElementById('loading');
+            const status = document.getElementById('status');
+            
+            loading.classList.add('active');
+            status.textContent = 'Generating layers...';
+            
+            // Update canvas size
+            const width = parseInt(document.getElementById('canvas-width').value);
+            const height = parseInt(document.getElementById('canvas-height').value);
+            
+            canvas.width = width;
+            canvas.height = height;
+            engine.width = width;
+            engine.height = height;
+            
+            try {
+                // Generate all layers
+                await engine.generateLayers();
+                
+                status.textContent = 'Composing layers...';
+                
+                // Compose the final result
+                const result = engine.compose();
+                
+                // Render to canvas
+                renderPaths(result.paths);
+                
+                status.textContent = `Generated ${result.paths.length} paths`;
+            } catch (error) {
+                console.error('Generation error:', error);
+                status.textContent = 'Error: ' + error.message;
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        function renderPaths(paths) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 0.5;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            for (const path of paths) {
+                if (path.length < 2) continue;
+                
+                ctx.beginPath();
+                ctx.moveTo(path[0][0], path[0][1]);
+                
+                for (let i = 1; i < path.length; i++) {
+                    ctx.lineTo(path[i][0], path[i][1]);
+                }
+                
+                ctx.stroke();
+            }
+        }
+
+        // Export functions
+        let exportType = 'svg';
+
+        function exportSVG() {
+            exportType = 'svg';
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('export-options').classList.add('active');
+        }
+
+        function exportPNG() {
+            exportType = 'png';
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('export-options').classList.add('active');
+        }
+
+        function closeExportOptions() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('export-options').classList.remove('active');
+        }
+
+        function confirmExport() {
+            const includeLayers = document.getElementById('include-layers').checked;
+            const optimizePlotter = document.getElementById('optimize-plotter').checked;
+            
+            if (exportType === 'svg') {
+                const svg = engine.exportSVG();
+                downloadFile('hybrid-composition.svg', svg, 'image/svg+xml');
+            } else if (exportType === 'png') {
+                canvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'hybrid-composition.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+            }
+            
+            closeExportOptions();
+        }
+
+        function downloadFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Configuration save/load
+        function saveConfiguration() {
+            const config = engine.getConfiguration();
+            const json = JSON.stringify(config, null, 2);
+            downloadFile('hybrid-config.json', json, 'application/json');
+        }
+
+        function loadConfiguration() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    const text = await file.text();
+                    const config = JSON.parse(text);
+                    
+                    // Clear existing layers
+                    document.getElementById('layers-container').innerHTML = '';
+                    
+                    // Load configuration
+                    engine.loadConfiguration(config);
+                    
+                    // Rebuild UI
+                    // This is simplified - in production you'd properly sync the UI
+                    location.reload();
+                } catch (error) {
+                    console.error('Error loading configuration:', error);
+                    alert('Failed to load configuration: ' + error.message);
+                }
+            };
+            
+            input.click();
+        }
+
+        // Initialize with one layer
+        addLayer();
+    </script>
+</body>
+</html>

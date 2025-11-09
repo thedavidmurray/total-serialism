@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Elementary CA - Multi-Color Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    .color-scheme {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      padding: 10px;
+      background: #333;
+      border-radius: 4px;
+    }
+    .color-preview {
+      display: flex;
+      margin-left: auto;
+    }
+    .color-box {
+      width: 20px;
+      height: 20px;
+      margin-left: 5px;
+      border: 1px solid #fff;
+    }
+    .export-btn {
+      background: #2196F3;
+    }
+    .export-btn:hover {
+      background: #1976D2;
+    }
+    .rule-btn {
+      background: #666;
+      margin: 2px 0;
+    }
+    .rule-btn:hover {
+      background: #777;
+    }
+    #generation-display {
+      text-align: center;
+      font-size: 16px;
+      color: #4CAF50;
+      margin: 10px 0;
+      padding: 10px;
+      background: #333;
+      border-radius: 4px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #color-zone-controls {
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .zone-control {
+      display: flex;
+      align-items: center;
+      margin: 5px 0;
+    }
+    .zone-control input[type="color"] {
+      width: 40px;
+      height: 25px;
+      margin-right: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    .zone-control input[type="number"] {
+      width: 60px;
+      margin: 0 5px;
+      padding: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Multi-Color Elementary CA</h2>
+    
+    <div id="generation-display">Rows Generated: 0</div>
+    
+    <div class="control-group">
+      <h3>Rule Configuration</h3>
+      <div class="control">
+        <label>Rule Number: <span class="value" id="rule-val">30</span></label>
+        <input type="range" id="rule" min="0" max="255" value="30">
+      </div>
+      <div class="control">
+        <input type="number" id="ruleInput" min="0" max="255" value="30">
+      </div>
+      <button class="rule-btn" onclick="setRule(30)">Rule 30 (Chaos)</button>
+      <button class="rule-btn" onclick="setRule(90)">Rule 90 (Sierpinski)</button>
+      <button class="rule-btn" onclick="setRule(110)">Rule 110 (Complex)</button>
+      <button class="rule-btn" onclick="setRule(184)">Rule 184 (Traffic)</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Width: <span class="value" id="width-val">200</span> cells</label>
+        <input type="range" id="cellWidth" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Height: <span class="value" id="height-val">200</span> cells</label>
+        <input type="range" id="cellHeight" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">3</span>px</label>
+        <input type="range" id="cellSize" min="1" max="10" value="3">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Color Modes</h3>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode" onchange="updateColorMode()">
+          <option value="zones">Horizontal Zones</option>
+          <option value="gradient">Gradient</option>
+          <option value="modulo">Modulo Pattern</option>
+          <option value="density">Density Based</option>
+          <option value="age">Cell Age</option>
+          <option value="neighborhood">Neighborhood Type</option>
+        </select>
+      </div>
+      
+      <div id="color-zone-controls" style="display: block;">
+        <h4 style="margin: 0 0 10px 0; font-size: 14px;">Zone Configuration</h4>
+        <div id="zones-container"></div>
+        <button onclick="addZone()" style="width: auto; padding: 5px 10px; margin-top: 10px;">+ Add Zone</button>
+      </div>
+      
+      <div class="control checkbox-container">
+        <input type="checkbox" id="separateLayers" checked>
+        <label for="separateLayers">Export as Separate Layers</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Color Schemes</h3>
+      <button onclick="applyColorScheme('rainbow')">Rainbow Spectrum</button>
+      <button onclick="applyColorScheme('ocean')">Ocean Depths</button>
+      <button onclick="applyColorScheme('fire')">Fire Gradient</button>
+      <button onclick="applyColorScheme('cmyk')">CMYK Print</button>
+      <button onclick="applyColorScheme('pastel')">Pastel Dream</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <button onclick="generate()">Generate</button>
+      <button onclick="reset()">Reset</button>
+      <div class="control">
+        <label>Initial Pattern:</label>
+        <select id="startPattern">
+          <option value="single">Single Center Cell</option>
+          <option value="random">Random</option>
+          <option value="alternating">Alternating</option>
+          <option value="symmetric">Symmetric</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export Options</h3>
+      <button class="export-btn" onclick="exportAllLayers()">Export All Color Layers</button>
+      <button class="export-btn" onclick="exportCombined()">Export Combined SVG</button>
+      <button class="export-btn" onclick="exportByColor()">Export Each Color</button>
+      <button class="export-btn" onclick="exportGIF()">Export as GIF</button>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="includeRegistration" checked>
+        <label for="includeRegistration">Include Registration Marks</label>
+      </div>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Multi-color Elementary CA
+    let cells = [];
+    let colorGrid = [];
+    let history = [];
+    let generation = 0;
+    let rule = 30;
+    let cellWidth = 200;
+    let cellHeight = 200;
+    let cellSize = 3;
+    let cellAge = [];
+    
+    // Color configuration
+    let colorMode = 'zones';
+    let colorZones = [
+      { color: '#FF6B6B', start: 0, end: 25 },
+      { color: '#4ECDC4', start: 25, end: 50 },
+      { color: '#45B7D1', start: 50, end: 75 },
+      { color: '#96CEB4', start: 75, end: 100 }
+    ];
+    
+    function setup() {
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      initializeCells();
+      setupControls();
+      updateZoneControls();
+    }
+    
+    function initializeCells() {
+      cells = new Array(cellWidth).fill(0);
+      colorGrid = [];
+      history = [];
+      cellAge = [];
+      generation = 0;
+      
+      // Initialize cell age tracking
+      for (let i = 0; i < cellWidth; i++) {
+        cellAge[i] = [];
+        for (let j = 0; j < cellHeight; j++) {
+          cellAge[i][j] = 0;
+        }
+      }
+      
+      // Set initial condition
+      const pattern = document.getElementById('startPattern').value;
+      switch (pattern) {
+        case 'single':
+          cells[Math.floor(cellWidth / 2)] = 1;
+          break;
+        case 'random':
+          for (let i = 0; i < cellWidth; i++) {
+            cells[i] = random() < 0.5 ? 1 : 0;
+          }
+          break;
+        case 'alternating':
+          for (let i = 0; i < cellWidth; i++) {
+            cells[i] = i % 2;
+          }
+          break;
+        case 'symmetric':
+          for (let i = 0; i < cellWidth / 2; i++) {
+            cells[i] = random() < 0.5 ? 1 : 0;
+            cells[cellWidth - 1 - i] = cells[i];
+          }
+          break;
+      }
+      
+      history.push([...cells]);
+    }
+    
+    function setupControls() {
+      // Rule controls
+      document.getElementById('rule').addEventListener('input', (e) => {
+        rule = parseInt(e.target.value);
+        document.getElementById('rule-val').textContent = rule;
+        document.getElementById('ruleInput').value = rule;
+        reset();
+        generate();
+      });
+      
+      document.getElementById('ruleInput').addEventListener('change', (e) => {
+        rule = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
+        document.getElementById('rule').value = rule;
+        document.getElementById('rule-val').textContent = rule;
+        reset();
+        generate();
+      });
+      
+      // Grid controls
+      document.getElementById('cellWidth').addEventListener('input', (e) => {
+        cellWidth = parseInt(e.target.value);
+        document.getElementById('width-val').textContent = cellWidth;
+      });
+      
+      document.getElementById('cellHeight').addEventListener('input', (e) => {
+        cellHeight = parseInt(e.target.value);
+        document.getElementById('height-val').textContent = cellHeight;
+      });
+      
+      document.getElementById('cellSize').addEventListener('input', (e) => {
+        cellSize = parseInt(e.target.value);
+        document.getElementById('cellSize-val').textContent = cellSize;
+      });
+    }
+    
+    function draw() {
+      background(30);
+      
+      const totalWidth = cellWidth * cellSize;
+      const totalHeight = Math.min(history.length, cellHeight) * cellSize;
+      const offsetX = (width - totalWidth) / 2;
+      const offsetY = (height - totalHeight) / 2;
+      
+      noStroke();
+      
+      // Draw colored cells
+      for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
+        for (let x = 0; x < cellWidth; x++) {
+          if (history[y][x] === 1) {
+            const color = getColorForCell(x, y);
+            fill(color);
+            rect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          }
+        }
+      }
+    }
+    
+    function getColorForCell(x, y) {
+      switch (colorMode) {
+        case 'zones':
+          // Horizontal color zones
+          const percent = (y / cellHeight) * 100;
+          for (let zone of colorZones) {
+            if (percent >= zone.start && percent < zone.end) {
+              return zone.color;
+            }
+          }
+          return '#FFFFFF';
+          
+        case 'gradient':
+          // Smooth gradient from top to bottom
+          const gradientColors = colorZones.map(z => z.color);
+          const position = y / cellHeight;
+          const index = position * (gradientColors.length - 1);
+          const i = Math.floor(index);
+          const fraction = index - i;
+          
+          if (i >= gradientColors.length - 1) {
+            return gradientColors[gradientColors.length - 1];
+          }
+          
+          // Interpolate between colors
+          const c1 = color(gradientColors[i]);
+          const c2 = color(gradientColors[i + 1]);
+          return lerpColor(c1, c2, fraction);
+          
+        case 'modulo':
+          // Color based on position modulo
+          const colors = colorZones.map(z => z.color);
+          return colors[(x + y) % colors.length];
+          
+        case 'density':
+          // Color based on local density
+          let density = 0;
+          const radius = 3;
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const ny = y + dy;
+              const nx = x + dx;
+              if (ny >= 0 && ny < history.length && nx >= 0 && nx < cellWidth) {
+                density += history[ny][nx];
+              }
+            }
+          }
+          const maxDensity = (radius * 2 + 1) * (radius * 2 + 1);
+          const colorIndex = Math.floor((density / maxDensity) * colorZones.length);
+          return colorZones[Math.min(colorIndex, colorZones.length - 1)].color;
+          
+        case 'age':
+          // Color based on how long cell has been alive
+          const age = cellAge[x][y];
+          const ageColors = colorZones.map(z => z.color);
+          const ageIndex = Math.min(age, ageColors.length - 1);
+          return ageColors[ageIndex];
+          
+        case 'neighborhood':
+          // Color based on neighborhood pattern
+          if (y > 0) {
+            const left = x > 0 ? history[y-1][x-1] : 0;
+            const center = history[y-1][x];
+            const right = x < cellWidth-1 ? history[y-1][x+1] : 0;
+            const pattern = (left << 2) | (center << 1) | right;
+            return colorZones[pattern % colorZones.length].color;
+          }
+          return colorZones[0].color;
+          
+        default:
+          return '#FFFFFF';
+      }
+    }
+    
+    function generate() {
+      initializeCells();
+      
+      // Generate all generations
+      for (let g = 0; g < cellHeight - 1; g++) {
+        stepGeneration();
+      }
+      
+      updateGenerationDisplay();
+    }
+    
+    function stepGeneration() {
+      const newCells = new Array(cellWidth);
+      
+      for (let i = 0; i < cellWidth; i++) {
+        // Get neighborhood
+        const left = cells[(i - 1 + cellWidth) % cellWidth];
+        const center = cells[i];
+        const right = cells[(i + 1) % cellWidth];
+        
+        // Calculate neighborhood index
+        const neighborhood = (left << 2) | (center << 1) | right;
+        
+        // Apply rule
+        newCells[i] = (rule >> neighborhood) & 1;
+        
+        // Update cell age
+        if (generation < cellHeight) {
+          if (newCells[i] === 1) {
+            if (cells[i] === 1) {
+              cellAge[i][generation] = (generation > 0 ? cellAge[i][generation-1] : 0) + 1;
+            } else {
+              cellAge[i][generation] = 1;
+            }
+          } else {
+            cellAge[i][generation] = 0;
+          }
+        }
+      }
+      
+      cells = newCells;
+      history.push([...cells]);
+      generation++;
+    }
+    
+    function reset() {
+      initializeCells();
+      generation = 0;
+      updateGenerationDisplay();
+    }
+    
+    function setRule(r) {
+      rule = r;
+      document.getElementById('rule').value = r;
+      document.getElementById('rule-val').textContent = r;
+      document.getElementById('ruleInput').value = r;
+      generate();
+    }
+    
+    function updateGenerationDisplay() {
+      document.getElementById('generation-display').textContent = `Rows Generated: ${generation}`;
+    }
+    
+    function updateColorMode() {
+      colorMode = document.getElementById('colorMode').value;
+      document.getElementById('color-zone-controls').style.display = 
+        colorMode === 'zones' ? 'block' : 'none';
+    }
+    
+    function updateZoneControls() {
+      const container = document.getElementById('zones-container');
+      container.innerHTML = '';
+      
+      colorZones.forEach((zone, idx) => {
+        const div = document.createElement('div');
+        div.className = 'zone-control';
+        div.innerHTML = `
+          <input type="color" value="${zone.color}" onchange="updateZoneColor(${idx}, this.value)">
+          <span>Start:</span>
+          <input type="number" value="${zone.start}" min="0" max="100" onchange="updateZoneStart(${idx}, this.value)">
+          <span>End:</span>
+          <input type="number" value="${zone.end}" min="0" max="100" onchange="updateZoneEnd(${idx}, this.value)">
+          <button onclick="removeZone(${idx})" style="width: auto; padding: 3px 8px; margin-left: 10px;">×</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+    
+    function addZone() {
+      const lastEnd = colorZones.length > 0 ? colorZones[colorZones.length - 1].end : 0;
+      colorZones.push({
+        color: '#' + Math.floor(Math.random()*16777215).toString(16),
+        start: lastEnd,
+        end: Math.min(lastEnd + 25, 100)
+      });
+      updateZoneControls();
+    }
+    
+    function removeZone(idx) {
+      if (colorZones.length > 1) {
+        colorZones.splice(idx, 1);
+        updateZoneControls();
+      }
+    }
+    
+    function updateZoneColor(idx, color) {
+      colorZones[idx].color = color;
+    }
+    
+    function updateZoneStart(idx, value) {
+      colorZones[idx].start = parseFloat(value);
+    }
+    
+    function updateZoneEnd(idx, value) {
+      colorZones[idx].end = parseFloat(value);
+    }
+    
+    function applyColorScheme(scheme) {
+      switch (scheme) {
+        case 'rainbow':
+          colorZones = [
+            { color: '#FF0000', start: 0, end: 16.67 },
+            { color: '#FF8800', start: 16.67, end: 33.33 },
+            { color: '#FFFF00', start: 33.33, end: 50 },
+            { color: '#00FF00', start: 50, end: 66.67 },
+            { color: '#0088FF', start: 66.67, end: 83.33 },
+            { color: '#8800FF', start: 83.33, end: 100 }
+          ];
+          break;
+        case 'ocean':
+          colorZones = [
+            { color: '#001f3f', start: 0, end: 25 },
+            { color: '#0074D9', start: 25, end: 50 },
+            { color: '#7FDBFF', start: 50, end: 75 },
+            { color: '#39CCCC', start: 75, end: 100 }
+          ];
+          break;
+        case 'fire':
+          colorZones = [
+            { color: '#FFDC00', start: 0, end: 25 },
+            { color: '#FF851B', start: 25, end: 50 },
+            { color: '#FF4136', start: 50, end: 75 },
+            { color: '#85144b', start: 75, end: 100 }
+          ];
+          break;
+        case 'cmyk':
+          colorZones = [
+            { color: '#00FFFF', start: 0, end: 25 },
+            { color: '#FF00FF', start: 25, end: 50 },
+            { color: '#FFFF00', start: 50, end: 75 },
+            { color: '#000000', start: 75, end: 100 }
+          ];
+          break;
+        case 'pastel':
+          colorZones = [
+            { color: '#FFB3E6', start: 0, end: 25 },
+            { color: '#C5E1FF', start: 25, end: 50 },
+            { color: '#E6FFB3', start: 50, end: 75 },
+            { color: '#FFE6B3', start: 75, end: 100 }
+          ];
+          break;
+      }
+      updateZoneControls();
+      if (history.length > 1) {
+        redraw();
+      }
+    }
+    
+    // Export functions
+    function exportByColor() {
+      const uniqueColors = new Set();
+      
+      // Collect all unique colors
+      for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
+        for (let x = 0; x < cellWidth; x++) {
+          if (history[y][x] === 1) {
+            uniqueColors.add(getColorForCell(x, y));
+          }
+        }
+      }
+      
+      // Export each color as a separate layer
+      Array.from(uniqueColors).forEach((color, idx) => {
+        let svg = createGraphics(cellWidth * 10 + 40, cellHeight * 10 + 40, SVG);
+        svg.background(255);
+        
+        // Registration marks
+        if (document.getElementById('includeRegistration').checked) {
+          drawRegistrationMarks(svg);
+        }
+        
+        // Draw only cells of this color
+        svg.fill(0);
+        svg.noStroke();
+        
+        for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
+          for (let x = 0; x < cellWidth; x++) {
+            if (history[y][x] === 1 && getColorForCell(x, y) === color) {
+              svg.rect(20 + x * 10, 20 + y * 10, 10, 10);
+            }
+          }
+        }
+        
+        // Add metadata
+        svg.push();
+        svg.stroke(0);
+        svg.strokeWeight(0.5);
+        svg.textSize(8);
+        svg.text(`Layer ${idx + 1} - Color: ${color}`, 20, svg.height - 5);
+        svg.text(`Rule: ${rule}`, 200, svg.height - 5);
+        svg.pop();
+        
+        save(svg, `elementary-ca-rule${rule}-layer${idx + 1}.svg`);
+        svg.remove();
+      });
+    }
+    
+    function exportCombined() {
+      let svg = createGraphics(cellWidth * 10 + 40, cellHeight * 10 + 40, SVG);
+      svg.background(255);
+      
+      if (document.getElementById('includeRegistration').checked) {
+        drawRegistrationMarks(svg);
+      }
+      
+      // Draw all cells with their colors
+      svg.noStroke();
+      
+      for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
+        for (let x = 0; x < cellWidth; x++) {
+          if (history[y][x] === 1) {
+            svg.fill(getColorForCell(x, y));
+            svg.rect(20 + x * 10, 20 + y * 10, 10, 10);
+          }
+        }
+      }
+      
+      save(svg, `elementary-ca-rule${rule}-combined.svg`);
+      svg.remove();
+    }
+    
+    function exportAllLayers() {
+      if (document.getElementById('separateLayers').checked) {
+        exportByColor();
+      } else {
+        exportCombined();
+      }
+    }
+    
+    function drawRegistrationMarks(svg) {
+      svg.stroke(0);
+      svg.strokeWeight(1);
+      svg.noFill();
+      
+      // Corner registration marks
+      const marks = [
+        [10, 10], 
+        [svg.width - 10, 10], 
+        [10, svg.height - 10], 
+        [svg.width - 10, svg.height - 10]
+      ];
+      
+      marks.forEach(([x, y]) => {
+        svg.line(x - 5, y, x + 5, y);
+        svg.line(x, y - 5, x, y + 5);
+        svg.circle(x, y, 8);
+      });
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Store original state
+      const originalHistory = history.map(row => [...row]);
+      
+      // Clear and regenerate for animation
+      history = [];
+      cells = new Array(cellWidth).fill(0);
+      cells[Math.floor(cellWidth / 2)] = 1;
+      history.push([...cells]);
+      
+      // Generate frames
+      const totalFrames = 30;
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+        
+        // Create offscreen canvas
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const ctx = offscreenCanvas.getContext('2d');
+        
+        // Draw background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        // Draw current history state with colors
+        const cellSize = width / cellWidth;
+        
+        for (let y = 0; y < history.length; y++) {
+          for (let x = 0; x < cellWidth; x++) {
+            if (history[y][x] === 1) {
+              const colorObj = getColorForCell(x, y);
+              ctx.fillStyle = `rgb(${colorObj.levels[0]}, ${colorObj.levels[1]}, ${colorObj.levels[2]})`;
+              ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+            }
+          }
+        }
+        
+        // Add frame
+        gif.addFrame(ctx, {delay: 100});
+        
+        // Generate next generation
+        if (history.length < cellHeight) {
+          const nextGen = new Array(cellWidth).fill(0);
+          const currentGen = history[history.length - 1];
+          
+          for (let i = 0; i < cellWidth; i++) {
+            const left = currentGen[(i - 1 + cellWidth) % cellWidth];
+            const center = currentGen[i];
+            const right = currentGen[(i + 1) % cellWidth];
+            const index = left * 4 + center * 2 + right;
+            nextGen[i] = (rule >> index) & 1;
+          }
+          
+          cells = nextGen;
+          history.push([...cells]);
+        }
+      }
+      
+      // Restore original state
+      history = originalHistory;
+      
+      statusEl.textContent = 'Encoding GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `elementary-ca-layers-rule${rule}.gif`;
+        link.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ML5 AI Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #status {
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+    .webcam-container {
+      position: relative;
+      margin-bottom: 10px;
+    }
+    #webcam {
+      width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>ML5 AI Controls</h2>
+    
+    <div id="status">Model Status: Initializing...</div>
+    
+    <div class="control-group">
+      <h3>AI Model</h3>
+      <div class="control">
+        <label>Model Type:</label>
+        <select id="modelType">
+          <option value="sketchRNN">SketchRNN Drawing</option>
+          <option value="poseNet">PoseNet Body Tracking</option>
+          <option value="styleTransfer">Style Transfer</option>
+          <option value="imageClassifier">Image Classifier</option>
+          <option value="featureExtractor">Feature Extractor</option>
+          <option value="bodyPix">BodyPix Segmentation</option>
+        </select>
+      </div>
+      <button onclick="loadModel()">Load Model</button>
+    </div>
+    
+    <div class="control-group" id="sketchRNNControls">
+      <h3>SketchRNN Settings</h3>
+      <div class="control">
+        <label>Drawing Model:</label>
+        <select id="sketchModel">
+          <option value="cat">Cat</option>
+          <option value="bird">Bird</option>
+          <option value="flower">Flower</option>
+          <option value="rain">Rain</option>
+          <option value="ocean">Ocean</option>
+          <option value="butterfly">Butterfly</option>
+          <option value="elephant">Elephant</option>
+          <option value="spider">Spider</option>
+          <option value="tree">Tree</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Temperature: <span class="value" id="temperature-val">0.5</span></label>
+        <input type="range" id="temperature" min="0.1" max="2" value="0.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Stroke Length: <span class="value" id="strokeLength-val">50</span></label>
+        <input type="range" id="strokeLength" min="10" max="200" value="50" step="10">
+      </div>
+      <button onclick="generateSketch()">Generate New Sketch</button>
+    </div>
+    
+    <div class="control-group" id="poseNetControls" style="display:none;">
+      <h3>PoseNet Settings</h3>
+      <div class="webcam-container">
+        <video id="webcam" autoplay muted></video>
+      </div>
+      <div class="control">
+        <label>Confidence Threshold: <span class="value" id="confidence-val">0.5</span></label>
+        <input type="range" id="confidence" min="0" max="1" value="0.5" step="0.05">
+      </div>
+      <div class="control">
+        <label>Pattern Style:</label>
+        <select id="posePattern">
+          <option value="skeleton">Skeleton</option>
+          <option value="particles">Particle Flow</option>
+          <option value="ribbons">Ribbons</option>
+          <option value="mandala">Mandala</option>
+        </select>
+      </div>
+      <button onclick="toggleWebcam()">Toggle Webcam</button>
+    </div>
+    
+    <div class="control-group" id="styleTransferControls" style="display:none;">
+      <h3>Style Transfer Settings</h3>
+      <div class="control">
+        <label>Style Model:</label>
+        <select id="styleModel">
+          <option value="udnie">Udnie</option>
+          <option value="scream">The Scream</option>
+          <option value="wave">The Great Wave</option>
+          <option value="rain_princess">Rain Princess</option>
+          <option value="la_muse">La Muse</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Input Image:</label>
+        <input type="file" id="styleInput" accept="image/*">
+      </div>
+      <button onclick="applyStyleTransfer()">Apply Style</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Pattern Generation</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">10</span></label>
+        <input type="range" id="gridSize" min="5" max="50" value="10" step="5">
+      </div>
+      <div class="control">
+        <label>Pattern Scale: <span class="value" id="patternScale-val">1</span></label>
+        <input type="range" id="patternScale" min="0.5" max="3" value="1" step="0.1">
+      </div>
+      <div class="control">
+        <label>Complexity: <span class="value" id="complexity-val">5</span></label>
+        <input type="range" id="complexity" min="1" max="10" value="5" step="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="continuous" checked>
+        <label for="continuous">Continuous Generation</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showAI">
+        <label for="showAI">Show AI Visualization</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Visualization</h3>
+      <div class="control">
+        <label>Render Mode:</label>
+        <select id="renderMode">
+          <option value="lines">Lines</option>
+          <option value="dots">Dots</option>
+          <option value="curves">Curves</option>
+          <option value="filled">Filled Shapes</option>
+          <option value="hatching">Hatching</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="monochrome">Monochrome</option>
+          <option value="gradient">Gradient</option>
+          <option value="rainbow">Rainbow</option>
+          <option value="confidence">AI Confidence</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="lineWeight-val">2</span></label>
+        <input type="range" id="lineWeight" min="0.5" max="5" value="2" step="0.5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      modelType: 'sketchRNN',
+      sketchModel: 'cat',
+      temperature: 0.5,
+      strokeLength: 50,
+      confidence: 0.5,
+      posePattern: 'skeleton',
+      styleModel: 'udnie',
+      gridSize: 10,
+      patternScale: 1,
+      complexity: 5,
+      continuous: true,
+      showAI: false,
+      renderMode: 'lines',
+      colorMode: 'monochrome',
+      lineWeight: 2
+    };
+    
+    let model;
+    let svgCanvas;
+    let patterns = [];
+    let video;
+    let poseNet;
+    let poses = [];
+    let sketchRNN;
+    let currentStroke;
+    let styleTransfer;
+    let classifier;
+    let featureExtractor;
+    let bodyPix;
+    
+    function setup() {
+      const w = 600;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      loadModel();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              if (key === 'modelType') {
+                updateControlVisibility();
+              }
+            });
+          }
+        }
+      });
+      
+      // File input handler
+      document.getElementById('styleInput').addEventListener('change', handleFileSelect);
+    }
+    
+    function updateControlVisibility() {
+      // Hide all model-specific controls
+      document.getElementById('sketchRNNControls').style.display = 'none';
+      document.getElementById('poseNetControls').style.display = 'none';
+      document.getElementById('styleTransferControls').style.display = 'none';
+      
+      // Show relevant controls
+      switch (params.modelType) {
+        case 'sketchRNN':
+          document.getElementById('sketchRNNControls').style.display = 'block';
+          break;
+        case 'poseNet':
+          document.getElementById('poseNetControls').style.display = 'block';
+          break;
+        case 'styleTransfer':
+          document.getElementById('styleTransferControls').style.display = 'block';
+          break;
+      }
+    }
+    
+    async function loadModel() {
+      updateStatus('Loading model...');
+      
+      try {
+        switch (params.modelType) {
+          case 'sketchRNN':
+            await loadSketchRNN();
+            break;
+          case 'poseNet':
+            await loadPoseNet();
+            break;
+          case 'styleTransfer':
+            await loadStyleTransfer();
+            break;
+          case 'imageClassifier':
+            await loadImageClassifier();
+            break;
+          case 'featureExtractor':
+            await loadFeatureExtractor();
+            break;
+          case 'bodyPix':
+            await loadBodyPix();
+            break;
+        }
+        
+        updateStatus('Model loaded successfully!');
+      } catch (error) {
+        updateStatus('Error loading model: ' + error.message);
+        console.error(error);
+      }
+    }
+    
+    async function loadSketchRNN() {
+      const modelName = params.sketchModel;
+      sketchRNN = ml5.sketchRNN(modelName, () => {
+        updateStatus('SketchRNN model loaded');
+        generateSketch();
+      });
+    }
+    
+    async function loadPoseNet() {
+      // Setup video
+      video = createCapture(VIDEO);
+      video.size(320, 240);
+      video.hide();
+      
+      // Load PoseNet
+      poseNet = ml5.poseNet(video, () => {
+        updateStatus('PoseNet model loaded');
+      });
+      
+      poseNet.on('pose', (results) => {
+        poses = results;
+      });
+    }
+    
+    async function loadStyleTransfer() {
+      styleTransfer = ml5.styleTransfer('models/' + params.styleModel, () => {
+        updateStatus('Style Transfer model loaded');
+      });
+    }
+    
+    async function loadImageClassifier() {
+      classifier = ml5.imageClassifier('MobileNet', () => {
+        updateStatus('Image Classifier loaded');
+      });
+    }
+    
+    async function loadFeatureExtractor() {
+      featureExtractor = ml5.featureExtractor('MobileNet', () => {
+        updateStatus('Feature Extractor loaded');
+      });
+    }
+    
+    async function loadBodyPix() {
+      const options = {
+        outputStride: 16,
+        segmentationThreshold: 0.5
+      };
+      
+      bodyPix = ml5.bodyPix(options, () => {
+        updateStatus('BodyPix model loaded');
+      });
+    }
+    
+    function generateSketch() {
+      if (!sketchRNN) return;
+      
+      // Start a new drawing
+      sketchRNN.reset();
+      const startX = width / 2;
+      const startY = height / 2;
+      
+      currentStroke = {
+        points: [[startX, startY]],
+        drawing: true
+      };
+      
+      // Generate strokes
+      generateNextStroke();
+    }
+    
+    function generateNextStroke() {
+      if (!currentStroke.drawing || currentStroke.points.length > params.strokeLength) {
+        patterns.push(currentStroke);
+        return;
+      }
+      
+      sketchRNN.generate((err, strokeData) => {
+        if (err) return;
+        
+        const lastPoint = currentStroke.points[currentStroke.points.length - 1];
+        const dx = strokeData.dx * params.patternScale * 5;
+        const dy = strokeData.dy * params.patternScale * 5;
+        const newX = lastPoint[0] + dx;
+        const newY = lastPoint[1] + dy;
+        
+        currentStroke.points.push([newX, newY]);
+        
+        if (strokeData.pen === 'end') {
+          currentStroke.drawing = false;
+        } else if (strokeData.pen === 'up') {
+          // Start new stroke
+          patterns.push(currentStroke);
+          currentStroke = {
+            points: [[newX, newY]],
+            drawing: true
+          };
+        }
+        
+        // Continue generating
+        if (params.continuous) {
+          setTimeout(generateNextStroke, 10);
+        }
+      });
+    }
+    
+    function draw() {
+      background(255);
+      
+      // Draw based on model type
+      switch (params.modelType) {
+        case 'sketchRNN':
+          drawSketchRNN();
+          break;
+        case 'poseNet':
+          drawPoseNet();
+          break;
+        case 'styleTransfer':
+          drawStyleTransfer();
+          break;
+        case 'imageClassifier':
+          drawImageClassifier();
+          break;
+        case 'featureExtractor':
+          drawFeatureExtractor();
+          break;
+        case 'bodyPix':
+          drawBodyPix();
+          break;
+      }
+    }
+    
+    function drawSketchRNN() {
+      noFill();
+      strokeWeight(params.lineWeight);
+      
+      // Draw all completed strokes
+      patterns.forEach((stroke, i) => {
+        if (stroke.points.length > 1) {
+          setStrokeColor(i / patterns.length);
+          
+          switch (params.renderMode) {
+            case 'lines':
+              beginShape();
+              stroke.points.forEach(p => vertex(p[0], p[1]));
+              endShape();
+              break;
+              
+            case 'dots':
+              stroke.points.forEach(p => point(p[0], p[1]));
+              break;
+              
+            case 'curves':
+              beginShape();
+              stroke.points.forEach((p, j) => {
+                if (j === 0) {
+                  vertex(p[0], p[1]);
+                } else {
+                  const prev = stroke.points[j - 1];
+                  bezierVertex(
+                    prev[0], prev[1],
+                    p[0], p[1],
+                    p[0], p[1]
+                  );
+                }
+              });
+              endShape();
+              break;
+              
+            case 'hatching':
+              stroke.points.forEach((p, j) => {
+                if (j % 3 === 0 && j < stroke.points.length - 1) {
+                  const next = stroke.points[j + 1];
+                  for (let k = 0; k < 5; k++) {
+                    const offset = k * 2;
+                    line(p[0] + offset, p[1], next[0] + offset, next[1]);
+                  }
+                }
+              });
+              break;
+          }
+        }
+      });
+      
+      // Draw current stroke
+      if (currentStroke && currentStroke.points.length > 1) {
+        stroke(255, 0, 0);
+        beginShape();
+        currentStroke.points.forEach(p => vertex(p[0], p[1]));
+        endShape();
+      }
+    }
+    
+    function drawPoseNet() {
+      if (video && params.showAI) {
+        // Draw video feed
+        push();
+        tint(255, 50);
+        image(video, 0, 0, width, height);
+        pop();
+      }
+      
+      // Draw poses
+      for (let i = 0; i < poses.length; i++) {
+        const pose = poses[i].pose;
+        
+        switch (params.posePattern) {
+          case 'skeleton':
+            drawSkeleton(pose);
+            break;
+          case 'particles':
+            drawPoseParticles(pose);
+            break;
+          case 'ribbons':
+            drawPoseRibbons(pose);
+            break;
+          case 'mandala':
+            drawPoseMandala(pose);
+            break;
+        }
+      }
+    }
+    
+    function drawSkeleton(pose) {
+      // Draw keypoints
+      for (let j = 0; j < pose.keypoints.length; j++) {
+        const keypoint = pose.keypoints[j];
+        if (keypoint.score > params.confidence) {
+          fill(0);
+          noStroke();
+          ellipse(keypoint.position.x, keypoint.position.y, 10);
+        }
+      }
+      
+      // Draw skeleton
+      const skeleton = [
+        ['leftShoulder', 'rightShoulder'],
+        ['leftShoulder', 'leftElbow'],
+        ['leftElbow', 'leftWrist'],
+        ['rightShoulder', 'rightElbow'],
+        ['rightElbow', 'rightWrist'],
+        ['leftHip', 'rightHip'],
+        ['leftHip', 'leftKnee'],
+        ['leftKnee', 'leftAnkle'],
+        ['rightHip', 'rightKnee'],
+        ['rightKnee', 'rightAnkle']
+      ];
+      
+      stroke(0);
+      strokeWeight(params.lineWeight);
+      skeleton.forEach(connection => {
+        const a = pose[connection[0]];
+        const b = pose[connection[1]];
+        if (a && b && a.confidence > params.confidence && b.confidence > params.confidence) {
+          line(a.x, a.y, b.x, b.y);
+        }
+      });
+    }
+    
+    function setStrokeColor(t) {
+      switch (params.colorMode) {
+        case 'monochrome':
+          stroke(0);
+          break;
+        case 'gradient':
+          stroke(lerpColor(color(0, 0, 255), color(255, 0, 0), t));
+          break;
+        case 'rainbow':
+          colorMode(HSB);
+          stroke(t * 360, 100, 100);
+          colorMode(RGB);
+          break;
+        case 'confidence':
+          stroke(255 - t * 255, 0, t * 255);
+          break;
+      }
+    }
+    
+    function updateStatus(message) {
+      document.getElementById('status').textContent = 'Model Status: ' + message;
+    }
+    
+    function toggleWebcam() {
+      if (video) {
+        const webcamEl = document.getElementById('webcam');
+        if (webcamEl.style.display === 'none') {
+          webcamEl.style.display = 'block';
+          webcamEl.srcObject = video.elt.srcObject;
+        } else {
+          webcamEl.style.display = 'none';
+        }
+      }
+    }
+    
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          // Process uploaded image
+          const img = createImg(event.target.result, () => {
+            img.hide();
+            if (params.modelType === 'styleTransfer') {
+              applyStyleTransfer(img);
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `ml5-pattern-${params.modelType}-${Date.now()}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`ml5-pattern-${params.modelType}-${Date.now()}.png`);
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Generate frames
+      const totalFrames = 60;
+      const frameDelay = 50;
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Clear and draw
+        clear();
+        
+        // Animate based on model
+        if (params.modelType === 'sketchRNN' && sketchRNN) {
+          generateNextStroke();
+        }
+        
+        draw();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ml5-pattern-${params.modelType}-${Date.now()}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+    
+    // Placeholder functions for other pattern types
+    function drawPoseParticles(pose) {
+      // Particle system based on pose keypoints
+      noStroke();
+      fill(0, 50);
+      pose.keypoints.forEach(kp => {
+        if (kp.score > params.confidence) {
+          for (let i = 0; i < 10; i++) {
+            const x = kp.position.x + random(-20, 20);
+            const y = kp.position.y + random(-20, 20);
+            ellipse(x, y, random(2, 8));
+          }
+        }
+      });
+    }
+    
+    function drawPoseRibbons(pose) {
+      // Flowing ribbons between keypoints
+      noFill();
+      stroke(0);
+      strokeWeight(params.lineWeight);
+      
+      const connections = [
+        ['leftWrist', 'leftElbow', 'leftShoulder'],
+        ['rightWrist', 'rightElbow', 'rightShoulder'],
+        ['leftAnkle', 'leftKnee', 'leftHip'],
+        ['rightAnkle', 'rightKnee', 'rightHip']
+      ];
+      
+      connections.forEach(ribbon => {
+        beginShape();
+        ribbon.forEach(point => {
+          const kp = pose[point];
+          if (kp && kp.confidence > params.confidence) {
+            curveVertex(kp.x, kp.y);
+          }
+        });
+        endShape();
+      });
+    }
+    
+    function drawPoseMandala(pose) {
+      // Mandala pattern from pose center
+      const center = pose.nose || { x: width/2, y: height/2, confidence: 1 };
+      
+      if (center.confidence > params.confidence) {
+        push();
+        translate(center.x, center.y);
+        
+        noFill();
+        stroke(0);
+        strokeWeight(params.lineWeight);
+        
+        for (let i = 0; i < 12; i++) {
+          rotate(TWO_PI / 12);
+          pose.keypoints.forEach(kp => {
+            if (kp.score > params.confidence) {
+              const d = dist(center.x, center.y, kp.position.x, kp.position.y);
+              ellipse(d, 0, d * 0.5);
+            }
+          });
+        }
+        
+        pop();
+      }
+    }
+    
+    function drawStyleTransfer() {
+      // Style transfer visualization placeholder
+      textAlign(CENTER, CENTER);
+      text('Style Transfer Mode\nUpload an image to apply style', width/2, height/2);
+    }
+    
+    function drawImageClassifier() {
+      // Image classifier visualization placeholder
+      textAlign(CENTER, CENTER);
+      text('Image Classifier Mode\nUpload an image to classify', width/2, height/2);
+    }
+    
+    function drawFeatureExtractor() {
+      // Feature extractor visualization placeholder
+      textAlign(CENTER, CENTER);
+      text('Feature Extractor Mode\nExtract features from images', width/2, height/2);
+    }
+    
+    function drawBodyPix() {
+      // BodyPix segmentation placeholder
+      textAlign(CENTER, CENTER);
+      text('BodyPix Mode\nBody segmentation visualization', width/2, height/2);
+    }
+    
+    // Mouse interaction
+    function mousePressed() {
+      if (mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height) {
+        if (params.modelType === 'sketchRNN') {
+          // Start new sketch at mouse position
+          currentStroke = {
+            points: [[mouseX, mouseY]],
+            drawing: true
+          };
+          generateNextStroke();
+        }
+      }
+    }
+  </script>
+</body>
+</html>

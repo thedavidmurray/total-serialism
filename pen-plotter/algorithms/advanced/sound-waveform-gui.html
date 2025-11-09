@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sound Waveform Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"], select {
+            width: 100%;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button.stop {
+            background: #f44336;
+        }
+        button.stop:hover {
+            background: #da190b;
+        }
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+        .frequency-display {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .status.active {
+            background: #4CAF50;
+            color: white;
+        }
+        .status.inactive {
+            background: #ccc;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Sound Waveform Controls</h3>
+        
+        <div id="status" class="status inactive">Microphone Inactive</div>
+        
+        <div class="control-group">
+            <label>Visualization Style:</label>
+            <select id="vizStyle">
+                <option value="oscilloscope">Oscilloscope</option>
+                <option value="radial">Radial</option>
+                <option value="spiral">Spiral</option>
+                <option value="waterfall">Waterfall</option>
+                <option value="frequency">Frequency Bars</option>
+                <option value="circular">Circular FFT</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>FFT Bins: <span id="fftBinsValue" class="value-display">256</span></label>
+            <select id="fftBins">
+                <option value="64">64</option>
+                <option value="128">128</option>
+                <option value="256" selected>256</option>
+                <option value="512">512</option>
+                <option value="1024">1024</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Frequency Range:</label>
+            <label>Min: <span id="freqMinValue" class="value-display">20</span> Hz</label>
+            <input type="range" id="freqMin" min="20" max="1000" value="20" step="10">
+            <label>Max: <span id="freqMaxValue" class="value-display">20000</span> Hz</label>
+            <input type="range" id="freqMax" min="1000" max="20000" value="20000" step="100">
+        </div>
+        
+        <div class="control-group">
+            <label>Smoothing: <span id="smoothingValue" class="value-display">0.8</span></label>
+            <input type="range" id="smoothing" min="0" max="0.99" value="0.8" step="0.01">
+        </div>
+        
+        <div class="control-group">
+            <label>Scale: <span id="scaleValue" class="value-display">1.0</span></label>
+            <input type="range" id="scale" min="0.5" max="3" value="1" step="0.1">
+        </div>
+        
+        <div class="control-group">
+            <label>Line Weight: <span id="lineWeightValue" class="value-display">2</span></label>
+            <input type="range" id="lineWeight" min="1" max="5" value="2" step="0.5">
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="showPeaks" checked> Show Frequency Peaks
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="trails" checked> Motion Trails
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="recording"> Recording Mode
+            </label>
+        </div>
+        
+        <div class="frequency-display" id="freqDisplay">
+            Dominant Frequency: -- Hz<br>
+            Peak Amplitude: -- dB
+        </div>
+        
+        <button onclick="toggleMic()">Start Microphone</button>
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="clearCanvas()" class="stop">Clear</button>
+    </div>
+
+    <script>
+        let mic, fft, amplitude;
+        let micActive = false;
+        let waveform = [];
+        let spectrum = [];
+        let history = [];
+        let recordedPaths = [];
+        let isRecording = false;
+        
+        let params = {
+            vizStyle: 'oscilloscope',
+            fftBins: 256,
+            freqMin: 20,
+            freqMax: 20000,
+            smoothing: 0.8,
+            scale: 1.0,
+            lineWeight: 2,
+            showPeaks: true,
+            trails: true,
+            recording: false
+        };
+        
+        function setup() {
+            createCanvas(windowWidth - 350, windowHeight - 40);
+            
+            // Initialize audio analysis
+            fft = new p5.FFT(params.smoothing, params.fftBins);
+            amplitude = new p5.Amplitude();
+            
+            setupControls();
+            
+            // Start with a simple sine wave for testing
+            noLoop();
+        }
+        
+        function setupControls() {
+            // Visualization style
+            document.getElementById('vizStyle').addEventListener('change', (e) => {
+                params.vizStyle = e.target.value;
+                history = []; // Clear history when changing styles
+            });
+            
+            // FFT bins
+            document.getElementById('fftBins').addEventListener('change', (e) => {
+                params.fftBins = parseInt(e.target.value);
+                document.getElementById('fftBinsValue').textContent = e.target.value;
+                if (micActive) {
+                    fft = new p5.FFT(params.smoothing, params.fftBins);
+                    fft.setInput(mic);
+                }
+            });
+            
+            // Frequency range
+            document.getElementById('freqMin').addEventListener('input', (e) => {
+                params.freqMin = parseInt(e.target.value);
+                document.getElementById('freqMinValue').textContent = e.target.value;
+            });
+            
+            document.getElementById('freqMax').addEventListener('input', (e) => {
+                params.freqMax = parseInt(e.target.value);
+                document.getElementById('freqMaxValue').textContent = e.target.value;
+            });
+            
+            // Smoothing
+            document.getElementById('smoothing').addEventListener('input', (e) => {
+                params.smoothing = parseFloat(e.target.value);
+                document.getElementById('smoothingValue').textContent = e.target.value;
+                fft.smooth(params.smoothing);
+            });
+            
+            // Scale
+            document.getElementById('scale').addEventListener('input', (e) => {
+                params.scale = parseFloat(e.target.value);
+                document.getElementById('scaleValue').textContent = e.target.value;
+            });
+            
+            // Line weight
+            document.getElementById('lineWeight').addEventListener('input', (e) => {
+                params.lineWeight = parseFloat(e.target.value);
+                document.getElementById('lineWeightValue').textContent = e.target.value;
+            });
+            
+            // Checkboxes
+            document.getElementById('showPeaks').addEventListener('change', (e) => {
+                params.showPeaks = e.target.checked;
+            });
+            
+            document.getElementById('trails').addEventListener('change', (e) => {
+                params.trails = e.target.checked;
+                if (!params.trails) history = [];
+            });
+            
+            document.getElementById('recording').addEventListener('change', (e) => {
+                params.recording = e.target.checked;
+                isRecording = e.target.checked;
+                if (!isRecording && recordedPaths.length > 0) {
+                    // Stop recording
+                    console.log('Recorded', recordedPaths.length, 'paths');
+                }
+            });
+        }
+        
+        function toggleMic() {
+            if (!micActive) {
+                mic = new p5.AudioIn();
+                mic.start(() => {
+                    micActive = true;
+                    fft.setInput(mic);
+                    amplitude.setInput(mic);
+                    loop();
+                    updateStatus(true);
+                });
+            } else {
+                mic.stop();
+                micActive = false;
+                noLoop();
+                updateStatus(false);
+            }
+        }
+        
+        function updateStatus(active) {
+            const status = document.getElementById('status');
+            if (active) {
+                status.className = 'status active';
+                status.textContent = 'Microphone Active';
+            } else {
+                status.className = 'status inactive';
+                status.textContent = 'Microphone Inactive';
+            }
+        }
+        
+        function draw() {
+            if (!params.trails) {
+                background(240);
+            } else {
+                background(240, 240, 240, 30); // Fade effect for trails
+            }
+            
+            if (micActive) {
+                // Get audio data
+                waveform = fft.waveform();
+                spectrum = fft.analyze();
+                
+                // Update frequency display
+                updateFrequencyDisplay();
+                
+                // Draw based on selected style
+                push();
+                translate(width / 2, height / 2);
+                
+                switch(params.vizStyle) {
+                    case 'oscilloscope':
+                        drawOscilloscope();
+                        break;
+                    case 'radial':
+                        drawRadial();
+                        break;
+                    case 'spiral':
+                        drawSpiral();
+                        break;
+                    case 'waterfall':
+                        drawWaterfall();
+                        break;
+                    case 'frequency':
+                        drawFrequencyBars();
+                        break;
+                    case 'circular':
+                        drawCircularFFT();
+                        break;
+                }
+                
+                pop();
+                
+                // Record paths if in recording mode
+                if (isRecording) {
+                    recordPath();
+                }
+            }
+        }
+        
+        function drawOscilloscope() {
+            stroke(0);
+            strokeWeight(params.lineWeight);
+            noFill();
+            
+            beginShape();
+            for (let i = 0; i < waveform.length; i++) {
+                const x = map(i, 0, waveform.length, -width/2, width/2);
+                const y = map(waveform[i], -1, 1, -height/4, height/4) * params.scale;
+                vertex(x, y);
+            }
+            endShape();
+            
+            // Add to history for trails
+            if (params.trails) {
+                history.push([...waveform]);
+                if (history.length > 10) history.shift();
+                
+                // Draw older waveforms with transparency
+                for (let h = 0; h < history.length - 1; h++) {
+                    stroke(0, 0, 0, map(h, 0, history.length, 20, 100));
+                    strokeWeight(params.lineWeight * 0.5);
+                    beginShape();
+                    for (let i = 0; i < history[h].length; i++) {
+                        const x = map(i, 0, history[h].length, -width/2, width/2);
+                        const y = map(history[h][i], -1, 1, -height/4, height/4) * params.scale;
+                        vertex(x, y);
+                    }
+                    endShape();
+                }
+            }
+        }
+        
+        function drawRadial() {
+            stroke(0);
+            strokeWeight(params.lineWeight);
+            noFill();
+            
+            beginShape();
+            for (let i = 0; i < waveform.length; i++) {
+                const angle = map(i, 0, waveform.length, 0, TWO_PI);
+                const amp = map(waveform[i], -1, 1, 0, 1);
+                const r = (100 + amp * 100) * params.scale;
+                const x = r * cos(angle);
+                const y = r * sin(angle);
+                vertex(x, y);
+            }
+            endShape(CLOSE);
+        }
+        
+        function drawSpiral() {
+            stroke(0);
+            strokeWeight(params.lineWeight);
+            noFill();
+            
+            const spirals = 5;
+            beginShape();
+            for (let i = 0; i < waveform.length; i++) {
+                const angle = map(i, 0, waveform.length, 0, TWO_PI * spirals);
+                const baseR = map(i, 0, waveform.length, 0, 200);
+                const amp = map(waveform[i], -1, 1, -50, 50);
+                const r = (baseR + amp) * params.scale;
+                const x = r * cos(angle);
+                const y = r * sin(angle);
+                vertex(x, y);
+            }
+            endShape();
+        }
+        
+        function drawWaterfall() {
+            // Add current spectrum to history
+            history.push([...spectrum]);
+            if (history.length > height / 4) history.shift();
+            
+            // Draw waterfall
+            for (let h = 0; h < history.length; h++) {
+                for (let i = 0; i < history[h].length; i++) {
+                    const x = map(i, 0, history[h].length, -width/2, width/2);
+                    const y = map(h, 0, history.length, -height/2, height/2);
+                    const brightness = map(history[h][i], 0, 255, 255, 0);
+                    stroke(brightness);
+                    strokeWeight(2);
+                    point(x, y);
+                }
+            }
+        }
+        
+        function drawFrequencyBars() {
+            const barWidth = width / spectrum.length;
+            
+            noStroke();
+            for (let i = 0; i < spectrum.length; i++) {
+                const freq = map(i, 0, spectrum.length, 0, 22050); // Nyquist frequency
+                if (freq >= params.freqMin && freq <= params.freqMax) {
+                    const x = map(i, 0, spectrum.length, -width/2, width/2);
+                    const h = map(spectrum[i], 0, 255, 0, height/2) * params.scale;
+                    
+                    // Color based on frequency
+                    const hue = map(freq, params.freqMin, params.freqMax, 0, 280);
+                    fill(hue, 100, 100);
+                    rect(x, 0, barWidth, -h);
+                }
+            }
+            
+            // Show peaks
+            if (params.showPeaks) {
+                stroke(255, 0, 0);
+                strokeWeight(2);
+                const peaks = findPeaks(spectrum);
+                for (let peak of peaks) {
+                    const x = map(peak, 0, spectrum.length, -width/2, width/2);
+                    const h = map(spectrum[peak], 0, 255, 0, height/2) * params.scale;
+                    line(x, 0, x, -h);
+                }
+            }
+        }
+        
+        function drawCircularFFT() {
+            stroke(0);
+            strokeWeight(params.lineWeight);
+            noFill();
+            
+            beginShape();
+            for (let i = 0; i < spectrum.length; i++) {
+                const angle = map(i, 0, spectrum.length, 0, TWO_PI);
+                const amp = map(spectrum[i], 0, 255, 0, 200);
+                const r = (100 + amp) * params.scale;
+                const x = r * cos(angle - PI/2);
+                const y = r * sin(angle - PI/2);
+                vertex(x, y);
+            }
+            endShape(CLOSE);
+            
+            // Inner circle
+            noFill();
+            stroke(100);
+            strokeWeight(1);
+            ellipse(0, 0, 200 * params.scale, 200 * params.scale);
+        }
+        
+        function findPeaks(data) {
+            const peaks = [];
+            const threshold = 100; // Minimum amplitude for peak
+            
+            for (let i = 1; i < data.length - 1; i++) {
+                if (data[i] > threshold && 
+                    data[i] > data[i-1] && 
+                    data[i] > data[i+1]) {
+                    peaks.push(i);
+                }
+            }
+            
+            return peaks;
+        }
+        
+        function updateFrequencyDisplay() {
+            const nyquist = 22050; // Half the sample rate
+            let maxAmp = 0;
+            let dominantFreq = 0;
+            
+            for (let i = 0; i < spectrum.length; i++) {
+                if (spectrum[i] > maxAmp) {
+                    maxAmp = spectrum[i];
+                    dominantFreq = map(i, 0, spectrum.length, 0, nyquist);
+                }
+            }
+            
+            const freqDisplay = document.getElementById('freqDisplay');
+            freqDisplay.innerHTML = `Dominant Frequency: ${dominantFreq.toFixed(0)} Hz<br>` +
+                                   `Peak Amplitude: ${(20 * log(maxAmp / 255) / log(10)).toFixed(1)} dB`;
+        }
+        
+        function recordPath() {
+            // Store current visualization as path data
+            const path = {
+                style: params.vizStyle,
+                data: params.vizStyle === 'oscilloscope' ? [...waveform] : [...spectrum],
+                timestamp: millis()
+            };
+            recordedPaths.push(path);
+        }
+        
+        function exportSVG() {
+            const svg = createSVG();
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sound-viz-${params.vizStyle}-${Date.now()}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function createSVG() {
+            const svgSize = 800;
+            
+            let svg = `<svg width="${svgSize}" height="${svgSize}" xmlns="http://www.w3.org/2000/svg">\n`;
+            svg += `<rect width="${svgSize}" height="${svgSize}" fill="white"/>\n`;
+            svg += `<g transform="translate(${svgSize/2}, ${svgSize/2})">\n`;
+            
+            // Export current visualization
+            if (params.vizStyle === 'oscilloscope' && waveform.length > 0) {
+                svg += `<path d="M `;
+                for (let i = 0; i < waveform.length; i++) {
+                    const x = map(i, 0, waveform.length, -svgSize/2, svgSize/2);
+                    const y = map(waveform[i], -1, 1, -svgSize/4, svgSize/4) * params.scale;
+                    svg += `${x} ${y} `;
+                }
+                svg += `" stroke="black" stroke-width="${params.lineWeight}" fill="none"/>\n`;
+            }
+            
+            // Export recorded paths if any
+            if (recordedPaths.length > 0) {
+                svg += `<!-- Recorded paths: ${recordedPaths.length} -->\n`;
+                for (let path of recordedPaths) {
+                    svg += `<g opacity="0.5">\n`;
+                    // Add path data based on style
+                    svg += `</g>\n`;
+                }
+            }
+            
+            svg += `</g>\n</svg>`;
+            return svg;
+        }
+        
+        function clearCanvas() {
+            background(240);
+            history = [];
+            recordedPaths = [];
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth - 350, windowHeight - 40);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Crystallization Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Crystallization Controls</h2>
+    
+    <div class="control-group">
+      <h3>Crystal Type</h3>
+      <div class="control">
+        <label>Crystal System:</label>
+        <select id="crystalType">
+          <option value="dendritic">Dendritic (Frost)</option>
+          <option value="dla">Diffusion-Limited Aggregation</option>
+          <option value="snowflake">Snowflake</option>
+          <option value="voronoi">Voronoi Crystals</option>
+          <option value="salt">Salt Cubic</option>
+          <option value="quartz">Quartz Hexagonal</option>
+          <option value="pyrite">Pyrite</option>
+          <option value="bismuth">Bismuth Spiral</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Growth Mode:</label>
+        <select id="growthMode">
+          <option value="center">Center Seed</option>
+          <option value="multiple">Multiple Seeds</option>
+          <option value="edge">Edge Growth</option>
+          <option value="random">Random Seeds</option>
+          <option value="spiral">Spiral Growth</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Growth Parameters</h3>
+      <div class="control">
+        <label>Growth Rate: <span class="value" id="growthRate-val">0.5</span></label>
+        <input type="range" id="growthRate" min="0.1" max="2" value="0.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Branching Probability: <span class="value" id="branchingProb-val">0.3</span></label>
+        <input type="range" id="branchingProb" min="0" max="1" value="0.3" step="0.05">
+      </div>
+      <div class="control">
+        <label>Temperature: <span class="value" id="temperature-val">0.5</span></label>
+        <input type="range" id="temperature" min="0" max="1" value="0.5" step="0.05">
+      </div>
+      <div class="control">
+        <label>Supersaturation: <span class="value" id="supersaturation-val">0.7</span></label>
+        <input type="range" id="supersaturation" min="0" max="1" value="0.7" step="0.05">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Crystal Properties</h3>
+      <div class="control">
+        <label>Symmetry Order: <span class="value" id="symmetry-val">6</span></label>
+        <input type="range" id="symmetry" min="3" max="12" value="6" step="1">
+      </div>
+      <div class="control">
+        <label>Anisotropy: <span class="value" id="anisotropy-val">0.5</span></label>
+        <input type="range" id="anisotropy" min="0" max="1" value="0.5" step="0.05">
+      </div>
+      <div class="control">
+        <label>Facet Sharpness: <span class="value" id="facetSharpness-val">0.7</span></label>
+        <input type="range" id="facetSharpness" min="0" max="1" value="0.7" step="0.05">
+      </div>
+      <div class="control">
+        <label>Defect Rate: <span class="value" id="defectRate-val">0.1</span></label>
+        <input type="range" id="defectRate" min="0" max="0.5" value="0.1" step="0.05">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Visualization</h3>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="growth">Growth Time</option>
+          <option value="depth">Depth</option>
+          <option value="gradient">Gradient</option>
+          <option value="birefringence">Birefringence</option>
+          <option value="monochrome">Monochrome</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Detail Level: <span class="value" id="detailLevel-val">100</span></label>
+        <input type="range" id="detailLevel" min="50" max="200" value="100" step="10">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showGrowthFront" checked>
+        <label for="showGrowthFront">Show Growth Front</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showLattice">
+        <label for="showLattice">Show Crystal Lattice</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animate" checked>
+        <label for="animate">Animate Growth</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="stopGrowth()">Stop Growth</button>
+      <button onclick="resumeGrowth()">Resume Growth</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      crystalType: 'dendritic',
+      growthMode: 'center',
+      growthRate: 0.5,
+      branchingProb: 0.3,
+      temperature: 0.5,
+      supersaturation: 0.7,
+      symmetry: 6,
+      anisotropy: 0.5,
+      facetSharpness: 0.7,
+      defectRate: 0.1,
+      colorMode: 'growth',
+      detailLevel: 100,
+      showGrowthFront: true,
+      showLattice: false,
+      animate: true
+    };
+    
+    let crystal = [];
+    let growthFront = [];
+    let latticeField = [];
+    let svgCanvas;
+    let growing = true;
+    let generation = 0;
+    
+    function setup() {
+      const w = 600;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              if (key === 'crystalType') {
+                updateCrystalDefaults();
+              }
+            });
+          }
+        }
+      });
+    }
+    
+    function updateCrystalDefaults() {
+      // Set default parameters for different crystal types
+      switch (params.crystalType) {
+        case 'dendritic':
+          params.symmetry = 6;
+          params.anisotropy = 0.7;
+          params.branchingProb = 0.3;
+          break;
+        case 'snowflake':
+          params.symmetry = 6;
+          params.anisotropy = 0.9;
+          params.branchingProb = 0.4;
+          params.facetSharpness = 0.9;
+          break;
+        case 'salt':
+          params.symmetry = 4;
+          params.anisotropy = 0.1;
+          params.branchingProb = 0;
+          params.facetSharpness = 1;
+          break;
+        case 'quartz':
+          params.symmetry = 6;
+          params.anisotropy = 0.3;
+          params.branchingProb = 0;
+          params.facetSharpness = 0.8;
+          break;
+        case 'pyrite':
+          params.symmetry = 4;
+          params.anisotropy = 0;
+          params.branchingProb = 0;
+          params.facetSharpness = 1;
+          break;
+        case 'bismuth':
+          params.symmetry = 4;
+          params.anisotropy = 0.2;
+          params.branchingProb = 0.1;
+          params.facetSharpness = 0.6;
+          break;
+      }
+      
+      // Update UI
+      ['symmetry', 'anisotropy', 'branchingProb', 'facetSharpness'].forEach(key => {
+        const element = document.getElementById(key);
+        const display = document.getElementById(key + '-val');
+        if (element && display) {
+          element.value = params[key];
+          display.textContent = params[key];
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      document.getElementById('seed-display').textContent = params.seed;
+      
+      crystal = [];
+      growthFront = [];
+      generation = 0;
+      growing = true;
+      
+      initializeCrystal();
+    }
+    
+    function initializeCrystal() {
+      const gridSize = params.detailLevel;
+      
+      // Initialize lattice field
+      latticeField = [];
+      for (let x = 0; x < gridSize; x++) {
+        latticeField[x] = [];
+        for (let y = 0; y < gridSize; y++) {
+          latticeField[x][y] = 0;
+        }
+      }
+      
+      // Initialize seeds based on growth mode
+      switch (params.growthMode) {
+        case 'center':
+          addSeed(gridSize / 2, gridSize / 2);
+          break;
+          
+        case 'multiple':
+          const numSeeds = 3 + floor(random(5));
+          for (let i = 0; i < numSeeds; i++) {
+            const angle = (i / numSeeds) * TWO_PI;
+            const r = gridSize / 4;
+            const x = gridSize / 2 + cos(angle) * r;
+            const y = gridSize / 2 + sin(angle) * r;
+            addSeed(x, y);
+          }
+          break;
+          
+        case 'edge':
+          for (let i = 0; i < gridSize; i += 10) {
+            addSeed(i, 0);
+            addSeed(i, gridSize - 1);
+            addSeed(0, i);
+            addSeed(gridSize - 1, i);
+          }
+          break;
+          
+        case 'random':
+          const randomSeeds = 5 + floor(random(10));
+          for (let i = 0; i < randomSeeds; i++) {
+            addSeed(random(gridSize), random(gridSize));
+          }
+          break;
+          
+        case 'spiral':
+          let spiralAngle = 0;
+          let spiralR = 0;
+          for (let i = 0; i < 10; i++) {
+            const x = gridSize / 2 + cos(spiralAngle) * spiralR;
+            const y = gridSize / 2 + sin(spiralAngle) * spiralR;
+            addSeed(x, y);
+            spiralAngle += 0.5;
+            spiralR += 5;
+          }
+          break;
+      }
+    }
+    
+    function addSeed(x, y) {
+      const ix = floor(x);
+      const iy = floor(y);
+      
+      if (ix >= 0 && ix < params.detailLevel && iy >= 0 && iy < params.detailLevel) {
+        latticeField[ix][iy] = 1;
+        crystal.push({ x: ix, y: iy, generation: 0, branch: 0 });
+        growthFront.push({ x: ix, y: iy });
+      }
+    }
+    
+    function update() {
+      if (!growing || !params.animate) return;
+      
+      const newFront = [];
+      const growthSteps = ceil(params.growthRate * 10);
+      
+      for (let step = 0; step < growthSteps; step++) {
+        for (let point of growthFront) {
+          const neighbors = getGrowthCandidates(point.x, point.y);
+          
+          for (let neighbor of neighbors) {
+            if (shouldGrow(neighbor.x, neighbor.y, neighbor.angle)) {
+              latticeField[neighbor.x][neighbor.y] = 1;
+              crystal.push({
+                x: neighbor.x,
+                y: neighbor.y,
+                generation: generation,
+                branch: neighbor.branch
+              });
+              newFront.push({ x: neighbor.x, y: neighbor.y });
+              
+              // Check for branching
+              if (random() < params.branchingProb) {
+                const branchNeighbors = getGrowthCandidates(neighbor.x, neighbor.y);
+                for (let branch of branchNeighbors) {
+                  if (random() < 0.3) {
+                    newFront.push({ x: branch.x, y: branch.y });
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      growthFront = newFront;
+      generation++;
+      
+      // Stop if no more growth
+      if (growthFront.length === 0) {
+        growing = false;
+      }
+    }
+    
+    function getGrowthCandidates(x, y) {
+      const candidates = [];
+      const directions = params.symmetry;
+      
+      for (let i = 0; i < directions; i++) {
+        const angle = (i / directions) * TWO_PI;
+        
+        // Apply anisotropy
+        let r = 1;
+        if (params.anisotropy > 0) {
+          r = 1 + params.anisotropy * cos(directions * angle);
+        }
+        
+        const nx = floor(x + cos(angle) * r);
+        const ny = floor(y + sin(angle) * r);
+        
+        if (nx >= 0 && nx < params.detailLevel && 
+            ny >= 0 && ny < params.detailLevel && 
+            latticeField[nx][ny] === 0) {
+          candidates.push({
+            x: nx,
+            y: ny,
+            angle: angle,
+            branch: i
+          });
+        }
+      }
+      
+      // Add diagonal growth for certain crystal types
+      if (params.crystalType === 'dla' || params.crystalType === 'dendritic') {
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < params.detailLevel && 
+                ny >= 0 && ny < params.detailLevel && 
+                latticeField[nx][ny] === 0) {
+              candidates.push({
+                x: nx,
+                y: ny,
+                angle: atan2(dy, dx),
+                branch: -1
+              });
+            }
+          }
+        }
+      }
+      
+      return candidates;
+    }
+    
+    function shouldGrow(x, y, angle) {
+      // Base growth probability
+      let growthProb = params.supersaturation;
+      
+      // Temperature effect
+      growthProb *= (1 - params.temperature * 0.5);
+      
+      // Crystal type specific rules
+      switch (params.crystalType) {
+        case 'dendritic':
+          // Prefer growth along main axes
+          const axisAlignment = abs(cos(params.symmetry * angle));
+          growthProb *= (0.5 + axisAlignment * 0.5);
+          break;
+          
+        case 'snowflake':
+          // Strong hexagonal preference
+          const hexAlignment = abs(cos(6 * angle));
+          growthProb *= (0.3 + hexAlignment * 0.7);
+          break;
+          
+        case 'salt':
+        case 'pyrite':
+          // Cubic growth
+          const cubicAlignment = max(abs(cos(angle)), abs(sin(angle)));
+          growthProb *= cubicAlignment;
+          break;
+          
+        case 'dla':
+          // Uniform random growth
+          growthProb = 0.5;
+          break;
+          
+        case 'voronoi':
+          // Distance-based growth
+          const cx = params.detailLevel / 2;
+          const cy = params.detailLevel / 2;
+          const dist = sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+          growthProb *= map(dist, 0, params.detailLevel / 2, 1, 0.1);
+          break;
+      }
+      
+      // Facet sharpness
+      if (params.facetSharpness > 0) {
+        const facetAngle = round(angle / (TWO_PI / params.symmetry)) * (TWO_PI / params.symmetry);
+        const deviation = abs(angle - facetAngle);
+        growthProb *= (1 - params.facetSharpness * deviation / (PI / params.symmetry));
+      }
+      
+      // Defects
+      if (random() < params.defectRate) {
+        growthProb *= random(0.5, 1.5);
+      }
+      
+      return random() < growthProb;
+    }
+    
+    function draw() {
+      update();
+      
+      background(255);
+      
+      const cellSize = width / params.detailLevel;
+      
+      // Draw crystal
+      noStroke();
+      for (let point of crystal) {
+        let c;
+        
+        switch (params.colorMode) {
+          case 'growth':
+            // Color by generation time
+            const t = point.generation / generation;
+            c = lerpColor(color(0, 0, 255), color(255, 0, 0), t);
+            break;
+            
+          case 'depth':
+            // Color by distance from seed
+            const cx = params.detailLevel / 2;
+            const cy = params.detailLevel / 2;
+            const d = sqrt((point.x - cx) * (point.x - cx) + (point.y - cy) * (point.y - cy));
+            const maxDist = params.detailLevel / 2;
+            c = lerpColor(color(0, 0, 100), color(0, 0, 255), d / maxDist);
+            break;
+            
+          case 'gradient':
+            // Gradient based on position
+            const gx = point.x / params.detailLevel;
+            const gy = point.y / params.detailLevel;
+            c = color(gx * 255, gy * 255, 255 - (gx + gy) * 127);
+            break;
+            
+          case 'birefringence':
+            // Simulate optical birefringence
+            const angle = atan2(point.y - params.detailLevel / 2, point.x - params.detailLevel / 2);
+            const hue = (angle + PI) / TWO_PI * 360;
+            colorMode(HSB);
+            c = color(hue, 100, 100);
+            colorMode(RGB);
+            break;
+            
+          case 'monochrome':
+            c = color(0);
+            break;
+        }
+        
+        fill(c);
+        rect(point.x * cellSize, point.y * cellSize, cellSize, cellSize);
+      }
+      
+      // Draw growth front
+      if (params.showGrowthFront && growing) {
+        stroke(255, 0, 0);
+        strokeWeight(2);
+        noFill();
+        for (let point of growthFront) {
+          ellipse(point.x * cellSize + cellSize / 2, 
+                  point.y * cellSize + cellSize / 2, 
+                  cellSize * 1.5);
+        }
+      }
+      
+      // Draw lattice
+      if (params.showLattice) {
+        stroke(200, 200, 200, 100);
+        strokeWeight(0.5);
+        for (let x = 0; x <= params.detailLevel; x++) {
+          line(x * cellSize, 0, x * cellSize, height);
+        }
+        for (let y = 0; y <= params.detailLevel; y++) {
+          line(0, y * cellSize, width, y * cellSize);
+        }
+      }
+    }
+    
+    function stopGrowth() {
+      growing = false;
+      params.animate = false;
+      document.getElementById('animate').checked = false;
+    }
+    
+    function resumeGrowth() {
+      if (growthFront.length > 0) {
+        growing = true;
+        params.animate = true;
+        document.getElementById('animate').checked = true;
+      }
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `crystal-${params.crystalType}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`crystal-${params.crystalType}-${params.seed}.png`);
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Reset and animate growth
+      const currentAnimate = params.animate;
+      params.animate = false;
+      regenerate();
+      
+      const totalFrames = 60;
+      const frameDelay = 50;
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Update crystal growth
+        for (let i = 0; i < 5; i++) {
+          update();
+        }
+        
+        // Draw frame
+        clear();
+        draw();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      // Restore animation state
+      params.animate = currentAnimate;
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `crystal-${params.crystalType}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+    
+    // Mouse interaction
+    function mousePressed() {
+      if (mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height) {
+        const x = floor(mouseX / (width / params.detailLevel));
+        const y = floor(mouseY / (height / params.detailLevel));
+        addSeed(x, y);
+      }
+    }
+  </script>
+</body>
+</html>

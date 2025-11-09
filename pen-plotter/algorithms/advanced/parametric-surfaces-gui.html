@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parametric Surfaces - 3D to 2D Projection</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"], select {
+            width: 100%;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Parametric Surface Controls</h3>
+        
+        <div class="control-group">
+            <label>Surface Type:</label>
+            <select id="surfaceType">
+                <option value="klein">Klein Bottle</option>
+                <option value="mobius">Möbius Strip</option>
+                <option value="torus">Torus</option>
+                <option value="sphere">Sphere</option>
+                <option value="boy">Boy's Surface</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Projection Type:</label>
+            <select id="projectionType">
+                <option value="orthographic">Orthographic</option>
+                <option value="perspective">Perspective</option>
+                <option value="stereographic">Stereographic</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Resolution: <span id="resolutionValue" class="value-display">30</span></label>
+            <input type="range" id="resolution" min="10" max="100" value="30" step="5">
+        </div>
+        
+        <div class="control-group">
+            <label>Scale: <span id="scaleValue" class="value-display">100</span></label>
+            <input type="range" id="scale" min="50" max="300" value="100" step="10">
+        </div>
+        
+        <div class="control-group">
+            <label>Rotation X: <span id="rotXValue" class="value-display">0</span>°</label>
+            <input type="range" id="rotX" min="0" max="360" value="0" step="5">
+        </div>
+        
+        <div class="control-group">
+            <label>Rotation Y: <span id="rotYValue" class="value-display">0</span>°</label>
+            <input type="range" id="rotY" min="0" max="360" value="0" step="5">
+        </div>
+        
+        <div class="control-group">
+            <label>Rotation Z: <span id="rotZValue" class="value-display">0</span>°</label>
+            <input type="range" id="rotZ" min="0" max="360" value="0" step="5">
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="hiddenLines" checked> Hidden Line Removal
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="autoRotate"> Auto Rotate
+            </label>
+        </div>
+        
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="generateNew()">Generate New</button>
+    </div>
+
+    <script>
+        let surface = [];
+        let projectedPoints = [];
+        let edges = [];
+        let params = {
+            surfaceType: 'klein',
+            projectionType: 'orthographic',
+            resolution: 30,
+            scale: 100,
+            rotX: 0,
+            rotY: 0,
+            rotZ: 0,
+            hiddenLines: true,
+            autoRotate: false
+        };
+        
+        function setup() {
+            createCanvas(windowWidth - 350, windowHeight - 40);
+            setupControls();
+            generateSurface();
+        }
+        
+        function setupControls() {
+            // Surface type
+            document.getElementById('surfaceType').addEventListener('change', (e) => {
+                params.surfaceType = e.target.value;
+                generateSurface();
+            });
+            
+            // Projection type
+            document.getElementById('projectionType').addEventListener('change', (e) => {
+                params.projectionType = e.target.value;
+                projectSurface();
+            });
+            
+            // Resolution
+            document.getElementById('resolution').addEventListener('input', (e) => {
+                params.resolution = parseInt(e.target.value);
+                document.getElementById('resolutionValue').textContent = e.target.value;
+                generateSurface();
+            });
+            
+            // Scale
+            document.getElementById('scale').addEventListener('input', (e) => {
+                params.scale = parseInt(e.target.value);
+                document.getElementById('scaleValue').textContent = e.target.value;
+                projectSurface();
+            });
+            
+            // Rotations
+            ['rotX', 'rotY', 'rotZ'].forEach(axis => {
+                document.getElementById(axis).addEventListener('input', (e) => {
+                    params[axis] = parseInt(e.target.value);
+                    document.getElementById(axis + 'Value').textContent = e.target.value;
+                    projectSurface();
+                });
+            });
+            
+            // Hidden lines
+            document.getElementById('hiddenLines').addEventListener('change', (e) => {
+                params.hiddenLines = e.target.checked;
+            });
+            
+            // Auto rotate
+            document.getElementById('autoRotate').addEventListener('change', (e) => {
+                params.autoRotate = e.target.checked;
+            });
+        }
+        
+        function generateSurface() {
+            surface = [];
+            edges = [];
+            
+            switch(params.surfaceType) {
+                case 'klein':
+                    generateKleinBottle();
+                    break;
+                case 'mobius':
+                    generateMobiusStrip();
+                    break;
+                case 'torus':
+                    generateTorus();
+                    break;
+                case 'sphere':
+                    generateSphere();
+                    break;
+                case 'boy':
+                    generateBoySurface();
+                    break;
+            }
+            
+            projectSurface();
+        }
+        
+        function generateKleinBottle() {
+            const res = params.resolution;
+            for (let i = 0; i < res; i++) {
+                for (let j = 0; j < res; j++) {
+                    const u = (i / res) * TWO_PI;
+                    const v = (j / res) * TWO_PI;
+                    
+                    const r = 4 * (1 - cos(u) / 2);
+                    let x, y, z;
+                    
+                    if (u < PI) {
+                        x = 6 * cos(u) * (1 + sin(u)) + r * cos(v) * cos(u);
+                        y = 16 * sin(u) + r * cos(v) * sin(u);
+                        z = r * sin(v);
+                    } else {
+                        x = 6 * cos(u) * (1 + sin(u)) + r * cos(v + PI);
+                        y = 16 * sin(u);
+                        z = r * sin(v);
+                    }
+                    
+                    surface.push(createVector(x, y, z));
+                    
+                    // Create edges
+                    if (i < res - 1 && j < res - 1) {
+                        const idx = i * res + j;
+                        edges.push([idx, idx + 1]);
+                        edges.push([idx, idx + res]);
+                    }
+                }
+            }
+        }
+        
+        function generateMobiusStrip() {
+            const res = params.resolution;
+            for (let i = 0; i < res; i++) {
+                for (let j = 0; j < res / 2; j++) {
+                    const s = (i / res) * TWO_PI;
+                    const t = (j / (res / 2) - 0.5) * 2;
+                    
+                    const x = (1 + t * cos(s / 2)) * cos(s);
+                    const y = (1 + t * cos(s / 2)) * sin(s);
+                    const z = t * sin(s / 2);
+                    
+                    surface.push(createVector(x * 50, y * 50, z * 50));
+                    
+                    if (i < res - 1 && j < res / 2 - 1) {
+                        const idx = i * (res / 2) + j;
+                        edges.push([idx, idx + 1]);
+                        edges.push([idx, idx + res / 2]);
+                    }
+                }
+            }
+        }
+        
+        function generateTorus() {
+            const res = params.resolution;
+            const R = 2; // Major radius
+            const r = 1; // Minor radius
+            
+            for (let i = 0; i < res; i++) {
+                for (let j = 0; j < res; j++) {
+                    const u = (i / res) * TWO_PI;
+                    const v = (j / res) * TWO_PI;
+                    
+                    const x = (R + r * cos(v)) * cos(u);
+                    const y = (R + r * cos(v)) * sin(u);
+                    const z = r * sin(v);
+                    
+                    surface.push(createVector(x * 30, y * 30, z * 30));
+                    
+                    if (i < res - 1 && j < res - 1) {
+                        const idx = i * res + j;
+                        edges.push([idx, idx + 1]);
+                        edges.push([idx, idx + res]);
+                    }
+                }
+            }
+        }
+        
+        function generateSphere() {
+            const res = params.resolution;
+            
+            for (let i = 0; i <= res; i++) {
+                for (let j = 0; j <= res; j++) {
+                    const theta = (i / res) * PI;
+                    const phi = (j / res) * TWO_PI;
+                    
+                    const x = sin(theta) * cos(phi);
+                    const y = sin(theta) * sin(phi);
+                    const z = cos(theta);
+                    
+                    surface.push(createVector(x * 100, y * 100, z * 100));
+                    
+                    if (i < res && j < res) {
+                        const idx = i * (res + 1) + j;
+                        edges.push([idx, idx + 1]);
+                        edges.push([idx, idx + res + 1]);
+                    }
+                }
+            }
+        }
+        
+        function generateBoySurface() {
+            const res = params.resolution;
+            
+            for (let i = 0; i < res; i++) {
+                for (let j = 0; j < res; j++) {
+                    const u = (i / res) * PI;
+                    const v = (j / res) * PI;
+                    
+                    const denom = sqrt(2) - sin(2 * u) * sin(3 * v);
+                    const x = (sqrt(2) * cos(2 * u) * cos(v) * cos(v) + cos(u) * sin(2 * v)) / denom;
+                    const y = (sqrt(2) * sin(2 * u) * cos(v) * cos(v) - sin(u) * sin(2 * v)) / denom;
+                    const z = (3 * cos(v) * cos(v)) / denom;
+                    
+                    surface.push(createVector(x * 50, y * 50, z * 50));
+                    
+                    if (i < res - 1 && j < res - 1) {
+                        const idx = i * res + j;
+                        edges.push([idx, idx + 1]);
+                        edges.push([idx, idx + res]);
+                    }
+                }
+            }
+        }
+        
+        function rotatePoint(p, angleX, angleY, angleZ) {
+            let rotated = p.copy();
+            
+            // Rotate around X
+            const cosX = cos(angleX);
+            const sinX = sin(angleX);
+            const y1 = rotated.y * cosX - rotated.z * sinX;
+            const z1 = rotated.y * sinX + rotated.z * cosX;
+            rotated.y = y1;
+            rotated.z = z1;
+            
+            // Rotate around Y
+            const cosY = cos(angleY);
+            const sinY = sin(angleY);
+            const x2 = rotated.x * cosY + rotated.z * sinY;
+            const z2 = -rotated.x * sinY + rotated.z * cosY;
+            rotated.x = x2;
+            rotated.z = z2;
+            
+            // Rotate around Z
+            const cosZ = cos(angleZ);
+            const sinZ = sin(angleZ);
+            const x3 = rotated.x * cosZ - rotated.y * sinZ;
+            const y3 = rotated.x * sinZ + rotated.y * cosZ;
+            rotated.x = x3;
+            rotated.y = y3;
+            
+            return rotated;
+        }
+        
+        function projectSurface() {
+            projectedPoints = [];
+            
+            const angleX = radians(params.rotX);
+            const angleY = radians(params.rotY);
+            const angleZ = radians(params.rotZ);
+            
+            for (let p of surface) {
+                const rotated = rotatePoint(p, angleX, angleY, angleZ);
+                let projected;
+                
+                switch(params.projectionType) {
+                    case 'orthographic':
+                        projected = createVector(rotated.x, rotated.y);
+                        break;
+                    case 'perspective':
+                        const d = 300; // Distance to projection plane
+                        const scale = d / (d + rotated.z);
+                        projected = createVector(rotated.x * scale, rotated.y * scale);
+                        break;
+                    case 'stereographic':
+                        const r = 200; // Radius of projection sphere
+                        const denom = r - rotated.z;
+                        projected = createVector(
+                            (rotated.x * r) / denom,
+                            (rotated.y * r) / denom
+                        );
+                        break;
+                }
+                
+                projectedPoints.push(projected.mult(params.scale / 100));
+            }
+        }
+        
+        function draw() {
+            background(240);
+            translate(width / 2, height / 2);
+            
+            if (params.autoRotate) {
+                params.rotY = (params.rotY + 1) % 360;
+                document.getElementById('rotY').value = params.rotY;
+                document.getElementById('rotYValue').textContent = params.rotY;
+                projectSurface();
+            }
+            
+            stroke(0);
+            strokeWeight(1);
+            noFill();
+            
+            if (params.hiddenLines) {
+                drawWithHiddenLineRemoval();
+            } else {
+                drawAllEdges();
+            }
+        }
+        
+        function drawAllEdges() {
+            for (let edge of edges) {
+                const p1 = projectedPoints[edge[0]];
+                const p2 = projectedPoints[edge[1]];
+                if (p1 && p2) {
+                    line(p1.x, p1.y, p2.x, p2.y);
+                }
+            }
+        }
+        
+        function drawWithHiddenLineRemoval() {
+            // Simple hidden line removal based on normal direction
+            const drawnEdges = new Set();
+            
+            for (let i = 0; i < edges.length; i++) {
+                const edge = edges[i];
+                const edgeKey = edge[0] + ',' + edge[1];
+                
+                if (drawnEdges.has(edgeKey)) continue;
+                
+                // Check if edge should be visible
+                if (isEdgeVisible(edge)) {
+                    const p1 = projectedPoints[edge[0]];
+                    const p2 = projectedPoints[edge[1]];
+                    if (p1 && p2) {
+                        line(p1.x, p1.y, p2.x, p2.y);
+                        drawnEdges.add(edgeKey);
+                    }
+                }
+            }
+        }
+        
+        function isEdgeVisible(edge) {
+            // Simplified visibility check based on z-depth
+            const p1 = surface[edge[0]];
+            const p2 = surface[edge[1]];
+            
+            if (!p1 || !p2) return false;
+            
+            const angleX = radians(params.rotX);
+            const angleY = radians(params.rotY);
+            const angleZ = radians(params.rotZ);
+            
+            const r1 = rotatePoint(p1, angleX, angleY, angleZ);
+            const r2 = rotatePoint(p2, angleX, angleY, angleZ);
+            
+            // Simple check: if both points are behind viewer, hide edge
+            return r1.z > -100 || r2.z > -100;
+        }
+        
+        function exportSVG() {
+            const svg = createSVG();
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `parametric-${params.surfaceType}-${Date.now()}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function createSVG() {
+            const padding = 50;
+            const svgWidth = 800;
+            const svgHeight = 800;
+            
+            let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">\n`;
+            svg += `<rect width="${svgWidth}" height="${svgHeight}" fill="white"/>\n`;
+            svg += `<g transform="translate(${svgWidth/2}, ${svgHeight/2})">\n`;
+            
+            for (let edge of edges) {
+                if (!params.hiddenLines || isEdgeVisible(edge)) {
+                    const p1 = projectedPoints[edge[0]];
+                    const p2 = projectedPoints[edge[1]];
+                    if (p1 && p2) {
+                        svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="black" stroke-width="1"/>\n`;
+                    }
+                }
+            }
+            
+            svg += `</g>\n</svg>`;
+            return svg;
+        }
+        
+        function generateNew() {
+            generateSurface();
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth - 350, windowHeight - 40);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plotter Export Tool</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: fit-content;
+        }
+
+        .preview-area {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        .range-value {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-group button {
+            flex: 1;
+        }
+
+        #canvas {
+            border: 1px solid #ddd;
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .stats {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 13px;
+        }
+
+        .stats div {
+            margin-bottom: 5px;
+        }
+
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .export-btn {
+            background: #28a745;
+            text-align: center;
+            padding: 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .export-btn:hover {
+            background: #218838;
+            transform: translateY(-2px);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-wrapper button {
+            width: 100%;
+            background: #6c757d;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #007bff;
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .preview-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        #output {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tab-button {
+            padding: 8px 16px;
+            background: #e9ecef;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tab-button.active {
+            background: #007bff;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pen Plotter Export Tool</h1>
+            <p>Configure and export your generative art for pen plotters</p>
+        </header>
+
+        <div class="main-content">
+            <div class="sidebar">
+                <div class="section">
+                    <h3>Input</h3>
+                    <div class="form-group">
+                        <div class="file-input-wrapper">
+                            <button>Load SVG File</button>
+                            <input type="file" id="fileInput" accept=".svg">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Or paste SVG path data:</label>
+                        <textarea id="svgInput" rows="4" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Export Format</h3>
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="svg">SVG</button>
+                        <button class="tab-button" data-tab="gcode">G-code</button>
+                        <button class="tab-button" data-tab="hpgl">HPGL</button>
+                    </div>
+
+                    <div id="svg-tab" class="tab-content active">
+                        <div class="form-group">
+                            <label>Optimize paths</label>
+                            <input type="checkbox" id="svgOptimize" checked>
+                        </div>
+                    </div>
+
+                    <div id="gcode-tab" class="tab-content">
+                        <div class="form-group">
+                            <label>Plotter Type</label>
+                            <select id="plotterType">
+                                <option value="generic">Generic CNC</option>
+                                <option value="axidraw">AxiDraw</option>
+                                <option value="grbl">GRBL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Draw Speed (mm/min)</label>
+                            <input type="number" id="drawSpeed" value="1500" min="100" max="5000">
+                        </div>
+                        <div class="form-group">
+                            <label>Move Speed (mm/min)</label>
+                            <input type="number" id="moveSpeed" value="3000" min="100" max="10000">
+                        </div>
+                        <div class="form-group">
+                            <label>Pen Up Height (mm)</label>
+                            <input type="number" id="penUpHeight" value="5" min="0" max="20" step="0.5">
+                        </div>
+                        <div class="form-group">
+                            <label>Pen Down Height (mm)</label>
+                            <input type="number" id="penDownHeight" value="0" min="-5" max="5" step="0.5">
+                        </div>
+                    </div>
+
+                    <div id="hpgl-tab" class="tab-content">
+                        <div class="form-group">
+                            <label>Paper Size</label>
+                            <select id="paperSize">
+                                <option value="letter">Letter (8.5" × 11")</option>
+                                <option value="a4">A4 (210mm × 297mm)</option>
+                                <option value="a3">A3 (297mm × 420mm)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pen Number</label>
+                            <input type="number" id="penNumber" value="1" min="1" max="8">
+                        </div>
+                        <div class="form-group">
+                            <label>Pen Speed (%)</label>
+                            <input type="range" id="penSpeed" value="50" min="1" max="100">
+                            <div class="range-value"><span id="penSpeedValue">50</span>%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h3>Plotter Settings</h3>
+                    <div class="form-group">
+                        <label>Work Area Width (mm)</label>
+                        <input type="number" id="workWidth" value="210" min="10" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Work Area Height (mm)</label>
+                        <input type="number" id="workHeight" value="297" min="10" max="1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Scale Factor</label>
+                        <input type="number" id="scaleFactor" value="1" min="0.1" max="10" step="0.1">
+                    </div>
+                </div>
+
+                <div class="export-options">
+                    <button class="export-btn" id="exportSVG">Export SVG</button>
+                    <button class="export-btn" id="exportGCode">Export G-code</button>
+                    <button class="export-btn" id="exportHPGL">Export HPGL</button>
+                </div>
+            </div>
+
+            <div class="preview-area">
+                <div class="preview-controls">
+                    <button id="playBtn">Play</button>
+                    <button id="pauseBtn" disabled>Pause</button>
+                    <button id="stopBtn" disabled>Stop</button>
+                    <div class="speed-control">
+                        <label>Speed:</label>
+                        <input type="range" id="speedControl" min="1" max="50" value="10" style="width: 100px;">
+                        <span id="speedValue">10x</span>
+                    </div>
+                </div>
+
+                <canvas id="canvas" width="800" height="600"></canvas>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+
+                <div class="stats" id="stats">
+                    <div>Paths: <span id="pathCount">0</span></div>
+                    <div>Total Distance: <span id="totalDistance">0</span> mm</div>
+                    <div>Draw Time: <span id="drawTime">0:00</span></div>
+                    <div>Move Time: <span id="moveTime">0:00</span></div>
+                    <div>Total Time: <span id="totalTime">0:00</span></div>
+                </div>
+
+                <div id="output"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import the modules (in real use, these would be proper ES6 imports)
+        // For now, we'll include them inline
+        
+        // Simple path optimizer (integrate with your actual optimizer)
+        class PathOptimizer {
+            static optimize(paths) {
+                // Simple nearest neighbor optimization
+                if (paths.length <= 1) return paths;
+                
+                const optimized = [];
+                const remaining = [...paths];
+                optimized.push(remaining.shift());
+                
+                while (remaining.length > 0) {
+                    const lastPath = optimized[optimized.length - 1];
+                    const lastPoint = lastPath.points[lastPath.points.length - 1];
+                    
+                    let nearestIndex = 0;
+                    let nearestDistance = Infinity;
+                    
+                    remaining.forEach((path, index) => {
+                        if (path.points && path.points.length > 0) {
+                            const dist = PathOptimizer.distance(lastPoint, path.points[0]);
+                            if (dist < nearestDistance) {
+                                nearestDistance = dist;
+                                nearestIndex = index;
+                            }
+                        }
+                    });
+                    
+                    optimized.push(remaining.splice(nearestIndex, 1)[0]);
+                }
+                
+                return optimized;
+            }
+            
+            static distance(p1, p2) {
+                const dx = p2.x - p1.x;
+                const dy = p2.y - p1.y;
+                return Math.sqrt(dx * dx + dy * dy);
+            }
+        }
+
+        // Include the exporter modules inline
+        ${await (async () => {
+            const gcodeContent = await read({ file_path: '/Users/djm/claude-projects/pen-plotter-art/src/export/gcode-exporter.js' });
+            return gcodeContent.content;
+        })()}
+
+        ${await (async () => {
+            const hpglContent = await read({ file_path: '/Users/djm/claude-projects/pen-plotter-art/src/export/hpgl-exporter.js' });
+            return hpglContent.content;
+        })()}
+
+        ${await (async () => {
+            const previewContent = await read({ file_path: '/Users/djm/claude-projects/pen-plotter-art/src/preview/plot-preview.js' });
+            return previewContent.content;
+        })()}
+
+        // Initialize the GUI
+        const canvas = document.getElementById('canvas');
+        const preview = new PlotPreview(canvas, {
+            showStats: false // We show stats separately
+        });
+
+        let currentPaths = [];
+        let gcodeExporter = new GCodeExporter();
+        let hpglExporter = new HPGLExporter();
+
+        // Tab switching
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                const tab = button.dataset.tab;
+                
+                // Update buttons
+                document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                
+                // Update content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(`${tab}-tab`).classList.add('active');
+            });
+        });
+
+        // File input
+        document.getElementById('fileInput').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    loadSVG(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // SVG input
+        document.getElementById('svgInput').addEventListener('input', (e) => {
+            if (e.target.value) {
+                loadSVGPath(e.target.value);
+            }
+        });
+
+        // Load SVG
+        function loadSVG(svgContent) {
+            // Parse SVG and extract paths
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(svgContent, 'image/svg+xml');
+            const paths = [];
+            
+            doc.querySelectorAll('path').forEach(pathElement => {
+                const d = pathElement.getAttribute('d');
+                if (d) {
+                    const parsedPaths = hpglExporter.parseSVGPath(d);
+                    paths.push(...parsedPaths);
+                }
+            });
+            
+            loadPaths(paths);
+        }
+
+        // Load SVG path data
+        function loadSVGPath(pathData) {
+            const paths = hpglExporter.parseSVGPath(pathData);
+            loadPaths(paths);
+        }
+
+        // Load paths into preview
+        function loadPaths(paths) {
+            currentPaths = paths;
+            
+            // Optimize if needed
+            const optimizeCheckbox = document.getElementById('svgOptimize');
+            if (optimizeCheckbox.checked) {
+                currentPaths = PathOptimizer.optimize(currentPaths);
+            }
+            
+            // Update preview
+            preview.loadPaths(currentPaths);
+            updateStats();
+        }
+
+        // Update statistics
+        function updateStats() {
+            const gconfig = getGCodeConfig();
+            gcodeExporter.config = { ...gcodeExporter.config, ...gconfig };
+            const estimate = gcodeExporter.estimateTime(currentPaths);
+            
+            document.getElementById('pathCount').textContent = estimate.pathCount;
+            document.getElementById('totalDistance').textContent = estimate.totalDistance.toFixed(1);
+            document.getElementById('drawTime').textContent = formatTime(estimate.drawTime);
+            document.getElementById('moveTime').textContent = formatTime(estimate.moveTime);
+            document.getElementById('totalTime').textContent = formatTime(estimate.totalTime);
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${minutes}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        // Preview controls
+        document.getElementById('playBtn').addEventListener('click', () => {
+            preview.play();
+            document.getElementById('playBtn').disabled = true;
+            document.getElementById('pauseBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = false;
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            preview.pause();
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+            preview.stop();
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('progressBar').style.width = '0%';
+        });
+
+        // Speed control
+        document.getElementById('speedControl').addEventListener('input', (e) => {
+            const speed = parseInt(e.target.value);
+            document.getElementById('speedValue').textContent = `${speed}x`;
+            preview.setSpeed(speed);
+        });
+
+        // Progress callback
+        preview.onProgress = (progress, estimate) => {
+            document.getElementById('progressBar').style.width = `${progress * 100}%`;
+        };
+
+        preview.onComplete = () => {
+            document.getElementById('playBtn').disabled = false;
+            document.getElementById('pauseBtn').disabled = true;
+            document.getElementById('stopBtn').disabled = true;
+        };
+
+        // Get configurations
+        function getGCodeConfig() {
+            return {
+                plotterType: document.getElementById('plotterType').value,
+                drawSpeed: parseInt(document.getElementById('drawSpeed').value),
+                moveSpeed: parseInt(document.getElementById('moveSpeed').value),
+                penUpHeight: parseFloat(document.getElementById('penUpHeight').value),
+                penDownHeight: parseFloat(document.getElementById('penDownHeight').value),
+                width: parseFloat(document.getElementById('workWidth').value),
+                height: parseFloat(document.getElementById('workHeight').value)
+            };
+        }
+
+        function getHPGLConfig() {
+            const paperSize = document.getElementById('paperSize').value;
+            let paperWidth, paperHeight;
+            
+            switch (paperSize) {
+                case 'letter':
+                    paperWidth = 8.5;
+                    paperHeight = 11;
+                    break;
+                case 'a4':
+                    paperWidth = 210 / 25.4; // mm to inches
+                    paperHeight = 297 / 25.4;
+                    break;
+                case 'a3':
+                    paperWidth = 297 / 25.4;
+                    paperHeight = 420 / 25.4;
+                    break;
+            }
+            
+            return {
+                paperWidth,
+                paperHeight,
+                penNumber: parseInt(document.getElementById('penNumber').value),
+                penSpeed: parseInt(document.getElementById('penSpeed').value)
+            };
+        }
+
+        // Range input updates
+        document.getElementById('penSpeed').addEventListener('input', (e) => {
+            document.getElementById('penSpeedValue').textContent = e.target.value;
+        });
+
+        // Export functions
+        document.getElementById('exportSVG').addEventListener('click', () => {
+            if (currentPaths.length === 0) {
+                alert('No paths to export');
+                return;
+            }
+            
+            // Generate SVG
+            const svg = generateSVG(currentPaths);
+            downloadFile('artwork.svg', svg, 'image/svg+xml');
+        });
+
+        document.getElementById('exportGCode').addEventListener('click', () => {
+            if (currentPaths.length === 0) {
+                alert('No paths to export');
+                return;
+            }
+            
+            const config = getGCodeConfig();
+            gcodeExporter.config = { ...gcodeExporter.config, ...config };
+            const gcode = gcodeExporter.export(currentPaths);
+            
+            showOutput(gcode);
+            downloadFile('artwork.gcode', gcode, 'text/plain');
+        });
+
+        document.getElementById('exportHPGL').addEventListener('click', () => {
+            if (currentPaths.length === 0) {
+                alert('No paths to export');
+                return;
+            }
+            
+            const config = getHPGLConfig();
+            hpglExporter.config = { ...hpglExporter.config, ...config };
+            const hpgl = hpglExporter.export(currentPaths);
+            
+            showOutput(hpgl);
+            downloadFile('artwork.hpgl', hpgl, 'text/plain');
+        });
+
+        // Generate SVG from paths
+        function generateSVG(paths) {
+            const width = document.getElementById('workWidth').value;
+            const height = document.getElementById('workHeight').value;
+            
+            let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+            svg += `<svg width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">\n`;
+            
+            paths.forEach((path, index) => {
+                let d = `M ${path.points[0].x} ${path.points[0].y}`;
+                for (let i = 1; i < path.points.length; i++) {
+                    d += ` L ${path.points[i].x} ${path.points[i].y}`;
+                }
+                svg += `  <path d="${d}" fill="none" stroke="black" stroke-width="0.5" />\n`;
+            });
+            
+            svg += `</svg>`;
+            return svg;
+        }
+
+        // Show output
+        function showOutput(content) {
+            const output = document.getElementById('output');
+            output.textContent = content;
+            output.style.display = 'block';
+        }
+
+        // Download file
+        function downloadFile(filename, content, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Update config when inputs change
+        document.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('change', () => {
+                if (currentPaths.length > 0) {
+                    updateStats();
+                }
+            });
+        });
+
+        // Sample paths for testing
+        const samplePaths = [
+            {
+                points: [
+                    { x: 100, y: 100 },
+                    { x: 200, y: 100 },
+                    { x: 200, y: 200 },
+                    { x: 100, y: 200 },
+                    { x: 100, y: 100 }
+                ]
+            },
+            {
+                points: [
+                    { x: 250, y: 150 },
+                    { x: 350, y: 150 },
+                    { x: 300, y: 250 }
+                ]
+            },
+            {
+                points: Array.from({ length: 36 }, (_, i) => {
+                    const angle = (i / 36) * Math.PI * 2;
+                    return {
+                        x: 500 + Math.cos(angle) * 80,
+                        y: 200 + Math.sin(angle) * 80
+                    };
+                })
+            }
+        ];
+
+        // Load sample paths on start
+        loadPaths(samplePaths);
+    </script>
+</body>
+</html>

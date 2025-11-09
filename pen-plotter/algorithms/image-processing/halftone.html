@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Halftone - Image to Circle Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../src/path-optimizer.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #image-upload-area {
+      border: 2px dashed #4a90e2;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+    #image-upload-area:hover {
+      background: #f0f7ff;
+      border-color: #357abd;
+    }
+    #image-upload-area.dragover {
+      background: #e6f2ff;
+      border-color: #2563eb;
+    }
+    .upload-text {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .upload-icon {
+      font-size: 48px;
+      color: #4a90e2;
+      margin-bottom: 10px;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #processing-status.processing {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    .preview-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .preview-options label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .preview-options input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>Halftone Converter</h2>
+    <p style="margin-top: 0; color: #666; font-size: 14px;">Convert images to halftone circle patterns for pen plotting</p>
+    
+    <div class="control-group">
+      <h3>📷 Image Input</h3>
+      <div id="image-upload-area">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Drop image here or click to browse</div>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>⚫ Halftone Parameters</h3>
+      <div class="control">
+        <label>Grid Type:</label>
+        <select id="gridType">
+          <option value="square">Square Grid</option>
+          <option value="hex">Hexagonal Grid</option>
+          <option value="triangle">Triangular Grid</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Dot Spacing: <span id="spacing-value">10</span>px</label>
+        <input type="range" id="spacing" min="5" max="30" step="1" value="10">
+      </div>
+      <div class="control">
+        <label>Maximum Dot Size: <span id="maxSize-value">8</span>px</label>
+        <input type="range" id="maxSize" min="2" max="20" step="1" value="8">
+      </div>
+      <div class="control">
+        <label>Minimum Dot Size: <span id="minSize-value">1</span>px</label>
+        <input type="range" id="minSize" min="0" max="10" step="0.5" value="1">
+      </div>
+      <div class="control">
+        <label>Brightness Curve:</label>
+        <select id="curve">
+          <option value="linear">Linear</option>
+          <option value="sqrt">Square Root (Darker)</option>
+          <option value="squared">Squared (Lighter)</option>
+          <option value="sigmoid">S-Curve</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Shape Type:</label>
+        <select id="shapeType">
+          <option value="circle">Circles</option>
+          <option value="square">Squares</option>
+          <option value="diamond">Diamonds</option>
+          <option value="star">Stars</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="invertBrightness"> Invert Brightness
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Display Options</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="showOriginal" checked> Show Original
+        </label>
+        <label>
+          <input type="checkbox" id="showHalftone" checked> Show Halftone
+        </label>
+      </div>
+      <div class="control">
+        <label>Canvas Size: <span id="canvasSize-value">600</span>px</label>
+        <input type="range" id="canvasSize" min="300" max="1200" step="50" value="600">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚡ Path Optimization</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="optimizePaths" checked> Optimize Order
+        </label>
+        <label>
+          <input type="checkbox" id="sortBySize"> Sort by Size
+        </label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>💾 Export</h3>
+      <button onclick="generateHalftone()">Generate Halftone</button>
+      <div class="button-group">
+        <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
+        <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
+      </div>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats" style="display: none;">
+        <div>Shapes: <strong id="shapeCountStat">0</strong></div>
+        <div>Total Area: <strong id="areaCountStat">0</strong>mm²</div>
+        <div>Path Length: <strong id="pathLengthStat">0</strong>mm</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let img = null;
+    let canvas;
+    let svgCanvas;
+    let halftoneShapes = [];
+    let optimizer = new PathOptimizer();
+    let processing = false;
+
+    // P5.js setup
+    function setup() {
+      const canvasSize = parseInt(document.getElementById('canvasSize').value);
+      canvas = createCanvas(canvasSize, canvasSize);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
+      
+      background(255);
+      strokeWeight(1);
+      noFill();
+      
+      // Setup image upload
+      setupImageUpload();
+    }
+
+    function draw() {
+      background(255);
+      
+      if (img && document.getElementById('showOriginal').checked) {
+        // Draw original image faded
+        push();
+        tint(255, 100);
+        image(img, 0, 0, width, height);
+        pop();
+      }
+      
+      if (halftoneShapes.length > 0 && document.getElementById('showHalftone').checked) {
+        // Draw halftone shapes
+        stroke(0);
+        strokeWeight(0.5);
+        fill(0);
+        
+        halftoneShapes.forEach(shape => {
+          drawShape(shape);
+        });
+      }
+    }
+
+    function drawShape(shape) {
+      push();
+      translate(shape.x, shape.y);
+      
+      switch (shape.type) {
+        case 'circle':
+          circle(0, 0, shape.size);
+          break;
+        case 'square':
+          rectMode(CENTER);
+          square(0, 0, shape.size);
+          break;
+        case 'diamond':
+          rotate(45);
+          rectMode(CENTER);
+          square(0, 0, shape.size * 0.7071); // sqrt(2)/2
+          break;
+        case 'star':
+          drawStar(0, 0, shape.size / 2, shape.size / 4, 5);
+          break;
+      }
+      
+      pop();
+    }
+
+    function drawStar(x, y, radius1, radius2, npoints) {
+      const angle = TWO_PI / npoints;
+      const halfAngle = angle / 2.0;
+      
+      beginShape();
+      for (let a = -PI / 2; a < TWO_PI - PI / 2; a += angle) {
+        let sx = x + cos(a) * radius1;
+        let sy = y + sin(a) * radius1;
+        vertex(sx, sy);
+        sx = x + cos(a + halfAngle) * radius2;
+        sy = y + sin(a + halfAngle) * radius2;
+        vertex(sx, sy);
+      }
+      endShape(CLOSE);
+    }
+
+    function setupImageUpload() {
+      const uploadArea = document.getElementById('image-upload-area');
+      const fileInput = document.getElementById('imageUpload');
+      
+      uploadArea.addEventListener('click', () => fileInput.click());
+      
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          loadImageFile(e.target.files[0]);
+        }
+      });
+      
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+          loadImageFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function loadImageFile(file) {
+      if (!file.type.match('image.*')) {
+        showStatus('Please upload an image file', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (loadedImg) => {
+          img = loadedImg;
+          halftoneShapes = [];
+          showStatus('Image loaded successfully', 'success');
+          document.getElementById('exportBtn').disabled = true;
+          document.getElementById('exportPNGBtn').disabled = true;
+          redraw();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function generateHalftone() {
+      if (!img) {
+        showStatus('Please upload an image first', 'error');
+        return;
+      }
+      
+      if (processing) {
+        showStatus('Already processing...', 'error');
+        return;
+      }
+      
+      processing = true;
+      showStatus('Generating halftone...', 'processing');
+      
+      // Clear previous shapes
+      halftoneShapes = [];
+      
+      // Get parameters
+      const gridType = document.getElementById('gridType').value;
+      const spacing = parseInt(document.getElementById('spacing').value);
+      const maxSize = parseInt(document.getElementById('maxSize').value);
+      const minSize = parseFloat(document.getElementById('minSize').value);
+      const curve = document.getElementById('curve').value;
+      const shapeType = document.getElementById('shapeType').value;
+      const invertBrightness = document.getElementById('invertBrightness').checked;
+      
+      // Process image
+      img.loadPixels();
+      
+      // Generate grid points based on type
+      const points = generateGridPoints(gridType, spacing);
+      
+      // Create shapes at each point
+      points.forEach(point => {
+        const brightness = sampleBrightness(point.x, point.y);
+        let normalizedBrightness = brightness / 255;
+        
+        if (invertBrightness) {
+          normalizedBrightness = 1 - normalizedBrightness;
+        }
+        
+        // Apply curve
+        normalizedBrightness = applyCurve(normalizedBrightness, curve);
+        
+        // Calculate size
+        const size = map(normalizedBrightness, 0, 1, minSize, maxSize);
+        
+        if (size > minSize) {
+          halftoneShapes.push({
+            x: point.x,
+            y: point.y,
+            size: size,
+            type: shapeType,
+            brightness: normalizedBrightness
+          });
+        }
+      });
+      
+      // Apply optimization if enabled
+      if (document.getElementById('optimizePaths').checked) {
+        optimizeShapeOrder();
+      }
+      
+      // Sort by size if enabled
+      if (document.getElementById('sortBySize').checked) {
+        halftoneShapes.sort((a, b) => b.size - a.size);
+      }
+      
+      // Update stats
+      updateStats();
+      
+      processing = false;
+      showStatus('Halftone generated successfully!', 'success');
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('exportPNGBtn').disabled = false;
+      
+      redraw();
+    }
+
+    function generateGridPoints(gridType, spacing) {
+      const points = [];
+      
+      switch (gridType) {
+        case 'square':
+          for (let y = spacing / 2; y < height; y += spacing) {
+            for (let x = spacing / 2; x < width; x += spacing) {
+              points.push({ x, y });
+            }
+          }
+          break;
+          
+        case 'hex':
+          const hexHeight = spacing * Math.sqrt(3) / 2;
+          let row = 0;
+          for (let y = spacing / 2; y < height; y += hexHeight) {
+            const offset = (row % 2) * spacing / 2;
+            for (let x = spacing / 2 + offset; x < width; x += spacing) {
+              points.push({ x, y });
+            }
+            row++;
+          }
+          break;
+          
+        case 'triangle':
+          const triHeight = spacing * Math.sqrt(3) / 2;
+          let triRow = 0;
+          for (let y = spacing / 2; y < height; y += triHeight) {
+            const rowOffset = (triRow % 2) * spacing / 2;
+            for (let x = spacing / 2; x < width; x += spacing) {
+              points.push({ x: x + rowOffset, y });
+              
+              // Add intermediate point for triangular pattern
+              if (triRow % 2 === 0 && x + spacing / 2 < width) {
+                points.push({ 
+                  x: x + spacing / 2, 
+                  y: y + triHeight / 2 
+                });
+              }
+            }
+            triRow++;
+          }
+          break;
+      }
+      
+      return points;
+    }
+
+    function sampleBrightness(x, y) {
+      const imgX = Math.floor(map(x, 0, width, 0, img.width));
+      const imgY = Math.floor(map(y, 0, height, 0, img.height));
+      const pixelIndex = (imgY * img.width + imgX) * 4;
+      
+      const r = img.pixels[pixelIndex];
+      const g = img.pixels[pixelIndex + 1];
+      const b = img.pixels[pixelIndex + 2];
+      
+      return (r + g + b) / 3;
+    }
+
+    function applyCurve(value, curveType) {
+      switch (curveType) {
+        case 'linear':
+          return value;
+        case 'sqrt':
+          return Math.sqrt(value);
+        case 'squared':
+          return value * value;
+        case 'sigmoid':
+          // S-curve function
+          const k = 10; // Steepness
+          return 1 / (1 + Math.exp(-k * (value - 0.5)));
+        default:
+          return value;
+      }
+    }
+
+    function optimizeShapeOrder() {
+      // Convert shapes to path segments for TSP optimization
+      const segments = halftoneShapes.map(shape => ({
+        points: [{ x: shape.x, y: shape.y }],
+        closed: false,
+        shape: shape
+      }));
+      
+      // Use optimizer to find optimal order
+      const optimized = optimizer.optimizeOrder(segments);
+      
+      // Extract shapes in optimized order
+      halftoneShapes = optimized.map(seg => seg.shape);
+    }
+
+    function exportSVG() {
+      if (halftoneShapes.length === 0) {
+        showStatus('No halftone to export', 'error');
+        return;
+      }
+      
+      // Create SVG content
+      svgCanvas.clear();
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(0.5);
+      svgCanvas.fill(0);
+      
+      halftoneShapes.forEach(shape => {
+        svgCanvas.push();
+        svgCanvas.translate(shape.x, shape.y);
+        
+        switch (shape.type) {
+          case 'circle':
+            svgCanvas.circle(0, 0, shape.size);
+            break;
+          case 'square':
+            svgCanvas.rectMode(CENTER);
+            svgCanvas.square(0, 0, shape.size);
+            break;
+          case 'diamond':
+            svgCanvas.push();
+            svgCanvas.rotate(45);
+            svgCanvas.rectMode(CENTER);
+            svgCanvas.square(0, 0, shape.size * 0.7071);
+            svgCanvas.pop();
+            break;
+          case 'star':
+            // Draw star manually for SVG
+            const radius1 = shape.size / 2;
+            const radius2 = shape.size / 4;
+            const npoints = 5;
+            const angle = TWO_PI / npoints;
+            const halfAngle = angle / 2.0;
+            
+            svgCanvas.beginShape();
+            for (let a = -PI / 2; a < TWO_PI - PI / 2; a += angle) {
+              let sx = cos(a) * radius1;
+              let sy = sin(a) * radius1;
+              svgCanvas.vertex(sx, sy);
+              sx = cos(a + halfAngle) * radius2;
+              sy = sin(a + halfAngle) * radius2;
+              svgCanvas.vertex(sx, sy);
+            }
+            svgCanvas.endShape(CLOSE);
+            break;
+        }
+        
+        svgCanvas.pop();
+      });
+      
+      // Save SVG
+      save(svgCanvas, 'halftone-output.svg');
+      showStatus('SVG exported successfully!', 'success');
+    }
+
+    function exportPNG() {
+      if (halftoneShapes.length === 0) {
+        showStatus('No halftone to export', 'error');
+        return;
+      }
+      
+      // Save current canvas as PNG
+      save(canvas, 'halftone-output.png');
+      showStatus('PNG exported successfully!', 'success');
+    }
+
+    function updateStats() {
+      let totalArea = 0;
+      let totalLength = 0;
+      
+      // Calculate statistics
+      halftoneShapes.forEach(shape => {
+        // Calculate area based on shape type
+        switch (shape.type) {
+          case 'circle':
+            totalArea += Math.PI * Math.pow(shape.size / 2, 2);
+            totalLength += Math.PI * shape.size; // Circumference
+            break;
+          case 'square':
+            totalArea += Math.pow(shape.size, 2);
+            totalLength += shape.size * 4; // Perimeter
+            break;
+          case 'diamond':
+            totalArea += Math.pow(shape.size * 0.7071, 2);
+            totalLength += shape.size * 0.7071 * 4;
+            break;
+          case 'star':
+            // Approximate
+            totalArea += Math.PI * Math.pow(shape.size / 2, 2) * 0.5;
+            totalLength += shape.size * 5;
+            break;
+        }
+      });
+      
+      // Convert pixels to mm (assuming 96 DPI)
+      const areaMM = (totalArea * Math.pow(25.4 / 96, 2)).toFixed(1);
+      const lengthMM = (totalLength * 25.4 / 96).toFixed(1);
+      
+      document.getElementById('shapeCountStat').textContent = halftoneShapes.length;
+      document.getElementById('areaCountStat').textContent = areaMM;
+      document.getElementById('pathLengthStat').textContent = lengthMM;
+      document.getElementById('stats').style.display = 'block';
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Update value displays
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const valueSpan = document.getElementById(e.target.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = e.target.value;
+        }
+        
+        // Resize canvas if needed
+        if (e.target.id === 'canvasSize') {
+          const size = parseInt(e.target.value);
+          resizeCanvas(size, size);
+          svgCanvas = createGraphics(size, size, SVG);
+          if (img) {
+            redraw();
+          }
+        }
+      });
+    });
+
+    // Checkbox handlers
+    document.getElementById('showOriginal').addEventListener('change', () => redraw());
+    document.getElementById('showHalftone').addEventListener('change', () => redraw());
+  </script>
+</body>
+</html>

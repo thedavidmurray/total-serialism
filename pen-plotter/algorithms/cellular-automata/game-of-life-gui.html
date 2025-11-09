@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Game of Life - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+      background: #333;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:active {
+      background: #3d8b40;
+    }
+    .secondary {
+      background: #555;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .pattern-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .pattern-btn:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #generation {
+      text-align: center;
+      font-size: 18px;
+      color: #4CAF50;
+      margin: 10px 0;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Game of Life</h2>
+    
+    <div id="generation">Generation: 0</div>
+    
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <button id="play-pause">▶ Play</button>
+      <button id="step" class="secondary">Step Forward</button>
+      <button id="reset" class="secondary">Reset</button>
+      <button id="clear" class="secondary">Clear Grid</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">50</span></label>
+        <input type="range" id="gridSize" min="20" max="200" value="50">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">10</span>px</label>
+        <input type="range" id="cellSize" min="2" max="20" value="10">
+      </div>
+      <div class="control">
+        <label>Speed: <span class="value" id="speed-val">10</span> fps</label>
+        <input type="range" id="speed" min="1" max="60" value="10">
+      </div>
+      <div class="control">
+        <label>Boundary Type:</label>
+        <select id="boundary">
+          <option value="wrap">Wrap (Toroidal)</option>
+          <option value="dead">Dead (Fixed)</option>
+          <option value="alive">Alive (Fixed)</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Patterns</h3>
+      <button class="pattern-btn" onclick="loadPattern('glider')">Glider</button>
+      <button class="pattern-btn" onclick="loadPattern('blinker')">Blinker</button>
+      <button class="pattern-btn" onclick="loadPattern('toad')">Toad</button>
+      <button class="pattern-btn" onclick="loadPattern('beacon')">Beacon</button>
+      <button class="pattern-btn" onclick="loadPattern('pulsar')">Pulsar</button>
+      <button class="pattern-btn" onclick="loadPattern('pentadecathlon')">Pentadecathlon</button>
+      <button class="pattern-btn" onclick="loadPattern('gosper')">Gosper Gun</button>
+      <button class="pattern-btn" onclick="loadPattern('rpentomino')">R-Pentomino</button>
+      <button class="pattern-btn" onclick="loadPattern('acorn')">Acorn</button>
+      <button class="pattern-btn" onclick="loadPattern('random')">Random (30%)</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display</h3>
+      <div class="control">
+        <label>Render Style:</label>
+        <select id="renderStyle">
+          <option value="squares">Squares</option>
+          <option value="circles">Circles</option>
+          <option value="dots">Dots</option>
+          <option value="lines">Lines (Plotter Style)</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showGrid" checked>
+        <label for="showGrid">Show Grid</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showTrails">
+        <label for="showTrails">Show Trails</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export Current as SVG</button>
+      <button onclick="exportGIF()">Export GIF Animation</button>
+      <button onclick="exportAnimation()">Export Animation (100 frames)</button>
+      <div class="control">
+        <label>Export at Generation:</label>
+        <input type="number" id="exportGen" value="50" min="1" style="width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555;">
+      </div>
+      <button onclick="exportAtGeneration()">Export at Specific Gen</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Game of Life implementation
+    let grid = [];
+    let nextGrid = [];
+    let generation = 0;
+    let isPlaying = false;
+    let lastUpdate = 0;
+    let trailGrid = [];
+    
+    // Parameters
+    let params = {
+      gridSize: 50,
+      cellSize: 10,
+      speed: 10,
+      boundary: 'wrap',
+      renderStyle: 'squares',
+      showGrid: true,
+      showTrails: false
+    };
+    
+    // Pattern library
+    const patterns = {
+      glider: [[0,1,0],[0,0,1],[1,1,1]],
+      blinker: [[1,1,1]],
+      toad: [[0,1,1,1],[1,1,1,0]],
+      beacon: [[1,1,0,0],[1,0,0,0],[0,0,0,1],[0,0,1,1]],
+      pulsar: [
+        [0,0,1,1,1,0,0,0,1,1,1,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [1,0,0,0,0,1,0,1,0,0,0,0,1],
+        [1,0,0,0,0,1,0,1,0,0,0,0,1],
+        [1,0,0,0,0,1,0,1,0,0,0,0,1],
+        [0,0,1,1,1,0,0,0,1,1,1,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,1,1,1,0,0,0,1,1,1,0,0],
+        [1,0,0,0,0,1,0,1,0,0,0,0,1],
+        [1,0,0,0,0,1,0,1,0,0,0,0,1],
+        [1,0,0,0,0,1,0,1,0,0,0,0,1],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,1,1,1,0,0,0,1,1,1,0,0]
+      ],
+      pentadecathlon: [
+        [0,0,1,0,0,0,0,1,0,0],
+        [1,1,0,1,1,1,1,0,1,1],
+        [0,0,1,0,0,0,0,1,0,0]
+      ],
+      gosper: [
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1,1],
+        [1,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [1,1,0,0,0,0,0,0,0,0,1,0,0,0,1,0,1,1,0,0,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+        [0,0,0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+      ],
+      rpentomino: [[0,1,1],[1,1,0],[0,1,0]],
+      acorn: [[0,1,0,0,0,0,0],[0,0,0,1,0,0,0],[1,1,0,0,1,1,1]]
+    };
+    
+    function setup() {
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      // Initialize grids
+      initializeGrid();
+      
+      // Setup controls
+      setupControls();
+      
+      // Start with a glider
+      loadPattern('glider');
+    }
+    
+    function initializeGrid() {
+      grid = [];
+      nextGrid = [];
+      trailGrid = [];
+      for (let i = 0; i < params.gridSize; i++) {
+        grid[i] = [];
+        nextGrid[i] = [];
+        trailGrid[i] = [];
+        for (let j = 0; j < params.gridSize; j++) {
+          grid[i][j] = 0;
+          nextGrid[i][j] = 0;
+          trailGrid[i][j] = 0;
+        }
+      }
+      generation = 0;
+      updateGenerationDisplay();
+    }
+    
+    function setupControls() {
+      // Play/Pause button
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPlaying = !isPlaying;
+        document.getElementById('play-pause').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+      });
+      
+      // Step button
+      document.getElementById('step').addEventListener('click', () => {
+        stepSimulation();
+      });
+      
+      // Reset button
+      document.getElementById('reset').addEventListener('click', () => {
+        generation = 0;
+        updateGenerationDisplay();
+        loadPattern('glider');
+      });
+      
+      // Clear button
+      document.getElementById('clear').addEventListener('click', () => {
+        initializeGrid();
+      });
+      
+      // Parameter controls
+      ['gridSize', 'cellSize', 'speed'].forEach(param => {
+        document.getElementById(param).addEventListener('input', (e) => {
+          params[param] = parseInt(e.target.value);
+          document.getElementById(param + '-val').textContent = e.target.value;
+          if (param === 'gridSize') {
+            initializeGrid();
+          }
+        });
+      });
+      
+      // Dropdowns
+      ['boundary', 'renderStyle'].forEach(param => {
+        document.getElementById(param).addEventListener('change', (e) => {
+          params[param] = e.target.value;
+        });
+      });
+      
+      // Checkboxes
+      ['showGrid', 'showTrails'].forEach(param => {
+        document.getElementById(param).addEventListener('change', (e) => {
+          params[param] = e.target.checked;
+          if (param === 'showTrails' && !e.target.checked) {
+            // Clear trails when disabled
+            for (let i = 0; i < params.gridSize; i++) {
+              for (let j = 0; j < params.gridSize; j++) {
+                trailGrid[i][j] = 0;
+              }
+            }
+          }
+        });
+      });
+    }
+    
+    function draw() {
+      background(30);
+      
+      // Update simulation
+      if (isPlaying && millis() - lastUpdate > 1000 / params.speed) {
+        stepSimulation();
+        lastUpdate = millis();
+      }
+      
+      // Calculate drawing parameters
+      const offsetX = (width - params.gridSize * params.cellSize) / 2;
+      const offsetY = (height - params.gridSize * params.cellSize) / 2;
+      
+      // Draw grid
+      if (params.showGrid) {
+        stroke(50);
+        strokeWeight(0.5);
+        for (let i = 0; i <= params.gridSize; i++) {
+          line(offsetX + i * params.cellSize, offsetY, 
+               offsetX + i * params.cellSize, offsetY + params.gridSize * params.cellSize);
+          line(offsetX, offsetY + i * params.cellSize, 
+               offsetX + params.gridSize * params.cellSize, offsetY + i * params.cellSize);
+        }
+      }
+      
+      // Draw cells
+      noStroke();
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          const x = offsetX + i * params.cellSize;
+          const y = offsetY + j * params.cellSize;
+          
+          // Draw trails if enabled
+          if (params.showTrails && trailGrid[i][j] > 0) {
+            fill(76, 175, 80, trailGrid[i][j] * 25);
+            rect(x, y, params.cellSize, params.cellSize);
+          }
+          
+          // Draw live cells
+          if (grid[i][j] === 1) {
+            fill(76, 175, 80);
+            
+            switch (params.renderStyle) {
+              case 'squares':
+                rect(x, y, params.cellSize, params.cellSize);
+                break;
+              case 'circles':
+                ellipse(x + params.cellSize/2, y + params.cellSize/2, 
+                       params.cellSize * 0.8, params.cellSize * 0.8);
+                break;
+              case 'dots':
+                ellipse(x + params.cellSize/2, y + params.cellSize/2, 
+                       params.cellSize * 0.3, params.cellSize * 0.3);
+                break;
+              case 'lines':
+                strokeWeight(2);
+                stroke(76, 175, 80);
+                line(x + params.cellSize * 0.2, y + params.cellSize * 0.2,
+                     x + params.cellSize * 0.8, y + params.cellSize * 0.8);
+                line(x + params.cellSize * 0.8, y + params.cellSize * 0.2,
+                     x + params.cellSize * 0.2, y + params.cellSize * 0.8);
+                noStroke();
+                break;
+            }
+          }
+        }
+      }
+      
+      // Handle mouse interaction
+      if (mouseIsPressed) {
+        const gridX = Math.floor((mouseX - offsetX) / params.cellSize);
+        const gridY = Math.floor((mouseY - offsetY) / params.cellSize);
+        if (gridX >= 0 && gridX < params.gridSize && gridY >= 0 && gridY < params.gridSize) {
+          grid[gridX][gridY] = mouseButton === LEFT ? 1 : 0;
+        }
+      }
+    }
+    
+    function stepSimulation() {
+      // Calculate next generation
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          const neighbors = countNeighbors(i, j);
+          
+          if (grid[i][j] === 1) {
+            // Live cell
+            nextGrid[i][j] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
+          } else {
+            // Dead cell
+            nextGrid[i][j] = (neighbors === 3) ? 1 : 0;
+          }
+          
+          // Update trails
+          if (params.showTrails) {
+            if (grid[i][j] === 1) {
+              trailGrid[i][j] = Math.min(10, trailGrid[i][j] + 1);
+            } else if (trailGrid[i][j] > 0) {
+              trailGrid[i][j] = Math.max(0, trailGrid[i][j] - 0.5);
+            }
+          }
+        }
+      }
+      
+      // Swap grids
+      let temp = grid;
+      grid = nextGrid;
+      nextGrid = temp;
+      
+      generation++;
+      updateGenerationDisplay();
+    }
+    
+    function countNeighbors(x, y) {
+      let count = 0;
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (i === 0 && j === 0) continue;
+          
+          let nx = x + i;
+          let ny = y + j;
+          
+          // Handle boundary conditions
+          if (params.boundary === 'wrap') {
+            nx = (nx + params.gridSize) % params.gridSize;
+            ny = (ny + params.gridSize) % params.gridSize;
+          } else if (nx < 0 || nx >= params.gridSize || ny < 0 || ny >= params.gridSize) {
+            if (params.boundary === 'alive') {
+              count++;
+            }
+            continue;
+          }
+          
+          count += grid[nx][ny];
+        }
+      }
+      return count;
+    }
+    
+    function loadPattern(patternName) {
+      initializeGrid();
+      
+      if (patternName === 'random') {
+        for (let i = 0; i < params.gridSize; i++) {
+          for (let j = 0; j < params.gridSize; j++) {
+            grid[i][j] = random() < 0.3 ? 1 : 0;
+          }
+        }
+      } else if (patterns[patternName]) {
+        const pattern = patterns[patternName];
+        const startX = Math.floor((params.gridSize - pattern[0].length) / 2);
+        const startY = Math.floor((params.gridSize - pattern.length) / 2);
+        
+        for (let i = 0; i < pattern.length; i++) {
+          for (let j = 0; j < pattern[i].length; j++) {
+            if (startX + j >= 0 && startX + j < params.gridSize && 
+                startY + i >= 0 && startY + i < params.gridSize) {
+              grid[startX + j][startY + i] = pattern[i][j];
+            }
+          }
+        }
+      }
+    }
+    
+    function updateGenerationDisplay() {
+      document.getElementById('generation').textContent = `Generation: ${generation}`;
+    }
+    
+    function exportSVG() {
+      let svg = createGraphics(params.gridSize * 10, params.gridSize * 10, SVG);
+      
+      svg.background(255);
+      svg.noStroke();
+      svg.fill(0);
+      
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          if (grid[i][j] === 1) {
+            switch (params.renderStyle) {
+              case 'squares':
+                svg.rect(i * 10, j * 10, 10, 10);
+                break;
+              case 'circles':
+                svg.ellipse(i * 10 + 5, j * 10 + 5, 8, 8);
+                break;
+              case 'dots':
+                svg.ellipse(i * 10 + 5, j * 10 + 5, 3, 3);
+                break;
+              case 'lines':
+                svg.stroke(0);
+                svg.strokeWeight(1);
+                svg.line(i * 10 + 2, j * 10 + 2, i * 10 + 8, j * 10 + 8);
+                svg.line(i * 10 + 8, j * 10 + 2, i * 10 + 2, j * 10 + 8);
+                svg.noStroke();
+                break;
+            }
+          }
+        }
+      }
+      
+      save(svg, `game-of-life-gen${generation}.svg`);
+      svg.remove();
+    }
+    
+    function exportAnimation() {
+      alert('Animation export would create 100 SVG files. This is a demo - implement batch export in production.');
+    }
+    
+    function exportAtGeneration() {
+      const targetGen = parseInt(document.getElementById('exportGen').value);
+      alert(`Would export at generation ${targetGen}. This is a demo - implement time travel in production.`);
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Store original state
+      const originalRunning = running;
+      const originalGeneration = generation;
+      const originalGrid = grid.map(row => [...row]);
+      
+      running = false;
+      
+      // Reset to initial state or pattern
+      if (params.pattern !== 'random') {
+        clearGrid();
+        placePattern(params.pattern);
+      } else {
+        randomize();
+      }
+      generation = 0;
+      
+      // Generate frames
+      const totalFrames = 50;
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+        
+        // Create offscreen canvas
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const ctx = offscreenCanvas.getContext('2d');
+        
+        // Draw current state
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        const cellSize = params.cellSize;
+        ctx.fillStyle = 'black';
+        
+        for (let i = 0; i < cols; i++) {
+          for (let j = 0; j < rows; j++) {
+            if (grid[i][j] === 1) {
+              ctx.fillRect(i * cellSize, j * cellSize, cellSize - 1, cellSize - 1);
+            }
+          }
+        }
+        
+        // Add frame
+        gif.addFrame(ctx, {delay: 100});
+        
+        // Update grid for next frame
+        if (frame < totalFrames - 1) {
+          updateGrid();
+          generation++;
+        }
+      }
+      
+      // Restore original state
+      grid = originalGrid;
+      generation = originalGeneration;
+      running = originalRunning;
+      
+      statusEl.textContent = 'Encoding GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `game-of-life-${params.pattern}.gif`;
+        link.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

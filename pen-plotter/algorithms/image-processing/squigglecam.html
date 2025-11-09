@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SquiggleCam - Image to Squiggly Lines</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../src/path-optimizer.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #image-upload-area {
+      border: 2px dashed #4a90e2;
+      border-radius: 8px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+    }
+    #image-upload-area:hover {
+      background: #f0f7ff;
+      border-color: #357abd;
+    }
+    #image-upload-area.dragover {
+      background: #e6f2ff;
+      border-color: #2563eb;
+    }
+    .upload-text {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .upload-icon {
+      font-size: 48px;
+      color: #4a90e2;
+      margin-bottom: 10px;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #processing-status.processing {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    .preview-options {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .preview-options label {
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .preview-options input[type="checkbox"] {
+      margin-right: 5px;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>SquiggleCam</h2>
+    <p style="margin-top: 0; color: #666; font-size: 14px;">Convert images to squiggly line art for pen plotting</p>
+    
+    <div class="control-group">
+      <h3>📷 Image Input</h3>
+      <div id="image-upload-area">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Drop image here or click to browse</div>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>〰️ Squiggle Parameters</h3>
+      <div class="control">
+        <label>Line Count: <span id="lineCount-value">50</span></label>
+        <input type="range" id="lineCount" min="10" max="200" step="5" value="50">
+      </div>
+      <div class="control">
+        <label>Amplitude: <span id="amplitude-value">20</span></label>
+        <input type="range" id="amplitude" min="1" max="100" step="1" value="20">
+      </div>
+      <div class="control">
+        <label>Frequency: <span id="frequency-value">0.1</span></label>
+        <input type="range" id="frequency" min="0.01" max="0.5" step="0.01" value="0.1">
+      </div>
+      <div class="control">
+        <label>Sample Spacing: <span id="spacing-value">3</span>px</label>
+        <input type="range" id="spacing" min="1" max="10" step="1" value="3">
+      </div>
+      <div class="control">
+        <label>Brightness Threshold: <span id="threshold-value">128</span></label>
+        <input type="range" id="threshold" min="0" max="255" step="1" value="128">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Display Options</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="showOriginal" checked> Show Original
+        </label>
+        <label>
+          <input type="checkbox" id="showPreview" checked> Show Squiggles
+        </label>
+      </div>
+      <div class="control">
+        <label>Canvas Size: <span id="canvasSize-value">600</span>px</label>
+        <input type="range" id="canvasSize" min="300" max="1200" step="50" value="600">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚡ Path Optimization</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="optimizePaths" checked> Optimize Paths
+        </label>
+        <label>
+          <input type="checkbox" id="joinPaths"> Join Nearby Paths
+        </label>
+      </div>
+      <div class="control">
+        <label>Join Threshold: <span id="joinThreshold-value">5</span>px</label>
+        <input type="range" id="joinThreshold" min="1" max="20" step="1" value="5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>💾 Export</h3>
+      <button onclick="generateSquiggles()">Generate Squiggles</button>
+      <div class="button-group">
+        <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
+        <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
+      </div>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats" style="display: none;">
+        <div>Lines: <strong id="lineCountStat">0</strong></div>
+        <div>Points: <strong id="pointCountStat">0</strong></div>
+        <div>Path Length: <strong id="pathLengthStat">0</strong>mm</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let img = null;
+    let canvas;
+    let svgCanvas;
+    let squiggleLines = [];
+    let optimizer = new PathOptimizer();
+    let processing = false;
+
+    // P5.js setup
+    function setup() {
+      const canvasSize = parseInt(document.getElementById('canvasSize').value);
+      canvas = createCanvas(canvasSize, canvasSize);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
+      
+      background(255);
+      strokeWeight(1);
+      noFill();
+      
+      // Setup image upload
+      setupImageUpload();
+    }
+
+    function draw() {
+      background(255);
+      
+      if (img && document.getElementById('showOriginal').checked) {
+        // Draw original image faded
+        push();
+        tint(255, 100);
+        image(img, 0, 0, width, height);
+        pop();
+      }
+      
+      if (squiggleLines.length > 0 && document.getElementById('showPreview').checked) {
+        // Draw squiggle lines
+        stroke(0);
+        strokeWeight(1);
+        noFill();
+        
+        squiggleLines.forEach(line => {
+          beginShape();
+          line.forEach(point => {
+            vertex(point.x, point.y);
+          });
+          endShape();
+        });
+      }
+    }
+
+    function setupImageUpload() {
+      const uploadArea = document.getElementById('image-upload-area');
+      const fileInput = document.getElementById('imageUpload');
+      
+      // Click to upload
+      uploadArea.addEventListener('click', () => fileInput.click());
+      
+      // File input change
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          loadImageFile(e.target.files[0]);
+        }
+      });
+      
+      // Drag and drop
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+      
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+      
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+          loadImageFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function loadImageFile(file) {
+      if (!file.type.match('image.*')) {
+        showStatus('Please upload an image file', 'error');
+        return;
+      }
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (loadedImg) => {
+          img = loadedImg;
+          squiggleLines = [];
+          showStatus('Image loaded successfully', 'success');
+          document.getElementById('exportBtn').disabled = true;
+          document.getElementById('exportPNGBtn').disabled = true;
+          redraw();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function generateSquiggles() {
+      if (!img) {
+        showStatus('Please upload an image first', 'error');
+        return;
+      }
+      
+      if (processing) {
+        showStatus('Already processing...', 'error');
+        return;
+      }
+      
+      processing = true;
+      showStatus('Generating squiggles...', 'processing');
+      
+      // Clear previous lines
+      squiggleLines = [];
+      
+      // Get parameters
+      const lineCount = parseInt(document.getElementById('lineCount').value);
+      const amplitude = parseInt(document.getElementById('amplitude').value);
+      const frequency = parseFloat(document.getElementById('frequency').value);
+      const spacing = parseInt(document.getElementById('spacing').value);
+      const threshold = parseInt(document.getElementById('threshold').value);
+      
+      // Process image
+      img.loadPixels();
+      
+      // Generate squiggle lines
+      for (let i = 0; i < lineCount; i++) {
+        const y = map(i, 0, lineCount - 1, 0, height);
+        const line = [];
+        let angle = 0;
+        
+        for (let x = 0; x < width; x += spacing) {
+          // Sample brightness at this point
+          const imgX = Math.floor(map(x, 0, width, 0, img.width));
+          const imgY = Math.floor(map(y, 0, height, 0, img.height));
+          const pixelIndex = (imgY * img.width + imgX) * 4;
+          
+          // Get brightness (0-255)
+          const r = img.pixels[pixelIndex];
+          const g = img.pixels[pixelIndex + 1];
+          const b = img.pixels[pixelIndex + 2];
+          const brightness = (r + g + b) / 3;
+          
+          // Calculate squiggle amplitude based on darkness
+          const darkness = 255 - brightness;
+          const squiggleAmp = darkness > threshold ? 
+            map(darkness, 0, 255, 0, amplitude) : 0;
+          
+          // Update angle based on frequency
+          angle += frequency;
+          
+          // Calculate squiggly Y position
+          const squigglyY = y + sin(angle) * squiggleAmp;
+          
+          line.push({ x: x, y: squigglyY });
+        }
+        
+        // Add line to collection
+        if (line.length > 1) {
+          squiggleLines.push(line);
+        }
+      }
+      
+      // Apply path optimization if enabled
+      if (document.getElementById('optimizePaths').checked) {
+        optimizeSquiggles();
+      }
+      
+      // Update stats
+      updateStats();
+      
+      processing = false;
+      showStatus('Squiggles generated successfully!', 'success');
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('exportPNGBtn').disabled = false;
+      
+      redraw();
+    }
+
+    function optimizeSquiggles() {
+      // Convert lines to path segments
+      let segments = squiggleLines.map(line => ({
+        points: line,
+        closed: false
+      }));
+      
+      // Simplify paths
+      segments = segments.map(seg => ({
+        ...seg,
+        points: optimizer.simplifyPath(seg.points, 1.0)
+      }));
+      
+      // Join nearby paths if enabled
+      if (document.getElementById('joinPaths').checked) {
+        const threshold = parseInt(document.getElementById('joinThreshold').value);
+        segments = optimizer.joinPaths(segments, threshold);
+      }
+      
+      // Optimize order
+      segments = optimizer.optimizeOrder(segments);
+      
+      // Convert back to squiggle lines
+      squiggleLines = segments.map(seg => seg.points);
+    }
+
+    function exportSVG() {
+      if (squiggleLines.length === 0) {
+        showStatus('No squiggles to export', 'error');
+        return;
+      }
+      
+      // Create SVG content
+      svgCanvas.clear();
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(1);
+      svgCanvas.noFill();
+      
+      squiggleLines.forEach(line => {
+        svgCanvas.beginShape();
+        line.forEach(point => {
+          svgCanvas.vertex(point.x, point.y);
+        });
+        svgCanvas.endShape();
+      });
+      
+      // Save SVG
+      save(svgCanvas, 'squigglecam-output.svg');
+      showStatus('SVG exported successfully!', 'success');
+    }
+
+    function exportPNG() {
+      if (squiggleLines.length === 0) {
+        showStatus('No squiggles to export', 'error');
+        return;
+      }
+      
+      // Save current canvas as PNG
+      save(canvas, 'squigglecam-output.png');
+      showStatus('PNG exported successfully!', 'success');
+    }
+
+    function updateStats() {
+      let totalPoints = 0;
+      let totalLength = 0;
+      
+      squiggleLines.forEach(line => {
+        totalPoints += line.length;
+        
+        // Calculate path length
+        for (let i = 1; i < line.length; i++) {
+          const dx = line[i].x - line[i-1].x;
+          const dy = line[i].y - line[i-1].y;
+          totalLength += Math.sqrt(dx * dx + dy * dy);
+        }
+      });
+      
+      // Convert pixels to mm (assuming 96 DPI)
+      const lengthMM = (totalLength * 25.4 / 96).toFixed(1);
+      
+      document.getElementById('lineCountStat').textContent = squiggleLines.length;
+      document.getElementById('pointCountStat').textContent = totalPoints;
+      document.getElementById('pathLengthStat').textContent = lengthMM;
+      document.getElementById('stats').style.display = 'block';
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Update value displays
+    document.querySelectorAll('input[type="range"]').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const valueSpan = document.getElementById(e.target.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = e.target.value;
+        }
+        
+        // Resize canvas if needed
+        if (e.target.id === 'canvasSize') {
+          const size = parseInt(e.target.value);
+          resizeCanvas(size, size);
+          svgCanvas = createGraphics(size, size, SVG);
+          if (img) {
+            redraw();
+          }
+        }
+      });
+    });
+
+    // Checkbox handlers
+    document.getElementById('showOriginal').addEventListener('change', () => redraw());
+    document.getElementById('showPreview').addEventListener('change', () => redraw());
+  </script>
+</body>
+</html>

@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Zellige Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .pattern-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>Zellige Pattern Generator</h2>
+    <div class="pattern-info">
+      <strong>Zellige</strong> is a traditional Moroccan mosaic tilework made from geometric shapes. 
+      This generator creates authentic 8-fold symmetric patterns using traditional tile shapes.
+    </div>
+    
+    <div class="control-group">
+      <h3>🔷 Pattern Type</h3>
+      <div class="control">
+        <label>Zellige Style:</label>
+        <select id="patternType">
+          <option value="classic8">Classic 8-fold Star</option>
+          <option value="hexagonal">Hexagonal Tessellation</option>
+          <option value="star16">16-Point Star</option>
+          <option value="safavid">Safavid Complex</option>
+          <option value="geometric">Geometric Interlock</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Complexity: <span id="complexity-value">3</span></label>
+        <input type="range" id="complexity" min="1" max="5" step="1" value="3">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>⚡ Tile Properties</h3>
+      <div class="control">
+        <label>Base Size: <span id="tileSize-value">40</span>px</label>
+        <input type="range" id="tileSize" min="20" max="100" step="5" value="40">
+      </div>
+      <div class="control">
+        <label>Spacing: <span id="spacing-value">2</span>px</label>
+        <input type="range" id="spacing" min="0" max="10" step="0.5" value="2">
+      </div>
+      <div class="control">
+        <label>Rotation Offset: <span id="rotationOffset-value">0</span>°</label>
+        <input type="range" id="rotationOffset" min="0" max="45" step="5" value="0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Visual Style</h3>
+      <div class="control">
+        <label>Line Weight: <span id="lineWeight-value">1</span>px</label>
+        <input type="range" id="lineWeight" min="0.1" max="3" step="0.1" value="1">
+      </div>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="showConstruction"> Show Construction Lines
+        </label>
+        <label>
+          <input type="checkbox" id="fillShapes"> Fill Shapes
+        </label>
+        <label>
+          <input type="checkbox" id="colorCode" checked> Color Code by Type
+        </label>
+        <label>
+          <input type="checkbox" id="showSymmetry"> Show Symmetry Lines
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📐 Grid Settings</h3>
+      <div class="control">
+        <label>Repetitions: <span id="repetitions-value">8</span></label>
+        <input type="range" id="repetitions" min="4" max="16" step="2" value="8">
+      </div>
+      <div class="control">
+        <label>Inner Radius: <span id="innerRadius-value">100</span>px</label>
+        <input type="range" id="innerRadius" min="50" max="200" step="10" value="100">
+      </div>
+      <div class="control">
+        <label>Outer Radius: <span id="outerRadius-value">250</span>px</label>
+        <input type="range" id="outerRadius" min="150" max="350" step="10" value="250">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>🎮 Controls</h3>
+      <button onclick="generatePattern()">Generate New Pattern</button>
+      <button onclick="randomizePattern()">Randomize</button>
+      <div class="button-group">
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+      <div id="processing-status"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let tiles = [];
+    let svgCanvas;
+    let currentSeed;
+
+    // Tile shape definitions for Zellige patterns
+    const TILE_SHAPES = {
+      kite: (size) => {
+        const angle = TWO_PI / 8;
+        return [
+          { x: 0, y: 0 },
+          { x: size * cos(angle/2), y: size * sin(angle/2) },
+          { x: size * 1.5 * cos(angle), y: size * 1.5 * sin(angle) },
+          { x: size * cos(3*angle/2), y: size * sin(3*angle/2) }
+        ];
+      },
+      dart: (size) => {
+        const angle = TWO_PI / 8;
+        const phi = (1 + sqrt(5)) / 2; // Golden ratio
+        return [
+          { x: 0, y: 0 },
+          { x: size * cos(angle/2), y: size * sin(angle/2) },
+          { x: size * phi * cos(angle), y: size * phi * sin(angle) },
+          { x: size * cos(3*angle/2), y: size * sin(3*angle/2) }
+        ];
+      },
+      hexagon: (size) => {
+        const points = [];
+        for (let i = 0; i < 6; i++) {
+          const angle = (TWO_PI / 6) * i;
+          points.push({
+            x: size * cos(angle),
+            y: size * sin(angle)
+          });
+        }
+        return points;
+      },
+      octagon: (size) => {
+        const points = [];
+        for (let i = 0; i < 8; i++) {
+          const angle = (TWO_PI / 8) * i;
+          points.push({
+            x: size * cos(angle),
+            y: size * sin(angle)
+          });
+        }
+        return points;
+      },
+      star8: (size) => {
+        const points = [];
+        for (let i = 0; i < 16; i++) {
+          const angle = (TWO_PI / 16) * i;
+          const r = i % 2 === 0 ? size : size * 0.5;
+          points.push({
+            x: r * cos(angle),
+            y: r * sin(angle)
+          });
+        }
+        return points;
+      }
+    };
+
+    function setup() {
+      const canvas = createCanvas(600, 600);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(600, 600, SVG);
+      
+      angleMode(RADIANS);
+      setupEventListeners();
+      generatePattern();
+    }
+
+    function generatePattern() {
+      currentSeed = millis();
+      randomSeed(currentSeed);
+      
+      tiles = [];
+      const patternType = document.getElementById('patternType').value;
+      const complexity = parseInt(document.getElementById('complexity').value);
+      const tileSize = parseFloat(document.getElementById('tileSize').value);
+      const repetitions = parseInt(document.getElementById('repetitions').value);
+      const innerRadius = parseFloat(document.getElementById('innerRadius').value);
+      const outerRadius = parseFloat(document.getElementById('outerRadius').value);
+      
+      // Generate tiles based on pattern type
+      switch (patternType) {
+        case 'classic8':
+          generateClassic8Pattern(complexity, tileSize, repetitions, innerRadius, outerRadius);
+          break;
+        case 'hexagonal':
+          generateHexagonalPattern(complexity, tileSize);
+          break;
+        case 'star16':
+          generateStar16Pattern(complexity, tileSize, repetitions);
+          break;
+        case 'safavid':
+          generateSafavidPattern(complexity, tileSize, repetitions);
+          break;
+        case 'geometric':
+          generateGeometricPattern(complexity, tileSize);
+          break;
+      }
+      
+      redraw();
+      showStatus('Pattern generated', 'success');
+    }
+
+    function generateClassic8Pattern(complexity, size, reps, innerR, outerR) {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      // Generate radial layers
+      for (let layer = 0; layer < complexity; layer++) {
+        const radius = map(layer, 0, complexity - 1, innerR, outerR);
+        
+        for (let i = 0; i < reps; i++) {
+          const angle = (TWO_PI / reps) * i;
+          const x = centerX + radius * cos(angle);
+          const y = centerY + radius * sin(angle);
+          
+          // Alternate between kites and darts
+          const shapeType = (layer + i) % 2 === 0 ? 'kite' : 'dart';
+          const shape = TILE_SHAPES[shapeType](size);
+          
+          tiles.push({
+            type: shapeType,
+            points: shape,
+            x: x,
+            y: y,
+            rotation: angle + HALF_PI,
+            layer: layer
+          });
+        }
+      }
+    }
+
+    function generateHexagonalPattern(complexity, size) {
+      const cols = floor(width / (size * 1.5));
+      const rows = floor(height / (size * sqrt(3)));
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * size * 1.5 + size;
+          const y = row * size * sqrt(3) + (col % 2) * size * sqrt(3) / 2 + size;
+          
+          if (x < width && y < height) {
+            tiles.push({
+              type: 'hexagon',
+              points: TILE_SHAPES.hexagon(size),
+              x: x,
+              y: y,
+              rotation: 0,
+              layer: (row + col) % complexity
+            });
+          }
+        }
+      }
+    }
+
+    function generateStar16Pattern(complexity, size, reps) {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      // Central star
+      tiles.push({
+        type: 'star8',
+        points: TILE_SHAPES.star8(size * 2),
+        x: centerX,
+        y: centerY,
+        rotation: 0,
+        layer: 0
+      });
+      
+      // Surrounding pattern
+      for (let ring = 1; ring < complexity; ring++) {
+        const radius = ring * size * 2;
+        const count = reps * ring;
+        
+        for (let i = 0; i < count; i++) {
+          const angle = (TWO_PI / count) * i;
+          const x = centerX + radius * cos(angle);
+          const y = centerY + radius * sin(angle);
+          
+          const shapeType = ring % 2 === 0 ? 'octagon' : 'kite';
+          tiles.push({
+            type: shapeType,
+            points: TILE_SHAPES[shapeType](size),
+            x: x,
+            y: y,
+            rotation: angle,
+            layer: ring
+          });
+        }
+      }
+    }
+
+    function generateSafavidPattern(complexity, size, reps) {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      // Complex interlocking pattern
+      for (let level = 0; level < complexity; level++) {
+        const baseAngle = (level * PI) / (complexity * 2);
+        
+        for (let i = 0; i < reps; i++) {
+          const angle = (TWO_PI / reps) * i + baseAngle;
+          const radius = size * (level + 1) * 1.5;
+          
+          // Primary shape
+          const x1 = centerX + radius * cos(angle);
+          const y1 = centerY + radius * sin(angle);
+          
+          tiles.push({
+            type: 'dart',
+            points: TILE_SHAPES.dart(size),
+            x: x1,
+            y: y1,
+            rotation: angle,
+            layer: level
+          });
+          
+          // Interstitial shapes
+          if (level > 0) {
+            const angle2 = angle + (TWO_PI / reps) / 2;
+            const x2 = centerX + radius * 0.7 * cos(angle2);
+            const y2 = centerY + radius * 0.7 * sin(angle2);
+            
+            tiles.push({
+              type: 'kite',
+              points: TILE_SHAPES.kite(size * 0.7),
+              x: x2,
+              y: y2,
+              rotation: angle2 + PI,
+              layer: level
+            });
+          }
+        }
+      }
+    }
+
+    function generateGeometricPattern(complexity, size) {
+      const gridSize = floor(sqrt(complexity * 20));
+      const cellSize = min(width, height) / gridSize;
+      
+      for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+          const x = col * cellSize + cellSize / 2;
+          const y = row * cellSize + cellSize / 2;
+          
+          const patternIndex = (row * gridSize + col) % 4;
+          let shapeType, rotation;
+          
+          switch (patternIndex) {
+            case 0:
+              shapeType = 'octagon';
+              rotation = 0;
+              break;
+            case 1:
+              shapeType = 'kite';
+              rotation = QUARTER_PI;
+              break;
+            case 2:
+              shapeType = 'dart';
+              rotation = -QUARTER_PI;
+              break;
+            case 3:
+              shapeType = 'hexagon';
+              rotation = 0;
+              break;
+          }
+          
+          tiles.push({
+            type: shapeType,
+            points: TILE_SHAPES[shapeType](size * 0.8),
+            x: x,
+            y: y,
+            rotation: rotation,
+            layer: patternIndex
+          });
+        }
+      }
+    }
+
+    function draw() {
+      background(255);
+      
+      const lineWeight = parseFloat(document.getElementById('lineWeight').value);
+      const spacing = parseFloat(document.getElementById('spacing').value);
+      const rotationOffset = radians(parseFloat(document.getElementById('rotationOffset').value));
+      const showConstruction = document.getElementById('showConstruction').checked;
+      const fillShapes = document.getElementById('fillShapes').checked;
+      const colorCode = document.getElementById('colorCode').checked;
+      const showSymmetry = document.getElementById('showSymmetry').checked;
+      
+      // Show symmetry lines if enabled
+      if (showSymmetry) {
+        push();
+        translate(width / 2, height / 2);
+        stroke(200);
+        strokeWeight(0.5);
+        const reps = parseInt(document.getElementById('repetitions').value);
+        for (let i = 0; i < reps; i++) {
+          const angle = (TWO_PI / reps) * i;
+          line(0, 0, width * cos(angle), width * sin(angle));
+        }
+        pop();
+      }
+      
+      // Draw construction lines if enabled
+      if (showConstruction) {
+        push();
+        noFill();
+        stroke(220);
+        strokeWeight(0.5);
+        
+        const innerR = parseFloat(document.getElementById('innerRadius').value);
+        const outerR = parseFloat(document.getElementById('outerRadius').value);
+        circle(width / 2, height / 2, innerR * 2);
+        circle(width / 2, height / 2, outerR * 2);
+        pop();
+      }
+      
+      // Draw tiles
+      strokeWeight(lineWeight);
+      
+      tiles.forEach(tile => {
+        push();
+        translate(tile.x, tile.y);
+        rotate(tile.rotation + rotationOffset);
+        
+        // Color coding
+        if (colorCode) {
+          const colors = {
+            kite: color(66, 133, 244, 50),      // Blue
+            dart: color(234, 67, 53, 50),       // Red
+            hexagon: color(52, 168, 83, 50),    // Green
+            octagon: color(251, 188, 5, 50),    // Yellow
+            star8: color(154, 64, 210, 50)      // Purple
+          };
+          
+          if (fillShapes) {
+            fill(colors[tile.type] || color(128, 128, 128, 50));
+          } else {
+            noFill();
+          }
+          
+          const strokeColors = {
+            kite: color(66, 133, 244),
+            dart: color(234, 67, 53),
+            hexagon: color(52, 168, 83),
+            octagon: color(251, 188, 5),
+            star8: color(154, 64, 210)
+          };
+          stroke(strokeColors[tile.type] || 0);
+        } else {
+          if (fillShapes) {
+            fill(255);
+          } else {
+            noFill();
+          }
+          stroke(0);
+        }
+        
+        // Draw the tile with spacing
+        beginShape();
+        tile.points.forEach(point => {
+          const scale = 1 - (spacing / 100);
+          vertex(point.x * scale, point.y * scale);
+        });
+        endShape(CLOSE);
+        
+        pop();
+      });
+      
+      noLoop();
+    }
+
+    function randomizePattern() {
+      // Randomize controls
+      document.getElementById('complexity').value = floor(random(1, 6));
+      document.getElementById('tileSize').value = floor(random(20, 101) / 5) * 5;
+      document.getElementById('spacing').value = floor(random(0, 11) / 0.5) * 0.5;
+      document.getElementById('repetitions').value = floor(random(4, 17) / 2) * 2;
+      document.getElementById('innerRadius').value = floor(random(50, 201) / 10) * 10;
+      document.getElementById('outerRadius').value = floor(random(150, 351) / 10) * 10;
+      
+      // Update displays
+      updateAllDisplays();
+      
+      // Generate new pattern
+      generatePattern();
+    }
+
+    function exportSVG() {
+      // Redraw to SVG canvas
+      svgCanvas.clear();
+      svgCanvas.background(255);
+      
+      // Copy all drawing operations to SVG
+      drawToCanvas(svgCanvas);
+      
+      // Save SVG
+      save(svgCanvas, `zellige-pattern-${currentSeed}.svg`);
+      showStatus('SVG exported successfully', 'success');
+    }
+
+    function exportPNG() {
+      save(`zellige-pattern-${currentSeed}.png`);
+      showStatus('PNG exported successfully', 'success');
+    }
+
+    function drawToCanvas(canvas) {
+      const lineWeight = parseFloat(document.getElementById('lineWeight').value);
+      const spacing = parseFloat(document.getElementById('spacing').value);
+      const rotationOffset = radians(parseFloat(document.getElementById('rotationOffset').value));
+      const fillShapes = document.getElementById('fillShapes').checked;
+      
+      canvas.strokeWeight(lineWeight);
+      
+      tiles.forEach(tile => {
+        canvas.push();
+        canvas.translate(tile.x, tile.y);
+        canvas.rotate(tile.rotation + rotationOffset);
+        
+        if (fillShapes) {
+          canvas.fill(255);
+        } else {
+          canvas.noFill();
+        }
+        canvas.stroke(0);
+        
+        canvas.beginShape();
+        tile.points.forEach(point => {
+          const scale = 1 - (spacing / 100);
+          canvas.vertex(point.x * scale, point.y * scale);
+        });
+        canvas.endShape(CLOSE);
+        
+        canvas.pop();
+      });
+    }
+
+    function setupEventListeners() {
+      // Update value displays
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const valueSpan = document.getElementById(e.target.id + '-value');
+          if (valueSpan) {
+            valueSpan.textContent = e.target.value;
+          }
+        });
+      });
+      
+      // Regenerate on parameter change
+      ['patternType', 'complexity', 'tileSize', 'spacing', 'rotationOffset', 
+       'repetitions', 'innerRadius', 'outerRadius'].forEach(id => {
+        document.getElementById(id).addEventListener('change', generatePattern);
+      });
+      
+      // Redraw on visual change
+      ['lineWeight', 'showConstruction', 'fillShapes', 'colorCode', 'showSymmetry'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+          redraw();
+        });
+      });
+    }
+
+    function updateAllDisplays() {
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        const valueSpan = document.getElementById(input.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = input.value;
+        }
+      });
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

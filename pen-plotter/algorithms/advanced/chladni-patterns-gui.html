@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chladni Patterns - Vibration Visualization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 300px;
+        }
+        .control-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="range"], select {
+            width: 100%;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .value-display {
+            display: inline-block;
+            width: 50px;
+            text-align: right;
+        }
+        .frequency-controls {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Chladni Pattern Controls</h3>
+        
+        <div class="control-group">
+            <label>Plate Shape:</label>
+            <select id="plateShape">
+                <option value="square">Square</option>
+                <option value="circular">Circular</option>
+                <option value="triangular">Triangular</option>
+                <option value="hexagonal">Hexagonal</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Mode m: <span id="modeMValue" class="value-display">2</span></label>
+            <input type="range" id="modeM" min="1" max="10" value="2" step="1">
+        </div>
+        
+        <div class="control-group">
+            <label>Mode n: <span id="modeNValue" class="value-display">3</span></label>
+            <input type="range" id="modeN" min="1" max="10" value="3" step="1">
+        </div>
+        
+        <div class="frequency-controls">
+            <h4>Frequency Components</h4>
+            
+            <div class="control-group">
+                <label>Fundamental: <span id="fundamentalValue" class="value-display">100</span> Hz</label>
+                <input type="range" id="fundamental" min="50" max="500" value="100" step="10">
+            </div>
+            
+            <div class="control-group">
+                <label>2nd Harmonic: <span id="harmonic2Value" class="value-display">0</span>%</label>
+                <input type="range" id="harmonic2" min="0" max="100" value="0" step="5">
+            </div>
+            
+            <div class="control-group">
+                <label>3rd Harmonic: <span id="harmonic3Value" class="value-display">0</span>%</label>
+                <input type="range" id="harmonic3" min="0" max="100" value="0" step="5">
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Resolution: <span id="resolutionValue" class="value-display">100</span></label>
+            <input type="range" id="resolution" min="50" max="200" value="100" step="10">
+        </div>
+        
+        <div class="control-group">
+            <label>Sand Density: <span id="sandDensityValue" class="value-display">5000</span></label>
+            <input type="range" id="sandDensity" min="1000" max="20000" value="5000" step="1000">
+        </div>
+        
+        <div class="control-group">
+            <label>Amplitude: <span id="amplitudeValue" class="value-display">50</span></label>
+            <input type="range" id="amplitude" min="10" max="100" value="50" step="5">
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="showNodes" checked> Show Nodal Lines
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="showSand" checked> Show Sand Accumulation
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="animate"> Animate Vibration
+            </label>
+        </div>
+        
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="generateNew()">Generate New</button>
+    </div>
+
+    <script>
+        let params = {
+            plateShape: 'square',
+            modeM: 2,
+            modeN: 3,
+            fundamental: 100,
+            harmonic2: 0,
+            harmonic3: 0,
+            resolution: 100,
+            sandDensity: 5000,
+            amplitude: 50,
+            showNodes: true,
+            showSand: true,
+            animate: false
+        };
+        
+        let vibrationField = [];
+        let sandParticles = [];
+        let nodalLines = [];
+        let time = 0;
+        
+        function setup() {
+            createCanvas(windowWidth - 350, windowHeight - 40);
+            setupControls();
+            generatePattern();
+        }
+        
+        function setupControls() {
+            // Plate shape
+            document.getElementById('plateShape').addEventListener('change', (e) => {
+                params.plateShape = e.target.value;
+                generatePattern();
+            });
+            
+            // Mode controls
+            ['modeM', 'modeN'].forEach(mode => {
+                document.getElementById(mode).addEventListener('input', (e) => {
+                    params[mode] = parseInt(e.target.value);
+                    document.getElementById(mode + 'Value').textContent = e.target.value;
+                    generatePattern();
+                });
+            });
+            
+            // Frequency controls
+            document.getElementById('fundamental').addEventListener('input', (e) => {
+                params.fundamental = parseInt(e.target.value);
+                document.getElementById('fundamentalValue').textContent = e.target.value;
+                generatePattern();
+            });
+            
+            ['harmonic2', 'harmonic3'].forEach(harmonic => {
+                document.getElementById(harmonic).addEventListener('input', (e) => {
+                    params[harmonic] = parseInt(e.target.value);
+                    document.getElementById(harmonic + 'Value').textContent = e.target.value;
+                    generatePattern();
+                });
+            });
+            
+            // Other controls
+            document.getElementById('resolution').addEventListener('input', (e) => {
+                params.resolution = parseInt(e.target.value);
+                document.getElementById('resolutionValue').textContent = e.target.value;
+                generatePattern();
+            });
+            
+            document.getElementById('sandDensity').addEventListener('input', (e) => {
+                params.sandDensity = parseInt(e.target.value);
+                document.getElementById('sandDensityValue').textContent = e.target.value;
+                generatePattern();
+            });
+            
+            document.getElementById('amplitude').addEventListener('input', (e) => {
+                params.amplitude = parseInt(e.target.value);
+                document.getElementById('amplitudeValue').textContent = e.target.value;
+            });
+            
+            // Checkboxes
+            document.getElementById('showNodes').addEventListener('change', (e) => {
+                params.showNodes = e.target.checked;
+            });
+            
+            document.getElementById('showSand').addEventListener('change', (e) => {
+                params.showSand = e.target.checked;
+            });
+            
+            document.getElementById('animate').addEventListener('change', (e) => {
+                params.animate = e.target.checked;
+            });
+        }
+        
+        function generatePattern() {
+            vibrationField = [];
+            sandParticles = [];
+            nodalLines = [];
+            
+            const res = params.resolution;
+            const size = min(width, height) * 0.8;
+            
+            // Generate vibration field
+            for (let i = 0; i < res; i++) {
+                vibrationField[i] = [];
+                for (let j = 0; j < res; j++) {
+                    const x = (i / res - 0.5) * 2;
+                    const y = (j / res - 0.5) * 2;
+                    
+                    let amplitude = 0;
+                    
+                    switch(params.plateShape) {
+                        case 'square':
+                            amplitude = calculateSquarePlate(x, y);
+                            break;
+                        case 'circular':
+                            amplitude = calculateCircularPlate(x, y);
+                            break;
+                        case 'triangular':
+                            amplitude = calculateTriangularPlate(x, y);
+                            break;
+                        case 'hexagonal':
+                            amplitude = calculateHexagonalPlate(x, y);
+                            break;
+                    }
+                    
+                    vibrationField[i][j] = amplitude;
+                }
+            }
+            
+            // Find nodal lines
+            findNodalLines();
+            
+            // Distribute sand particles
+            distributeSand();
+        }
+        
+        function calculateSquarePlate(x, y) {
+            // Square plate vibration modes
+            const m = params.modeM;
+            const n = params.modeN;
+            
+            let amplitude = sin(m * PI * (x + 1) / 2) * sin(n * PI * (y + 1) / 2);
+            
+            // Add harmonics
+            if (params.harmonic2 > 0) {
+                amplitude += (params.harmonic2 / 100) * sin(2 * m * PI * (x + 1) / 2) * sin(2 * n * PI * (y + 1) / 2);
+            }
+            if (params.harmonic3 > 0) {
+                amplitude += (params.harmonic3 / 100) * sin(3 * m * PI * (x + 1) / 2) * sin(3 * n * PI * (y + 1) / 2);
+            }
+            
+            return amplitude;
+        }
+        
+        function calculateCircularPlate(x, y) {
+            // Circular plate vibration modes (Bessel functions approximation)
+            const r = sqrt(x * x + y * y);
+            const theta = atan2(y, x);
+            
+            if (r > 1) return 0;
+            
+            const m = params.modeM;
+            const n = params.modeN;
+            
+            // Simplified Bessel function approximation
+            let amplitude = cos(n * theta) * (1 - r * r) * cos(m * PI * r);
+            
+            // Add harmonics
+            if (params.harmonic2 > 0) {
+                amplitude += (params.harmonic2 / 100) * cos(2 * n * theta) * (1 - r * r) * cos(2 * m * PI * r);
+            }
+            
+            return amplitude;
+        }
+        
+        function calculateTriangularPlate(x, y) {
+            // Triangular plate approximation
+            const rotY = y * cos(PI/6) - x * sin(PI/6);
+            
+            if (abs(x) > 1 || rotY < -0.5 || rotY > sqrt(3)/2) return 0;
+            
+            const m = params.modeM;
+            const n = params.modeN;
+            
+            return sin(m * PI * (x + 1)) * sin(n * PI * (rotY + 0.5));
+        }
+        
+        function calculateHexagonalPlate(x, y) {
+            // Hexagonal plate approximation
+            const r = sqrt(x * x + y * y);
+            const theta = atan2(y, x);
+            
+            if (r > 0.866) return 0; // Approximate hexagon radius
+            
+            const m = params.modeM;
+            const n = params.modeN;
+            
+            return cos(6 * n * theta) * (1 - r) * sin(m * PI * r);
+        }
+        
+        function findNodalLines() {
+            nodalLines = [];
+            const res = params.resolution;
+            const threshold = 0.01;
+            
+            // Find zero crossings in the vibration field
+            for (let i = 1; i < res - 1; i++) {
+                for (let j = 1; j < res - 1; j++) {
+                    const v = vibrationField[i][j];
+                    const vx = vibrationField[i + 1][j];
+                    const vy = vibrationField[i][j + 1];
+                    
+                    if (abs(v) < threshold || (v * vx < 0) || (v * vy < 0)) {
+                        nodalLines.push({
+                            x: (i / res - 0.5) * 2,
+                            y: (j / res - 0.5) * 2
+                        });
+                    }
+                }
+            }
+        }
+        
+        function distributeSand() {
+            sandParticles = [];
+            
+            // Randomly distribute sand particles
+            for (let i = 0; i < params.sandDensity; i++) {
+                let x = random(-1, 1);
+                let y = random(-1, 1);
+                
+                // Check if particle is within plate boundary
+                let valid = false;
+                switch(params.plateShape) {
+                    case 'square':
+                        valid = abs(x) <= 1 && abs(y) <= 1;
+                        break;
+                    case 'circular':
+                        valid = x * x + y * y <= 1;
+                        break;
+                    case 'triangular':
+                        const rotY = y * cos(PI/6) - x * sin(PI/6);
+                        valid = abs(x) <= 1 && rotY >= -0.5 && rotY <= sqrt(3)/2;
+                        break;
+                    case 'hexagonal':
+                        valid = sqrt(x * x + y * y) <= 0.866;
+                        break;
+                }
+                
+                if (valid) {
+                    sandParticles.push({
+                        x: x,
+                        y: y,
+                        settled: false
+                    });
+                }
+            }
+            
+            // Simulate sand settling at nodes
+            for (let iter = 0; iter < 50; iter++) {
+                for (let particle of sandParticles) {
+                    if (!particle.settled) {
+                        // Move particle towards nearest node
+                        let nearestNode = null;
+                        let minDist = Infinity;
+                        
+                        for (let node of nodalLines) {
+                            const dist = sqrt(pow(particle.x - node.x, 2) + pow(particle.y - node.y, 2));
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearestNode = node;
+                            }
+                        }
+                        
+                        if (nearestNode && minDist > 0.01) {
+                            // Move towards node
+                            const dx = nearestNode.x - particle.x;
+                            const dy = nearestNode.y - particle.y;
+                            const moveSpeed = 0.05;
+                            
+                            particle.x += dx * moveSpeed;
+                            particle.y += dy * moveSpeed;
+                        } else {
+                            particle.settled = true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        function draw() {
+            background(240);
+            translate(width / 2, height / 2);
+            
+            const size = min(width, height) * 0.8;
+            
+            // Draw plate boundary
+            stroke(100);
+            strokeWeight(2);
+            noFill();
+            
+            switch(params.plateShape) {
+                case 'square':
+                    rect(-size/2, -size/2, size, size);
+                    break;
+                case 'circular':
+                    ellipse(0, 0, size, size);
+                    break;
+                case 'triangular':
+                    triangle(
+                        0, -size/2,
+                        -size/2 * cos(PI/6), size/4,
+                        size/2 * cos(PI/6), size/4
+                    );
+                    break;
+                case 'hexagonal':
+                    beginShape();
+                    for (let i = 0; i < 6; i++) {
+                        const angle = i * PI / 3;
+                        vertex(cos(angle) * size/2, sin(angle) * size/2);
+                    }
+                    endShape(CLOSE);
+                    break;
+            }
+            
+            // Draw vibration field (animated if enabled)
+            if (params.animate) {
+                time += 0.05;
+                drawAnimatedField(size);
+            }
+            
+            // Draw nodal lines
+            if (params.showNodes) {
+                stroke(0, 0, 255);
+                strokeWeight(2);
+                for (let node of nodalLines) {
+                    point(node.x * size/2, node.y * size/2);
+                }
+            }
+            
+            // Draw sand particles
+            if (params.showSand) {
+                stroke(139, 69, 19);
+                strokeWeight(1);
+                for (let particle of sandParticles) {
+                    point(particle.x * size/2, particle.y * size/2);
+                }
+            }
+        }
+        
+        function drawAnimatedField(size) {
+            const res = 50; // Lower resolution for animation
+            
+            for (let i = 0; i < res; i++) {
+                for (let j = 0; j < res; j++) {
+                    const x = (i / res - 0.5) * 2;
+                    const y = (j / res - 0.5) * 2;
+                    
+                    const fieldX = floor((i / res) * params.resolution);
+                    const fieldY = floor((j / res) * params.resolution);
+                    
+                    if (fieldX < params.resolution && fieldY < params.resolution) {
+                        const amplitude = vibrationField[fieldX][fieldY];
+                        const animatedAmp = amplitude * sin(time * params.fundamental / 20);
+                        
+                        // Color based on amplitude
+                        const c = map(animatedAmp, -1, 1, 0, 255);
+                        fill(c, c, 255 - c, 100);
+                        noStroke();
+                        
+                        const px = x * size/2;
+                        const py = y * size/2;
+                        rect(px - size/res/2, py - size/res/2, size/res, size/res);
+                    }
+                }
+            }
+        }
+        
+        function exportSVG() {
+            const svg = createSVG();
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chladni-${params.plateShape}-m${params.modeM}-n${params.modeN}-${Date.now()}.svg`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        function createSVG() {
+            const svgSize = 800;
+            const size = svgSize * 0.8;
+            
+            let svg = `<svg width="${svgSize}" height="${svgSize}" xmlns="http://www.w3.org/2000/svg">\n`;
+            svg += `<rect width="${svgSize}" height="${svgSize}" fill="white"/>\n`;
+            svg += `<g transform="translate(${svgSize/2}, ${svgSize/2})">\n`;
+            
+            // Draw plate boundary
+            svg += `<g stroke="black" stroke-width="2" fill="none">\n`;
+            switch(params.plateShape) {
+                case 'square':
+                    svg += `<rect x="${-size/2}" y="${-size/2}" width="${size}" height="${size}"/>\n`;
+                    break;
+                case 'circular':
+                    svg += `<circle cx="0" cy="0" r="${size/2}"/>\n`;
+                    break;
+                case 'triangular':
+                    svg += `<polygon points="0,${-size/2} ${-size/2 * cos(PI/6)},${size/4} ${size/2 * cos(PI/6)},${size/4}"/>\n`;
+                    break;
+                case 'hexagonal':
+                    let points = '';
+                    for (let i = 0; i < 6; i++) {
+                        const angle = i * PI / 3;
+                        points += `${cos(angle) * size/2},${sin(angle) * size/2} `;
+                    }
+                    svg += `<polygon points="${points}"/>\n`;
+                    break;
+            }
+            svg += `</g>\n`;
+            
+            // Draw sand accumulation
+            if (params.showSand) {
+                svg += `<g stroke="brown" stroke-width="1">\n`;
+                for (let particle of sandParticles) {
+                    svg += `<circle cx="${particle.x * size/2}" cy="${particle.y * size/2}" r="0.5"/>\n`;
+                }
+                svg += `</g>\n`;
+            }
+            
+            // Draw nodal lines
+            if (params.showNodes) {
+                svg += `<g stroke="blue" stroke-width="2">\n`;
+                for (let node of nodalLines) {
+                    svg += `<circle cx="${node.x * size/2}" cy="${node.y * size/2}" r="1"/>\n`;
+                }
+                svg += `</g>\n`;
+            }
+            
+            svg += `</g>\n</svg>`;
+            return svg;
+        }
+        
+        function generateNew() {
+            generatePattern();
+        }
+        
+        function windowResized() {
+            resizeCanvas(windowWidth - 350, windowHeight - 40);
+        }
+    </script>
+</body>
+</html>

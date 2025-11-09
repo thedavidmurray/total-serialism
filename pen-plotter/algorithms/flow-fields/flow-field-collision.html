@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flow Field with Collision Detection</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #processing-status.processing {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>Flow Field with Collision</h2>
+    <p style="margin-top: 0; color: #666; font-size: 14px;">Particles avoid crossing existing paths</p>
+    
+    <div class="control-group">
+      <h3>🌊 Flow Field</h3>
+      <div class="control">
+        <label>Noise Scale: <span id="noiseScale-value">0.002</span></label>
+        <input type="range" id="noiseScale" min="0.0001" max="0.01" step="0.0001" value="0.002">
+      </div>
+      <div class="control">
+        <label>Noise Strength: <span id="noiseStrength-value">1.0</span></label>
+        <input type="range" id="noiseStrength" min="0.1" max="3" step="0.1" value="1">
+      </div>
+      <div class="control">
+        <label>Field Type:</label>
+        <select id="fieldType">
+          <option value="curl">Curl Noise</option>
+          <option value="perlin">Perlin Noise</option>
+          <option value="turbulent">Turbulent</option>
+          <option value="radial">Radial</option>
+          <option value="spiral">Spiral</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Time Evolution: <span id="timeEvolution-value">0.0</span></label>
+        <input type="range" id="timeEvolution" min="0" max="0.05" step="0.001" value="0">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>⚡ Particles</h3>
+      <div class="control">
+        <label>Count: <span id="particleCount-value">500</span></label>
+        <input type="range" id="particleCount" min="50" max="2000" step="50" value="500">
+      </div>
+      <div class="control">
+        <label>Speed: <span id="particleSpeed-value">1.0</span></label>
+        <input type="range" id="particleSpeed" min="0.1" max="5" step="0.1" value="1">
+      </div>
+      <div class="control">
+        <label>Max Life: <span id="maxLife-value">200</span> steps</label>
+        <input type="range" id="maxLife" min="50" max="1000" step="50" value="200">
+      </div>
+      <div class="control">
+        <label>Spawn Pattern:</label>
+        <select id="spawnPattern">
+          <option value="random">Random</option>
+          <option value="edges">Edges</option>
+          <option value="center">Center</option>
+          <option value="circle">Circle</option>
+          <option value="grid">Grid</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🛡️ Collision Detection</h3>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="enableCollision" checked> Enable Collision Detection
+        </label>
+        <label>
+          <input type="checkbox" id="showCollisionGrid"> Show Collision Grid
+        </label>
+        <label>
+          <input type="checkbox" id="dynamicAvoidance" checked> Dynamic Avoidance
+        </label>
+      </div>
+      <div class="control">
+        <label>Detection Radius: <span id="detectionRadius-value">3</span>px</label>
+        <input type="range" id="detectionRadius" min="1" max="10" step="1" value="3">
+      </div>
+      <div class="control">
+        <label>Avoidance Strength: <span id="avoidanceStrength-value">0.5</span></label>
+        <input type="range" id="avoidanceStrength" min="0" max="2" step="0.1" value="0.5">
+      </div>
+      <div class="control">
+        <label>Grid Resolution: <span id="gridResolution-value">10</span>px</label>
+        <input type="range" id="gridResolution" min="5" max="50" step="5" value="10">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Visual Style</h3>
+      <div class="control">
+        <label>Line Weight: <span id="lineWeight-value">0.5</span>px</label>
+        <input type="range" id="lineWeight" min="0.1" max="3" step="0.1" value="0.5">
+      </div>
+      <div class="control">
+        <label>Opacity: <span id="opacity-value">80</span>%</label>
+        <input type="range" id="opacity" min="10" max="100" step="5" value="80">
+      </div>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="fadeTrails" checked> Fade Trails
+        </label>
+        <label>
+          <input type="checkbox" id="colorBySpeed"> Color by Speed
+        </label>
+        <label>
+          <input type="checkbox" id="showParticles"> Show Particle Heads
+        </label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>🎮 Controls</h3>
+      <button onclick="generateFlowField()">Generate New Field</button>
+      <button onclick="clearCanvas()">Clear Canvas</button>
+      <div class="button-group">
+        <button onclick="pauseSimulation()" id="pauseBtn">Pause</button>
+        <button onclick="exportSVG()">Export SVG</button>
+      </div>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats">
+        <div>Active Particles: <strong id="activeParticles">0</strong></div>
+        <div>Total Paths: <strong id="totalPaths">0</strong></div>
+        <div>Collisions Avoided: <strong id="collisionsAvoided">0</strong></div>
+        <div>Grid Cells Used: <strong id="gridCells">0</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let particles = [];
+    let flowField = [];
+    let collisionGrid;
+    let gridResolution = 10;
+    let cols, rows;
+    let noiseScale = 0.002;
+    let noiseStrength = 1;
+    let timeOffset = 0;
+    let isPaused = false;
+    let totalCollisionsAvoided = 0;
+    let svgCanvas;
+
+    // Particle class with collision detection
+    class Particle {
+      constructor(x, y) {
+        this.pos = createVector(x, y);
+        this.vel = createVector(0, 0);
+        this.acc = createVector(0, 0);
+        this.maxSpeed = parseFloat(document.getElementById('particleSpeed').value);
+        this.trail = [];
+        this.life = 0;
+        this.maxLife = parseInt(document.getElementById('maxLife').value);
+        this.active = true;
+        this.color = color(0, 0, 0, 255 * parseFloat(document.getElementById('opacity').value) / 100);
+      }
+
+      follow(flowField) {
+        const x = floor(this.pos.x / gridResolution);
+        const y = floor(this.pos.y / gridResolution);
+        const index = x + y * cols;
+        
+        if (flowField[index]) {
+          let force = flowField[index].copy();
+          
+          // Apply collision avoidance if enabled
+          if (document.getElementById('enableCollision').checked) {
+            const avoidance = this.getAvoidanceVector();
+            const avoidanceStrength = parseFloat(document.getElementById('avoidanceStrength').value);
+            force.add(avoidance.mult(avoidanceStrength));
+          }
+          
+          this.applyForce(force);
+        }
+      }
+
+      getAvoidanceVector() {
+        const detectionRadius = parseInt(document.getElementById('detectionRadius').value);
+        const avoidanceVector = createVector(0, 0);
+        let nearbyOccupied = 0;
+        
+        // Check surrounding grid cells
+        for (let dx = -1; dx <= 1; dx++) {
+          for (let dy = -1; dy <= 1; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            
+            const checkX = floor(this.pos.x / gridResolution) + dx;
+            const checkY = floor(this.pos.y / gridResolution) + dy;
+            
+            if (checkX >= 0 && checkX < cols && checkY >= 0 && checkY < rows) {
+              const checkIndex = checkX + checkY * cols;
+              
+              if (collisionGrid[checkIndex] > 0) {
+                // Calculate repulsion vector
+                const cellCenterX = checkX * gridResolution + gridResolution / 2;
+                const cellCenterY = checkY * gridResolution + gridResolution / 2;
+                const repulsion = p5.Vector.sub(this.pos, createVector(cellCenterX, cellCenterY));
+                
+                const distance = repulsion.mag();
+                if (distance < detectionRadius * gridResolution && distance > 0) {
+                  repulsion.normalize();
+                  repulsion.mult(1 / distance); // Stronger repulsion when closer
+                  avoidanceVector.add(repulsion);
+                  nearbyOccupied++;
+                }
+              }
+            }
+          }
+        }
+        
+        if (nearbyOccupied > 0) {
+          avoidanceVector.normalize();
+          totalCollisionsAvoided++;
+        }
+        
+        return avoidanceVector;
+      }
+
+      applyForce(force) {
+        this.acc.add(force);
+      }
+
+      update() {
+        this.vel.add(this.acc);
+        this.vel.limit(this.maxSpeed);
+        this.pos.add(this.vel);
+        this.acc.mult(0);
+        
+        // Add current position to trail
+        this.trail.push(this.pos.copy());
+        
+        // Mark grid cell as occupied
+        const gridX = floor(this.pos.x / gridResolution);
+        const gridY = floor(this.pos.y / gridResolution);
+        if (gridX >= 0 && gridX < cols && gridY >= 0 && gridY < rows) {
+          const index = gridX + gridY * cols;
+          collisionGrid[index]++;
+        }
+        
+        // Limit trail length for performance
+        if (this.trail.length > 100) {
+          this.trail.shift();
+        }
+        
+        this.life++;
+        
+        // Check boundaries or life limit
+        if (this.pos.x < 0 || this.pos.x > width || 
+            this.pos.y < 0 || this.pos.y > height || 
+            this.life > this.maxLife) {
+          this.active = false;
+        }
+      }
+
+      show() {
+        // Draw trail
+        if (this.trail.length > 1) {
+          noFill();
+          strokeWeight(parseFloat(document.getElementById('lineWeight').value));
+          
+          for (let i = 1; i < this.trail.length; i++) {
+            let alpha = 255 * parseFloat(document.getElementById('opacity').value) / 100;
+            
+            if (document.getElementById('fadeTrails').checked) {
+              alpha *= (i / this.trail.length);
+            }
+            
+            if (document.getElementById('colorBySpeed').checked) {
+              const speed = p5.Vector.sub(this.trail[i], this.trail[i-1]).mag();
+              const hue = map(speed, 0, this.maxSpeed, 200, 0);
+              stroke(hue, 80, 80, alpha);
+            } else {
+              stroke(0, 0, 0, alpha);
+            }
+            
+            line(this.trail[i-1].x, this.trail[i-1].y, this.trail[i].x, this.trail[i].y);
+          }
+        }
+        
+        // Draw particle head
+        if (document.getElementById('showParticles').checked && this.active) {
+          fill(255, 0, 0);
+          noStroke();
+          circle(this.pos.x, this.pos.y, 3);
+        }
+      }
+
+      showInSVG(svg) {
+        if (this.trail.length > 1) {
+          svg.noFill();
+          svg.strokeWeight(parseFloat(document.getElementById('lineWeight').value));
+          svg.stroke(0);
+          
+          svg.beginShape();
+          for (let i = 0; i < this.trail.length; i++) {
+            svg.vertex(this.trail[i].x, this.trail[i].y);
+          }
+          svg.endShape();
+        }
+      }
+    }
+
+    function setup() {
+      const canvas = createCanvas(800, 800);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(800, 800, SVG);
+      
+      colorMode(HSB, 360, 100, 100, 255);
+      background(255);
+      
+      generateFlowField();
+      setupEventListeners();
+    }
+
+    function generateFlowField() {
+      // Clear everything
+      particles = [];
+      background(255);
+      
+      // Update grid resolution
+      gridResolution = parseInt(document.getElementById('gridResolution').value);
+      cols = floor(width / gridResolution);
+      rows = floor(height / gridResolution);
+      
+      // Initialize collision grid
+      collisionGrid = new Array(cols * rows).fill(0);
+      
+      // Generate flow field
+      flowField = [];
+      const fieldType = document.getElementById('fieldType').value;
+      
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const index = x + y * cols;
+          let angle;
+          
+          switch (fieldType) {
+            case 'curl':
+              // Curl noise for smooth, non-divergent flow
+              const xoff = x * noiseScale;
+              const yoff = y * noiseScale;
+              angle = noise(xoff, yoff, timeOffset) * TWO_PI * 2 * noiseStrength;
+              break;
+              
+            case 'perlin':
+              angle = noise(x * noiseScale, y * noiseScale, timeOffset) * TWO_PI * noiseStrength;
+              break;
+              
+            case 'turbulent':
+              angle = (noise(x * noiseScale * 2, y * noiseScale * 2, timeOffset) - 0.5) * TWO_PI * 4 * noiseStrength;
+              break;
+              
+            case 'radial':
+              const centerX = width / 2;
+              const centerY = height / 2;
+              const dx = x * gridResolution - centerX;
+              const dy = y * gridResolution - centerY;
+              angle = atan2(dy, dx) + PI/2;
+              break;
+              
+            case 'spiral':
+              const cx = width / 2;
+              const cy = height / 2;
+              const dx2 = x * gridResolution - cx;
+              const dy2 = y * gridResolution - cy;
+              const dist = sqrt(dx2 * dx2 + dy2 * dy2);
+              angle = atan2(dy2, dx2) + dist * 0.01;
+              break;
+          }
+          
+          const vec = p5.Vector.fromAngle(angle);
+          vec.setMag(1);
+          flowField[index] = vec;
+        }
+      }
+      
+      // Create initial particles
+      createParticles();
+      
+      showStatus('Flow field generated', 'success');
+    }
+
+    function createParticles() {
+      const count = parseInt(document.getElementById('particleCount').value);
+      const pattern = document.getElementById('spawnPattern').value;
+      
+      for (let i = 0; i < count; i++) {
+        let x, y;
+        
+        switch (pattern) {
+          case 'random':
+            x = random(width);
+            y = random(height);
+            break;
+            
+          case 'edges':
+            if (random() < 0.5) {
+              x = random() < 0.5 ? 0 : width;
+              y = random(height);
+            } else {
+              x = random(width);
+              y = random() < 0.5 ? 0 : height;
+            }
+            break;
+            
+          case 'center':
+            const angle = random(TWO_PI);
+            const r = random(50);
+            x = width/2 + cos(angle) * r;
+            y = height/2 + sin(angle) * r;
+            break;
+            
+          case 'circle':
+            const a = (i / count) * TWO_PI;
+            const radius = min(width, height) * 0.3;
+            x = width/2 + cos(a) * radius;
+            y = height/2 + sin(a) * radius;
+            break;
+            
+          case 'grid':
+            const gridSize = sqrt(count);
+            const gx = (i % gridSize) / gridSize * width;
+            const gy = floor(i / gridSize) / gridSize * height;
+            x = gx + random(-10, 10);
+            y = gy + random(-10, 10);
+            break;
+        }
+        
+        particles.push(new Particle(x, y));
+      }
+    }
+
+    function draw() {
+      if (!isPaused) {
+        // Update time evolution
+        const timeEvolution = parseFloat(document.getElementById('timeEvolution').value);
+        timeOffset += timeEvolution;
+        
+        // Update noise scale and strength
+        noiseScale = parseFloat(document.getElementById('noiseScale').value);
+        noiseStrength = parseFloat(document.getElementById('noiseStrength').value);
+        
+        // Regenerate flow field if time evolution is active
+        if (timeEvolution > 0) {
+          generateFlowFieldOnly();
+        }
+        
+        // Show collision grid if enabled
+        if (document.getElementById('showCollisionGrid').checked) {
+          drawCollisionGrid();
+        }
+        
+        // Update and display particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const particle = particles[i];
+          
+          if (particle.active) {
+            particle.follow(flowField);
+            particle.update();
+            particle.show();
+          } else {
+            particles.splice(i, 1);
+          }
+        }
+        
+        // Add new particles to maintain count
+        const targetCount = parseInt(document.getElementById('particleCount').value);
+        while (particles.length < targetCount) {
+          const pattern = document.getElementById('spawnPattern').value;
+          let x, y;
+          
+          // Spawn new particle based on pattern
+          switch (pattern) {
+            case 'edges':
+              if (random() < 0.5) {
+                x = random() < 0.5 ? 0 : width;
+                y = random(height);
+              } else {
+                x = random(width);
+                y = random() < 0.5 ? 0 : height;
+              }
+              break;
+            default:
+              x = random(width);
+              y = random(height);
+          }
+          
+          particles.push(new Particle(x, y));
+        }
+        
+        // Update statistics
+        updateStats();
+      }
+    }
+
+    function generateFlowFieldOnly() {
+      const fieldType = document.getElementById('fieldType').value;
+      
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const index = x + y * cols;
+          let angle;
+          
+          switch (fieldType) {
+            case 'curl':
+              const xoff = x * noiseScale;
+              const yoff = y * noiseScale;
+              angle = noise(xoff, yoff, timeOffset) * TWO_PI * 2 * noiseStrength;
+              break;
+            case 'perlin':
+              angle = noise(x * noiseScale, y * noiseScale, timeOffset) * TWO_PI * noiseStrength;
+              break;
+            case 'turbulent':
+              angle = (noise(x * noiseScale * 2, y * noiseScale * 2, timeOffset) - 0.5) * TWO_PI * 4 * noiseStrength;
+              break;
+            case 'radial':
+              const centerX = width / 2;
+              const centerY = height / 2;
+              const dx = x * gridResolution - centerX;
+              const dy = y * gridResolution - centerY;
+              angle = atan2(dy, dx) + PI/2;
+              break;
+            case 'spiral':
+              const cx = width / 2;
+              const cy = height / 2;
+              const dx2 = x * gridResolution - cx;
+              const dy2 = y * gridResolution - cy;
+              const dist = sqrt(dx2 * dx2 + dy2 * dy2);
+              angle = atan2(dy2, dx2) + dist * 0.01;
+              break;
+          }
+          
+          const vec = p5.Vector.fromAngle(angle);
+          vec.setMag(1);
+          flowField[index] = vec;
+        }
+      }
+    }
+
+    function drawCollisionGrid() {
+      // Draw collision grid visualization
+      push();
+      noStroke();
+      
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const index = x + y * cols;
+          const density = collisionGrid[index];
+          
+          if (density > 0) {
+            const alpha = map(density, 0, 10, 20, 100);
+            fill(0, 100, 100, alpha);
+            rect(x * gridResolution, y * gridResolution, gridResolution, gridResolution);
+          }
+        }
+      }
+      pop();
+    }
+
+    function clearCanvas() {
+      particles = [];
+      collisionGrid = new Array(cols * rows).fill(0);
+      background(255);
+      totalCollisionsAvoided = 0;
+      showStatus('Canvas cleared', 'success');
+    }
+
+    function pauseSimulation() {
+      isPaused = !isPaused;
+      document.getElementById('pauseBtn').textContent = isPaused ? 'Resume' : 'Pause';
+      showStatus(isPaused ? 'Simulation paused' : 'Simulation resumed', 'success');
+    }
+
+    function exportSVG() {
+      // Clear SVG canvas
+      svgCanvas.clear();
+      svgCanvas.background(255);
+      
+      // Draw all particle trails to SVG
+      for (let particle of particles) {
+        particle.showInSVG(svgCanvas);
+      }
+      
+      // Save SVG
+      save(svgCanvas, 'flow-field-collision.svg');
+      showStatus('SVG exported successfully', 'success');
+    }
+
+    function updateStats() {
+      document.getElementById('activeParticles').textContent = particles.length;
+      document.getElementById('totalPaths').textContent = particles.filter(p => p.trail.length > 1).length;
+      document.getElementById('collisionsAvoided').textContent = totalCollisionsAvoided;
+      
+      const usedCells = collisionGrid.filter(cell => cell > 0).length;
+      document.getElementById('gridCells').textContent = `${usedCells}/${collisionGrid.length}`;
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 3000);
+    }
+
+    function setupEventListeners() {
+      // Update value displays
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const valueSpan = document.getElementById(e.target.id + '-value');
+          if (valueSpan) {
+            valueSpan.textContent = e.target.value;
+          }
+          
+          // Update particle properties in real-time
+          if (e.target.id === 'particleSpeed') {
+            particles.forEach(p => p.maxSpeed = parseFloat(e.target.value));
+          }
+        });
+      });
+      
+      // Regenerate field on type change
+      document.getElementById('fieldType').addEventListener('change', generateFlowField);
+    }
+  </script>
+</body>
+</html>

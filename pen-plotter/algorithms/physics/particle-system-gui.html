@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Physics Particle System - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: relative;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:active {
+      background: #3d8b40;
+    }
+    .secondary {
+      background: #555;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .preset-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .preset-btn:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .force-control {
+      background: #333;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+    }
+    .force-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Particles: <span id="particle-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Physics Particles</h2>
+    
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <button id="play-pause">⏸ Pause</button>
+      <button id="reset" class="secondary">Reset</button>
+      <button id="clear" class="secondary">Clear Particles</button>
+      <button id="clear-trails" class="secondary">Clear Trails</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Particle Settings</h3>
+      <div class="control">
+        <label>Spawn Rate: <span class="value" id="spawnRate-val">5</span>/frame</label>
+        <input type="range" id="spawnRate" min="0" max="20" value="5">
+      </div>
+      <div class="control">
+        <label>Max Particles: <span class="value" id="maxParticles-val">500</span></label>
+        <input type="range" id="maxParticles" min="100" max="2000" value="500">
+      </div>
+      <div class="control">
+        <label>Initial Velocity: <span class="value" id="initialVel-val">2</span></label>
+        <input type="range" id="initialVel" min="0" max="10" step="0.5" value="2">
+      </div>
+      <div class="control">
+        <label>Particle Size: <span class="value" id="particleSize-val">2</span></label>
+        <input type="range" id="particleSize" min="1" max="10" value="2">
+      </div>
+      <div class="control">
+        <label>Spawn Pattern:</label>
+        <select id="spawnPattern">
+          <option value="point">Point Source</option>
+          <option value="line">Line</option>
+          <option value="circle">Circle</option>
+          <option value="random">Random</option>
+          <option value="grid">Grid</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Forces</h3>
+      <div id="forces-container"></div>
+      <button onclick="addForce()" class="secondary">+ Add Force</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showTrails" checked>
+        <label for="showTrails">Show Trails</label>
+      </div>
+      <div class="control">
+        <label>Trail Length: <span class="value" id="trailLength-val">20</span></label>
+        <input type="range" id="trailLength" min="2" max="100" value="20">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showVectors">
+        <label for="showVectors">Show Velocity Vectors</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showForceField">
+        <label for="showForceField">Show Force Field</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Color Settings</h3>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="monochrome">Monochrome</option>
+          <option value="velocity">Velocity-based</option>
+          <option value="force">Force-based</option>
+          <option value="age">Particle Age</option>
+          <option value="random">Random</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Color Palette:</label>
+        <select id="colorPalette">
+          <option value="default">Default</option>
+          <option value="warm">Warm</option>
+          <option value="cool">Cool</option>
+          <option value="rainbow">Rainbow</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <select id="backgroundMode">
+          <option value="white">White</option>
+          <option value="black">Black</option>
+          <option value="gradient">Gradient</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Trail Opacity: <span class="value" id="trailOpacity-val">0.8</span></label>
+        <input type="range" id="trailOpacity" min="0.1" max="1" step="0.1" value="0.8">
+      </div>
+      <div class="control">
+        <label>Base Hue: <span class="value" id="baseHue-val">120</span>°</label>
+        <input type="range" id="baseHue" min="0" max="360" value="120">
+      </div>
+      <div class="control">
+        <label>Saturation: <span class="value" id="saturation-val">70</span>%</label>
+        <input type="range" id="saturation" min="0" max="100" value="70">
+      </div>
+      <div class="control">
+        <label>Brightness: <span class="value" id="brightness-val">80</span>%</label>
+        <input type="range" id="brightness" min="0" max="100" value="80">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Presets</h3>
+      <button class="preset-btn" onclick="loadPreset('gravity')">Gravity Well</button>
+      <button class="preset-btn" onclick="loadPreset('magnetic')">Magnetic Field</button>
+      <button class="preset-btn" onclick="loadPreset('vortex')">Vortex</button>
+      <button class="preset-btn" onclick="loadPreset('springs')">Spring Network</button>
+      <button class="preset-btn" onclick="loadPreset('planets')">Planetary System</button>
+      <button class="preset-btn" onclick="loadPreset('windtunnel')">Wind Tunnel</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export Trails as SVG</button>
+      <button onclick="exportSnapshot()">Export Snapshot</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Particle class
+    class Particle {
+      constructor(x, y, vx = 0, vy = 0) {
+        this.position = createVector(x, y);
+        this.velocity = createVector(vx, vy);
+        this.acceleration = createVector(0, 0);
+        this.trail = [];
+        this.maxTrailLength = 20;
+        this.age = 0;
+        this.maxAge = 1000;
+        this.size = 2;
+        this.color = color(255);
+        this.mass = 1;
+      }
+      
+      applyForce(force) {
+        const f = p5.Vector.div(force, this.mass);
+        this.acceleration.add(f);
+      }
+      
+      update() {
+        this.velocity.add(this.acceleration);
+        this.velocity.limit(20); // Max velocity
+        this.position.add(this.velocity);
+        this.acceleration.mult(0);
+        
+        // Update trail
+        this.trail.push(this.position.copy());
+        if (this.trail.length > this.maxTrailLength) {
+          this.trail.shift();
+        }
+        
+        this.age++;
+      }
+      
+      isDead() {
+        return this.age > this.maxAge || 
+               this.position.x < -100 || this.position.x > width + 100 ||
+               this.position.y < -100 || this.position.y > height + 100;
+      }
+      
+      display(showTrails, showVectors, trailOpacity = 0.8) {
+        // Draw trail
+        if (showTrails && this.trail.length > 1) {
+          noFill();
+          for (let i = 1; i < this.trail.length; i++) {
+            const alpha = map(i, 0, this.trail.length, 0, 255 * trailOpacity);
+            stroke(red(this.color), green(this.color), blue(this.color), alpha);
+            strokeWeight(map(i, 0, this.trail.length, 0.5, this.size));
+            line(this.trail[i-1].x, this.trail[i-1].y, this.trail[i].x, this.trail[i].y);
+          }
+        }
+        
+        // Draw particle
+        noStroke();
+        fill(this.color);
+        ellipse(this.position.x, this.position.y, this.size * 2);
+        
+        // Draw velocity vector
+        if (showVectors) {
+          // Adjust vector color based on background
+          const vecColor = params.backgroundMode === 'white' ? color(0, 100) : color(255, 100);
+          stroke(vecColor);
+          strokeWeight(1);
+          const v = p5.Vector.mult(this.velocity, 5);
+          line(this.position.x, this.position.y, 
+               this.position.x + v.x, this.position.y + v.y);
+        }
+      }
+    }
+    
+    // Force types
+    class Force {
+      constructor(type, x, y) {
+        this.type = type;
+        this.position = createVector(x, y);
+        this.strength = 1;
+        this.radius = 200;
+        this.active = true;
+      }
+      
+      apply(particle) {
+        if (!this.active) return createVector(0, 0);
+        
+        const force = p5.Vector.sub(this.position, particle.position);
+        let distance = force.mag();
+        
+        if (distance < 1) distance = 1; // Prevent division by zero
+        
+        switch (this.type) {
+          case 'gravity':
+            // Newton's law of gravitation
+            force.normalize();
+            force.mult(this.strength * particle.mass / (distance * distance));
+            return force;
+            
+          case 'repeller':
+            // Inverse gravity
+            force.normalize();
+            force.mult(-this.strength * particle.mass / (distance * distance));
+            return force;
+            
+          case 'vortex':
+            // Rotating force
+            const angle = force.heading() + PI/2;
+            const vortexForce = p5.Vector.fromAngle(angle);
+            vortexForce.mult(this.strength / distance);
+            return vortexForce;
+            
+          case 'wind':
+            // Directional force
+            return createVector(this.strength, 0);
+            
+          case 'damping':
+            // Velocity-dependent drag
+            return p5.Vector.mult(particle.velocity, -this.strength * 0.1);
+            
+          case 'noise':
+            // Perlin noise field
+            const noiseScale = 0.01;
+            const angle2 = noise(particle.position.x * noiseScale, 
+                                particle.position.y * noiseScale) * TWO_PI * 2;
+            return p5.Vector.fromAngle(angle2).mult(this.strength);
+            
+          default:
+            return createVector(0, 0);
+        }
+      }
+    }
+    
+    // Global variables
+    let particles = [];
+    let forces = [];
+    let isPaused = false;
+    let showTrails = true;
+    let showVectors = false;
+    let showForceField = false;
+    let gifExporter;
+    
+    // Parameters
+    let params = {
+      spawnRate: 5,
+      maxParticles: 500,
+      initialVel: 2,
+      particleSize: 2,
+      spawnPattern: 'point',
+      trailLength: 20,
+      colorMode: 'monochrome',
+      colorPalette: 'default',
+      backgroundMode: 'black',
+      trailOpacity: 0.8,
+      baseHue: 120,
+      saturation: 70,
+      brightness: 80
+    };
+    
+    function setup() {
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 3,
+        quality: 10,
+        width: 800,
+        height: 600,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+      
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording' 
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          console.log('GIF created!', result);
+          // Auto-download the GIF
+          const link = document.createElement('a');
+          link.href = result.url;
+          link.download = `particle-system-${Date.now()}.gif`;
+          link.click();
+        }
+      });
+      
+      setupControls();
+      
+      // Add default gravity force
+      forces.push(new Force('gravity', width/2, height/2));
+      updateForceControls();
+      
+      // Load first preset
+      loadPreset('gravity');
+    }
+    
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? '▶ Play' : '⏸ Pause';
+      });
+      
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        particles = [];
+      });
+      
+      // Clear
+      document.getElementById('clear').addEventListener('click', () => {
+        particles = [];
+      });
+      
+      // Clear trails
+      document.getElementById('clear-trails').addEventListener('click', () => {
+        particles.forEach(p => p.trail = []);
+      });
+      
+      // Parameter controls
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element && element.type === 'range') {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+            
+            if (param === 'trailLength') {
+              particles.forEach(p => p.maxTrailLength = params.trailLength);
+            }
+          });
+        } else if (element && element.tagName === 'SELECT') {
+          element.addEventListener('change', (e) => {
+            params[param] = e.target.value;
+          });
+        }
+      });
+      
+      // Checkboxes
+      document.getElementById('showTrails').addEventListener('change', (e) => {
+        showTrails = e.target.checked;
+      });
+      
+      document.getElementById('showVectors').addEventListener('change', (e) => {
+        showVectors = e.target.checked;
+      });
+      
+      document.getElementById('showForceField').addEventListener('change', (e) => {
+        showForceField = e.target.checked;
+      });
+    }
+    
+    function draw() {
+      // Apply background based on mode
+      drawBackground();
+      
+      // Draw force field
+      if (showForceField) {
+        drawForceField();
+      }
+      
+      // Update and display particles
+      if (!isPaused) {
+        // Spawn new particles
+        for (let i = 0; i < params.spawnRate; i++) {
+          if (particles.length < params.maxParticles) {
+            spawnParticle();
+          }
+        }
+        
+        // Update particles
+        for (let i = particles.length - 1; i >= 0; i--) {
+          const p = particles[i];
+          
+          // Apply forces
+          forces.forEach(force => {
+            p.applyForce(force.apply(p));
+          });
+          
+          p.update();
+          
+          // Apply color based on mode
+          applyColorMode(p);
+          
+          if (p.isDead()) {
+            particles.splice(i, 1);
+          }
+        }
+      }
+      
+      // Display particles
+      particles.forEach(p => {
+        p.display(showTrails, showVectors, params.trailOpacity);
+      });
+      
+      // Draw forces
+      const forceColor = params.backgroundMode === 'white' ? color(0) : color(255);
+      const forceAlpha = params.backgroundMode === 'white' ? 50 : 50;
+      
+      forces.forEach(force => {
+        if (force.active) {
+          push();
+          translate(force.position.x, force.position.y);
+          noFill();
+          stroke(red(forceColor), green(forceColor), blue(forceColor), forceAlpha);
+          strokeWeight(1);
+          ellipse(0, 0, force.radius * 2);
+          
+          fill(forceColor);
+          noStroke();
+          switch (force.type) {
+            case 'gravity':
+              ellipse(0, 0, 10);
+              break;
+            case 'repeller':
+              rectMode(CENTER);
+              rect(0, 0, 10, 10);
+              break;
+            case 'vortex':
+              stroke(forceColor);
+              strokeWeight(1);
+              for (let a = 0; a < TWO_PI; a += PI/3) {
+                line(0, 0, cos(a) * 10, sin(a) * 10);
+              }
+              break;
+          }
+          pop();
+        }
+      });
+      
+      // Update info display
+      document.getElementById('particle-count').textContent = particles.length;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+      
+      // Capture GIF frame if recording
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.captureFrame();
+      }
+    }
+    
+    function spawnParticle() {
+      let x, y, vx, vy;
+      
+      switch (params.spawnPattern) {
+        case 'point':
+          x = width / 2;
+          y = height / 2;
+          const angle = random(TWO_PI);
+          vx = cos(angle) * params.initialVel;
+          vy = sin(angle) * params.initialVel;
+          break;
+          
+        case 'line':
+          x = random(width * 0.2, width * 0.8);
+          y = height * 0.2;
+          vx = random(-1, 1) * params.initialVel;
+          vy = params.initialVel;
+          break;
+          
+        case 'circle':
+          const r = 100;
+          const a = random(TWO_PI);
+          x = width/2 + cos(a) * r;
+          y = height/2 + sin(a) * r;
+          vx = cos(a) * params.initialVel;
+          vy = sin(a) * params.initialVel;
+          break;
+          
+        case 'random':
+          x = random(width);
+          y = random(height);
+          vx = random(-1, 1) * params.initialVel;
+          vy = random(-1, 1) * params.initialVel;
+          break;
+          
+        case 'grid':
+          const gridSize = 10;
+          const gx = floor(random(gridSize));
+          const gy = floor(random(gridSize));
+          x = map(gx, 0, gridSize-1, width*0.2, width*0.8);
+          y = map(gy, 0, gridSize-1, height*0.2, height*0.8);
+          vx = random(-0.5, 0.5) * params.initialVel;
+          vy = random(-0.5, 0.5) * params.initialVel;
+          break;
+      }
+      
+      const p = new Particle(x, y, vx, vy);
+      p.size = params.particleSize;
+      p.maxTrailLength = params.trailLength;
+      particles.push(p);
+    }
+    
+    function drawBackground() {
+      switch (params.backgroundMode) {
+        case 'white':
+          background(255);
+          break;
+        case 'black':
+          background(30);
+          break;
+        case 'gradient':
+          // Create vertical gradient
+          for (let i = 0; i <= height; i++) {
+            const inter = map(i, 0, height, 0, 1);
+            const c = lerpColor(color(20, 20, 40), color(40, 40, 80), inter);
+            stroke(c);
+            line(0, i, width, i);
+          }
+          break;
+      }
+    }
+    
+    function getColorFromPalette(value, palette) {
+      colorMode(HSB, 360, 100, 100);
+      let h, s, b;
+      
+      switch (palette) {
+        case 'warm':
+          h = map(value, 0, 1, 0, 60); // Red to yellow
+          s = params.saturation;
+          b = params.brightness;
+          break;
+          
+        case 'cool':
+          h = map(value, 0, 1, 180, 240); // Cyan to blue
+          s = params.saturation;
+          b = params.brightness;
+          break;
+          
+        case 'rainbow':
+          h = map(value, 0, 1, 0, 360);
+          s = params.saturation;
+          b = params.brightness;
+          break;
+          
+        case 'custom':
+          h = (params.baseHue + value * 60) % 360;
+          s = params.saturation;
+          b = params.brightness;
+          break;
+          
+        default: // 'default'
+          h = params.baseHue;
+          s = map(value, 0, 1, params.saturation * 0.5, params.saturation);
+          b = map(value, 0, 1, params.brightness * 0.7, params.brightness);
+          break;
+      }
+      
+      const c = color(h, s, b);
+      colorMode(RGB);
+      return c;
+    }
+    
+    function applyColorMode(particle) {
+      let value = 0;
+      
+      switch (params.colorMode) {
+        case 'monochrome':
+          particle.color = getColorFromPalette(0.5, params.colorPalette);
+          break;
+          
+        case 'velocity':
+          const vel = particle.velocity.mag();
+          value = constrain(map(vel, 0, 10, 0, 1), 0, 1);
+          particle.color = getColorFromPalette(value, params.colorPalette);
+          break;
+          
+        case 'age':
+          value = constrain(map(particle.age, 0, particle.maxAge, 0, 1), 0, 1);
+          particle.color = getColorFromPalette(value, params.colorPalette);
+          break;
+          
+        case 'force':
+          // Color based on strongest force influence
+          let maxForce = 0;
+          let dominantForceIndex = 0;
+          forces.forEach((force, idx) => {
+            const f = force.apply(particle).mag();
+            if (f > maxForce) {
+              maxForce = f;
+              dominantForceIndex = idx;
+            }
+          });
+          
+          value = forces.length > 0 ? dominantForceIndex / max(1, forces.length - 1) : 0;
+          particle.color = getColorFromPalette(value, params.colorPalette);
+          break;
+          
+        case 'random':
+          if (!particle.randomColorValue) {
+            particle.randomColorValue = random();
+          }
+          particle.color = getColorFromPalette(particle.randomColorValue, params.colorPalette);
+          break;
+      }
+    }
+    
+    function drawForceField() {
+      const resolution = 30;
+      const fieldColor = params.backgroundMode === 'white' ? color(0, 30) : color(255, 30);
+      
+      for (let x = 0; x < width; x += resolution) {
+        for (let y = 0; y < height; y += resolution) {
+          const testParticle = new Particle(x, y);
+          let totalForce = createVector(0, 0);
+          
+          forces.forEach(force => {
+            totalForce.add(force.apply(testParticle));
+          });
+          
+          if (totalForce.mag() > 0.1) {
+            push();
+            translate(x, y);
+            stroke(fieldColor);
+            strokeWeight(1);
+            const scaled = p5.Vector.mult(totalForce.normalize(), 10);
+            line(0, 0, scaled.x, scaled.y);
+            pop();
+          }
+        }
+      }
+    }
+    
+    function addForce() {
+      const types = ['gravity', 'repeller', 'vortex', 'wind', 'damping', 'noise'];
+      const type = types[forces.length % types.length];
+      const force = new Force(type, random(width), random(height));
+      forces.push(force);
+      updateForceControls();
+    }
+    
+    function removeForce(index) {
+      forces.splice(index, 1);
+      updateForceControls();
+    }
+    
+    function updateForceControls() {
+      const container = document.getElementById('forces-container');
+      container.innerHTML = '';
+      
+      forces.forEach((force, idx) => {
+        const div = document.createElement('div');
+        div.className = 'force-control';
+        div.innerHTML = `
+          <div class="force-header">
+            <strong>Force ${idx + 1}: ${force.type}</strong>
+            <div>
+              <input type="checkbox" ${force.active ? 'checked' : ''} 
+                     onchange="toggleForce(${idx})">
+              <button onclick="removeForce(${idx})" 
+                      style="width: auto; padding: 5px 10px; margin: 0;">×</button>
+            </div>
+          </div>
+          <div class="control">
+            <label>Strength: <span class="value">${force.strength.toFixed(1)}</span></label>
+            <input type="range" min="-10" max="10" step="0.5" value="${force.strength}" 
+                   onchange="updateForceStrength(${idx}, this.value)">
+          </div>
+          <div class="control">
+            <label>X: <span class="value">${Math.round(force.position.x)}</span></label>
+            <input type="range" min="0" max="${width}" value="${force.position.x}" 
+                   onchange="updateForcePosition(${idx}, this.value, null)">
+          </div>
+          <div class="control">
+            <label>Y: <span class="value">${Math.round(force.position.y)}</span></label>
+            <input type="range" min="0" max="${height}" value="${force.position.y}" 
+                   onchange="updateForcePosition(${idx}, null, this.value)">
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+    
+    function toggleForce(idx) {
+      forces[idx].active = !forces[idx].active;
+    }
+    
+    function updateForceStrength(idx, value) {
+      forces[idx].strength = parseFloat(value);
+      updateForceControls();
+    }
+    
+    function updateForcePosition(idx, x, y) {
+      if (x !== null) forces[idx].position.x = parseFloat(x);
+      if (y !== null) forces[idx].position.y = parseFloat(y);
+      updateForceControls();
+    }
+    
+    // Presets
+    function loadPreset(name) {
+      particles = [];
+      forces = [];
+      
+      switch (name) {
+        case 'gravity':
+          forces.push(new Force('gravity', width/2, height/2));
+          forces[0].strength = 5;
+          params.spawnPattern = 'circle';
+          params.spawnRate = 3;
+          break;
+          
+        case 'magnetic':
+          forces.push(new Force('gravity', width*0.3, height/2));
+          forces.push(new Force('repeller', width*0.7, height/2));
+          forces[0].strength = 8;
+          forces[1].strength = 8;
+          params.spawnPattern = 'line';
+          params.spawnRate = 5;
+          break;
+          
+        case 'vortex':
+          forces.push(new Force('vortex', width/2, height/2));
+          forces.push(new Force('gravity', width/2, height/2));
+          forces[0].strength = 10;
+          forces[1].strength = 0.5;
+          params.spawnPattern = 'random';
+          params.spawnRate = 8;
+          break;
+          
+        case 'springs':
+          // Create a grid of attractors
+          for (let x = 0.2; x <= 0.8; x += 0.2) {
+            for (let y = 0.2; y <= 0.8; y += 0.2) {
+              const f = new Force('gravity', width*x, height*y);
+              f.strength = 2;
+              forces.push(f);
+            }
+          }
+          params.spawnPattern = 'random';
+          params.spawnRate = 2;
+          break;
+          
+        case 'planets':
+          // Sun
+          forces.push(new Force('gravity', width/2, height/2));
+          forces[0].strength = 20;
+          // Planets
+          forces.push(new Force('gravity', width*0.8, height/2));
+          forces[1].strength = 3;
+          forces.push(new Force('gravity', width*0.2, height/2));
+          forces[2].strength = 3;
+          params.spawnPattern = 'point';
+          params.spawnRate = 1;
+          params.initialVel = 4;
+          break;
+          
+        case 'windtunnel':
+          forces.push(new Force('wind', 0, 0));
+          forces[0].strength = 2;
+          forces.push(new Force('noise', 0, 0));
+          forces[1].strength = 3;
+          forces.push(new Force('damping', 0, 0));
+          forces[2].strength = 0.5;
+          params.spawnPattern = 'line';
+          params.spawnRate = 10;
+          break;
+      }
+      
+      updateForceControls();
+      
+      // Update UI
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          element.value = params[key];
+          const valueDisplay = document.getElementById(key + '-val');
+          if (valueDisplay) valueDisplay.textContent = params[key];
+        }
+      });
+    }
+    
+    // Export functions
+    function exportSVG() {
+      let svg = createGraphics(width, height, SVG);
+      
+      // Set background color based on mode
+      switch (params.backgroundMode) {
+        case 'white':
+          svg.background(255);
+          break;
+        case 'black':
+          svg.background(30);
+          break;
+        case 'gradient':
+          svg.background(30, 30, 60); // Average gradient color
+          break;
+      }
+      
+      // Draw particle trails with colors
+      svg.noFill();
+      particles.forEach(p => {
+        if (p.trail.length > 1) {
+          // Apply particle color to trail
+          applyColorMode(p);
+          svg.stroke(red(p.color), green(p.color), blue(p.color));
+          svg.strokeWeight(0.5);
+          svg.beginShape();
+          p.trail.forEach(point => {
+            svg.vertex(point.x, point.y);
+          });
+          svg.endShape();
+        }
+      });
+      
+      // Draw force positions
+      const svgForceColor = params.backgroundMode === 'white' ? color(0) : color(255);
+      svg.fill(svgForceColor);
+      svg.noStroke();
+      forces.forEach((force, idx) => {
+        if (force.active) {
+          svg.push();
+          svg.translate(force.position.x, force.position.y);
+          svg.textAlign(CENTER, CENTER);
+          svg.textSize(10);
+          svg.text(force.type, 0, -15);
+          
+          switch (force.type) {
+            case 'gravity':
+              svg.ellipse(0, 0, 10);
+              break;
+            case 'repeller':
+              svg.rectMode(CENTER);
+              svg.rect(0, 0, 10, 10);
+              break;
+            case 'vortex':
+              svg.stroke(svgForceColor);
+              svg.strokeWeight(1);
+              for (let a = 0; a < TWO_PI; a += PI/3) {
+                svg.line(0, 0, cos(a) * 5, sin(a) * 5);
+              }
+              break;
+          }
+          svg.pop();
+        }
+      });
+      
+      save(svg, `particle-system-${Date.now()}.svg`);
+      svg.remove();
+    }
+    
+    function exportSnapshot() {
+      saveCanvas(`particle-snapshot-${Date.now()}`, 'png');
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        gifExporter.start();
+      }
+    }
+    
+    // Handle mouse interaction
+    function mousePressed() {
+      // Add force at mouse position with shift key
+      if (keyIsDown(SHIFT)) {
+        const force = new Force('gravity', mouseX, mouseY);
+        force.strength = 5;
+        forces.push(force);
+        updateForceControls();
+      }
+    }
+    
+    function mouseDragged() {
+      // Move nearest force
+      if (forces.length > 0 && !keyIsDown(SHIFT)) {
+        let nearest = forces[0];
+        let minDist = p5.Vector.dist(createVector(mouseX, mouseY), nearest.position);
+        
+        forces.forEach(force => {
+          const d = p5.Vector.dist(createVector(mouseX, mouseY), force.position);
+          if (d < minDist) {
+            minDist = d;
+            nearest = force;
+          }
+        });
+        
+        if (minDist < 50) {
+          nearest.position.x = mouseX;
+          nearest.position.y = mouseY;
+          updateForceControls();
+        }
+      }
+    }
+  </script>
+</body>
+</html>

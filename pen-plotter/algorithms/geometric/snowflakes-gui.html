@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Procedural Snowflake Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #333;
+      padding: 5px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    .preset-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .preset-btn:hover {
+      background: #1976D2;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Snowflake Generator</h2>
+    
+    <div class="control-group">
+      <h3>Structure</h3>
+      <div class="control">
+        <label>Branch Levels: <span class="value" id="branchLevels-val">3</span></label>
+        <input type="range" id="branchLevels" min="1" max="5" value="3" step="1">
+      </div>
+      <div class="control">
+        <label>Initial Length: <span class="value" id="initialLength-val">150</span>px</label>
+        <input type="range" id="initialLength" min="50" max="300" value="150" step="5">
+      </div>
+      <div class="control">
+        <label>Branch Reduction: <span class="value" id="branchReduction-val">0.67</span></label>
+        <input type="range" id="branchReduction" min="0.3" max="0.9" value="0.67" step="0.01">
+      </div>
+      <div class="control">
+        <label>Branch Angle: <span class="value" id="branchAngle-val">30</span>°</label>
+        <input type="range" id="branchAngle" min="10" max="90" value="30" step="5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Branching Pattern</h3>
+      <div class="control">
+        <label>Branch Points: <span class="value" id="branchPoints-val">2</span></label>
+        <input type="range" id="branchPoints" min="1" max="5" value="2" step="1">
+      </div>
+      <div class="control">
+        <label>Branch Distribution:</label>
+        <select id="branchDistribution">
+          <option value="even">Even</option>
+          <option value="weighted">Weighted to End</option>
+          <option value="random">Random</option>
+          <option value="golden">Golden Ratio</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Branches per Point: <span class="value" id="branchesPerPoint-val">2</span></label>
+        <input type="range" id="branchesPerPoint" min="1" max="4" value="2" step="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="symmetricBranches" checked>
+        <label for="symmetricBranches">Symmetric Branches</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Variation</h3>
+      <div class="control">
+        <label>Length Variation: <span class="value" id="lengthVariation-val">0.1</span></label>
+        <input type="range" id="lengthVariation" min="0" max="0.5" value="0.1" step="0.05">
+      </div>
+      <div class="control">
+        <label>Angle Variation: <span class="value" id="angleVariation-val">0.1</span></label>
+        <input type="range" id="angleVariation" min="0" max="0.5" value="0.1" step="0.05">
+      </div>
+      <div class="control">
+        <label>Complexity:</label>
+        <select id="complexity">
+          <option value="simple">Simple</option>
+          <option value="standard">Standard</option>
+          <option value="complex">Complex</option>
+          <option value="ornate">Ornate</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Decorations</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="addCrystals">
+        <label for="addCrystals">Add Crystal Tips</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="addDendritic">
+        <label for="addDendritic">Dendritic Growth</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="addPlates">
+        <label for="addPlates">Hexagonal Plates</label>
+      </div>
+      <div class="control">
+        <label>Center Style:</label>
+        <select id="centerStyle">
+          <option value="none">None</option>
+          <option value="hex">Hexagon</option>
+          <option value="star">Star</option>
+          <option value="circle">Circle</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Line Taper: <span class="value" id="lineTaper-val">0.8</span></label>
+        <input type="range" id="lineTaper" min="0.5" max="1" value="0.8" step="0.05">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showConstruction">
+        <label for="showConstruction">Show Construction</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Presets</h3>
+      <button class="preset-btn" onclick="loadPreset('stellar')">Stellar Dendrite</button>
+      <button class="preset-btn" onclick="loadPreset('plate')">Plate Crystal</button>
+      <button class="preset-btn" onclick="loadPreset('column')">Column Crystal</button>
+      <button class="preset-btn" onclick="loadPreset('needle')">Needle Crystal</button>
+      <button class="preset-btn" onclick="loadPreset('fern')">Fernlike</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportMultiple()">Export Multiple (6)</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      branchLevels: 3,
+      initialLength: 150,
+      branchReduction: 0.67,
+      branchAngle: 30,
+      branchPoints: 2,
+      branchDistribution: 'even',
+      branchesPerPoint: 2,
+      symmetricBranches: true,
+      lengthVariation: 0.1,
+      angleVariation: 0.1,
+      complexity: 'standard',
+      addCrystals: false,
+      addDendritic: false,
+      addPlates: false,
+      centerStyle: 'none',
+      strokeWeight: 1,
+      lineTaper: 0.8,
+      showConstruction: false
+    };
+    
+    let svgCanvas;
+    
+    function setup() {
+      const w = 800;
+      const h = 600;
+      
+      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas.parent('canvas-container');
+      
+      setupControls();
+      regenerate();
+    }
+    
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+    }
+    
+    function regenerate() {
+      randomSeed(params.seed);
+      redraw();
+    }
+    
+    function draw() {
+      background(255);
+      translate(width/2, height/2);
+      
+      // Draw center decoration
+      drawCenter();
+      
+      // Draw 6 main arms (hexagonal symmetry)
+      for (let i = 0; i < 6; i++) {
+        push();
+        rotate(i * PI / 3);
+        drawBranch(0, 0, params.initialLength, 0, params.branchLevels);
+        pop();
+      }
+      
+      noLoop();
+    }
+    
+    function drawBranch(x, y, length, angle, level) {
+      if (level <= 0) return;
+      
+      // Apply variations
+      const lengthVar = random(-params.lengthVariation, params.lengthVariation);
+      const angleVar = random(-params.angleVariation, params.angleVariation);
+      const finalLength = length * (1 + lengthVar);
+      const finalAngle = angle + angleVar;
+      
+      // Calculate end point
+      const endX = x + cos(finalAngle) * finalLength;
+      const endY = y + sin(finalAngle) * finalLength;
+      
+      // Draw main branch with tapering
+      const startWeight = params.strokeWeight * pow(params.lineTaper, params.branchLevels - level);
+      const endWeight = startWeight * params.lineTaper;
+      
+      drawTaperedLine(x, y, endX, endY, startWeight, endWeight);
+      
+      // Add decorations
+      if (params.addCrystals && level === 1) {
+        drawCrystalTip(endX, endY, finalAngle);
+      }
+      
+      // Calculate branch points
+      const branchPositions = getBranchPositions(finalLength);
+      
+      // Draw sub-branches
+      branchPositions.forEach(pos => {
+        const branchX = x + cos(finalAngle) * pos;
+        const branchY = y + sin(finalAngle) * pos;
+        
+        // Draw branches on both sides if symmetric
+        for (let b = 0; b < params.branchesPerPoint; b++) {
+          const branchSpread = (b - (params.branchesPerPoint - 1) / 2) * 0.3;
+          const newAngle = finalAngle + radians(params.branchAngle) + branchSpread;
+          const newLength = finalLength * params.branchReduction;
+          
+          drawBranch(branchX, branchY, newLength, newAngle, level - 1);
+          
+          if (params.symmetricBranches) {
+            const mirrorAngle = finalAngle - radians(params.branchAngle) - branchSpread;
+            drawBranch(branchX, branchY, newLength, mirrorAngle, level - 1);
+          }
+        }
+        
+        // Add dendritic growth
+        if (params.addDendritic && level > 1) {
+          drawDendriticGrowth(branchX, branchY, finalAngle, pos / finalLength);
+        }
+      });
+      
+      // Add plates
+      if (params.addPlates && level === 2) {
+        drawHexPlate(endX, endY, finalLength * 0.3);
+      }
+    }
+    
+    function getBranchPositions(length) {
+      const positions = [];
+      
+      switch (params.branchDistribution) {
+        case 'even':
+          for (let i = 1; i <= params.branchPoints; i++) {
+            positions.push(length * i / (params.branchPoints + 1));
+          }
+          break;
+          
+        case 'weighted':
+          for (let i = 1; i <= params.branchPoints; i++) {
+            const t = i / params.branchPoints;
+            positions.push(length * pow(t, 1.5));
+          }
+          break;
+          
+        case 'random':
+          for (let i = 0; i < params.branchPoints; i++) {
+            positions.push(random(length * 0.2, length * 0.8));
+          }
+          positions.sort((a, b) => a - b);
+          break;
+          
+        case 'golden':
+          const phi = (1 + sqrt(5)) / 2;
+          for (let i = 1; i <= params.branchPoints; i++) {
+            positions.push(length * (i / phi));
+          }
+          break;
+      }
+      
+      return positions;
+    }
+    
+    function drawTaperedLine(x1, y1, x2, y2, startWeight, endWeight) {
+      // Simple line for now - could be enhanced with actual tapering
+      strokeWeight(startWeight);
+      stroke(0);
+      line(x1, y1, x2, y2);
+      
+      if (params.showConstruction) {
+        // Show construction points
+        push();
+        fill(255, 0, 0);
+        noStroke();
+        ellipse(x1, y1, 3);
+        ellipse(x2, y2, 3);
+        pop();
+      }
+    }
+    
+    function drawCrystalTip(x, y, angle) {
+      push();
+      translate(x, y);
+      rotate(angle);
+      
+      noFill();
+      stroke(0);
+      strokeWeight(params.strokeWeight * 0.5);
+      
+      // Draw crystal formation
+      beginShape();
+      vertex(0, 0);
+      vertex(5, -3);
+      vertex(10, 0);
+      vertex(5, 3);
+      endShape(CLOSE);
+      
+      pop();
+    }
+    
+    function drawDendriticGrowth(x, y, mainAngle, position) {
+      const growthCount = floor(random(2, 5));
+      const growthLength = 5 + position * 10;
+      
+      for (let i = 0; i < growthCount; i++) {
+        const offset = random(-PI/6, PI/6);
+        const angle = mainAngle + PI/2 + offset;
+        const gx = x + cos(angle) * growthLength;
+        const gy = y + sin(angle) * growthLength;
+        
+        strokeWeight(params.strokeWeight * 0.3);
+        line(x, y, gx, gy);
+        
+        if (params.symmetricBranches) {
+          const mx = x + cos(mainAngle - PI/2 + offset) * growthLength;
+          const my = y + sin(mainAngle - PI/2 + offset) * growthLength;
+          line(x, y, mx, my);
+        }
+      }
+    }
+    
+    function drawHexPlate(x, y, size) {
+      push();
+      translate(x, y);
+      
+      noFill();
+      stroke(0);
+      strokeWeight(params.strokeWeight * 0.5);
+      
+      beginShape();
+      for (let i = 0; i < 6; i++) {
+        const angle = i * PI / 3;
+        const px = cos(angle) * size;
+        const py = sin(angle) * size;
+        vertex(px, py);
+      }
+      endShape(CLOSE);
+      
+      pop();
+    }
+    
+    function drawCenter() {
+      switch (params.centerStyle) {
+        case 'hex':
+          noFill();
+          stroke(0);
+          strokeWeight(params.strokeWeight);
+          beginShape();
+          for (let i = 0; i < 6; i++) {
+            const angle = i * PI / 3;
+            const x = cos(angle) * 10;
+            const y = sin(angle) * 10;
+            vertex(x, y);
+          }
+          endShape(CLOSE);
+          break;
+          
+        case 'star':
+          noFill();
+          stroke(0);
+          strokeWeight(params.strokeWeight);
+          for (let i = 0; i < 6; i++) {
+            const angle = i * PI / 3;
+            const x = cos(angle) * 15;
+            const y = sin(angle) * 15;
+            line(0, 0, x, y);
+          }
+          break;
+          
+        case 'circle':
+          noFill();
+          stroke(0);
+          strokeWeight(params.strokeWeight);
+          ellipse(0, 0, 20);
+          break;
+      }
+    }
+    
+    function loadPreset(type) {
+      switch (type) {
+        case 'stellar':
+          params.branchLevels = 4;
+          params.branchAngle = 60;
+          params.branchPoints = 3;
+          params.addDendritic = true;
+          params.complexity = 'complex';
+          break;
+          
+        case 'plate':
+          params.branchLevels = 2;
+          params.branchAngle = 30;
+          params.addPlates = true;
+          params.centerStyle = 'hex';
+          break;
+          
+        case 'column':
+          params.branchLevels = 3;
+          params.branchAngle = 90;
+          params.branchReduction = 0.5;
+          params.addCrystals = true;
+          break;
+          
+        case 'needle':
+          params.branchLevels = 2;
+          params.initialLength = 200;
+          params.branchAngle = 15;
+          params.branchPoints = 5;
+          break;
+          
+        case 'fern':
+          params.branchLevels = 5;
+          params.branchAngle = 45;
+          params.branchPoints = 4;
+          params.branchReduction = 0.7;
+          params.addDendritic = true;
+          break;
+      }
+      
+      // Update UI
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else {
+            element.value = params[key];
+          }
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = params[key];
+        }
+      });
+      
+      regenerate();
+    }
+    
+    function randomSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `snowflake-${params.seed}.json`;
+      a.click();
+    }
+    
+    function exportSVG() {
+      save(svgCanvas, `snowflake-${params.complexity}-${params.seed}.svg`);
+    }
+    
+    function exportPNG() {
+      save(`snowflake-${params.complexity}-${params.seed}.png`);
+    }
+    
+    function exportMultiple() {
+      // Export 6 different snowflakes
+      const originalSeed = params.seed;
+      
+      for (let i = 0; i < 6; i++) {
+        params.seed = Math.floor(Math.random() * 1000000);
+        regenerate();
+        save(svgCanvas, `snowflake-set-${i+1}-${params.seed}.svg`);
+      }
+      
+      params.seed = originalSeed;
+      regenerate();
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Generate frames with rotation animation
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+      
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Clear and draw frame
+        clear();
+        background(255);
+        push();
+        translate(width/2, height/2);
+        
+        // Animate rotation
+        const rotationAngle = (frame / totalFrames) * TWO_PI;
+        rotate(rotationAngle);
+        
+        // Draw snowflake with current parameters
+        stroke(0);
+        strokeWeight(params.strokeWeight);
+        
+        // Draw all 6 branches
+        for (let i = 0; i < 6; i++) {
+          push();
+          rotate(i * PI / 3);
+          drawBranch(params.initialLength, params.branchLevels);
+          pop();
+        }
+        
+        pop();
+        
+        // Copy p5 canvas to offscreen canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+        
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+      }
+      
+      statusEl.textContent = 'Rendering GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `snowflake-${params.preset}-${params.seed}.gif`;
+        a.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

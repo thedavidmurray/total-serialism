@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Enhanced Reaction-Diffusion - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: relative;
+      overflow: hidden;
+    }
+    #controls {
+      width: 420px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:active {
+      background: #3d8b40;
+    }
+    .secondary {
+      background: #555;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .preset-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .preset-btn:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+    .pattern-btn {
+      background: #9C27B0;
+      margin: 2px 0;
+    }
+    .pattern-btn:hover {
+      background: #7B1FA2;
+    }
+    .render-mode {
+      background: #FF9800;
+    }
+    .render-mode:hover {
+      background: #F57C00;
+    }
+    .button-group {
+      display: flex;
+      gap: 5px;
+      margin: 5px 0;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    .canvas-size-btn {
+      background: #607D8B;
+    }
+    .canvas-size-btn:hover {
+      background: #455A64;
+    }
+    .color-preset {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background: #333;
+      border-radius: 4px;
+      margin: 5px 0;
+      cursor: pointer;
+    }
+    .color-preview {
+      display: flex;
+      margin-left: auto;
+      gap: 5px;
+    }
+    .color-box {
+      width: 20px;
+      height: 20px;
+      border: 1px solid #fff;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Iteration: <span id="iteration-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+      <div>Canvas: <span id="canvas-size">800x600</span></div>
+      <div>Grid: <span id="grid-info">200x200</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Enhanced Reaction-Diffusion</h2>
+    
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <button id="play-pause">⏸ Pause</button>
+      <div class="button-group">
+        <button id="reset" class="secondary">Reset</button>
+        <button id="clear" class="secondary">Clear</button>
+        <button id="randomize" class="secondary">Randomize</button>
+      </div>
+      <div class="control">
+        <label>Speed: <span class="value" id="speed-val">10</span> iterations/frame</label>
+        <input type="range" id="speed" min="1" max="50" value="10">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Canvas Size</h3>
+      <div class="button-group">
+        <button class="canvas-size-btn" onclick="setCanvasSize('fit')">Fit Window</button>
+        <button class="canvas-size-btn" onclick="setCanvasSize('square')">Square</button>
+      </div>
+      <div class="button-group">
+        <button class="canvas-size-btn" onclick="setCanvasSize('a3')">A3 Ratio</button>
+        <button class="canvas-size-btn" onclick="setCanvasSize('a0')">A0 Ratio</button>
+      </div>
+      <div class="control">
+        <label>Zoom: <span class="value" id="zoom-val">100</span>%</label>
+        <input type="range" id="zoom" min="50" max="200" value="100">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>System Parameters</h3>
+      <div class="control">
+        <label>Feed Rate (f): <span class="value" id="feedRate-val">0.055</span></label>
+        <input type="range" id="feedRate" min="0.01" max="0.1" step="0.001" value="0.055">
+      </div>
+      <div class="control">
+        <label>Kill Rate (k): <span class="value" id="killRate-val">0.062</span></label>
+        <input type="range" id="killRate" min="0.01" max="0.1" step="0.001" value="0.062">
+      </div>
+      <div class="control">
+        <label>Diffusion A (dA): <span class="value" id="dA-val">1.0</span></label>
+        <input type="range" id="dA" min="0.5" max="1.5" step="0.01" value="1.0">
+      </div>
+      <div class="control">
+        <label>Diffusion B (dB): <span class="value" id="dB-val">0.5</span></label>
+        <input type="range" id="dB" min="0.1" max="0.8" step="0.01" value="0.5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">200</span></label>
+        <input type="range" id="gridSize" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">3</span>px</label>
+        <input type="range" id="cellSize" min="1" max="10" value="3">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoFit" checked>
+        <label for="autoFit">Auto-fit to canvas</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Color Schemes</h3>
+      <div class="color-preset" onclick="applyColorScheme('classic')">
+        <span>Classic B&W</span>
+        <div class="color-preview">
+          <div class="color-box" style="background: #000"></div>
+          <div class="color-box" style="background: #fff"></div>
+        </div>
+      </div>
+      <div class="color-preset" onclick="applyColorScheme('ocean')">
+        <span>Ocean Depths</span>
+        <div class="color-preview">
+          <div class="color-box" style="background: #001f3f"></div>
+          <div class="color-box" style="background: #0074D9"></div>
+          <div class="color-box" style="background: #7FDBFF"></div>
+        </div>
+      </div>
+      <div class="color-preset" onclick="applyColorScheme('fire')">
+        <span>Fire Gradient</span>
+        <div class="color-preview">
+          <div class="color-box" style="background: #FFDC00"></div>
+          <div class="color-box" style="background: #FF851B"></div>
+          <div class="color-box" style="background: #FF4136"></div>
+        </div>
+      </div>
+      <div class="color-preset" onclick="applyColorScheme('toxic')">
+        <span>Toxic Waste</span>
+        <div class="color-preview">
+          <div class="color-box" style="background: #2ECC40"></div>
+          <div class="color-box" style="background: #01FF70"></div>
+          <div class="color-box" style="background: #FFDC00"></div>
+        </div>
+      </div>
+      <div class="color-preset" onclick="applyColorScheme('sunset')">
+        <span>Sunset</span>
+        <div class="color-preview">
+          <div class="color-box" style="background: #FF6B6B"></div>
+          <div class="color-box" style="background: #4ECDC4"></div>
+          <div class="color-box" style="background: #45B7D1"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Render Modes</h3>
+      <div class="control">
+        <label>Render Mode:</label>
+        <select id="renderMode">
+          <option value="grayscale">Grayscale</option>
+          <option value="heatmap">Heat Map</option>
+          <option value="contour">Contour Lines</option>
+          <option value="threshold">Threshold</option>
+          <option value="gradient">Gradient Map</option>
+          <option value="duotone">Duotone</option>
+          <option value="spectrum">Full Spectrum</option>
+          <option value="layers">Concentration Layers</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Threshold: <span class="value" id="threshold-val">0.5</span></label>
+        <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.5">
+      </div>
+      <div class="control">
+        <label>Contrast: <span class="value" id="contrast-val">1.0</span></label>
+        <input type="range" id="contrast" min="0.5" max="2" step="0.1" value="1.0">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Pattern Seeds</h3>
+      <button class="pattern-btn" onclick="addSeed('center')">Center Seed</button>
+      <button class="pattern-btn" onclick="addSeed('random')">Random Seeds</button>
+      <button class="pattern-btn" onclick="addSeed('cross')">Cross Pattern</button>
+      <button class="pattern-btn" onclick="addSeed('circle')">Circle</button>
+      <button class="pattern-btn" onclick="addSeed('spiral')">Spiral</button>
+      <button class="pattern-btn" onclick="addSeed('grid')">Grid Points</button>
+      <button class="pattern-btn" onclick="addSeed('waves')">Wave Pattern</button>
+      <button class="pattern-btn" onclick="addSeed('noise')">Perlin Noise</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Famous Parameters</h3>
+      <button class="preset-btn" onclick="loadPreset('mitosis')">Mitosis</button>
+      <button class="preset-btn" onclick="loadPreset('coral')">Coral Growth</button>
+      <button class="preset-btn" onclick="loadPreset('fingerprint')">Fingerprints</button>
+      <button class="preset-btn" onclick="loadPreset('spirals')">Spirals</button>
+      <button class="preset-btn" onclick="loadPreset('worms')">Worms</button>
+      <button class="preset-btn" onclick="loadPreset('bubbles')">Bubbles</button>
+      <button class="preset-btn" onclick="loadPreset('solitons')">Solitons</button>
+      <button class="preset-btn" onclick="loadPreset('pulsating')">Pulsating</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export as SVG</button>
+      <button onclick="exportLayeredSVG()">Export Color Layers</button>
+      <button onclick="exportContours()">Export Contour Lines</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced Reaction-Diffusion System
+    let grid, next;
+    let gridSize = 200;
+    let cellSize = 3;
+    let iteration = 0;
+    let isPaused = false;
+    let gifExporter;
+    let canvasWidth = 800;
+    let canvasHeight = 600;
+    let zoom = 1.0;
+    let colorScheme = 'classic';
+    
+    // Color scheme definitions
+    const colorSchemes = {
+      classic: {
+        background: [255, 255, 255],
+        colors: [[0, 0, 0]]
+      },
+      ocean: {
+        background: [240, 248, 255],
+        colors: [[0, 31, 63], [0, 116, 217], [127, 219, 255]]
+      },
+      fire: {
+        background: [20, 20, 20],
+        colors: [[255, 220, 0], [255, 133, 27], [255, 65, 54], [133, 20, 75]]
+      },
+      toxic: {
+        background: [10, 10, 10],
+        colors: [[46, 204, 64], [1, 255, 112], [255, 220, 0]]
+      },
+      sunset: {
+        background: [255, 245, 235],
+        colors: [[255, 107, 107], [78, 205, 196], [69, 183, 209]]
+      }
+    };
+    
+    // Parameters
+    let params = {
+      feedRate: 0.055,
+      killRate: 0.062,
+      dA: 1.0,
+      dB: 0.5,
+      speed: 10,
+      threshold: 0.5,
+      contrast: 1.0,
+      renderMode: 'grayscale'
+    };
+    
+    // Laplacian kernel
+    const laplacian = [
+      [0.05, 0.2, 0.05],
+      [0.2, -1, 0.2],
+      [0.05, 0.2, 0.05]
+    ];
+    
+    function setup() {
+      updateCanvasSize();
+      let canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-container');
+      
+      initializeGrid();
+      setupControls();
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 5,
+        quality: 10,
+        width: canvasWidth,
+        height: canvasHeight
+      });
+      
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          document.getElementById('gif-status').textContent = data.status;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+        }
+      });
+    }
+    
+    function updateCanvasSize() {
+      const container = document.getElementById('canvas-container');
+      canvasWidth = container.clientWidth;
+      canvasHeight = container.clientHeight;
+    }
+    
+    function initializeGrid() {
+      grid = [];
+      next = [];
+      
+      for (let x = 0; x < gridSize; x++) {
+        grid[x] = [];
+        next[x] = [];
+        for (let y = 0; y < gridSize; y++) {
+          grid[x][y] = { a: 1, b: 0 };
+          next[x][y] = { a: 1, b: 0 };
+        }
+      }
+      
+      addSeed('center');
+      iteration = 0;
+    }
+    
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? '▶ Play' : '⏸ Pause';
+      });
+      
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        initializeGrid();
+      });
+      
+      // Clear
+      document.getElementById('clear').addEventListener('click', () => {
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            grid[x][y] = { a: 1, b: 0 };
+          }
+        }
+        iteration = 0;
+      });
+      
+      // Randomize parameters
+      document.getElementById('randomize').addEventListener('click', () => {
+        params.feedRate = random(0.01, 0.08);
+        params.killRate = random(0.045, 0.07);
+        document.getElementById('feedRate').value = params.feedRate;
+        document.getElementById('feedRate-val').textContent = params.feedRate.toFixed(3);
+        document.getElementById('killRate').value = params.killRate;
+        document.getElementById('killRate-val').textContent = params.killRate.toFixed(3);
+        initializeGrid();
+      });
+      
+      // Parameter controls
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element && element.type === 'range') {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+          });
+        } else if (element && element.tagName === 'SELECT') {
+          element.addEventListener('change', (e) => {
+            params[param] = e.target.value;
+          });
+        }
+      });
+      
+      // Grid size control
+      document.getElementById('gridSize').addEventListener('input', (e) => {
+        gridSize = parseInt(e.target.value);
+        document.getElementById('gridSize-val').textContent = gridSize;
+        document.getElementById('grid-info').textContent = `${gridSize}x${gridSize}`;
+        initializeGrid();
+      });
+      
+      document.getElementById('cellSize').addEventListener('input', (e) => {
+        cellSize = parseInt(e.target.value);
+        document.getElementById('cellSize-val').textContent = cellSize;
+      });
+      
+      // Zoom control
+      document.getElementById('zoom').addEventListener('input', (e) => {
+        zoom = parseFloat(e.target.value) / 100;
+        document.getElementById('zoom-val').textContent = e.target.value;
+      });
+    }
+    
+    function draw() {
+      // Update simulation
+      if (!isPaused) {
+        for (let i = 0; i < params.speed; i++) {
+          update();
+          iteration++;
+        }
+      }
+      
+      // Render
+      const scheme = colorSchemes[colorScheme];
+      background(scheme.background[0], scheme.background[1], scheme.background[2]);
+      
+      // Calculate drawing parameters
+      let drawCellSize = cellSize;
+      if (document.getElementById('autoFit').checked) {
+        const maxSize = min(width, height) * 0.9;
+        drawCellSize = maxSize / gridSize;
+      }
+      drawCellSize *= zoom;
+      
+      const totalSize = gridSize * drawCellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      push();
+      translate(offsetX, offsetY);
+      
+      noStroke();
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          const cell = grid[x][y];
+          const color = getRenderColor(cell);
+          fill(color);
+          rect(x * drawCellSize, y * drawCellSize, drawCellSize, drawCellSize);
+        }
+      }
+      
+      pop();
+      
+      // Update info display
+      document.getElementById('iteration-count').textContent = iteration;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+      document.getElementById('canvas-size').textContent = `${width}x${height}`;
+      
+      // Capture GIF frame
+      if (gifExporter.isRecording) {
+        gifExporter.captureFrame();
+      }
+    }
+    
+    function update() {
+      // Gray-Scott reaction-diffusion
+      for (let x = 1; x < gridSize - 1; x++) {
+        for (let y = 1; y < gridSize - 1; y++) {
+          const a = grid[x][y].a;
+          const b = grid[x][y].b;
+          
+          // Calculate laplacian
+          let laplaceA = 0;
+          let laplaceB = 0;
+          
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              laplaceA += grid[x + i][y + j].a * laplacian[i + 1][j + 1];
+              laplaceB += grid[x + i][y + j].b * laplacian[i + 1][j + 1];
+            }
+          }
+          
+          // Apply reaction-diffusion equations
+          const abb = a * b * b;
+          next[x][y].a = a + (params.dA * laplaceA - abb + params.feedRate * (1 - a));
+          next[x][y].b = b + (params.dB * laplaceB + abb - (params.killRate + params.feedRate) * b);
+          
+          // Constrain values
+          next[x][y].a = constrain(next[x][y].a, 0, 1);
+          next[x][y].b = constrain(next[x][y].b, 0, 1);
+        }
+      }
+      
+      // Swap grids
+      [grid, next] = [next, grid];
+    }
+    
+    function getRenderColor(cell) {
+      const { a, b } = cell;
+      let value = b;
+      
+      // Apply contrast
+      value = pow(value, 1 / params.contrast);
+      
+      const scheme = colorSchemes[colorScheme];
+      
+      switch (params.renderMode) {
+        case 'grayscale':
+          if (colorScheme === 'classic') {
+            const gray = floor((a - b) * 255);
+            return color(gray);
+          } else {
+            // Use color scheme for grayscale
+            const idx = floor(value * (scheme.colors.length - 1));
+            const frac = (value * (scheme.colors.length - 1)) - idx;
+            if (idx >= scheme.colors.length - 1) {
+              return color(...scheme.colors[scheme.colors.length - 1]);
+            }
+            return lerpColor(
+              color(...scheme.colors[idx]),
+              color(...scheme.colors[idx + 1]),
+              frac
+            );
+          }
+          
+        case 'heatmap':
+          const r = floor(value * 255);
+          const blu = floor((1 - value) * 255);
+          return color(r, 0, blu);
+          
+        case 'contour':
+          const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7];
+          for (let level of levels) {
+            if (abs(b - level) < 0.02) {
+              return color(0);
+            }
+          }
+          return color(255);
+          
+        case 'threshold':
+          return b > params.threshold ? color(0) : color(255);
+          
+        case 'gradient':
+          const r2 = floor(b * 255);
+          const g = floor((1 - abs(a - b)) * 255);
+          const b2 = floor(a * 255);
+          return color(r2, g, b2);
+          
+        case 'duotone':
+          if (b > params.threshold) {
+            return color(76, 175, 80);
+          } else {
+            return color(33, 150, 243);
+          }
+          
+        case 'spectrum':
+          // Full rainbow spectrum
+          const hue = value * 360;
+          colorMode(HSB);
+          const c = color(hue, 100, 100);
+          colorMode(RGB);
+          return c;
+          
+        case 'layers':
+          // Multiple threshold layers
+          if (b > 0.8) return color(255, 0, 0);
+          if (b > 0.6) return color(255, 128, 0);
+          if (b > 0.4) return color(255, 255, 0);
+          if (b > 0.2) return color(0, 255, 0);
+          return color(0, 0, 255);
+          
+        default:
+          return color(255);
+      }
+    }
+    
+    function setCanvasSize(mode) {
+      switch (mode) {
+        case 'fit':
+          updateCanvasSize();
+          resizeCanvas(canvasWidth, canvasHeight);
+          break;
+          
+        case 'square':
+          const size = min(canvasWidth, canvasHeight);
+          resizeCanvas(size, size);
+          break;
+          
+        case 'a3':
+          // A3 ratio (297:420 or approximately 1:1.414)
+          const a3Height = canvasWidth * 1.414;
+          if (a3Height <= canvasHeight) {
+            resizeCanvas(canvasWidth, a3Height);
+          } else {
+            resizeCanvas(canvasHeight / 1.414, canvasHeight);
+          }
+          break;
+          
+        case 'a0':
+          // A0 ratio (841:1189 or approximately 1:1.414)
+          const a0Height = canvasWidth * 1.414;
+          if (a0Height <= canvasHeight) {
+            resizeCanvas(canvasWidth, a0Height);
+          } else {
+            resizeCanvas(canvasHeight / 1.414, canvasHeight);
+          }
+          break;
+      }
+      
+      // Update GIF exporter with new size
+      gifExporter.setOptions({
+        width: width,
+        height: height
+      });
+    }
+    
+    function applyColorScheme(scheme) {
+      colorScheme = scheme;
+    }
+    
+    function addSeed(type) {
+      const cx = floor(gridSize / 2);
+      const cy = floor(gridSize / 2);
+      
+      switch (type) {
+        case 'center':
+          for (let i = -5; i <= 5; i++) {
+            for (let j = -5; j <= 5; j++) {
+              if (cx + i >= 0 && cx + i < gridSize && cy + j >= 0 && cy + j < gridSize) {
+                grid[cx + i][cy + j].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'random':
+          for (let i = 0; i < 20; i++) {
+            const x = floor(random(gridSize));
+            const y = floor(random(gridSize));
+            for (let dx = -2; dx <= 2; dx++) {
+              for (let dy = -2; dy <= 2; dy++) {
+                if (x + dx >= 0 && x + dx < gridSize && y + dy >= 0 && y + dy < gridSize) {
+                  grid[x + dx][y + dy].b = 1;
+                }
+              }
+            }
+          }
+          break;
+          
+        case 'cross':
+          const size = 20;
+          for (let i = -size; i <= size; i++) {
+            if (cx + i >= 0 && cx + i < gridSize) {
+              grid[cx + i][cy].b = 1;
+              if (cy + i >= 0 && cy + i < gridSize) {
+                grid[cx][cy + i].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'circle':
+          const radius = 30;
+          for (let angle = 0; angle < TWO_PI; angle += 0.1) {
+            const x = cx + floor(radius * cos(angle));
+            const y = cy + floor(radius * sin(angle));
+            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+              grid[x][y].b = 1;
+            }
+          }
+          break;
+          
+        case 'spiral':
+          let r = 0;
+          for (let angle = 0; angle < TWO_PI * 4; angle += 0.1) {
+            r += 0.5;
+            const x = cx + floor(r * cos(angle));
+            const y = cy + floor(r * sin(angle));
+            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+              grid[x][y].b = 1;
+            }
+          }
+          break;
+          
+        case 'grid':
+          const spacing = 20;
+          for (let x = spacing; x < gridSize; x += spacing) {
+            for (let y = spacing; y < gridSize; y += spacing) {
+              for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                  if (x + dx >= 0 && x + dx < gridSize && y + dy >= 0 && y + dy < gridSize) {
+                    grid[x + dx][y + dy].b = 1;
+                  }
+                }
+              }
+            }
+          }
+          break;
+          
+        case 'waves':
+          for (let x = 0; x < gridSize; x++) {
+            for (let k = 0; k < 3; k++) {
+              const y = floor(gridSize / 2 + sin(x * 0.1 + k * PI/3) * 30);
+              if (y >= 0 && y < gridSize) {
+                grid[x][y].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'noise':
+          noiseSeed(random(10000));
+          const noiseScale = 0.05;
+          for (let x = 0; x < gridSize; x++) {
+            for (let y = 0; y < gridSize; y++) {
+              if (noise(x * noiseScale, y * noiseScale) > 0.6) {
+                grid[x][y].b = 1;
+              }
+            }
+          }
+          break;
+      }
+    }
+    
+    function loadPreset(name) {
+      switch (name) {
+        case 'mitosis':
+          params.feedRate = 0.0367;
+          params.killRate = 0.0649;
+          break;
+        case 'coral':
+          params.feedRate = 0.0545;
+          params.killRate = 0.062;
+          break;
+        case 'fingerprint':
+          params.feedRate = 0.055;
+          params.killRate = 0.062;
+          break;
+        case 'spirals':
+          params.feedRate = 0.018;
+          params.killRate = 0.051;
+          break;
+        case 'worms':
+          params.feedRate = 0.078;
+          params.killRate = 0.061;
+          break;
+        case 'bubbles':
+          params.feedRate = 0.098;
+          params.killRate = 0.057;
+          break;
+        case 'solitons':
+          params.feedRate = 0.03;
+          params.killRate = 0.062;
+          break;
+        case 'pulsating':
+          params.feedRate = 0.025;
+          params.killRate = 0.06;
+          break;
+      }
+      
+      // Update UI
+      document.getElementById('feedRate').value = params.feedRate;
+      document.getElementById('feedRate-val').textContent = params.feedRate;
+      document.getElementById('killRate').value = params.killRate;
+      document.getElementById('killRate-val').textContent = params.killRate;
+      
+      initializeGrid();
+    }
+    
+    // Export functions
+    function exportSVG() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      svg.noStroke();
+      svg.fill(0);
+      
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (grid[x][y].b > params.threshold) {
+            svg.rect(x * 10, y * 10, 10, 10);
+          }
+        }
+      }
+      
+      save(svg, `reaction-diffusion-${colorScheme}-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function exportLayeredSVG() {
+      // Export multiple threshold layers for multi-color plotting
+      const thresholds = [0.2, 0.4, 0.6, 0.8];
+      const scheme = colorSchemes[colorScheme];
+      
+      thresholds.forEach((threshold, idx) => {
+        let svg = createGraphics(gridSize * 10 + 40, gridSize * 10 + 40, SVG);
+        svg.background(255);
+        
+        // Registration marks
+        svg.stroke(0);
+        svg.strokeWeight(1);
+        svg.noFill();
+        const marks = [[10, 10], [svg.width - 10, 10], [10, svg.height - 10], [svg.width - 10, svg.height - 10]];
+        marks.forEach(([x, y]) => {
+          svg.line(x - 5, y, x + 5, y);
+          svg.line(x, y - 5, x, y + 5);
+          svg.circle(x, y, 8);
+        });
+        
+        // Draw layer
+        svg.noStroke();
+        svg.fill(0);
+        
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            const value = grid[x][y].b;
+            if (value > threshold && value <= (thresholds[idx + 1] || 1)) {
+              svg.rect(20 + x * 10, 20 + y * 10, 10, 10);
+            }
+          }
+        }
+        
+        // Metadata
+        svg.push();
+        svg.stroke(0);
+        svg.strokeWeight(0.5);
+        svg.textSize(8);
+        svg.text(`Layer ${idx + 1} - Threshold: ${threshold}`, 20, svg.height - 10);
+        const colorStr = scheme.colors[idx % scheme.colors.length] || [0, 0, 0];
+        svg.text(`Suggested color: RGB(${colorStr.join(',')})`, 200, svg.height - 10);
+        svg.pop();
+        
+        save(svg, `rd-${colorScheme}-layer${idx + 1}-${iteration}.svg`);
+        svg.remove();
+      });
+    }
+    
+    function exportContours() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      svg.noFill();
+      svg.stroke(0);
+      svg.strokeWeight(1);
+      
+      const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+      
+      levels.forEach(level => {
+        for (let x = 0; x < gridSize - 1; x++) {
+          for (let y = 0; y < gridSize - 1; y++) {
+            const a = grid[x][y].b > level;
+            const b = grid[x + 1][y].b > level;
+            const c = grid[x + 1][y + 1].b > level;
+            const d = grid[x][y + 1].b > level;
+            
+            const code = (a ? 8 : 0) + (b ? 4 : 0) + (c ? 2 : 0) + (d ? 1 : 0);
+            
+            const px = x * 10;
+            const py = y * 10;
+            
+            // Marching squares
+            switch (code) {
+              case 1:
+              case 14:
+                svg.line(px, py + 5, px + 5, py + 10);
+                break;
+              case 2:
+              case 13:
+                svg.line(px + 5, py + 10, px + 10, py + 5);
+                break;
+              case 3:
+              case 12:
+                svg.line(px, py + 5, px + 10, py + 5);
+                break;
+              case 4:
+              case 11:
+                svg.line(px + 10, py + 5, px + 5, py);
+                break;
+              case 5:
+                svg.line(px, py + 5, px + 5, py);
+                svg.line(px + 10, py + 5, px + 5, py + 10);
+                break;
+              case 6:
+              case 9:
+                svg.line(px + 5, py, px + 5, py + 10);
+                break;
+              case 7:
+              case 8:
+                svg.line(px, py + 5, px + 5, py);
+                break;
+              case 10:
+                svg.line(px + 5, py, px + 10, py + 5);
+                svg.line(px, py + 5, px + 5, py + 10);
+                break;
+            }
+          }
+        }
+      });
+      
+      save(svg, `reaction-diffusion-contours-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter.isRecording) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        gifExporter.start();
+      }
+    }
+    
+    // Mouse interaction
+    function mousePressed() {
+      if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) return;
+      
+      let drawCellSize = cellSize;
+      if (document.getElementById('autoFit').checked) {
+        const maxSize = min(width, height) * 0.9;
+        drawCellSize = maxSize / gridSize;
+      }
+      drawCellSize *= zoom;
+      
+      const totalSize = gridSize * drawCellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      const x = floor((mouseX - offsetX) / drawCellSize);
+      const y = floor((mouseY - offsetY) / drawCellSize);
+      
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        // Add B chemical at mouse position
+        for (let dx = -3; dx <= 3; dx++) {
+          for (let dy = -3; dy <= 3; dy++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) {
+              const dist = sqrt(dx * dx + dy * dy);
+              if (dist <= 3) {
+                grid[nx][ny].b = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+    
+    // Window resize handling
+    function windowResized() {
+      if (document.getElementById('autoFit').checked) {
+        updateCanvasSize();
+        resizeCanvas(canvasWidth, canvasHeight);
+      }
+    }
+  </script>
+</body>
+</html>

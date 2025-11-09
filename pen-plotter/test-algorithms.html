@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Pen Plotter Algorithms</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f5f5f5;
+    }
+    h1 {
+      color: #333;
+    }
+    .test-section {
+      background: white;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .test-result {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .warning {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeaa7;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    .algorithm-link {
+      display: inline-block;
+      margin: 5px;
+      padding: 8px 15px;
+      background: #f0f0f0;
+      text-decoration: none;
+      color: #333;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .algorithm-link:hover {
+      background: #e0e0e0;
+    }
+    #test-results {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Pen Plotter Algorithm Test Suite</h1>
+  
+  <div class="test-section">
+    <h2>Quick Links to New Algorithms</h2>
+    <a href="algorithms/image-processing/squigglecam.html" class="algorithm-link" target="_blank">SquiggleCam</a>
+    <a href="algorithms/image-processing/hatching.html" class="algorithm-link" target="_blank">Hatching</a>
+    <a href="algorithms/image-processing/halftone.html" class="algorithm-link" target="_blank">Halftone</a>
+    <a href="index.html" class="algorithm-link" target="_blank">Hub (with Image Processing)</a>
+  </div>
+
+  <div class="test-section">
+    <h2>Path Optimizer Tests</h2>
+    <button onclick="runPathOptimizerTests()">Run Tests</button>
+    <div id="path-optimizer-results"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>Algorithm Integration Tests</h2>
+    <button onclick="runIntegrationTests()">Run Tests</button>
+    <div id="integration-results"></div>
+  </div>
+
+  <div id="test-results"></div>
+
+  <script src="src/path-optimizer.js"></script>
+  <script>
+    function addTestResult(container, message, status = 'success') {
+      const result = document.createElement('div');
+      result.className = `test-result ${status}`;
+      result.textContent = message;
+      container.appendChild(result);
+    }
+
+    function runPathOptimizerTests() {
+      const container = document.getElementById('path-optimizer-results');
+      container.innerHTML = '';
+      
+      try {
+        const optimizer = new PathOptimizer();
+        addTestResult(container, '✓ PathOptimizer instantiated successfully');
+
+        // Test 1: Path simplification
+        const testPoints = [
+          { x: 0, y: 0 },
+          { x: 5, y: 5 },
+          { x: 10, y: 10 }
+        ];
+        const simplified = optimizer.simplifyPath(testPoints, 1.0);
+        if (simplified.length === 2) {
+          addTestResult(container, '✓ Path simplification working correctly');
+        } else {
+          addTestResult(container, '✗ Path simplification failed', 'error');
+        }
+
+        // Test 2: Path joining
+        const paths = [
+          { points: [{ x: 0, y: 0 }, { x: 10, y: 0 }], closed: false },
+          { points: [{ x: 10, y: 0 }, { x: 10, y: 10 }], closed: false }
+        ];
+        const joined = optimizer.joinPaths(paths, 1.0);
+        if (joined.length === 1 && joined[0].points.length === 3) {
+          addTestResult(container, '✓ Path joining working correctly');
+        } else {
+          addTestResult(container, '✗ Path joining failed', 'error');
+        }
+
+        // Test 3: SVG parsing
+        const svgPath = 'M10,10 L20,20 L30,10';
+        const parsed = optimizer.parseSVGPath(svgPath);
+        if (parsed.length === 1 && parsed[0].points.length === 3) {
+          addTestResult(container, '✓ SVG parsing working correctly');
+        } else {
+          addTestResult(container, '✗ SVG parsing failed', 'error');
+        }
+
+        // Test 4: SVG generation
+        const segments = [{
+          points: [{ x: 10, y: 10 }, { x: 20, y: 20 }, { x: 30, y: 10 }],
+          closed: false
+        }];
+        const svg = optimizer.toSVGPath(segments);
+        if (svg === 'M10,10 L20,20 L30,10') {
+          addTestResult(container, '✓ SVG generation working correctly');
+        } else {
+          addTestResult(container, '✗ SVG generation failed', 'error');
+        }
+
+        addTestResult(container, 'All PathOptimizer tests completed!');
+      } catch (error) {
+        addTestResult(container, `Error: ${error.message}`, 'error');
+      }
+    }
+
+    function runIntegrationTests() {
+      const container = document.getElementById('integration-results');
+      container.innerHTML = '';
+
+      // Test 1: Check if new algorithms exist in hub
+      fetch('src/hub.js')
+        .then(response => response.text())
+        .then(text => {
+          if (text.includes('image-processing')) {
+            addTestResult(container, '✓ Image Processing category found in hub.js');
+          } else {
+            addTestResult(container, '✗ Image Processing category not found', 'error');
+          }
+
+          if (text.includes('SquiggleCam')) {
+            addTestResult(container, '✓ SquiggleCam algorithm registered');
+          } else {
+            addTestResult(container, '✗ SquiggleCam not found in registry', 'error');
+          }
+
+          if (text.includes('Hatching')) {
+            addTestResult(container, '✓ Hatching algorithm registered');
+          } else {
+            addTestResult(container, '✗ Hatching not found in registry', 'error');
+          }
+
+          if (text.includes('Halftone')) {
+            addTestResult(container, '✓ Halftone algorithm registered');
+          } else {
+            addTestResult(container, '✗ Halftone not found in registry', 'error');
+          }
+        })
+        .catch(error => {
+          addTestResult(container, `Error loading hub.js: ${error.message}`, 'error');
+        });
+
+      // Test 2: Check if filter button exists
+      fetch('index.html')
+        .then(response => response.text())
+        .then(text => {
+          if (text.includes('data-filter="image-processing"')) {
+            addTestResult(container, '✓ Image Processing filter button found');
+          } else {
+            addTestResult(container, '✗ Image Processing filter button missing', 'error');
+          }
+        })
+        .catch(error => {
+          addTestResult(container, `Error loading index.html: ${error.message}`, 'error');
+        });
+
+      // Test 3: Check algorithm files
+      const algorithmFiles = [
+        'algorithms/image-processing/squigglecam.html',
+        'algorithms/image-processing/hatching.html',
+        'algorithms/image-processing/halftone.html'
+      ];
+
+      algorithmFiles.forEach(file => {
+        fetch(file)
+          .then(response => {
+            if (response.ok) {
+              addTestResult(container, `✓ ${file} exists and is accessible`);
+            } else {
+              addTestResult(container, `✗ ${file} not found`, 'error');
+            }
+          })
+          .catch(error => {
+            addTestResult(container, `✗ Error checking ${file}: ${error.message}`, 'error');
+          });
+      });
+
+      addTestResult(container, 'Integration tests initiated. Check results above.', 'warning');
+    }
+
+    // Run tests automatically on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        runPathOptimizerTests();
+        runIntegrationTests();
+      }, 500);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reaction-Diffusion System - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: relative;
+    }
+    #controls {
+      width: 400px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button:active {
+      background: #3d8b40;
+    }
+    .secondary {
+      background: #555;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .preset-btn {
+      background: #2196F3;
+      margin: 2px 0;
+    }
+    .preset-btn:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .export-btn {
+      background: #FF6B6B;
+    }
+    .export-btn:hover {
+      background: #FF5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #4CAF50;
+      transition: width 0.3s;
+    }
+    .pattern-btn {
+      background: #9C27B0;
+      margin: 2px 0;
+    }
+    .pattern-btn:hover {
+      background: #7B1FA2;
+    }
+    .render-mode {
+      background: #FF9800;
+    }
+    .render-mode:hover {
+      background: #F57C00;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Iteration: <span id="iteration-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+      <div>A Concentration: <span id="a-concentration">0</span></div>
+      <div>B Concentration: <span id="b-concentration">0</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Reaction-Diffusion</h2>
+    
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <button id="play-pause">⏸ Pause</button>
+      <button id="reset" class="secondary">Reset</button>
+      <button id="clear" class="secondary">Clear</button>
+      <div class="control">
+        <label>Speed: <span class="value" id="speed-val">10</span> iterations/frame</label>
+        <input type="range" id="speed" min="1" max="50" value="10">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>System Parameters</h3>
+      <div class="control">
+        <label>Feed Rate (f): <span class="value" id="feedRate-val">0.055</span></label>
+        <input type="range" id="feedRate" min="0.01" max="0.1" step="0.001" value="0.055">
+      </div>
+      <div class="control">
+        <label>Kill Rate (k): <span class="value" id="killRate-val">0.062</span></label>
+        <input type="range" id="killRate" min="0.01" max="0.1" step="0.001" value="0.062">
+      </div>
+      <div class="control">
+        <label>Diffusion A (dA): <span class="value" id="dA-val">1.0</span></label>
+        <input type="range" id="dA" min="0.5" max="1.5" step="0.01" value="1.0">
+      </div>
+      <div class="control">
+        <label>Diffusion B (dB): <span class="value" id="dB-val">0.5</span></label>
+        <input type="range" id="dB" min="0.1" max="0.8" step="0.01" value="0.5">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">200</span></label>
+        <input type="range" id="gridSize" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">3</span>px</label>
+        <input type="range" id="cellSize" min="1" max="10" value="3">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Initial Patterns</h3>
+      <button class="pattern-btn" onclick="addSeed('center')">Center Seed</button>
+      <button class="pattern-btn" onclick="addSeed('random')">Random Seeds</button>
+      <button class="pattern-btn" onclick="addSeed('cross')">Cross Pattern</button>
+      <button class="pattern-btn" onclick="addSeed('circle')">Circle</button>
+      <button class="pattern-btn" onclick="addSeed('spiral')">Spiral</button>
+      <button class="pattern-btn" onclick="addSeed('grid')">Grid Points</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Famous Parameters</h3>
+      <button class="preset-btn" onclick="loadPreset('mitosis')">Mitosis (f=0.0367, k=0.0649)</button>
+      <button class="preset-btn" onclick="loadPreset('coral')">Coral Growth (f=0.0545, k=0.062)</button>
+      <button class="preset-btn" onclick="loadPreset('fingerprint')">Fingerprints (f=0.055, k=0.062)</button>
+      <button class="preset-btn" onclick="loadPreset('spirals')">Spirals (f=0.018, k=0.051)</button>
+      <button class="preset-btn" onclick="loadPreset('worms')">Worms (f=0.078, k=0.061)</button>
+      <button class="preset-btn" onclick="loadPreset('bubbles')">Bubbles (f=0.098, k=0.057)</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Render Mode:</label>
+        <select id="renderMode">
+          <option value="grayscale">Grayscale</option>
+          <option value="heatmap">Heat Map</option>
+          <option value="contour">Contour Lines</option>
+          <option value="threshold">Threshold</option>
+          <option value="gradient">Gradient Map</option>
+          <option value="duotone">Duotone</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Threshold: <span class="value" id="threshold-val">0.5</span></label>
+        <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.5">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showConcentration" checked>
+        <label for="showConcentration">Show Concentration Info</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export as SVG</button>
+      <button onclick="exportContours()">Export Contour Lines</button>
+      <button onclick="exportThreshold()">Export Threshold Pattern</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Reaction-Diffusion System
+    let grid, next;
+    let gridSize = 200;
+    let cellSize = 3;
+    let iteration = 0;
+    let isPaused = false;
+    let gifExporter;
+    
+    // Parameters
+    let params = {
+      feedRate: 0.055,
+      killRate: 0.062,
+      dA: 1.0,
+      dB: 0.5,
+      speed: 10,
+      threshold: 0.5,
+      renderMode: 'grayscale'
+    };
+    
+    // Laplacian kernel for diffusion
+    const laplacian = [
+      [0.05, 0.2, 0.05],
+      [0.2, -1, 0.2],
+      [0.05, 0.2, 0.05]
+    ];
+    
+    function setup() {
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      initializeGrid();
+      setupControls();
+      
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 5,
+        quality: 10,
+        width: 800,
+        height: 600
+      });
+      
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          document.getElementById('gif-status').textContent = data.status;
+          document.getElementById('gif-progress-bar').style.width = 
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          console.log('GIF created!', result);
+        }
+      });
+    }
+    
+    function initializeGrid() {
+      grid = [];
+      next = [];
+      
+      for (let x = 0; x < gridSize; x++) {
+        grid[x] = [];
+        next[x] = [];
+        for (let y = 0; y < gridSize; y++) {
+          grid[x][y] = { a: 1, b: 0 };
+          next[x][y] = { a: 1, b: 0 };
+        }
+      }
+      
+      // Add initial seed
+      addSeed('center');
+      iteration = 0;
+    }
+    
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? '▶ Play' : '⏸ Pause';
+      });
+      
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        initializeGrid();
+      });
+      
+      // Clear
+      document.getElementById('clear').addEventListener('click', () => {
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            grid[x][y] = { a: 1, b: 0 };
+          }
+        }
+        iteration = 0;
+      });
+      
+      // Parameter controls
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element && element.type === 'range') {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+          });
+        } else if (element && element.tagName === 'SELECT') {
+          element.addEventListener('change', (e) => {
+            params[param] = e.target.value;
+          });
+        }
+      });
+      
+      // Grid size control
+      document.getElementById('gridSize').addEventListener('input', (e) => {
+        gridSize = parseInt(e.target.value);
+        document.getElementById('gridSize-val').textContent = gridSize;
+        initializeGrid();
+      });
+      
+      document.getElementById('cellSize').addEventListener('input', (e) => {
+        cellSize = parseInt(e.target.value);
+        document.getElementById('cellSize-val').textContent = cellSize;
+      });
+    }
+    
+    function draw() {
+      // Update simulation
+      if (!isPaused) {
+        for (let i = 0; i < params.speed; i++) {
+          update();
+          iteration++;
+        }
+      }
+      
+      // Render
+      background(30);
+      const totalSize = gridSize * cellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      // Calculate average concentrations
+      let avgA = 0, avgB = 0;
+      let count = 0;
+      
+      noStroke();
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          const cell = grid[x][y];
+          avgA += cell.a;
+          avgB += cell.b;
+          count++;
+          
+          const color = getRenderColor(cell);
+          fill(color);
+          rect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+        }
+      }
+      
+      // Update info display
+      document.getElementById('iteration-count').textContent = iteration;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+      
+      if (document.getElementById('showConcentration').checked) {
+        document.getElementById('a-concentration').textContent = (avgA / count).toFixed(3);
+        document.getElementById('b-concentration').textContent = (avgB / count).toFixed(3);
+      }
+      
+      // Capture GIF frame if recording
+      if (gifExporter.isRecording) {
+        gifExporter.captureFrame();
+      }
+    }
+    
+    function update() {
+      // Calculate next state using Gray-Scott model
+      for (let x = 1; x < gridSize - 1; x++) {
+        for (let y = 1; y < gridSize - 1; y++) {
+          const a = grid[x][y].a;
+          const b = grid[x][y].b;
+          
+          // Calculate laplacian
+          let laplaceA = 0;
+          let laplaceB = 0;
+          
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              laplaceA += grid[x + i][y + j].a * laplacian[i + 1][j + 1];
+              laplaceB += grid[x + i][y + j].b * laplacian[i + 1][j + 1];
+            }
+          }
+          
+          // Apply reaction-diffusion equations
+          const abb = a * b * b;
+          next[x][y].a = a + (params.dA * laplaceA - abb + params.feedRate * (1 - a));
+          next[x][y].b = b + (params.dB * laplaceB + abb - (params.killRate + params.feedRate) * b);
+          
+          // Constrain values
+          next[x][y].a = constrain(next[x][y].a, 0, 1);
+          next[x][y].b = constrain(next[x][y].b, 0, 1);
+        }
+      }
+      
+      // Swap grids
+      [grid, next] = [next, grid];
+    }
+    
+    function getRenderColor(cell) {
+      const { a, b } = cell;
+      
+      switch (params.renderMode) {
+        case 'grayscale':
+          const gray = floor((a - b) * 255);
+          return color(gray);
+          
+        case 'heatmap':
+          // Blue to red heatmap based on B concentration
+          const r = floor(b * 255);
+          const blu = floor((1 - b) * 255);
+          return color(r, 0, blu);
+          
+        case 'contour':
+          // Contour lines at specific B concentrations
+          const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7];
+          for (let level of levels) {
+            if (abs(b - level) < 0.02) {
+              return color(255);
+            }
+          }
+          return color(0);
+          
+        case 'threshold':
+          // Binary threshold
+          return b > params.threshold ? color(255) : color(0);
+          
+        case 'gradient':
+          // Gradient based on both A and B
+          const r2 = floor(b * 255);
+          const g = floor((1 - abs(a - b)) * 255);
+          const b2 = floor(a * 255);
+          return color(r2, g, b2);
+          
+        case 'duotone':
+          // Two-tone based on threshold
+          if (b > params.threshold) {
+            return color(76, 175, 80); // Green
+          } else {
+            return color(33, 150, 243); // Blue
+          }
+          
+        default:
+          return color(255);
+      }
+    }
+    
+    function addSeed(type) {
+      const cx = floor(gridSize / 2);
+      const cy = floor(gridSize / 2);
+      
+      switch (type) {
+        case 'center':
+          // Single center seed
+          for (let i = -5; i <= 5; i++) {
+            for (let j = -5; j <= 5; j++) {
+              if (cx + i >= 0 && cx + i < gridSize && cy + j >= 0 && cy + j < gridSize) {
+                grid[cx + i][cy + j].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'random':
+          // Random seeds
+          for (let i = 0; i < 20; i++) {
+            const x = floor(random(gridSize));
+            const y = floor(random(gridSize));
+            for (let dx = -2; dx <= 2; dx++) {
+              for (let dy = -2; dy <= 2; dy++) {
+                if (x + dx >= 0 && x + dx < gridSize && y + dy >= 0 && y + dy < gridSize) {
+                  grid[x + dx][y + dy].b = 1;
+                }
+              }
+            }
+          }
+          break;
+          
+        case 'cross':
+          // Cross pattern
+          const size = 20;
+          for (let i = -size; i <= size; i++) {
+            if (cx + i >= 0 && cx + i < gridSize) {
+              grid[cx + i][cy].b = 1;
+              if (cy + i >= 0 && cy + i < gridSize) {
+                grid[cx][cy + i].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'circle':
+          // Circle pattern
+          const radius = 30;
+          for (let angle = 0; angle < TWO_PI; angle += 0.1) {
+            const x = cx + floor(radius * cos(angle));
+            const y = cy + floor(radius * sin(angle));
+            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+              grid[x][y].b = 1;
+            }
+          }
+          break;
+          
+        case 'spiral':
+          // Spiral pattern
+          let r = 0;
+          for (let angle = 0; angle < TWO_PI * 4; angle += 0.1) {
+            r += 0.5;
+            const x = cx + floor(r * cos(angle));
+            const y = cy + floor(r * sin(angle));
+            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+              grid[x][y].b = 1;
+            }
+          }
+          break;
+          
+        case 'grid':
+          // Grid of points
+          const spacing = 20;
+          for (let x = spacing; x < gridSize; x += spacing) {
+            for (let y = spacing; y < gridSize; y += spacing) {
+              for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                  if (x + dx >= 0 && x + dx < gridSize && y + dy >= 0 && y + dy < gridSize) {
+                    grid[x + dx][y + dy].b = 1;
+                  }
+                }
+              }
+            }
+          }
+          break;
+      }
+    }
+    
+    function loadPreset(name) {
+      switch (name) {
+        case 'mitosis':
+          params.feedRate = 0.0367;
+          params.killRate = 0.0649;
+          break;
+        case 'coral':
+          params.feedRate = 0.0545;
+          params.killRate = 0.062;
+          break;
+        case 'fingerprint':
+          params.feedRate = 0.055;
+          params.killRate = 0.062;
+          break;
+        case 'spirals':
+          params.feedRate = 0.018;
+          params.killRate = 0.051;
+          break;
+        case 'worms':
+          params.feedRate = 0.078;
+          params.killRate = 0.061;
+          break;
+        case 'bubbles':
+          params.feedRate = 0.098;
+          params.killRate = 0.057;
+          break;
+      }
+      
+      // Update UI
+      document.getElementById('feedRate').value = params.feedRate;
+      document.getElementById('feedRate-val').textContent = params.feedRate;
+      document.getElementById('killRate').value = params.killRate;
+      document.getElementById('killRate-val').textContent = params.killRate;
+      
+      // Reset and start with new parameters
+      initializeGrid();
+    }
+    
+    // Export functions
+    function exportSVG() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      svg.noStroke();
+      svg.fill(0);
+      
+      // Draw pattern based on threshold
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (grid[x][y].b > params.threshold) {
+            svg.rect(x * 10, y * 10, 10, 10);
+          }
+        }
+      }
+      
+      save(svg, `reaction-diffusion-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function exportContours() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      svg.noFill();
+      svg.stroke(0);
+      svg.strokeWeight(1);
+      
+      // Extract contour lines at different levels
+      const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+      
+      levels.forEach(level => {
+        // Simple contour extraction (marching squares would be better)
+        for (let x = 0; x < gridSize - 1; x++) {
+          for (let y = 0; y < gridSize - 1; y++) {
+            const a = grid[x][y].b > level;
+            const b = grid[x + 1][y].b > level;
+            const c = grid[x + 1][y + 1].b > level;
+            const d = grid[x][y + 1].b > level;
+            
+            const code = (a ? 8 : 0) + (b ? 4 : 0) + (c ? 2 : 0) + (d ? 1 : 0);
+            
+            // Draw contour segments based on marching squares cases
+            const px = x * 10;
+            const py = y * 10;
+            
+            switch (code) {
+              case 1:
+              case 14:
+                svg.line(px, py + 5, px + 5, py + 10);
+                break;
+              case 2:
+              case 13:
+                svg.line(px + 5, py + 10, px + 10, py + 5);
+                break;
+              case 3:
+              case 12:
+                svg.line(px, py + 5, px + 10, py + 5);
+                break;
+              case 4:
+              case 11:
+                svg.line(px + 10, py + 5, px + 5, py);
+                break;
+              case 5:
+                svg.line(px, py + 5, px + 5, py);
+                svg.line(px + 10, py + 5, px + 5, py + 10);
+                break;
+              case 6:
+              case 9:
+                svg.line(px + 5, py, px + 5, py + 10);
+                break;
+              case 7:
+              case 8:
+                svg.line(px, py + 5, px + 5, py);
+                break;
+              case 10:
+                svg.line(px + 5, py, px + 10, py + 5);
+                svg.line(px, py + 5, px + 5, py + 10);
+                break;
+            }
+          }
+        }
+      });
+      
+      save(svg, `reaction-diffusion-contours-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function exportThreshold() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      
+      // Group connected regions
+      const visited = Array(gridSize).fill(0).map(() => Array(gridSize).fill(false));
+      const regions = [];
+      
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (!visited[x][y] && grid[x][y].b > params.threshold) {
+            const region = [];
+            floodFill(x, y, visited, region);
+            if (region.length > 5) { // Minimum region size
+              regions.push(region);
+            }
+          }
+        }
+      }
+      
+      // Draw regions
+      svg.noStroke();
+      svg.fill(0);
+      
+      regions.forEach(region => {
+        region.forEach(point => {
+          svg.rect(point.x * 10, point.y * 10, 10, 10);
+        });
+      });
+      
+      // Add metadata
+      svg.push();
+      svg.stroke(0);
+      svg.strokeWeight(0.5);
+      svg.textSize(8);
+      svg.text(`Regions: ${regions.length}`, 10, svg.height - 10);
+      svg.text(`f=${params.feedRate}, k=${params.killRate}`, 10, svg.height - 20);
+      svg.pop();
+      
+      save(svg, `reaction-diffusion-threshold-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function floodFill(x, y, visited, region) {
+      if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+      if (visited[x][y] || grid[x][y].b <= params.threshold) return;
+      
+      visited[x][y] = true;
+      region.push({ x, y });
+      
+      // Check 4 neighbors
+      floodFill(x + 1, y, visited, region);
+      floodFill(x - 1, y, visited, region);
+      floodFill(x, y + 1, visited, region);
+      floodFill(x, y - 1, visited, region);
+    }
+    
+    function toggleGifRecording() {
+      if (gifExporter.isRecording) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        gifExporter.start();
+      }
+    }
+    
+    // Mouse interaction for adding seeds
+    function mousePressed() {
+      const totalSize = gridSize * cellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      const x = floor((mouseX - offsetX) / cellSize);
+      const y = floor((mouseY - offsetY) / cellSize);
+      
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        // Add B chemical at mouse position
+        for (let dx = -3; dx <= 3; dx++) {
+          for (let dy = -3; dy <= 3; dy++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) {
+              const dist = sqrt(dx * dx + dy * dy);
+              if (dist <= 3) {
+                grid[nx][ny].b = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

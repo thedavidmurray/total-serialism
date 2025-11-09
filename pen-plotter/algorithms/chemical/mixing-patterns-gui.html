@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mixing Patterns - Chemical Engineering Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #0a0a0a;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, monospace;
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .controls {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            height: fit-content;
+        }
+        
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        
+        canvas {
+            border: 1px solid #333;
+            background-color: #ffffff;
+            cursor: crosshair;
+        }
+        
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        
+        h3 {
+            margin-bottom: 10px;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #ccc;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        input[type="number"], select {
+            width: 100%;
+            padding: 5px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #2a2a2a;
+            border: 1px solid #444;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background-color: #3a3a3a;
+            border-color: #666;
+        }
+        
+        button:active {
+            background-color: #1a1a1a;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .button-group button {
+            flex: 1;
+        }
+        
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        #animationProgress {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controls">
+            <h1>Mixing Patterns</h1>
+            
+            <div class="control-group">
+                <h3>Mixer Type</h3>
+                <select id="mixerType">
+                    <option value="single">Single Blade</option>
+                    <option value="double">Double Blade</option>
+                    <option value="rushton">Rushton Turbine</option>
+                    <option value="anchor">Anchor Mixer</option>
+                    <option value="helical">Helical Ribbon</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <h3>Fluid Properties</h3>
+                <label>Viscosity Ratio: <span id="viscosityValue">2.0</span></label>
+                <input type="range" id="viscosityRatio" min="0.1" max="10" step="0.1" value="2.0">
+                
+                <label>Reynolds Number: <span id="reynoldsValue">100</span></label>
+                <input type="range" id="reynolds" min="1" max="1000" step="1" value="100">
+                
+                <label>Schmidt Number: <span id="schmidtValue">1000</span></label>
+                <input type="range" id="schmidt" min="100" max="10000" step="100" value="1000">
+            </div>
+            
+            <div class="control-group">
+                <h3>Mixing Parameters</h3>
+                <label>Rotation Speed (RPM): <span id="speedValue">60</span></label>
+                <input type="range" id="rotationSpeed" min="10" max="300" step="10" value="60">
+                
+                <label>Time Steps: <span id="stepsValue">1000</span></label>
+                <input type="range" id="timeSteps" min="100" max="5000" step="100" value="1000">
+                
+                <label>Tracer Particles: <span id="particlesValue">500</span></label>
+                <input type="range" id="particleCount" min="100" max="2000" step="50" value="500">
+            </div>
+            
+            <div class="control-group">
+                <h3>Visualization</h3>
+                <label>
+                    <input type="checkbox" id="showStreamlines" checked> Show Streamlines
+                </label>
+                <label>
+                    <input type="checkbox" id="showVorticity"> Show Vorticity
+                </label>
+                <label>
+                    <input type="checkbox" id="showMixingIndex"> Show Mixing Index
+                </label>
+                <label>
+                    <input type="checkbox" id="colorByAge" checked> Color by Residence Time
+                </label>
+            </div>
+            
+            <div class="control-group">
+                <h3>Actions</h3>
+                <button id="generateBtn">Generate Pattern</button>
+                <button id="animateBtn">Animate Mixing</button>
+                <div class="button-group">
+                    <button id="exportSVG">Export SVG</button>
+                    <button id="exportPNG">Export PNG</button>
+                </div>
+                <button id="exportGIF">Export Animation GIF</button>
+                <progress id="animationProgress" value="0" max="100" style="display: none;"></progress>
+                <div class="status" id="status"></div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas" width="800" height="800"></canvas>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+        
+        let particles = [];
+        let isAnimating = false;
+        let animationId = null;
+        let currentTime = 0;
+        let gif = null;
+        
+        // UI Elements
+        const mixerType = document.getElementById('mixerType');
+        const viscosityRatio = document.getElementById('viscosityRatio');
+        const reynolds = document.getElementById('reynolds');
+        const schmidt = document.getElementById('schmidt');
+        const rotationSpeed = document.getElementById('rotationSpeed');
+        const timeSteps = document.getElementById('timeSteps');
+        const particleCount = document.getElementById('particleCount');
+        const showStreamlines = document.getElementById('showStreamlines');
+        const showVorticity = document.getElementById('showVorticity');
+        const showMixingIndex = document.getElementById('showMixingIndex');
+        const colorByAge = document.getElementById('colorByAge');
+        const generateBtn = document.getElementById('generateBtn');
+        const animateBtn = document.getElementById('animateBtn');
+        const exportSVGBtn = document.getElementById('exportSVG');
+        const exportPNGBtn = document.getElementById('exportPNG');
+        const exportGIFBtn = document.getElementById('exportGIF');
+        const status = document.getElementById('status');
+        const animationProgress = document.getElementById('animationProgress');
+        
+        // Update value displays
+        viscosityRatio.oninput = () => document.getElementById('viscosityValue').textContent = viscosityRatio.value;
+        reynolds.oninput = () => document.getElementById('reynoldsValue').textContent = reynolds.value;
+        schmidt.oninput = () => document.getElementById('schmidtValue').textContent = schmidt.value;
+        rotationSpeed.oninput = () => document.getElementById('speedValue').textContent = rotationSpeed.value;
+        timeSteps.oninput = () => document.getElementById('stepsValue').textContent = timeSteps.value;
+        particleCount.oninput = () => document.getElementById('particlesValue').textContent = particleCount.value;
+        
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.initialX = x;
+                this.initialY = y;
+                this.path = [{x, y}];
+                this.age = 0;
+                this.stretchingHistory = [];
+            }
+            
+            update(vx, vy, dt) {
+                this.x += vx * dt;
+                this.y += vy * dt;
+                this.age += dt;
+                this.path.push({x: this.x, y: this.y});
+                
+                // Keep path length reasonable
+                if (this.path.length > 100) {
+                    this.path.shift();
+                }
+            }
+            
+            getStretchingFactor() {
+                if (this.path.length < 2) return 1;
+                const dx = this.x - this.initialX;
+                const dy = this.y - this.initialY;
+                return Math.sqrt(dx * dx + dy * dy) / Math.sqrt(width * width + height * height);
+            }
+        }
+        
+        function getVelocityField(x, y, time) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const omega = (rotationSpeed.value / 60) * 2 * Math.PI; // Convert RPM to rad/s
+            const Re = parseFloat(reynolds.value);
+            const mu = parseFloat(viscosityRatio.value);
+            
+            // Normalize coordinates
+            const r = Math.sqrt((x - centerX) ** 2 + (y - centerY) ** 2);
+            const theta = Math.atan2(y - centerY, x - centerX);
+            
+            let vx = 0, vy = 0;
+            
+            switch (mixerType.value) {
+                case 'single':
+                    // Single blade impeller flow
+                    vx = -omega * (y - centerY) * Math.exp(-r / (width * 0.3));
+                    vy = omega * (x - centerX) * Math.exp(-r / (width * 0.3));
+                    break;
+                    
+                case 'double':
+                    // Double blade with phase offset
+                    const phase1 = omega * time;
+                    const phase2 = omega * time + Math.PI;
+                    vx = -omega * (y - centerY) * (Math.cos(theta - phase1) + 0.5 * Math.cos(theta - phase2));
+                    vy = omega * (x - centerX) * (Math.sin(theta - phase1) + 0.5 * Math.sin(theta - phase2));
+                    break;
+                    
+                case 'rushton':
+                    // Rushton turbine - radial flow pattern
+                    const blades = 6;
+                    const bladeAngle = (2 * Math.PI) / blades;
+                    let bladeEffect = 0;
+                    for (let i = 0; i < blades; i++) {
+                        const bladeTheta = i * bladeAngle + omega * time;
+                        bladeEffect += Math.exp(-Math.abs(theta - bladeTheta) / 0.2);
+                    }
+                    vx = omega * r * Math.cos(theta) * bladeEffect * 0.1;
+                    vy = omega * r * Math.sin(theta) * bladeEffect * 0.1;
+                    break;
+                    
+                case 'anchor':
+                    // Anchor mixer - wall-following flow
+                    const wallDistance = Math.min(
+                        Math.abs(x - width * 0.1),
+                        Math.abs(x - width * 0.9),
+                        Math.abs(y - height * 0.1),
+                        Math.abs(y - height * 0.9)
+                    );
+                    const wallEffect = Math.exp(-wallDistance / 50);
+                    vx = -omega * (y - centerY) * wallEffect;
+                    vy = omega * (x - centerX) * wallEffect;
+                    break;
+                    
+                case 'helical':
+                    // Helical ribbon - axial and tangential flow
+                    const helixPitch = 0.1;
+                    const axialVelocity = omega * helixPitch * r / width;
+                    vx = -omega * (y - centerY) + axialVelocity * Math.sin(theta);
+                    vy = omega * (x - centerX) + axialVelocity * Math.cos(theta);
+                    break;
+            }
+            
+            // Add turbulent fluctuations based on Reynolds number
+            if (Re > 100) {
+                const turbulence = (Re / 1000) * 0.1;
+                vx += (Math.random() - 0.5) * turbulence * Math.abs(vx);
+                vy += (Math.random() - 0.5) * turbulence * Math.abs(vy);
+            }
+            
+            // Apply viscosity effects
+            vx /= mu;
+            vy /= mu;
+            
+            return {vx, vy};
+        }
+        
+        function initializeParticles() {
+            particles = [];
+            const count = parseInt(particleCount.value);
+            
+            // Initialize particles in different regions
+            for (let i = 0; i < count; i++) {
+                let x, y;
+                
+                if (i < count / 2) {
+                    // Half in the left region
+                    x = width * 0.25 + (Math.random() - 0.5) * width * 0.2;
+                    y = height * 0.5 + (Math.random() - 0.5) * height * 0.6;
+                } else {
+                    // Half in the right region
+                    x = width * 0.75 + (Math.random() - 0.5) * width * 0.2;
+                    y = height * 0.5 + (Math.random() - 0.5) * height * 0.6;
+                }
+                
+                particles.push(new Particle(x, y));
+            }
+        }
+        
+        function calculateMixingIndex() {
+            // Calculate variance-based mixing index
+            let sumX = 0, sumY = 0;
+            particles.forEach(p => {
+                sumX += p.x;
+                sumY += p.y;
+            });
+            
+            const meanX = sumX / particles.length;
+            const meanY = sumY / particles.length;
+            
+            let variance = 0;
+            particles.forEach(p => {
+                variance += (p.x - meanX) ** 2 + (p.y - meanY) ** 2;
+            });
+            
+            variance /= particles.length;
+            const initialVariance = (width * 0.2) ** 2 + (height * 0.3) ** 2;
+            
+            return 1 - Math.min(variance / initialVariance, 1);
+        }
+        
+        function drawPattern() {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw mixing vessel outline
+            ctx.strokeStyle = '#cccccc';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(width * 0.1, height * 0.1, width * 0.8, height * 0.8);
+            
+            // Draw impeller
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const impellerRadius = width * 0.15;
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentTime * (rotationSpeed.value / 60) * 2 * Math.PI);
+            
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 3;
+            
+            switch (mixerType.value) {
+                case 'single':
+                case 'double':
+                    // Draw blade(s)
+                    ctx.beginPath();
+                    ctx.moveTo(-impellerRadius, 0);
+                    ctx.lineTo(impellerRadius, 0);
+                    ctx.stroke();
+                    
+                    if (mixerType.value === 'double') {
+                        ctx.beginPath();
+                        ctx.moveTo(0, -impellerRadius);
+                        ctx.lineTo(0, impellerRadius);
+                        ctx.stroke();
+                    }
+                    break;
+                    
+                case 'rushton':
+                    // Draw 6-blade turbine
+                    for (let i = 0; i < 6; i++) {
+                        ctx.save();
+                        ctx.rotate(i * Math.PI / 3);
+                        ctx.beginPath();
+                        ctx.moveTo(0, 0);
+                        ctx.lineTo(impellerRadius, 0);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                    break;
+            }
+            
+            ctx.restore();
+            
+            // Draw particles and paths
+            particles.forEach(particle => {
+                // Draw path
+                if (showStreamlines.checked && particle.path.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(particle.path[0].x, particle.path[0].y);
+                    
+                    for (let i = 1; i < particle.path.length; i++) {
+                        ctx.lineTo(particle.path[i].x, particle.path[i].y);
+                    }
+                    
+                    if (colorByAge.checked) {
+                        const hue = (particle.age * 60) % 360;
+                        ctx.strokeStyle = `hsla(${hue}, 70%, 50%, 0.5)`;
+                    } else {
+                        ctx.strokeStyle = 'rgba(0, 100, 255, 0.3)';
+                    }
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                }
+                
+                // Draw particle
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+                
+                if (colorByAge.checked) {
+                    const hue = (particle.age * 60) % 360;
+                    ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+                } else {
+                    const intensity = particle.getStretchingFactor();
+                    ctx.fillStyle = `rgb(${255 * intensity}, ${100 * (1 - intensity)}, ${255 * (1 - intensity)})`;
+                }
+                ctx.fill();
+            });
+            
+            // Draw mixing index
+            if (showMixingIndex.checked) {
+                const mixingIndex = calculateMixingIndex();
+                ctx.fillStyle = '#000000';
+                ctx.font = '16px monospace';
+                ctx.fillText(`Mixing Index: ${mixingIndex.toFixed(3)}`, 20, 30);
+            }
+            
+            // Draw vorticity field
+            if (showVorticity.checked) {
+                const gridSize = 40;
+                ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+                ctx.lineWidth = 1;
+                
+                for (let x = gridSize; x < width; x += gridSize) {
+                    for (let y = gridSize; y < height; y += gridSize) {
+                        const v1 = getVelocityField(x - 5, y, currentTime);
+                        const v2 = getVelocityField(x + 5, y, currentTime);
+                        const v3 = getVelocityField(x, y - 5, currentTime);
+                        const v4 = getVelocityField(x, y + 5, currentTime);
+                        
+                        const vorticity = (v2.vy - v1.vy) / 10 - (v4.vx - v3.vx) / 10;
+                        
+                        if (Math.abs(vorticity) > 0.01) {
+                            ctx.beginPath();
+                            ctx.arc(x, y, Math.abs(vorticity) * 100, 0, Math.PI * 2);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+        }
+        
+        function animate() {
+            if (!isAnimating) return;
+            
+            const dt = 0.01;
+            currentTime += dt;
+            
+            // Update particles
+            particles.forEach(particle => {
+                const vel = getVelocityField(particle.x, particle.y, currentTime);
+                particle.update(vel.vx, vel.vy, dt);
+                
+                // Keep particles in bounds
+                if (particle.x < 0 || particle.x > width || particle.y < 0 || particle.y > height) {
+                    particle.x = Math.max(0, Math.min(width, particle.x));
+                    particle.y = Math.max(0, Math.min(height, particle.y));
+                }
+            });
+            
+            drawPattern();
+            
+            if (currentTime < parseInt(timeSteps.value) / 100) {
+                animationId = requestAnimationFrame(animate);
+            } else {
+                isAnimating = false;
+                animateBtn.textContent = 'Animate Mixing';
+                status.textContent = 'Animation complete';
+            }
+        }
+        
+        generateBtn.addEventListener('click', () => {
+            currentTime = 0;
+            initializeParticles();
+            drawPattern();
+            status.textContent = 'Pattern generated';
+        });
+        
+        animateBtn.addEventListener('click', () => {
+            if (isAnimating) {
+                isAnimating = false;
+                cancelAnimationFrame(animationId);
+                animateBtn.textContent = 'Animate Mixing';
+                status.textContent = 'Animation paused';
+            } else {
+                if (particles.length === 0) {
+                    initializeParticles();
+                }
+                isAnimating = true;
+                animateBtn.textContent = 'Pause Animation';
+                status.textContent = 'Animating...';
+                animate();
+            }
+        });
+        
+        exportSVGBtn.addEventListener('click', () => {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', width);
+            svg.setAttribute('height', height);
+            svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            
+            // White background
+            const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            bg.setAttribute('width', width);
+            bg.setAttribute('height', height);
+            bg.setAttribute('fill', 'white');
+            svg.appendChild(bg);
+            
+            // Add particle paths
+            particles.forEach(particle => {
+                if (particle.path.length > 1) {
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const d = particle.path.map((p, i) => 
+                        `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
+                    ).join(' ');
+                    
+                    path.setAttribute('d', d);
+                    path.setAttribute('fill', 'none');
+                    
+                    if (colorByAge.checked) {
+                        const hue = (particle.age * 60) % 360;
+                        path.setAttribute('stroke', `hsl(${hue}, 70%, 50%)`);
+                    } else {
+                        path.setAttribute('stroke', 'rgba(0, 100, 255, 0.5)');
+                    }
+                    path.setAttribute('stroke-width', '1');
+                    svg.appendChild(path);
+                }
+            });
+            
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mixing-pattern.svg';
+            a.click();
+            URL.revokeObjectURL(url);
+            status.textContent = 'SVG exported';
+        });
+        
+        exportPNGBtn.addEventListener('click', () => {
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'mixing-pattern.png';
+            a.click();
+            status.textContent = 'PNG exported';
+        });
+        
+        exportGIFBtn.addEventListener('click', () => {
+            if (particles.length === 0) {
+                status.textContent = 'Generate pattern first';
+                return;
+            }
+            
+            status.textContent = 'Creating GIF...';
+            animationProgress.style.display = 'block';
+            animationProgress.value = 0;
+            
+            gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: width,
+                height: height
+            });
+            
+            // Reset and animate for GIF
+            currentTime = 0;
+            initializeParticles();
+            
+            const frames = 60;
+            const dt = parseInt(timeSteps.value) / 100 / frames;
+            
+            for (let frame = 0; frame < frames; frame++) {
+                // Update particles
+                particles.forEach(particle => {
+                    const vel = getVelocityField(particle.x, particle.y, currentTime);
+                    particle.update(vel.vx, vel.vy, dt);
+                    
+                    if (particle.x < 0 || particle.x > width || particle.y < 0 || particle.y > height) {
+                        particle.x = Math.max(0, Math.min(width, particle.x));
+                        particle.y = Math.max(0, Math.min(height, particle.y));
+                    }
+                });
+                
+                currentTime += dt;
+                drawPattern();
+                
+                gif.addFrame(ctx, {copy: true, delay: 50});
+                animationProgress.value = (frame / frames) * 100;
+            }
+            
+            gif.on('finished', function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'mixing-animation.gif';
+                a.click();
+                URL.revokeObjectURL(url);
+                status.textContent = 'GIF exported';
+                animationProgress.style.display = 'none';
+            });
+            
+            gif.render();
+        });
+        
+        // Initialize
+        initializeParticles();
+        drawPattern();
+    </script>
+</body>
+</html>

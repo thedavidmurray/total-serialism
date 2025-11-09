@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Flow Field with GUI Controls</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+    }
+    #canvas-container {
+      flex: 1;
+    }
+    #controls {
+      width: 300px;
+      padding: 20px;
+      background: #f0f0f0;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 15px;
+    }
+    .control-group h3 {
+      margin: 0 0 10px 0;
+      color: #333;
+    }
+    .control {
+      margin-bottom: 10px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+    }
+    .control input[type="range"] {
+      width: 100%;
+    }
+    .control span {
+      font-weight: bold;
+      color: #666;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #333;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #555;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #fff;
+      padding: 5px;
+      border: 1px solid #ddd;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Flow Field Controls</h2>
+    
+    <div class="control-group">
+      <h3>Flow Field</h3>
+      <div class="control">
+        <label>Noise Scale: <span id="noiseScale-value">0.002</span></label>
+        <input type="range" id="noiseScale" min="0.0001" max="0.01" step="0.0001" value="0.002">
+      </div>
+      <div class="control">
+        <label>Noise Strength: <span id="noiseStrength-value">1</span></label>
+        <input type="range" id="noiseStrength" min="0.1" max="3" step="0.1" value="1">
+      </div>
+      <div class="control">
+        <label>Field Type:</label>
+        <select id="fieldType">
+          <option value="curl">Curl Noise</option>
+          <option value="perlin">Perlin Noise</option>
+          <option value="turbulent">Turbulent</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Particles</h3>
+      <div class="control">
+        <label>Count: <span id="particleCount-value">2000</span></label>
+        <input type="range" id="particleCount" min="100" max="10000" step="100" value="2000">
+      </div>
+      <div class="control">
+        <label>Step Length: <span id="stepLength-value">2</span></label>
+        <input type="range" id="stepLength" min="0.5" max="10" step="0.5" value="2">
+      </div>
+      <div class="control">
+        <label>Steps: <span id="steps-value">100</span></label>
+        <input type="range" id="steps" min="10" max="500" step="10" value="100">
+      </div>
+      <div class="control">
+        <label>Line Width: <span id="lineWidth-value">0.5</span></label>
+        <input type="range" id="lineWidth" min="0.1" max="2" step="0.1" value="0.5">
+      </div>
+      <div class="control">
+        <label>Start Pattern:</label>
+        <select id="startPattern">
+          <option value="random">Random</option>
+          <option value="grid">Grid</option>
+          <option value="circle">Circle</option>
+          <option value="edge">Edge</option>
+        </select>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Aesthetics</h3>
+      <div class="control">
+        <label>Margin: <span id="margin-value">20</span></label>
+        <input type="range" id="margin" min="0" max="100" step="5" value="20">
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="fadeEdges" checked> Fade Edges
+        </label>
+      </div>
+      <div class="control">
+        <label>Fade Strength: <span id="fadeStrength-value">50</span></label>
+        <input type="range" id="fadeStrength" min="10" max="200" step="10" value="50">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomizeParams()">Randomize</button>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <button onclick="saveParams()">Save Parameters</button>
+      <button onclick="loadLastParams()">Load Last Saved</button>
+      <div class="control">
+        <label>Seed:</label>
+        <div id="seed-display">-</div>
+      </div>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
+    </div>
+  </div>
+
+  <script>
+    // Parameters object
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      noiseScale: 0.002,
+      noiseStrength: 1,
+      fieldType: 'curl',
+      particleCount: 2000,
+      stepLength: 2,
+      steps: 100,
+      lineWidth: 0.5,
+      startPattern: 'random',
+      margin: 20,
+      fadeEdges: true,
+      fadeStrength: 50
+    };
+    
+    let particles = [];
+    
+    // Paper sizes in mm
+    const paperSizes = {
+      A3: [297, 420],
+      A4: [210, 297]
+    };
+    
+    function setup() {
+      // Create canvas with A3 proportions
+      const [w, h] = paperSizes.A3;
+      const scale = Math.min(windowWidth * 0.7 / w, windowHeight / h);
+      
+      let canvas = createCanvas(w * scale, h * scale, SVG);
+      canvas.parent('canvas-container');
+      
+      // Set up controls
+      setupControls();
+      
+      // Initial generation
+      regenerate();
+    }
+    
+    function setupControls() {
+      // Add event listeners to all controls
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              document.getElementById(key + '-value').textContent = e.target.value;
+              regenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              regenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              regenerate();
+            });
+          }
+        }
+      });
+      
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+    
+    function generateFlowField(x, y) {
+      switch (params.fieldType) {
+        case 'curl':
+          // Curl noise
+          const eps = 0.0001;
+          const n1 = noise(x * params.noiseScale, y * params.noiseScale - eps);
+          const n2 = noise(x * params.noiseScale, y * params.noiseScale + eps);
+          const a = (n1 - n2) / (2 * eps);
+          
+          const n3 = noise(x * params.noiseScale - eps, y * params.noiseScale);
+          const n4 = noise(x * params.noiseScale + eps, y * params.noiseScale);
+          const b = (n3 - n4) / (2 * eps);
+          
+          return atan2(b, a);
+          
+        case 'perlin':
+          return noise(x * params.noiseScale, y * params.noiseScale) * TWO_PI * params.noiseStrength;
+          
+        case 'turbulent':
+          const turb = abs(noise(x * params.noiseScale, y * params.noiseScale) - 0.5) * 2;
+          return turb * TWO_PI * params.noiseStrength;
+      }
+    }
+    
+    function generateStartPositions() {
+      const positions = [];
+      
+      switch (params.startPattern) {
+        case 'random':
+          for (let i = 0; i < params.particleCount; i++) {
+            positions.push({
+              x: random(params.margin, width - params.margin),
+              y: random(params.margin, height - params.margin)
+            });
+          }
+          break;
+          
+        case 'grid':
+          const gridSize = Math.sqrt(params.particleCount);
+          for (let i = 0; i < gridSize; i++) {
+            for (let j = 0; j < gridSize; j++) {
+              positions.push({
+                x: map(i, 0, gridSize - 1, params.margin, width - params.margin),
+                y: map(j, 0, gridSize - 1, params.margin, height - params.margin)
+              });
+            }
+          }
+          break;
+          
+        case 'circle':
+          const centerX = width / 2;
+          const centerY = height / 2;
+          const radius = min(width, height) / 3;
+          for (let i = 0; i < params.particleCount; i++) {
+            const angle = (i / params.particleCount) * TWO_PI;
+            positions.push({
+              x: centerX + cos(angle) * radius,
+              y: centerY + sin(angle) * radius
+            });
+          }
+          break;
+          
+        case 'edge':
+          const perSide = params.particleCount / 4;
+          // Top, right, bottom, left edges
+          for (let s = 0; s < 4; s++) {
+            for (let i = 0; i < perSide; i++) {
+              const t = i / perSide;
+              let x, y;
+              
+              switch (s) {
+                case 0: // Top
+                  x = lerp(params.margin, width - params.margin, t);
+                  y = params.margin;
+                  break;
+                case 1: // Right
+                  x = width - params.margin;
+                  y = lerp(params.margin, height - params.margin, t);
+                  break;
+                case 2: // Bottom
+                  x = lerp(width - params.margin, params.margin, t);
+                  y = height - params.margin;
+                  break;
+                case 3: // Left
+                  x = params.margin;
+                  y = lerp(height - params.margin, params.margin, t);
+                  break;
+              }
+              
+              positions.push({ x, y });
+            }
+          }
+          break;
+      }
+      
+      return positions;
+    }
+    
+    function regenerate() {
+      // Set random seed
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      
+      // Clear particles
+      particles = [];
+      
+      // Generate new particles
+      const startPositions = generateStartPositions();
+      
+      startPositions.forEach(pos => {
+        const particle = {
+          x: pos.x,
+          y: pos.y,
+          path: []
+        };
+        
+        // Trace path
+        let x = particle.x;
+        let y = particle.y;
+        
+        for (let step = 0; step < params.steps; step++) {
+          particle.path.push({ x, y });
+          
+          const angle = generateFlowField(x, y);
+          x += cos(angle) * params.stepLength;
+          y += sin(angle) * params.stepLength;
+          
+          if (x < 0 || x > width || y < 0 || y > height) break;
+        }
+        
+        particles.push(particle);
+      });
+      
+      // Redraw
+      redraw();
+    }
+    
+    function draw() {
+      background(255);
+      
+      stroke(0);
+      strokeWeight(params.lineWidth);
+      noFill();
+      
+      particles.forEach(particle => {
+        if (particle.path.length < 2) return;
+        
+        beginShape();
+        particle.path.forEach((point, i) => {
+          // Apply edge fade if enabled
+          let alpha = 255;
+          if (params.fadeEdges) {
+            const edgeDist = min(
+              point.x - params.margin,
+              point.y - params.margin,
+              width - params.margin - point.x,
+              height - params.margin - point.y
+            );
+            alpha = max(0, min(255, map(edgeDist, 0, params.fadeStrength, 0, 255)));
+          }
+          
+          stroke(0, alpha);
+          vertex(point.x, point.y);
+        });
+        endShape();
+      });
+      
+      noLoop();
+    }
+    
+    // Action functions
+    function randomizeParams() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      params.noiseScale = random(0.0001, 0.01);
+      params.noiseStrength = random(0.1, 3);
+      params.particleCount = Math.floor(random(100, 5000));
+      params.stepLength = random(0.5, 10);
+      params.steps = Math.floor(random(10, 500));
+      
+      // Update UI
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element && element.type === 'range') {
+          element.value = params[key];
+          const valueDisplay = document.getElementById(key + '-value');
+          if (valueDisplay) valueDisplay.textContent = params[key];
+        }
+      });
+      
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+    
+    function exportSVG() {
+      save(`flow-field-${params.seed}.svg`);
+    }
+    
+    function saveParams() {
+      const paramData = {
+        algorithm: 'flow-field-p5-gui',
+        timestamp: new Date().toISOString(),
+        params: { ...params }
+      };
+      
+      localStorage.setItem('lastFlowFieldParams', JSON.stringify(paramData));
+      
+      // Also download as JSON
+      const dataStr = JSON.stringify(paramData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `flow-field-params-${params.seed}.json`;
+      link.click();
+      
+      alert('Parameters saved!');
+    }
+    
+    function loadLastParams() {
+      const saved = localStorage.getItem('lastFlowFieldParams');
+      if (saved) {
+        const data = JSON.parse(saved);
+        params = data.params;
+        
+        // Update UI
+        Object.keys(params).forEach(key => {
+          const element = document.getElementById(key);
+          if (element) {
+            if (element.type === 'range' || element.type === 'select-one') {
+              element.value = params[key];
+              const valueDisplay = document.getElementById(key + '-value');
+              if (valueDisplay) valueDisplay.textContent = params[key];
+            } else if (element.type === 'checkbox') {
+              element.checked = params[key];
+            }
+          }
+        });
+        
+        document.getElementById('seed-display').textContent = params.seed;
+        regenerate();
+      } else {
+        alert('No saved parameters found');
+      }
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+      
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+      
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+      
+      // Store original parameters
+      const originalSeed = params.seed;
+      const originalNoise = params.noiseScale;
+      
+      // Generate frames by varying the noise offset
+      const totalFrames = 30;
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+        
+        // Vary the noise seed for animation
+        noiseSeed(originalSeed + frame * 0.1);
+        
+        // Regenerate particles with new noise
+        particles = [];
+        const startPositions = generateStartPositions();
+        
+        startPositions.forEach(pos => {
+          const particle = {
+            x: pos.x,
+            y: pos.y,
+            path: []
+          };
+          
+          let x = particle.x;
+          let y = particle.y;
+          
+          for (let step = 0; step < params.steps; step++) {
+            particle.path.push({ x, y });
+            
+            const angle = generateFlowField(x, y);
+            x += cos(angle) * params.stepLength;
+            y += sin(angle) * params.stepLength;
+            
+            if (x < 0 || x > width || y < 0 || y > height) break;
+          }
+          
+          particles.push(particle);
+        });
+        
+        // Draw frame
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = params.lineWidth;
+        
+        particles.forEach(particle => {
+          if (particle.path.length < 2) return;
+          
+          ctx.beginPath();
+          particle.path.forEach((point, i) => {
+            if (i === 0) {
+              ctx.moveTo(point.x, point.y);
+            } else {
+              ctx.lineTo(point.x, point.y);
+            }
+          });
+          ctx.stroke();
+        });
+        
+        // Add frame to GIF
+        gif.addFrame(ctx, {delay: 100});
+      }
+      
+      // Restore original seed
+      noiseSeed(originalSeed);
+      regenerate();
+      
+      statusEl.textContent = 'Encoding GIF...';
+      
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `flow-field-${params.seed}.gif`;
+        link.click();
+        
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+      
+      gif.render();
+    }
+  </script>
+</body>
+</html>

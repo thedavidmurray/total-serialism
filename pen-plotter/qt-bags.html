@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QT Bags - Generative Art NFT Collection</title>
+    <script src="https://cdn.jsdelivr.net/npm/p5@1.7.0/lib/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', monospace;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        #header {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            max-width: 800px;
+        }
+        
+        #header h1 {
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+        }
+        
+        #header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin: 1rem 0;
+        }
+        
+        #canvas-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 20px;
+            margin: 20px;
+        }
+        
+        #controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: white;
+            color: #764ba2;
+            border: 2px solid #764ba2;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .btn:hover {
+            background: #764ba2;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(118, 75, 162, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        #stats {
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            margin: 20px;
+            max-width: 800px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        #stats h3 {
+            color: #764ba2;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat-item {
+            padding: 0.5rem;
+            background: rgba(118, 75, 162, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid #764ba2;
+        }
+        
+        .stat-label {
+            font-weight: bold;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        .stat-value {
+            color: #764ba2;
+            font-size: 1.1rem;
+            margin-top: 0.2rem;
+        }
+        
+        #gallery {
+            background: rgba(255,255,255,0.95);
+            border-radius: 8px;
+            padding: 1rem 2rem;
+            margin: 20px;
+            max-width: 800px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        #gallery h3 {
+            color: #764ba2;
+            margin-bottom: 1rem;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        
+        .gallery-item {
+            background: white;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-item:hover {
+            border-color: #764ba2;
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(118, 75, 162, 0.2);
+        }
+        
+        .gallery-item canvas {
+            width: 100%;
+            height: auto;
+        }
+        
+        .gallery-info {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .rarity-common { color: #666; }
+        .rarity-uncommon { color: #4CAF50; }
+        .rarity-rare { color: #2196F3; }
+        .rarity-epic { color: #9C27B0; }
+        .rarity-legendary { color: #FF9800; }
+        .rarity-mythic { color: #F44336; }
+        .rarity-artifact { color: #FFD700; font-weight: bold; }
+        
+        #footer {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            padding: 2rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>QT BAGS</h1>
+        <p>A Generative Art Collection of Mystical Containers</p>
+        <p style="font-size: 1rem; opacity: 0.8;">Each bag is unique, with procedurally generated traits and rarity</p>
+    </div>
+    
+    <div id="canvas-container">
+        <div id="canvas-holder"></div>
+    </div>
+    
+    <div id="controls">
+        <button class="btn" onclick="generateNewBag()">Generate New Bag</button>
+        <button class="btn" onclick="saveBag()">Save as PNG</button>
+        <button class="btn" onclick="generateBatch()">Generate Batch (10)</button>
+        <button class="btn" onclick="toggleAutoGenerate()">Auto Generate: OFF</button>
+    </div>
+    
+    <div id="stats">
+        <h3>Current Bag Stats</h3>
+        <div class="stat-grid" id="stat-grid">
+            <!-- Stats will be populated here -->
+        </div>
+    </div>
+    
+    <div id="gallery">
+        <h3>Recent Generations</h3>
+        <div class="gallery-grid" id="gallery-grid">
+            <!-- Gallery items will be populated here -->
+        </div>
+    </div>
+    
+    <div id="footer">
+        <p>© 2024 QT Bags Collection | Press SPACE to generate | S to save | R for new seed</p>
+    </div>
+    
+    <script src="qt-bags-generator.js"></script>
+    <script>
+        let autoGenerate = false;
+        let autoGenerateInterval;
+        let generationHistory = [];
+        const maxHistory = 12;
+        
+        // Override setup to place canvas in container
+        const originalSetup = setup;
+        setup = function() {
+            const canvas = createCanvas(800, 800);
+            canvas.parent('canvas-holder');
+            seed = Math.floor(random(100000));
+            randomSeed(seed);
+            currentBag = generateBag();
+            updateStats();
+            addToGallery();
+            noLoop();
+        };
+        
+        // Generate new bag
+        function generateNewBag() {
+            currentBag = generateBag();
+            updateStats();
+            addToGallery();
+            redraw();
+        }
+        
+        // Save current bag
+        function saveBag() {
+            if (currentBag) {
+                saveCanvas(`qt-bag-${currentBag.id}`, 'png');
+            }
+        }
+        
+        // Generate batch of bags
+        async function generateBatch() {
+            for (let i = 0; i < 10; i++) {
+                generateNewBag();
+                await new Promise(resolve => setTimeout(resolve, 200));
+            }
+        }
+        
+        // Toggle auto generation
+        function toggleAutoGenerate() {
+            autoGenerate = !autoGenerate;
+            const btn = event.target;
+            btn.textContent = `Auto Generate: ${autoGenerate ? 'ON' : 'OFF'}`;
+            btn.style.background = autoGenerate ? '#764ba2' : 'white';
+            btn.style.color = autoGenerate ? 'white' : '#764ba2';
+            
+            if (autoGenerate) {
+                autoGenerateInterval = setInterval(generateNewBag, 3000);
+            } else {
+                clearInterval(autoGenerateInterval);
+            }
+        }
+        
+        // Update stats display
+        function updateStats() {
+            if (!currentBag) return;
+            
+            const statGrid = document.getElementById('stat-grid');
+            const rarityScore = calculateRarityScore(currentBag);
+            const rarityClass = getRarityClass(rarityScore);
+            
+            statGrid.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-label">Type</div>
+                    <div class="stat-value ${getRarityClass(currentBag.type.rarity)}">${currentBag.type.name}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Capacity</div>
+                    <div class="stat-value ${getRarityClass(currentBag.capacity.rarity)}">${currentBag.capacity.name}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Material</div>
+                    <div class="stat-value ${getRarityClass(currentBag.material.rarity)}">${currentBag.material.name}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Color</div>
+                    <div class="stat-value ${getRarityClass(currentBag.color.rarity)}">${currentBag.color.name}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Enchantment</div>
+                    <div class="stat-value ${getRarityClass(currentBag.enchantment.rarity)}">${currentBag.enchantment.name}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">History</div>
+                    <div class="stat-value ${getRarityClass(currentBag.history.rarity)}">${currentBag.history.name}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Weight</div>
+                    <div class="stat-value">${currentBag.weight} units</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Rarity Score</div>
+                    <div class="stat-value ${rarityClass}" style="font-size: 1.3rem; font-weight: bold;">${rarityScore}/100</div>
+                </div>
+            `;
+        }
+        
+        // Get rarity class for styling
+        function getRarityClass(rarityOrScore) {
+            if (typeof rarityOrScore === 'number') {
+                if (rarityOrScore >= 90) return 'rarity-artifact';
+                if (rarityOrScore >= 70) return 'rarity-mythic';
+                if (rarityOrScore >= 50) return 'rarity-legendary';
+                if (rarityOrScore >= 40) return 'rarity-epic';
+                if (rarityOrScore >= 30) return 'rarity-rare';
+                if (rarityOrScore >= 20) return 'rarity-uncommon';
+                return 'rarity-common';
+            } else {
+                return `rarity-${rarityOrScore.toLowerCase()}`;
+            }
+        }
+        
+        // Add current bag to gallery
+        function addToGallery() {
+            if (!currentBag) return;
+            
+            // Store bag in history
+            generationHistory.unshift({...currentBag});
+            if (generationHistory.length > maxHistory) {
+                generationHistory.pop();
+            }
+            
+            // Update gallery display
+            const galleryGrid = document.getElementById('gallery-grid');
+            galleryGrid.innerHTML = '';
+            
+            generationHistory.forEach(bag => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.innerHTML = `
+                    <div class="gallery-info">
+                        <strong>${bag.type.name}</strong><br>
+                        <span class="${getRarityClass(calculateRarityScore(bag))}">
+                            Score: ${calculateRarityScore(bag)}
+                        </span>
+                    </div>
+                `;
+                item.onclick = () => {
+                    currentBag = bag;
+                    updateStats();
+                    redraw();
+                };
+                galleryGrid.appendChild(item);
+            });
+        }
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            // Stats and gallery will be initialized after p5.js setup
+        });
+    </script>
+</body>
+</html>

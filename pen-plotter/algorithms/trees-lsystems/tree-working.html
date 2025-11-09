@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>L-System Tree Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f0f0f0;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .control-group {
+      background: #f8f8f8;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+      font-size: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    .value {
+      color: #4CAF50;
+      font-weight: bold;
+    }
+    .buttons {
+      text-align: center;
+      margin: 20px 0;
+    }
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 5px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .preset {
+      background: #2196F3;
+    }
+    .preset:hover {
+      background: #1976D2;
+    }
+    #canvas-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>L-System Tree Generator</h1>
+    
+    <div class="buttons">
+      <button class="preset" id="simple">Simple Tree</button>
+      <button class="preset" id="organic">Organic</button>
+      <button class="preset" id="willow">Willow</button>
+      <button class="preset" id="fern">Fern</button>
+    </div>
+    
+    <div class="controls">
+      <div class="control-group">
+        <label>Iterations: <span class="value" id="iterations-val">5</span></label>
+        <input type="range" id="iterations" min="1" max="8" value="5">
+      </div>
+      
+      <div class="control-group">
+        <label>Branch Length: <span class="value" id="length-val">60</span></label>
+        <input type="range" id="length" min="20" max="100" value="60">
+      </div>
+      
+      <div class="control-group">
+        <label>Branch Angle: <span class="value" id="angle-val">25</span>°</label>
+        <input type="range" id="angle" min="10" max="45" value="25">
+      </div>
+      
+      <div class="control-group">
+        <label>Length Decay: <span class="value" id="decay-val">0.7</span></label>
+        <input type="range" id="decay" min="0.5" max="0.9" step="0.05" value="0.7">
+      </div>
+    </div>
+    
+    <div class="buttons">
+      <button id="regenerate">Regenerate</button>
+      <button id="export">Export SVG</button>
+    </div>
+    
+    <div id="canvas-container"></div>
+  </div>
+
+  <script>
+    let params = {
+      iterations: 5,
+      length: 60,
+      angle: 25,
+      decay: 0.7,
+      axiom: 'F',
+      rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
+    };
+    
+    const presets = {
+      simple: {
+        iterations: 5,
+        angle: 25,
+        decay: 0.7,
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
+      },
+      organic: {
+        iterations: 4,
+        angle: 30,
+        decay: 0.75,
+        axiom: 'F',
+        rules: { 'F': 'F[+F]F[-F][F]' }
+      },
+      willow: {
+        iterations: 5,
+        angle: 35,
+        decay: 0.8,
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-FF-F]-[-F+FF+F]' }
+      },
+      fern: {
+        iterations: 6,
+        angle: 22,
+        decay: 0.85,
+        axiom: 'X',
+        rules: { 
+          'X': 'F+[[X]-X]-F[-FX]+X',
+          'F': 'FF'
+        }
+      }
+    };
+    
+    let canvas;
+    
+    function setup() {
+      canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      // Setup range inputs
+      document.getElementById('iterations').addEventListener('input', updateParam);
+      document.getElementById('length').addEventListener('input', updateParam);
+      document.getElementById('angle').addEventListener('input', updateParam);
+      document.getElementById('decay').addEventListener('input', updateParam);
+      
+      // Setup buttons
+      document.getElementById('regenerate').addEventListener('click', drawTree);
+      document.getElementById('export').addEventListener('click', exportSVG);
+      
+      // Setup presets
+      Object.keys(presets).forEach(preset => {
+        document.getElementById(preset).addEventListener('click', () => loadPreset(preset));
+      });
+      
+      drawTree();
+    }
+    
+    function updateParam(e) {
+      const id = e.target.id;
+      params[id] = parseFloat(e.target.value);
+      document.getElementById(id + '-val').textContent = e.target.value;
+      drawTree();
+    }
+    
+    function generateLSystem() {
+      let current = params.axiom;
+      for (let i = 0; i < params.iterations; i++) {
+        let next = '';
+        for (let char of current) {
+          next += params.rules[char] || char;
+        }
+        current = next;
+      }
+      return current;
+    }
+    
+    function drawTree() {
+      background(255);
+      stroke(0);
+      strokeWeight(2);
+      
+      push();
+      translate(width / 2, height - 50);
+      
+      const system = generateLSystem();
+      drawLSystem(system);
+      
+      pop();
+    }
+    
+    function drawLSystem(system) {
+      for (let char of system) {
+        switch (char) {
+          case 'F':
+            line(0, 0, 0, -params.length);
+            translate(0, -params.length);
+            break;
+          case '+':
+            rotate(radians(params.angle));
+            break;
+          case '-':
+            rotate(radians(-params.angle));
+            break;
+          case '[':
+            push();
+            params.length *= params.decay;
+            break;
+          case ']':
+            params.length /= params.decay;
+            pop();
+            break;
+        }
+      }
+    }
+    
+    function loadPreset(name) {
+      const preset = presets[name];
+      Object.assign(params, preset);
+      
+      // Update UI
+      ['iterations', 'length', 'angle', 'decay'].forEach(key => {
+        if (params[key] !== undefined) {
+          const element = document.getElementById(key);
+          if (element) {
+            element.value = params[key];
+            document.getElementById(key + '-val').textContent = params[key];
+          }
+        }
+      });
+      
+      drawTree();
+    }
+    
+    function exportSVG() {
+      // Create SVG version
+      let svgCanvas = createGraphics(800, 600, SVG);
+      
+      svgCanvas.background(255);
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(2);
+      
+      svgCanvas.push();
+      svgCanvas.translate(400, 550);
+      
+      // Draw to SVG
+      const system = generateLSystem();
+      let len = params.length;
+      
+      for (let char of system) {
+        switch (char) {
+          case 'F':
+            svgCanvas.line(0, 0, 0, -len);
+            svgCanvas.translate(0, -len);
+            break;
+          case '+':
+            svgCanvas.rotate(radians(params.angle));
+            break;
+          case '-':
+            svgCanvas.rotate(radians(-params.angle));
+            break;
+          case '[':
+            svgCanvas.push();
+            len *= params.decay;
+            break;
+          case ']':
+            len /= params.decay;
+            svgCanvas.pop();
+            break;
+        }
+      }
+      
+      svgCanvas.pop();
+      
+      // Save the SVG
+      save(svgCanvas, 'lsystem-tree.svg');
+      svgCanvas.remove();
+    }
+  </script>
+</body>
+</html>

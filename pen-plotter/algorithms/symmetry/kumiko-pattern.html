@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kumiko Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #f5f5f5;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 350px;
+      padding: 20px;
+      background: white;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 15px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #666;
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 5px;
+    }
+    .control span {
+      font-weight: bold;
+      color: #4a90e2;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #processing-status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      padding: 20px;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .pattern-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+  
+  <div id="controls">
+    <h2>Kumiko Pattern Generator</h2>
+    <div class="pattern-info">
+      <strong>Kumiko</strong> is a traditional Japanese woodworking technique that creates intricate geometric patterns without nails or glue. 
+      This generator creates authentic patterns suitable for pen plotting.
+    </div>
+    
+    <div class="control-group">
+      <h3>🎌 Pattern Type</h3>
+      <div class="control">
+        <label>Kumiko Style:</label>
+        <select id="patternType">
+          <option value="asanoha">Asanoha (Hemp Leaf)</option>
+          <option value="seigaiha">Seigaiha (Blue Ocean Waves)</option>
+          <option value="shippo">Shippo (Seven Treasures)</option>
+          <option value="yosegi">Yosegi (Parquet)</option>
+          <option value="kikko">Kikko (Tortoise Shell)</option>
+          <option value="sakura">Sakura (Cherry Blossom)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Density: <span id="density-value">3</span></label>
+        <input type="range" id="density" min="1" max="6" step="1" value="3">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>📐 Grid Properties</h3>
+      <div class="control">
+        <label>Module Size: <span id="moduleSize-value">60</span>px</label>
+        <input type="range" id="moduleSize" min="30" max="120" step="10" value="60">
+      </div>
+      <div class="control">
+        <label>Line Thickness: <span id="lineThickness-value">3</span>px</label>
+        <input type="range" id="lineThickness" min="1" max="8" step="0.5" value="3">
+      </div>
+      <div class="control">
+        <label>Joint Size: <span id="jointSize-value">5</span>px</label>
+        <input type="range" id="jointSize" min="0" max="10" step="1" value="5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Visual Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span id="strokeWeight-value">1</span>px</label>
+        <input type="range" id="strokeWeight" min="0.1" max="3" step="0.1" value="1">
+      </div>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="showJoints" checked> Show Joints
+        </label>
+        <label>
+          <input type="checkbox" id="showOverUnder" checked> Show Over/Under
+        </label>
+        <label>
+          <input type="checkbox" id="showGrid"> Show Grid
+        </label>
+        <label>
+          <input type="checkbox" id="doubleLines"> Double Lines (Wood Effect)
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🔄 Variations</h3>
+      <div class="control">
+        <label>Rotation: <span id="rotation-value">0</span>°</label>
+        <input type="range" id="rotation" min="0" max="90" step="15" value="0">
+      </div>
+      <div class="control">
+        <label>Pattern Offset X: <span id="offsetX-value">0</span>px</label>
+        <input type="range" id="offsetX" min="-50" max="50" step="5" value="0">
+      </div>
+      <div class="control">
+        <label>Pattern Offset Y: <span id="offsetY-value">0</span>px</label>
+        <input type="range" id="offsetY" min="-50" max="50" step="5" value="0">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>🎮 Controls</h3>
+      <button onclick="generatePattern()">Generate New Pattern</button>
+      <button onclick="randomizePattern()">Randomize</button>
+      <div class="button-group">
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+      <div id="processing-status"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let pattern = [];
+    let svgCanvas;
+    let currentSeed;
+
+    function setup() {
+      const canvas = createCanvas(600, 600);
+      canvas.parent('canvas-wrapper');
+      
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(600, 600, SVG);
+      
+      angleMode(DEGREES);
+      setupEventListeners();
+      generatePattern();
+    }
+
+    function generatePattern() {
+      currentSeed = millis();
+      randomSeed(currentSeed);
+      
+      pattern = [];
+      const patternType = document.getElementById('patternType').value;
+      const density = parseInt(document.getElementById('density').value);
+      const moduleSize = parseFloat(document.getElementById('moduleSize').value);
+      
+      // Generate pattern based on type
+      switch (patternType) {
+        case 'asanoha':
+          generateAsanoha(density, moduleSize);
+          break;
+        case 'seigaiha':
+          generateSeigaiha(density, moduleSize);
+          break;
+        case 'shippo':
+          generateShippo(density, moduleSize);
+          break;
+        case 'yosegi':
+          generateYosegi(density, moduleSize);
+          break;
+        case 'kikko':
+          generateKikko(density, moduleSize);
+          break;
+        case 'sakura':
+          generateSakura(density, moduleSize);
+          break;
+      }
+      
+      redraw();
+      showStatus('Pattern generated', 'success');
+    }
+
+    function generateAsanoha(density, size) {
+      // Hemp leaf pattern - hexagonal star pattern
+      const cols = floor(width / size) + 2;
+      const rows = floor(height / (size * 0.866)) + 2; // 0.866 = sqrt(3)/2
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * size + (row % 2) * size / 2;
+          const y = row * size * 0.866;
+          
+          // Create hexagonal star
+          const center = { x: x, y: y };
+          
+          // Six triangles forming the star
+          for (let i = 0; i < 6; i++) {
+            const angle1 = i * 60;
+            const angle2 = (i + 1) * 60;
+            
+            const p1 = {
+              x: center.x + size * 0.5 * cos(angle1),
+              y: center.y + size * 0.5 * sin(angle1)
+            };
+            const p2 = {
+              x: center.x + size * 0.5 * cos(angle2),
+              y: center.y + size * 0.5 * sin(angle2)
+            };
+            
+            // Inner lines
+            pattern.push({
+              type: 'line',
+              points: [center, p1],
+              layer: 0,
+              overUnder: i % 2
+            });
+            
+            // Outer hexagon
+            pattern.push({
+              type: 'line',
+              points: [p1, p2],
+              layer: 1,
+              overUnder: 0
+            });
+            
+            // Additional detail based on density
+            if (density > 2) {
+              const mid = {
+                x: (p1.x + p2.x) / 2,
+                y: (p1.y + p2.y) / 2
+              };
+              pattern.push({
+                type: 'line',
+                points: [center, mid],
+                layer: 2,
+                overUnder: (i + 1) % 2
+              });
+            }
+          }
+        }
+      }
+    }
+
+    function generateSeigaiha(density, size) {
+      // Wave pattern - overlapping circles
+      const radius = size / 2;
+      const rows = floor(height / radius) + 2;
+      const cols = floor(width / radius) + 2;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * radius + (row % 2) * radius / 2;
+          const y = row * radius * 0.5;
+          
+          // Create concentric arcs
+          for (let i = 0; i < density; i++) {
+            const r = radius * (1 - i / density);
+            
+            pattern.push({
+              type: 'arc',
+              center: { x: x, y: y },
+              radius: r,
+              startAngle: 0,
+              endAngle: 180,
+              layer: i,
+              overUnder: row % 2
+            });
+          }
+        }
+      }
+    }
+
+    function generateShippo(density, size) {
+      // Seven treasures - overlapping circles
+      const radius = size / 2;
+      const cols = floor(width / (radius * 1.5)) + 2;
+      const rows = floor(height / (radius * 1.5)) + 2;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * radius * 1.5;
+          const y = row * radius * 1.5;
+          
+          // Four overlapping circles
+          const positions = [
+            { dx: 0, dy: 0 },
+            { dx: radius * 0.75, dy: 0 },
+            { dx: 0, dy: radius * 0.75 },
+            { dx: radius * 0.75, dy: radius * 0.75 }
+          ];
+          
+          positions.forEach((pos, i) => {
+            pattern.push({
+              type: 'circle',
+              center: { x: x + pos.dx, y: y + pos.dy },
+              radius: radius,
+              layer: i % 2,
+              overUnder: i < 2 ? 0 : 1
+            });
+          });
+        }
+      }
+    }
+
+    function generateYosegi(density, size) {
+      // Parquet pattern - rectangular interlocking
+      const unitWidth = size;
+      const unitHeight = size / 2;
+      const cols = floor(width / unitWidth) + 1;
+      const rows = floor(height / unitHeight) + 1;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * unitWidth;
+          const y = row * unitHeight;
+          
+          // Horizontal and vertical rectangles
+          if ((row + col) % 2 === 0) {
+            // Horizontal strips
+            for (let i = 0; i < density; i++) {
+              const stripHeight = unitHeight / density;
+              pattern.push({
+                type: 'rect',
+                points: [
+                  { x: x, y: y + i * stripHeight },
+                  { x: x + unitWidth, y: y + i * stripHeight },
+                  { x: x + unitWidth, y: y + (i + 1) * stripHeight },
+                  { x: x, y: y + (i + 1) * stripHeight }
+                ],
+                layer: 0,
+                overUnder: i % 2
+              });
+            }
+          } else {
+            // Vertical strips
+            for (let i = 0; i < density; i++) {
+              const stripWidth = unitWidth / density;
+              pattern.push({
+                type: 'rect',
+                points: [
+                  { x: x + i * stripWidth, y: y },
+                  { x: x + (i + 1) * stripWidth, y: y },
+                  { x: x + (i + 1) * stripWidth, y: y + unitHeight },
+                  { x: x + i * stripWidth, y: y + unitHeight }
+                ],
+                layer: 1,
+                overUnder: i % 2
+              });
+            }
+          }
+        }
+      }
+    }
+
+    function generateKikko(density, size) {
+      // Tortoise shell - hexagonal pattern
+      const hexHeight = size * 0.866;
+      const cols = floor(width / (size * 1.5)) + 2;
+      const rows = floor(height / hexHeight) + 2;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * size * 1.5 + size;
+          const y = row * hexHeight + (col % 2) * hexHeight / 2;
+          
+          // Hexagon vertices
+          const vertices = [];
+          for (let i = 0; i < 6; i++) {
+            const angle = i * 60 + 30;
+            vertices.push({
+              x: x + size * 0.5 * cos(angle),
+              y: y + size * 0.5 * sin(angle)
+            });
+          }
+          
+          // Draw hexagon edges
+          for (let i = 0; i < 6; i++) {
+            pattern.push({
+              type: 'line',
+              points: [vertices[i], vertices[(i + 1) % 6]],
+              layer: 0,
+              overUnder: 0
+            });
+          }
+          
+          // Inner pattern based on density
+          if (density > 1) {
+            // Y-shaped inner pattern
+            const center = { x: x, y: y };
+            for (let i = 0; i < 3; i++) {
+              const angle = i * 120 + 30;
+              const endpoint = {
+                x: x + size * 0.3 * cos(angle),
+                y: y + size * 0.3 * sin(angle)
+              };
+              pattern.push({
+                type: 'line',
+                points: [center, endpoint],
+                layer: 1,
+                overUnder: i % 2
+              });
+            }
+          }
+        }
+      }
+    }
+
+    function generateSakura(density, size) {
+      // Cherry blossom - 5-fold symmetry pattern
+      const gridSize = size;
+      const cols = floor(width / gridSize) + 1;
+      const rows = floor(height / gridSize) + 1;
+      
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = col * gridSize + gridSize / 2;
+          const y = row * gridSize + gridSize / 2;
+          
+          // Five petals
+          for (let i = 0; i < 5; i++) {
+            const angle = i * 72;
+            const petalSize = size * 0.4;
+            
+            // Petal outline (two curves)
+            const tipAngle = angle;
+            const leftAngle = angle - 36;
+            const rightAngle = angle + 36;
+            
+            const tip = {
+              x: x + petalSize * cos(tipAngle),
+              y: y + petalSize * sin(tipAngle)
+            };
+            const left = {
+              x: x + petalSize * 0.5 * cos(leftAngle),
+              y: y + petalSize * 0.5 * sin(leftAngle)
+            };
+            const right = {
+              x: x + petalSize * 0.5 * cos(rightAngle),
+              y: y + petalSize * 0.5 * sin(rightAngle)
+            };
+            
+            pattern.push({
+              type: 'curve',
+              points: [left, tip, right],
+              layer: 0,
+              overUnder: i % 2
+            });
+            
+            // Center to petal line for higher density
+            if (density > 2) {
+              pattern.push({
+                type: 'line',
+                points: [{ x: x, y: y }, tip],
+                layer: 1,
+                overUnder: (i + 1) % 2
+              });
+            }
+          }
+          
+          // Center circle
+          if (density > 1) {
+            pattern.push({
+              type: 'circle',
+              center: { x: x, y: y },
+              radius: size * 0.1,
+              layer: 2,
+              overUnder: 0
+            });
+          }
+        }
+      }
+    }
+
+    function draw() {
+      background(255);
+      
+      const strokeWeight = parseFloat(document.getElementById('strokeWeight').value);
+      const lineThickness = parseFloat(document.getElementById('lineThickness').value);
+      const jointSize = parseFloat(document.getElementById('jointSize').value);
+      const rotation = parseFloat(document.getElementById('rotation').value);
+      const offsetX = parseFloat(document.getElementById('offsetX').value);
+      const offsetY = parseFloat(document.getElementById('offsetY').value);
+      const showJoints = document.getElementById('showJoints').checked;
+      const showOverUnder = document.getElementById('showOverUnder').checked;
+      const showGrid = document.getElementById('showGrid').checked;
+      const doubleLines = document.getElementById('doubleLines').checked;
+      
+      push();
+      translate(width / 2, height / 2);
+      rotate(rotation);
+      translate(-width / 2 + offsetX, -height / 2 + offsetY);
+      
+      // Show grid if enabled
+      if (showGrid) {
+        push();
+        stroke(220);
+        strokeWeight(0.5);
+        const gridSize = parseFloat(document.getElementById('moduleSize').value);
+        for (let x = 0; x < width; x += gridSize) {
+          line(x, 0, x, height);
+        }
+        for (let y = 0; y < height; y += gridSize) {
+          line(0, y, width, y);
+        }
+        pop();
+      }
+      
+      // Draw pattern elements
+      strokeWeight(strokeWeight);
+      noFill();
+      
+      // Sort by layer for proper over/under effect
+      const sortedPattern = [...pattern].sort((a, b) => a.layer - b.layer);
+      
+      sortedPattern.forEach(element => {
+        push();
+        
+        // Apply over/under effect
+        if (showOverUnder && element.overUnder) {
+          stroke(150);
+        } else {
+          stroke(0);
+        }
+        
+        switch (element.type) {
+          case 'line':
+            if (doubleLines) {
+              // Draw double lines for wood effect
+              push();
+              strokeWeight(strokeWeight * 0.5);
+              const offset = lineThickness / 2;
+              const dx = element.points[1].y - element.points[0].y;
+              const dy = element.points[0].x - element.points[1].x;
+              const len = sqrt(dx * dx + dy * dy);
+              const nx = dx / len * offset;
+              const ny = dy / len * offset;
+              
+              line(element.points[0].x + nx, element.points[0].y + ny,
+                   element.points[1].x + nx, element.points[1].y + ny);
+              line(element.points[0].x - nx, element.points[0].y - ny,
+                   element.points[1].x - nx, element.points[1].y - ny);
+              pop();
+            } else {
+              line(element.points[0].x, element.points[0].y,
+                   element.points[1].x, element.points[1].y);
+            }
+            
+            // Draw joints
+            if (showJoints && jointSize > 0) {
+              fill(255);
+              circle(element.points[0].x, element.points[0].y, jointSize);
+              circle(element.points[1].x, element.points[1].y, jointSize);
+              noFill();
+            }
+            break;
+            
+          case 'arc':
+            arc(element.center.x, element.center.y,
+                element.radius * 2, element.radius * 2,
+                element.startAngle, element.endAngle);
+            break;
+            
+          case 'circle':
+            circle(element.center.x, element.center.y, element.radius * 2);
+            break;
+            
+          case 'rect':
+            beginShape();
+            element.points.forEach(p => vertex(p.x, p.y));
+            endShape(CLOSE);
+            break;
+            
+          case 'curve':
+            beginShape();
+            vertex(element.points[0].x, element.points[0].y);
+            quadraticVertex(
+              element.points[1].x, element.points[1].y,
+              element.points[2].x, element.points[2].y
+            );
+            endShape();
+            break;
+        }
+        
+        pop();
+      });
+      
+      pop();
+      noLoop();
+    }
+
+    function randomizePattern() {
+      // Randomize controls
+      document.getElementById('density').value = floor(random(1, 7));
+      document.getElementById('moduleSize').value = floor(random(30, 121) / 10) * 10;
+      document.getElementById('lineThickness').value = floor(random(1, 9) / 0.5) * 0.5;
+      document.getElementById('jointSize').value = floor(random(0, 11));
+      document.getElementById('rotation').value = floor(random(0, 7)) * 15;
+      
+      // Random pattern type
+      const patterns = ['asanoha', 'seigaiha', 'shippo', 'yosegi', 'kikko', 'sakura'];
+      document.getElementById('patternType').value = random(patterns);
+      
+      // Update displays
+      updateAllDisplays();
+      
+      // Generate new pattern
+      generatePattern();
+    }
+
+    function exportSVG() {
+      // Redraw to SVG canvas
+      svgCanvas.clear();
+      svgCanvas.background(255);
+      
+      // Copy all drawing operations to SVG
+      drawToCanvas(svgCanvas);
+      
+      // Save SVG
+      save(svgCanvas, `kumiko-pattern-${currentSeed}.svg`);
+      showStatus('SVG exported successfully', 'success');
+    }
+
+    function exportPNG() {
+      save(`kumiko-pattern-${currentSeed}.png`);
+      showStatus('PNG exported successfully', 'success');
+    }
+
+    function drawToCanvas(canvas) {
+      const strokeWeight = parseFloat(document.getElementById('strokeWeight').value);
+      const lineThickness = parseFloat(document.getElementById('lineThickness').value);
+      const rotation = parseFloat(document.getElementById('rotation').value);
+      const offsetX = parseFloat(document.getElementById('offsetX').value);
+      const offsetY = parseFloat(document.getElementById('offsetY').value);
+      const doubleLines = document.getElementById('doubleLines').checked;
+      
+      canvas.push();
+      canvas.translate(width / 2, height / 2);
+      canvas.rotate(rotation);
+      canvas.translate(-width / 2 + offsetX, -height / 2 + offsetY);
+      
+      canvas.strokeWeight(strokeWeight);
+      canvas.noFill();
+      canvas.stroke(0);
+      
+      pattern.forEach(element => {
+        switch (element.type) {
+          case 'line':
+            if (doubleLines) {
+              canvas.push();
+              canvas.strokeWeight(strokeWeight * 0.5);
+              const offset = lineThickness / 2;
+              const dx = element.points[1].y - element.points[0].y;
+              const dy = element.points[0].x - element.points[1].x;
+              const len = sqrt(dx * dx + dy * dy);
+              const nx = dx / len * offset;
+              const ny = dy / len * offset;
+              
+              canvas.line(element.points[0].x + nx, element.points[0].y + ny,
+                         element.points[1].x + nx, element.points[1].y + ny);
+              canvas.line(element.points[0].x - nx, element.points[0].y - ny,
+                         element.points[1].x - nx, element.points[1].y - ny);
+              canvas.pop();
+            } else {
+              canvas.line(element.points[0].x, element.points[0].y,
+                         element.points[1].x, element.points[1].y);
+            }
+            break;
+            
+          case 'arc':
+            canvas.arc(element.center.x, element.center.y,
+                      element.radius * 2, element.radius * 2,
+                      element.startAngle, element.endAngle);
+            break;
+            
+          case 'circle':
+            canvas.circle(element.center.x, element.center.y, element.radius * 2);
+            break;
+            
+          case 'rect':
+            canvas.beginShape();
+            element.points.forEach(p => canvas.vertex(p.x, p.y));
+            canvas.endShape(CLOSE);
+            break;
+            
+          case 'curve':
+            canvas.beginShape();
+            canvas.vertex(element.points[0].x, element.points[0].y);
+            canvas.quadraticVertex(
+              element.points[1].x, element.points[1].y,
+              element.points[2].x, element.points[2].y
+            );
+            canvas.endShape();
+            break;
+        }
+      });
+      
+      canvas.pop();
+    }
+
+    function setupEventListeners() {
+      // Update value displays
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const valueSpan = document.getElementById(e.target.id + '-value');
+          if (valueSpan) {
+            valueSpan.textContent = e.target.value;
+          }
+        });
+      });
+      
+      // Regenerate on parameter change
+      ['patternType', 'density', 'moduleSize'].forEach(id => {
+        document.getElementById(id).addEventListener('change', generatePattern);
+      });
+      
+      // Redraw on visual change
+      ['strokeWeight', 'lineThickness', 'jointSize', 'rotation', 'offsetX', 'offsetY',
+       'showJoints', 'showOverUnder', 'showGrid', 'doubleLines'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+          redraw();
+        });
+      });
+    }
+
+    function updateAllDisplays() {
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        const valueSpan = document.getElementById(input.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = input.value;
+        }
+      });
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+      
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

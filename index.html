@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism Generative Art</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            text-align: center;
+        }
+        h1 {
+            color: #ffa500;
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #ffa500;
+            font-size: 24px;
+            margin-top: 40px;
+        }
+        .subtitle {
+            font-size: 20px;
+            color: #999;
+            margin-bottom: 60px;
+        }
+        .versions {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            margin-bottom: 60px;
+        }
+        .version-card {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 30px;
+            width: 300px;
+            transition: all 0.3s;
+        }
+        .version-card:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: #ffa500;
+            transform: translateY(-5px);
+        }
+        .version-card h3 {
+            color: #ffa500;
+            font-size: 28px;
+            margin: 0 0 15px 0;
+        }
+        .version-card p {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .features {
+            text-align: left;
+            font-size: 14px;
+            color: #999;
+            margin: 20px 0;
+        }
+        .features li {
+            margin: 5px 0;
+        }
+        .launch-btn {
+            display: inline-block;
+            background: #ffa500;
+            color: #000;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .launch-btn:hover {
+            background: #ffb520;
+            transform: translateY(-2px);
+        }
+        .info {
+            background: rgba(255,165,0,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 40px;
+        }
+        .tech-stack {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        .tech {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Total Serialism × Generative Art</h1>
+        <p class="subtitle">Algorithmic composition meets visual art</p>
+        
+        <div class="versions">
+            <div class="version-card">
+                <h3>Version 1</h3>
+                <p>Simple & Elegant</p>
+                <ul class="features">
+                    <li>Quick keyboard controls</li>
+                    <li>5 color presets</li>
+                    <li>PNG export</li>
+                    <li>Minimal interface</li>
+                    <li>Perfect for exploration</li>
+                </ul>
+                <a href="total-serialism-fidenza.html" class="launch-btn">Launch V1</a>
+            </div>
+            
+            <div class="version-card">
+                <h3>Version 2</h3>
+                <p>Professional Control</p>
+                <ul class="features">
+                    <li>20+ real-time parameters</li>
+                    <li>SVG & PNG export</li>
+                    <li>Preset save/load system</li>
+                    <li>5 render modes</li>
+                    <li>Advanced control panel</li>
+                </ul>
+                <a href="total-serialism-fidenza-v2.html" class="launch-btn">Launch V2</a>
+            </div>
+        </div>
+        
+        <div class="info">
+            <h2>About This Project</h2>
+            <p>
+                This generative art system uses Total Serialism's algorithmic composition techniques
+                to create Fidenza-inspired flowing artworks. Mathematical patterns from music
+                (Euclidean rhythms, harmonic progressions) drive visual elements.
+            </p>
+            <p style="margin-top: 20px;">
+                Each refresh generates a completely unique A3-sized artwork (297×420mm @ 150 DPI).
+            </p>
+        </div>
+        
+        <div class="tech-stack">
+            <span class="tech">Total Serialism</span>
+            <span class="tech">p5.js</span>
+            <span class="tech">Euclidean Rhythms</span>
+            <span class="tech">Flow Fields</span>
+            <span class="tech">SVG Export</span>
+        </div>
+    </div>
+</body>
+</html>
