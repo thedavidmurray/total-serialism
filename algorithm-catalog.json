@@ -55,6 +55,21 @@
         }
       ]
     },
+    "packing": {
+      "name": "Circle Packing",
+      "description": "Organic patterns through space-filling circle arrangements",
+      "icon": "⭕",
+      "algorithms": [
+        {
+          "id": "circle-packing",
+          "name": "Circle Packing",
+          "description": "Pack circles without overlapping for organic patterns",
+          "path": "pen-plotter/algorithms/packing/circle-packing-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        }
+      ]
+    },
     "geometric": {
       "name": "Geometric Patterns",
       "description": "Mathematical patterns, spirals, grids, and geometric art",
@@ -499,8 +514,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 69,
-    "totalCategories": 14,
-    "featuredCount": 11
+    "totalAlgorithms": 70,
+    "totalCategories": 15,
+    "featuredCount": 12
   }
 }
