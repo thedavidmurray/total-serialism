@@ -32,6 +32,21 @@
         }
       ]
     },
+    "voronoi": {
+      "name": "Voronoi & Stippling",
+      "description": "Voronoi diagrams, weighted stippling, and organic distributions",
+      "icon": "🔷",
+      "algorithms": [
+        {
+          "id": "voronoi-stippling",
+          "name": "Voronoi Stippling",
+          "description": "Weighted point distribution with Lloyd's relaxation for TSP art",
+          "path": "pen-plotter/algorithms/voronoi/voronoi-stippling-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        }
+      ]
+    },
     "geometric": {
       "name": "Geometric Patterns",
       "description": "Mathematical patterns, spirals, grids, and geometric art",
@@ -476,8 +491,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 67,
-    "totalCategories": 13,
-    "featuredCount": 9
+    "totalAlgorithms": 68,
+    "totalCategories": 14,
+    "featuredCount": 10
   }
 }
