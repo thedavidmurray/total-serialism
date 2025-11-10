@@ -77,6 +77,16 @@ total-serialism/
 - Perlin noise integration
 - Customizable filters
 
+### Preset Management ✨ NEW!
+- Save/load algorithm parameters
+- Export/import presets as JSON
+- Share configurations with others
+- Search and organize presets
+- Built-in randomization
+- LocalStorage persistence
+
+See [PRESET-MANAGER-GUIDE.md](PRESET-MANAGER-GUIDE.md) for integration instructions.
+
 ## Getting Started
 
 ### 🎨 Quick Start - Algorithm Browser (NEW!)
@@ -133,7 +143,7 @@ npm install  # If dependencies are added later
 ## Improvements Roadmap
 
 - [x] **Algorithm browser with search and categorization** ✨ NEW!
-- [ ] Preset management system (save/load parameters)
+- [x] **Preset management system (save/load parameters)** ✨ NEW!
 - [ ] Path optimization tools (vpype-style)
 - [ ] Calibration wizard for pen plotters
 - [ ] Unified control interface across all tools

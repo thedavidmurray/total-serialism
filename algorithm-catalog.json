@@ -436,6 +436,14 @@
       "icon": "🛠️",
       "algorithms": [
         {
+          "id": "preset-manager-demo",
+          "name": "Preset Manager Demo",
+          "description": "Interactive demo of the preset save/load system",
+          "path": "preset-manager-demo.html",
+          "featured": true,
+          "complexity": "beginner"
+        },
+        {
           "id": "path-optimizer",
           "name": "Path Optimizer",
           "description": "Optimize SVG paths for faster plotting",
@@ -468,8 +476,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 65,
+    "totalAlgorithms": 66,
     "totalCategories": 13,
-    "featuredCount": 7
+    "featuredCount": 8
   }
 }
