@@ -55,3 +55,9 @@ archive/
 build/
 dist/
 *.egg-info/
+
+# Test artifacts
+coverage/
+.nyc_output/
+test-results/
+*.lcov
