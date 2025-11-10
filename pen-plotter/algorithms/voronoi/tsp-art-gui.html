@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TSP Art Generator - Traveling Salesman Art</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+    }
+
+    .control-group h3 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    input[type="range"],
+    input[type="number"],
+    select,
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9em;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    .range-value {
+      float: right;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.85em;
+    }
+
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #555;
+    }
+
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+
+    .stats .value {
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .algorithm-info {
+      background: #e7f3ff;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85em;
+      color: #004085;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+
+    #imagePreview {
+      max-width: 100%;
+      margin-bottom: 12px;
+      border-radius: 6px;
+      display: none;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e9ecef;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      display: none;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <h1>🛤️ TSP Art Generator</h1>
+  <p class="subtitle">Create continuous single-line drawings using Traveling Salesman Problem algorithms</p>
+
+  <div class="container">
+    <!-- Controls Panel -->
+    <div class="panel">
+      <div class="algorithm-info">
+        <strong>TSP Art:</strong> Generates a continuous path through points by solving the Traveling Salesman Problem. Perfect for single-line pen plotter drawings.
+      </div>
+
+      <!-- Preset Manager Container -->
+      <div id="preset-container"></div>
+
+      <!-- Point Generation -->
+      <div class="control-group">
+        <h3>📍 Point Generation</h3>
+
+        <label>
+          Generation Mode
+          <select id="pointMode">
+            <option value="random">Random Distribution</option>
+            <option value="image">Image-Based (Brightness)</option>
+            <option value="grid">Grid Pattern</option>
+            <option value="poisson">Poisson Disc</option>
+            <option value="manual">Manual Placement</option>
+          </select>
+        </label>
+
+        <label>
+          Point Count: <span class="range-value" id="pointCountValue">500</span>
+          <input type="range" id="pointCount" min="10" max="2000" value="500" step="10">
+        </label>
+
+        <label>
+          Seed
+          <input type="number" id="seed" value="42" min="1" max="99999">
+        </label>
+      </div>
+
+      <!-- Image Upload (for image mode) -->
+      <div class="control-group" id="imageControls" style="display: none;">
+        <h3>🖼️ Source Image</h3>
+
+        <label>
+          Upload Image
+          <input type="file" id="imageUpload" accept="image/*">
+        </label>
+
+        <img id="imagePreview" alt="Preview">
+
+        <label>
+          Brightness Threshold: <span class="range-value" id="thresholdValue">128</span>
+          <input type="range" id="threshold" min="0" max="255" value="128" step="1">
+        </label>
+
+        <label>
+          Density Bias: <span class="range-value" id="densityBiasValue">1.5</span>
+          <input type="range" id="densityBias" min="0.5" max="3" value="1.5" step="0.1">
+        </label>
+      </div>
+
+      <!-- TSP Algorithm -->
+      <div class="control-group">
+        <h3>🧮 TSP Algorithm</h3>
+
+        <label>
+          Algorithm
+          <select id="tspAlgorithm">
+            <option value="nearestNeighbor">Nearest Neighbor (Fast)</option>
+            <option value="2opt">2-Opt Optimization</option>
+            <option value="both">Both (NN + 2-Opt)</option>
+          </select>
+        </label>
+
+        <label>
+          2-Opt Iterations: <span class="range-value" id="optIterationsValue">100</span>
+          <input type="range" id="optIterations" min="10" max="500" value="100" step="10">
+        </label>
+
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+      </div>
+
+      <!-- Display Options -->
+      <div class="control-group">
+        <h3>🎨 Display Options</h3>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showPoints" checked>
+          <label for="showPoints">Show Points</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showPath" checked>
+          <label for="showPath">Show Path</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showSourceImage">
+          <label for="showSourceImage">Show Source Image</label>
+        </div>
+
+        <label>
+          Line Weight: <span class="range-value" id="lineWeightValue">1.5</span>
+          <input type="range" id="lineWeight" min="0.5" max="5" value="1.5" step="0.1">
+        </label>
+
+        <label>
+          Point Size: <span class="range-value" id="pointSizeValue">3</span>
+          <input type="range" id="pointSize" min="1" max="10" value="3" step="0.5">
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="control-group">
+        <h3>⚡ Actions</h3>
+
+        <button onclick="generatePoints()">Generate Points</button>
+        <button onclick="solveTSP()">Solve TSP</button>
+
+        <div class="button-group">
+          <button class="secondary" onclick="randomizeSeed()">Random Seed</button>
+          <button class="secondary" onclick="clearCanvas()">Clear</button>
+        </div>
+
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats" id="stats">
+        <div>
+          <span>Points:</span>
+          <span class="value" id="statPoints">0</span>
+        </div>
+        <div>
+          <span>Path Length:</span>
+          <span class="value" id="statLength">0</span>
+        </div>
+        <div>
+          <span>Improvement:</span>
+          <span class="value" id="statImprovement">0%</span>
+        </div>
+        <div>
+          <span>Algorithm:</span>
+          <span class="value" id="statAlgorithm">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+      <div id="canvas"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let points = [];
+    let tspPath = [];
+    let sourceImage = null;
+    let presetManager;
+
+    // Parameters
+    const params = {
+      pointMode: 'random',
+      pointCount: 500,
+      seed: 42,
+      threshold: 128,
+      densityBias: 1.5,
+      tspAlgorithm: 'both',
+      optIterations: 100,
+      showPoints: true,
+      showPath: true,
+      showSourceImage: false,
+      lineWeight: 1.5,
+      pointSize: 3
+    };
+
+    // p5.js setup
+    function setup() {
+      const canvas = createCanvas(800, 800);
+      canvas.parent('canvas');
+      background(255);
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'tsp-art',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          generatePoints();
+          solveTSP();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 99999);
+          params.pointCount = Math.floor(Math.random() * 1900) + 100;
+          params.threshold = Math.floor(Math.random() * 255);
+          params.densityBias = Math.random() * 2.5 + 0.5;
+          params.lineWeight = Math.random() * 4 + 0.5;
+          updateUIFromParams();
+          generatePoints();
+          solveTSP();
+        }
+      });
+
+      generatePoints();
+      solveTSP();
+    }
+
+    // p5.js draw
+    function draw() {
+      background(255);
+
+      // Show source image if requested
+      if (params.showSourceImage && sourceImage) {
+        push();
+        tint(255, 100);
+        image(sourceImage, 0, 0, width, height);
+        pop();
+      }
+
+      // Draw TSP path
+      if (params.showPath && tspPath.length > 0) {
+        stroke(0);
+        strokeWeight(params.lineWeight);
+        noFill();
+
+        beginShape();
+        for (let i = 0; i < tspPath.length; i++) {
+          const p = points[tspPath[i]];
+          vertex(p.x, p.y);
+        }
+        // Close the loop
+        if (tspPath.length > 0) {
+          const p = points[tspPath[0]];
+          vertex(p.x, p.y);
+        }
+        endShape();
+      }
+
+      // Draw points
+      if (params.showPoints) {
+        fill(255, 0, 0);
+        noStroke();
+        for (let p of points) {
+          circle(p.x, p.y, params.pointSize);
+        }
+      }
+    }
+
+    // Generate points based on mode
+    function generatePoints() {
+      randomSeed(params.seed);
+      points = [];
+
+      switch (params.pointMode) {
+        case 'random':
+          generateRandomPoints();
+          break;
+        case 'image':
+          if (sourceImage) {
+            generateImagePoints();
+          } else {
+            generateRandomPoints();
+          }
+          break;
+        case 'grid':
+          generateGridPoints();
+          break;
+        case 'poisson':
+          generatePoissonPoints();
+          break;
+        case 'manual':
+          // Points added by clicking
+          break;
+      }
+
+      updateStats();
+    }
+
+    // Random point generation
+    function generateRandomPoints() {
+      const margin = 50;
+      for (let i = 0; i < params.pointCount; i++) {
+        points.push({
+          x: random(margin, width - margin),
+          y: random(margin, height - margin)
+        });
+      }
+    }
+
+    // Grid point generation
+    function generateGridPoints() {
+      const margin = 50;
+      const cols = Math.floor(Math.sqrt(params.pointCount));
+      const rows = cols;
+      const spacing = (width - 2 * margin) / (cols - 1);
+
+      for (let i = 0; i < cols; i++) {
+        for (let j = 0; j < rows; j++) {
+          points.push({
+            x: margin + i * spacing,
+            y: margin + j * spacing
+          });
+        }
+      }
+    }
+
+    // Poisson disc sampling
+    function generatePoissonPoints() {
+      const margin = 50;
+      const minDist = Math.sqrt((width * height) / params.pointCount) * 0.8;
+      const maxAttempts = 30;
+
+      const grid = [];
+      const cellSize = minDist / Math.sqrt(2);
+      const cols = Math.floor(width / cellSize);
+      const rows = Math.floor(height / cellSize);
+
+      for (let i = 0; i < cols * rows; i++) {
+        grid[i] = null;
+      }
+
+      const active = [];
+      const start = { x: width / 2, y: height / 2 };
+      points.push(start);
+      active.push(start);
+
+      while (active.length > 0 && points.length < params.pointCount) {
+        const randomIndex = Math.floor(random(active.length));
+        const pos = active[randomIndex];
+        let found = false;
+
+        for (let i = 0; i < maxAttempts; i++) {
+          const angle = random(TWO_PI);
+          const radius = random(minDist, minDist * 2);
+          const newPos = {
+            x: pos.x + cos(angle) * radius,
+            y: pos.y + sin(angle) * radius
+          };
+
+          if (newPos.x >= margin && newPos.x < width - margin &&
+              newPos.y >= margin && newPos.y < height - margin) {
+            const col = Math.floor(newPos.x / cellSize);
+            const row = Math.floor(newPos.y / cellSize);
+
+            let valid = true;
+            for (let dx = -1; dx <= 1; dx++) {
+              for (let dy = -1; dy <= 1; dy++) {
+                const c = col + dx;
+                const r = row + dy;
+                if (c >= 0 && c < cols && r >= 0 && r < rows) {
+                  const neighbor = grid[r * cols + c];
+                  if (neighbor) {
+                    const d = dist(newPos.x, newPos.y, neighbor.x, neighbor.y);
+                    if (d < minDist) {
+                      valid = false;
+                      break;
+                    }
+                  }
+                }
+              }
+              if (!valid) break;
+            }
+
+            if (valid) {
+              points.push(newPos);
+              active.push(newPos);
+              grid[row * cols + col] = newPos;
+              found = true;
+              break;
+            }
+          }
+        }
+
+        if (!found) {
+          active.splice(randomIndex, 1);
+        }
+      }
+    }
+
+    // Image-based point generation
+    function generateImagePoints() {
+      sourceImage.loadPixels();
+      const margin = 50;
+
+      // Sample brightness
+      const brightnessSamples = [];
+      for (let i = 0; i < params.pointCount * 10; i++) {
+        const x = random(margin, width - margin);
+        const y = random(margin, height - margin);
+
+        const imgX = map(x, 0, width, 0, sourceImage.width);
+        const imgY = map(y, 0, height, 0, sourceImage.height);
+        const idx = (Math.floor(imgY) * sourceImage.width + Math.floor(imgX)) * 4;
+        const brightness = (sourceImage.pixels[idx] + sourceImage.pixels[idx + 1] + sourceImage.pixels[idx + 2]) / 3;
+
+        // Use brightness to weight point placement (darker = more points)
+        const probability = pow(1 - brightness / 255, params.densityBias);
+        if (random() < probability && points.length < params.pointCount) {
+          points.push({ x, y });
+        }
+      }
+    }
+
+    // Solve TSP
+    function solveTSP() {
+      if (points.length < 2) return;
+
+      showProgress(true);
+
+      // Start with nearest neighbor
+      tspPath = nearestNeighborTSP();
+      const initialLength = calculatePathLength(tspPath);
+
+      updateStats(initialLength, initialLength, 'Nearest Neighbor');
+
+      // Apply 2-opt if requested
+      if (params.tspAlgorithm === '2opt' || params.tspAlgorithm === 'both') {
+        setTimeout(() => {
+          tspPath = twoOptTSP(tspPath);
+          const finalLength = calculatePathLength(tspPath);
+          const improvement = ((initialLength - finalLength) / initialLength * 100).toFixed(1);
+          updateStats(finalLength, initialLength, '2-Opt');
+          showProgress(false);
+        }, 100);
+      } else {
+        showProgress(false);
+      }
+    }
+
+    // Nearest Neighbor TSP
+    function nearestNeighborTSP() {
+      const path = [];
+      const visited = new Set();
+
+      // Start from random point
+      let current = 0;
+      path.push(current);
+      visited.add(current);
+
+      while (path.length < points.length) {
+        let nearest = -1;
+        let nearestDist = Infinity;
+
+        for (let i = 0; i < points.length; i++) {
+          if (!visited.has(i)) {
+            const d = dist(points[current].x, points[current].y, points[i].x, points[i].y);
+            if (d < nearestDist) {
+              nearestDist = d;
+              nearest = i;
+            }
+          }
+        }
+
+        if (nearest !== -1) {
+          path.push(nearest);
+          visited.add(nearest);
+          current = nearest;
+        }
+      }
+
+      return path;
+    }
+
+    // 2-Opt TSP optimization
+    function twoOptTSP(path) {
+      let improved = true;
+      let iterations = 0;
+
+      while (improved && iterations < params.optIterations) {
+        improved = false;
+
+        for (let i = 1; i < path.length - 1; i++) {
+          for (let j = i + 1; j < path.length; j++) {
+            const delta = twoOptSwapDelta(path, i, j);
+            if (delta < -0.01) {
+              // Reverse segment between i and j
+              const newPath = [...path.slice(0, i), ...path.slice(i, j + 1).reverse(), ...path.slice(j + 1)];
+              path = newPath;
+              improved = true;
+            }
+          }
+        }
+
+        iterations++;
+        updateProgress(iterations / params.optIterations);
+      }
+
+      return path;
+    }
+
+    // Calculate delta for 2-opt swap
+    function twoOptSwapDelta(path, i, j) {
+      const a = points[path[i - 1]];
+      const b = points[path[i]];
+      const c = points[path[j]];
+      const d = points[path[(j + 1) % path.length]];
+
+      const currentDist = dist(a.x, a.y, b.x, b.y) + dist(c.x, c.y, d.x, d.y);
+      const newDist = dist(a.x, a.y, c.x, c.y) + dist(b.x, b.y, d.x, d.y);
+
+      return newDist - currentDist;
+    }
+
+    // Calculate total path length
+    function calculatePathLength(path) {
+      let length = 0;
+      for (let i = 0; i < path.length; i++) {
+        const p1 = points[path[i]];
+        const p2 = points[path[(i + 1) % path.length]];
+        length += dist(p1.x, p1.y, p2.x, p2.y);
+      }
+      return length;
+    }
+
+    // Update statistics
+    function updateStats(finalLength, initialLength, algorithm) {
+      document.getElementById('statPoints').textContent = points.length;
+
+      if (finalLength !== undefined) {
+        document.getElementById('statLength').textContent = finalLength.toFixed(1);
+
+        if (initialLength !== undefined && initialLength !== finalLength) {
+          const improvement = ((initialLength - finalLength) / initialLength * 100).toFixed(1);
+          document.getElementById('statImprovement').textContent = improvement + '%';
+        } else {
+          document.getElementById('statImprovement').textContent = '0%';
+        }
+      }
+
+      if (algorithm) {
+        document.getElementById('statAlgorithm').textContent = algorithm;
+      }
+    }
+
+    // Show/hide progress bar
+    function showProgress(show) {
+      document.getElementById('progressBar').style.display = show ? 'block' : 'none';
+    }
+
+    // Update progress bar
+    function updateProgress(percent) {
+      document.getElementById('progressFill').style.width = (percent * 100) + '%';
+    }
+
+    // UI event listeners
+    document.getElementById('pointMode').addEventListener('change', (e) => {
+      params.pointMode = e.target.value;
+      document.getElementById('imageControls').style.display = params.pointMode === 'image' ? 'block' : 'none';
+    });
+
+    document.getElementById('pointCount').addEventListener('input', (e) => {
+      params.pointCount = parseInt(e.target.value);
+      document.getElementById('pointCountValue').textContent = params.pointCount;
+    });
+
+    document.getElementById('seed').addEventListener('input', (e) => {
+      params.seed = parseInt(e.target.value);
+    });
+
+    document.getElementById('threshold').addEventListener('input', (e) => {
+      params.threshold = parseInt(e.target.value);
+      document.getElementById('thresholdValue').textContent = params.threshold;
+    });
+
+    document.getElementById('densityBias').addEventListener('input', (e) => {
+      params.densityBias = parseFloat(e.target.value);
+      document.getElementById('densityBiasValue').textContent = params.densityBias.toFixed(1);
+    });
+
+    document.getElementById('tspAlgorithm').addEventListener('change', (e) => {
+      params.tspAlgorithm = e.target.value;
+    });
+
+    document.getElementById('optIterations').addEventListener('input', (e) => {
+      params.optIterations = parseInt(e.target.value);
+      document.getElementById('optIterationsValue').textContent = params.optIterations;
+    });
+
+    document.getElementById('showPoints').addEventListener('change', (e) => {
+      params.showPoints = e.target.checked;
+    });
+
+    document.getElementById('showPath').addEventListener('change', (e) => {
+      params.showPath = e.target.checked;
+    });
+
+    document.getElementById('showSourceImage').addEventListener('change', (e) => {
+      params.showSourceImage = e.target.checked;
+    });
+
+    document.getElementById('lineWeight').addEventListener('input', (e) => {
+      params.lineWeight = parseFloat(e.target.value);
+      document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(1);
+    });
+
+    document.getElementById('pointSize').addEventListener('input', (e) => {
+      params.pointSize = parseFloat(e.target.value);
+      document.getElementById('pointSizeValue').textContent = params.pointSize.toFixed(1);
+    });
+
+    document.getElementById('imageUpload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          loadImage(event.target.result, (img) => {
+            sourceImage = img;
+            sourceImage.resize(width, height);
+            document.getElementById('imagePreview').src = event.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+            if (params.pointMode === 'image') {
+              generatePoints();
+            }
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Action functions
+    function randomizeSeed() {
+      params.seed = Math.floor(Math.random() * 99999);
+      document.getElementById('seed').value = params.seed;
+      generatePoints();
+      solveTSP();
+    }
+
+    function clearCanvas() {
+      points = [];
+      tspPath = [];
+      updateStats();
+    }
+
+    function updateUIFromParams() {
+      document.getElementById('pointMode').value = params.pointMode;
+      document.getElementById('pointCount').value = params.pointCount;
+      document.getElementById('seed').value = params.seed;
+      document.getElementById('threshold').value = params.threshold;
+      document.getElementById('densityBias').value = params.densityBias;
+      document.getElementById('tspAlgorithm').value = params.tspAlgorithm;
+      document.getElementById('optIterations').value = params.optIterations;
+      document.getElementById('showPoints').checked = params.showPoints;
+      document.getElementById('showPath').checked = params.showPath;
+      document.getElementById('showSourceImage').checked = params.showSourceImage;
+      document.getElementById('lineWeight').value = params.lineWeight;
+      document.getElementById('pointSize').value = params.pointSize;
+
+      document.getElementById('pointCountValue').textContent = params.pointCount;
+      document.getElementById('thresholdValue').textContent = params.threshold;
+      document.getElementById('densityBiasValue').textContent = params.densityBias.toFixed(1);
+      document.getElementById('optIterationsValue').textContent = params.optIterations;
+      document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(1);
+      document.getElementById('pointSizeValue').textContent = params.pointSize.toFixed(1);
+
+      document.getElementById('imageControls').style.display = params.pointMode === 'image' ? 'block' : 'none';
+    }
+
+    // Export SVG
+    function exportSVG() {
+      if (tspPath.length === 0) {
+        alert('Generate and solve TSP first!');
+        return;
+      }
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="white"/>
+  <path d="`;
+
+      for (let i = 0; i < tspPath.length; i++) {
+        const p = points[tspPath[i]];
+        svg += i === 0 ? `M ${p.x},${p.y} ` : `L ${p.x},${p.y} `;
+      }
+
+      // Close path
+      const p = points[tspPath[0]];
+      svg += `L ${p.x},${p.y}`;
+
+      svg += `" stroke="black" stroke-width="${params.lineWeight}" fill="none"/>
+</svg>`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tsp-art-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Export PNG
+    function exportPNG() {
+      saveCanvas(`tsp-art-${Date.now()}`, 'png');
+    }
+
+    // Manual point placement
+    function mousePressed() {
+      if (params.pointMode === 'manual' && mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+        points.push({ x: mouseX, y: mouseY });
+        updateStats();
+      }
+    }
+  </script>
+</body>
+</html>

@@ -44,6 +44,14 @@
           "path": "pen-plotter/algorithms/voronoi/voronoi-stippling-gui.html",
           "featured": true,
           "complexity": "intermediate"
+        },
+        {
+          "id": "tsp-art",
+          "name": "TSP Art Generator",
+          "description": "Traveling Salesman Problem solver for continuous single-line drawings",
+          "path": "pen-plotter/algorithms/voronoi/tsp-art-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
         }
       ]
     },
@@ -491,8 +499,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 68,
+    "totalAlgorithms": 69,
     "totalCategories": 14,
-    "featuredCount": 10
+    "featuredCount": 11
   }
 }
