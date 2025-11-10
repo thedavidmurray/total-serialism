@@ -15,23 +15,34 @@ Total Serialism is a collection of tools and algorithms for creating algorithmic
 
 ```
 total-serialism/
+├── browse.html                   # 🌟 Algorithm browser (START HERE!)
+├── algorithm-catalog.json        # Structured catalog of all algorithms
 ├── index.html                    # Main entry point for web interface
 ├── total-serialism-*.js          # Core JavaScript engines
 ├── total-serialism-*.html        # Various visualization interfaces
 ├── pen-plotter/                  # Pen plotter specific tools
-│   ├── algorithms/               # Advanced generative algorithms
+│   ├── algorithms/               # 65+ generative algorithms
 │   │   ├── advanced/            # Complex pattern generators
 │   │   ├── flow-fields/         # Flow field visualizations
 │   │   ├── natural/            # Nature-inspired algorithms
 │   │   ├── reaction-diffusion/ # Reaction-diffusion systems
+│   │   ├── chemical/           # Chemical engineering art
+│   │   ├── cellular-automata/  # Game of Life, elementary CA
+│   │   ├── geometric/          # Geometric patterns & spirals
+│   │   ├── lsystems/           # L-System trees
+│   │   ├── symmetry/           # Zellige, kumiko patterns
+│   │   ├── image-processing/   # Halftone, hatching, squigglecam
+│   │   ├── physics/            # Particle systems
 │   │   ├── textures/           # Texture generation
-│   │   └── tools/              # Utility tools
+│   │   └── tools/              # Path optimizer, export tools
 │   └── docs/                    # Documentation
 ├── linedraw/                     # Python tools for image processing
 │   ├── linedraw.py              # Main line drawing converter
 │   ├── filters.py               # Image filters
 │   ├── perlin.py                # Perlin noise generation
 │   └── strokesort.py            # Stroke optimization
+├── RESEARCH-SUMMARY.md           # Best practices research
+├── IMPROVEMENT-ROADMAP.md        # Development roadmap
 └── backlog/                      # Work in progress and experiments
 ```
 
@@ -68,7 +79,9 @@ total-serialism/
 
 ## Getting Started
 
-### Web Interface
+### 🎨 Quick Start - Algorithm Browser (NEW!)
+
+The easiest way to explore all 65+ algorithms:
 
 1. Start a local server:
 ```bash
@@ -77,9 +90,19 @@ npm start
 python3 -m http.server 8080
 ```
 
-2. Open http://localhost:8080 in your browser
+2. Open http://localhost:8080/browse.html in your browser
 
-3. Navigate to different tools:
+3. Features:
+   - 📱 **Search** - Find algorithms by name or description
+   - 🏷️ **Filter** - By difficulty (beginner/intermediate/advanced)
+   - ⭐ **Featured** - Curated selection of best algorithms
+   - ❤️ **Favorites** - Save your preferred algorithms locally
+   - 📂 **Categories** - Browse by type (Geometric, Flow Fields, Natural, Chemical, etc.)
+
+### Alternative: Direct Access
+
+Navigate directly to specific tools:
+   - Algorithm Browser: `browse.html` ⭐ **Start here!**
    - Main interface: `index.html`
    - Fidenza style: `total-serialism-fidenza.html`
    - Version 3 engine: `total-serialism-v3.html`
@@ -109,14 +132,18 @@ npm install  # If dependencies are added later
 
 ## Improvements Roadmap
 
+- [x] **Algorithm browser with search and categorization** ✨ NEW!
+- [ ] Preset management system (save/load parameters)
+- [ ] Path optimization tools (vpype-style)
+- [ ] Calibration wizard for pen plotters
 - [ ] Unified control interface across all tools
 - [ ] Better documentation and examples
 - [ ] Performance optimizations for complex patterns
 - [ ] More export formats (DXF, HPGL)
-- [ ] Real-time collaboration features
 - [ ] Gallery of generated works
-- [ ] Preset management system
 - [ ] Animation and time-based patterns
+
+See [IMPROVEMENT-ROADMAP.md](IMPROVEMENT-ROADMAP.md) for detailed plans.
 
 ## Contributing
 

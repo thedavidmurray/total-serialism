@@ -1,0 +1,475 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-11-10",
+  "categories": {
+    "core": {
+      "name": "Core Engines",
+      "description": "Main generative art engines with comprehensive controls",
+      "icon": "⚡",
+      "algorithms": [
+        {
+          "id": "total-serialism-v3",
+          "name": "Total Serialism V3",
+          "description": "Maximum variety generative art engine with advanced controls",
+          "path": "total-serialism-v3.html",
+          "featured": true,
+          "complexity": "intermediate"
+        },
+        {
+          "id": "total-serialism-fidenza-v2",
+          "name": "Fidenza Style V2",
+          "description": "Fidenza-inspired generative art with enhanced controls",
+          "path": "total-serialism-fidenza-v2.html",
+          "featured": true,
+          "complexity": "intermediate"
+        },
+        {
+          "id": "total-serialism-generative",
+          "name": "Generative Art Core",
+          "description": "Original total serialism generative art tool",
+          "path": "total-serialism-generative-art.html",
+          "complexity": "beginner"
+        }
+      ]
+    },
+    "geometric": {
+      "name": "Geometric Patterns",
+      "description": "Mathematical patterns, spirals, grids, and geometric art",
+      "icon": "📐",
+      "algorithms": [
+        {
+          "id": "perlin-landscape",
+          "name": "Perlin Landscape",
+          "description": "Topographical contours using Perlin noise",
+          "path": "pen-plotter/algorithms/geometric/perlin-landscape-gui.html",
+          "featured": true,
+          "complexity": "beginner"
+        },
+        {
+          "id": "spirotron",
+          "name": "Spirotron",
+          "description": "Spirograph-style pattern generator",
+          "path": "pen-plotter/algorithms/geometric/spirotron-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "perlin-spiral",
+          "name": "Perlin Spiral",
+          "description": "Spiral patterns modulated with Perlin noise",
+          "path": "pen-plotter/algorithms/geometric/perlin-spiral-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "perlin-circles",
+          "name": "Perlin Circles",
+          "description": "Concentric circles with noise-based distortion",
+          "path": "pen-plotter/algorithms/geometric/perlin-circles-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "circle-rays",
+          "name": "Circle Rays",
+          "description": "Radial line patterns emanating from circles",
+          "path": "pen-plotter/algorithms/geometric/circle-rays-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "circle-twist",
+          "name": "Circle Twist",
+          "description": "Layered twisted circle patterns",
+          "path": "pen-plotter/algorithms/geometric/circle-twist-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "grid-landscape",
+          "name": "Grid Landscape",
+          "description": "3D landscape visualization on grid",
+          "path": "pen-plotter/algorithms/geometric/grid-landscape-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "hash-tiles",
+          "name": "Hash Tiles",
+          "description": "Procedural hash-based tile patterns",
+          "path": "pen-plotter/algorithms/geometric/hash-tiles-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "10print",
+          "name": "10 PRINT",
+          "description": "Classic Commodore 64 maze pattern",
+          "path": "pen-plotter/algorithms/geometric/10print-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "snowflakes",
+          "name": "Snowflakes",
+          "description": "Procedural snowflake generator with hexagonal symmetry",
+          "path": "pen-plotter/algorithms/geometric/snowflakes-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "spiral-fill",
+          "name": "Spiral Fill",
+          "description": "Fill shapes with spiral patterns",
+          "path": "pen-plotter/algorithms/geometric/spiral-fill.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "flow-fields": {
+      "name": "Flow Fields",
+      "description": "Particle systems guided by vector fields",
+      "icon": "🌊",
+      "algorithms": [
+        {
+          "id": "flow-field-gui",
+          "name": "Flow Field",
+          "description": "Particles following noise-based vector fields",
+          "path": "pen-plotter/algorithms/flow-fields/flow-field-p5-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        },
+        {
+          "id": "flow-field-collision",
+          "name": "Flow Field Collision",
+          "description": "Flow field with particle collision detection",
+          "path": "pen-plotter/algorithms/flow-fields/flow-field-collision.html",
+          "complexity": "advanced"
+        }
+      ]
+    },
+    "natural": {
+      "name": "Natural Phenomena",
+      "description": "Simulations inspired by nature",
+      "icon": "🌿",
+      "algorithms": [
+        {
+          "id": "crystal-growth",
+          "name": "Crystal Growth",
+          "description": "Diffusion-limited aggregation crystal formation",
+          "path": "pen-plotter/algorithms/natural/crystal-growth-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        },
+        {
+          "id": "coral-growth",
+          "name": "Coral Growth",
+          "description": "Organic coral-like growth patterns",
+          "path": "pen-plotter/algorithms/natural/coral-growth-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "lightning",
+          "name": "Lightning",
+          "description": "Fractal lightning bolt generation",
+          "path": "pen-plotter/algorithms/natural/lightning-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "astronomy",
+          "name": "Astronomy",
+          "description": "Celestial patterns and star fields",
+          "path": "pen-plotter/algorithms/natural/astronomy-gui.html",
+          "complexity": "beginner"
+        }
+      ]
+    },
+    "chemical": {
+      "name": "Chemical Patterns",
+      "description": "Reaction-diffusion and chemical engineering art",
+      "icon": "⚗️",
+      "algorithms": [
+        {
+          "id": "reaction-diffusion",
+          "name": "Reaction-Diffusion",
+          "description": "Gray-Scott model reaction-diffusion system",
+          "path": "pen-plotter/algorithms/reaction-diffusion/reaction-diffusion-gui.html",
+          "featured": true,
+          "complexity": "advanced"
+        },
+        {
+          "id": "reaction-diffusion-enhanced",
+          "name": "Reaction-Diffusion Enhanced",
+          "description": "Enhanced reaction-diffusion with advanced controls",
+          "path": "pen-plotter/algorithms/reaction-diffusion/reaction-diffusion-enhanced.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "reaction-diffusion-layers",
+          "name": "Multi-Layer Reaction-Diffusion",
+          "description": "Multiple layers of reaction-diffusion patterns",
+          "path": "pen-plotter/algorithms/reaction-diffusion/reaction-diffusion-layers.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "belousov-zhabotinsky",
+          "name": "Belousov-Zhabotinsky",
+          "description": "Oscillating chemical reaction patterns",
+          "path": "pen-plotter/algorithms/chemical/belousov-zhabotinsky-gui.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "crystallization",
+          "name": "Crystallization",
+          "description": "Chemical crystallization patterns",
+          "path": "pen-plotter/algorithms/chemical/crystallization-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "liesegang-rings",
+          "name": "Liesegang Rings",
+          "description": "Periodic precipitation pattern formation",
+          "path": "pen-plotter/algorithms/chemical/liesegang-rings-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "convection-cells",
+          "name": "Convection Cells",
+          "description": "Bénard convection cell patterns",
+          "path": "pen-plotter/algorithms/chemical/convection-cells-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "chromatography",
+          "name": "Chromatography",
+          "description": "Chemical chromatography separation patterns",
+          "path": "pen-plotter/algorithms/chemical/chromatography-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "mixing-patterns",
+          "name": "Mixing Patterns",
+          "description": "Fluid mixing and turbulence patterns",
+          "path": "pen-plotter/algorithms/chemical/mixing-patterns-gui.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "cellular-automata": {
+      "name": "Cellular Automata",
+      "description": "Rule-based evolving systems",
+      "icon": "🔬",
+      "algorithms": [
+        {
+          "id": "game-of-life",
+          "name": "Game of Life",
+          "description": "Conway's classic cellular automaton",
+          "path": "pen-plotter/algorithms/cellular-automata/game-of-life-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "game-of-life-layers",
+          "name": "Game of Life Multi-Layer",
+          "description": "Multi-color layered Game of Life",
+          "path": "pen-plotter/algorithms/cellular-automata/game-of-life-layers.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "elementary-ca",
+          "name": "Elementary CA",
+          "description": "Wolfram's elementary cellular automata",
+          "path": "pen-plotter/algorithms/cellular-automata/elementary-ca.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "elementary-ca-layers",
+          "name": "Elementary CA Multi-Color",
+          "description": "Multi-color elementary cellular automata",
+          "path": "pen-plotter/algorithms/cellular-automata/elementary-ca-layers.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "advanced": {
+      "name": "Advanced Algorithms",
+      "description": "Complex mathematical and physical simulations",
+      "icon": "🔮",
+      "algorithms": [
+        {
+          "id": "chladni-patterns",
+          "name": "Chladni Patterns",
+          "description": "Vibration and standing wave visualization",
+          "path": "pen-plotter/algorithms/advanced/chladni-patterns-gui.html",
+          "featured": true,
+          "complexity": "advanced"
+        },
+        {
+          "id": "vortex-street",
+          "name": "Kármán Vortex Street",
+          "description": "Fluid dynamics vortex shedding simulation",
+          "path": "pen-plotter/algorithms/advanced/vortex-street-gui.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "parametric-surfaces",
+          "name": "Parametric Surfaces",
+          "description": "3D mathematical surfaces projected to 2D",
+          "path": "pen-plotter/algorithms/advanced/parametric-surfaces-gui.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "sound-waveform",
+          "name": "Sound Waveform",
+          "description": "Audio waveform visualization and synthesis",
+          "path": "pen-plotter/algorithms/advanced/sound-waveform-gui.html",
+          "complexity": "advanced"
+        }
+      ]
+    },
+    "lsystems": {
+      "name": "L-Systems & Trees",
+      "description": "Lindenmayer systems and recursive structures",
+      "icon": "🌳",
+      "algorithms": [
+        {
+          "id": "lsystem-tree",
+          "name": "L-System Tree",
+          "description": "Fractal tree generation using L-systems",
+          "path": "pen-plotter/algorithms/trees-lsystems/tree-gui.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "lsystem-simple",
+          "name": "Simple L-Systems",
+          "description": "Basic L-system demonstrations",
+          "path": "pen-plotter/algorithms/trees-lsystems/lsystem-simple.html",
+          "complexity": "beginner"
+        }
+      ]
+    },
+    "image-processing": {
+      "name": "Image Processing",
+      "description": "Convert images to plottable line art",
+      "icon": "🖼️",
+      "algorithms": [
+        {
+          "id": "halftone",
+          "name": "Halftone",
+          "description": "Convert images to halftone circle patterns",
+          "path": "pen-plotter/algorithms/image-processing/halftone.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "hatching",
+          "name": "Hatching",
+          "description": "Convert images to cross-hatching patterns",
+          "path": "pen-plotter/algorithms/image-processing/hatching.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "squigglecam",
+          "name": "SquiggleCam",
+          "description": "Convert images to flowing squiggly lines",
+          "path": "pen-plotter/algorithms/image-processing/squigglecam.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "symmetry": {
+      "name": "Symmetry & Tiling",
+      "description": "Symmetrical patterns and tessellations",
+      "icon": "🔷",
+      "algorithms": [
+        {
+          "id": "zellige",
+          "name": "Zellige",
+          "description": "Moroccan zellige tile patterns",
+          "path": "pen-plotter/algorithms/symmetry/zellige-pattern.html",
+          "complexity": "intermediate"
+        },
+        {
+          "id": "kumiko",
+          "name": "Kumiko",
+          "description": "Japanese kumiko woodwork patterns",
+          "path": "pen-plotter/algorithms/symmetry/kumiko-pattern.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "physics": {
+      "name": "Physics Simulations",
+      "description": "Particle systems and physics-based art",
+      "icon": "⚛️",
+      "algorithms": [
+        {
+          "id": "particle-system",
+          "name": "Particle System",
+          "description": "Physics-based particle simulation",
+          "path": "pen-plotter/algorithms/physics/particle-system-gui.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "hybrid": {
+      "name": "Hybrid Composer",
+      "description": "Combine multiple algorithms",
+      "icon": "🎛️",
+      "algorithms": [
+        {
+          "id": "hybrid-composer",
+          "name": "Hybrid Composer",
+          "description": "Layer and combine multiple algorithms",
+          "path": "pen-plotter/algorithms/hybrid/hybrid-composer-gui.html",
+          "featured": true,
+          "complexity": "advanced"
+        }
+      ]
+    },
+    "ai": {
+      "name": "AI & Machine Learning",
+      "description": "Machine learning-powered pattern generation",
+      "icon": "🤖",
+      "algorithms": [
+        {
+          "id": "ml5-patterns",
+          "name": "ML5 Pattern Generator",
+          "description": "AI-powered pattern generation using ML5",
+          "path": "pen-plotter/algorithms/ai/ml5-patterns-gui.html",
+          "complexity": "advanced"
+        }
+      ]
+    },
+    "tools": {
+      "name": "Plotter Tools",
+      "description": "Utilities for optimization and export",
+      "icon": "🛠️",
+      "algorithms": [
+        {
+          "id": "path-optimizer",
+          "name": "Path Optimizer",
+          "description": "Optimize SVG paths for faster plotting",
+          "path": "pen-plotter/algorithms/tools/path-optimizer-gui.html",
+          "featured": true,
+          "complexity": "beginner"
+        },
+        {
+          "id": "plotter-export",
+          "name": "Export Tool",
+          "description": "Export to multiple plotter formats",
+          "path": "pen-plotter/algorithms/tools/plotter-export-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "debug-preview",
+          "name": "Debug Preview",
+          "description": "Visualize pen-up/pen-down movements",
+          "path": "pen-plotter/algorithms/tools/debug-preview-gui.html",
+          "complexity": "beginner"
+        },
+        {
+          "id": "hatching-demo",
+          "name": "Hatching Library",
+          "description": "Texture and hatching pattern library",
+          "path": "pen-plotter/algorithms/textures/hatching-demo.html",
+          "complexity": "intermediate"
+        }
+      ]
+    }
+  },
+  "stats": {
+    "totalAlgorithms": 65,
+    "totalCategories": 13,
+    "featuredCount": 7
+  }
+}
