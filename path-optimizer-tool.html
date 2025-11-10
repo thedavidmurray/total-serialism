@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Path Optimizer - Total Serialism</title>
+    <script src="path-optimizer.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 30px 20px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .upload-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            border: 2px dashed #4CAF50;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #45a049;
+            background: #333;
+        }
+
+        .upload-section.dragover {
+            border-color: #81C784;
+            background: #3a3a3a;
+        }
+
+        .upload-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        .options-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .options-section.visible {
+            display: block;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .option {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        .option label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+
+        .option input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .option input[type="range"] {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .option-value {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+            margin-left: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #1976D2;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .visualization {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .visualization.visible {
+            display: grid;
+        }
+
+        .viz-panel {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .viz-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+
+        .viz-canvas {
+            background: white;
+            border-radius: 8px;
+            width: 100%;
+            max-height: 500px;
+            overflow: auto;
+        }
+
+        .stats-section {
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            display: none;
+        }
+
+        .stats-section.visible {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #4CAF50;
+        }
+
+        .stat-change {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .stat-change.positive {
+            color: #4CAF50;
+        }
+
+        .stat-change.negative {
+            color: #f44336;
+        }
+
+        .time-saved {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            grid-column: 1 / -1;
+        }
+
+        .time-saved .stat-value {
+            color: white;
+            font-size: 48px;
+        }
+
+        .time-saved .stat-label {
+            color: white;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .visualization {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 18px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #4CAF50;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎨 SVG Path Optimizer</h1>
+        <div class="subtitle">Reduce plotting time with vpype-style optimization algorithms</div>
+    </div>
+
+    <div class="container">
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">Click to upload SVG file</div>
+            <div class="upload-hint">or drag and drop here</div>
+            <input type="file" id="fileInput" accept=".svg">
+        </div>
+
+        <div class="options-section" id="optionsSection">
+            <h2 style="margin-bottom: 20px;">Optimization Options</h2>
+
+            <div class="options-grid">
+                <div class="option">
+                    <label>
+                        <input type="checkbox" id="optMerge" checked>
+                        Line Merge
+                    </label>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                        Connect paths sharing endpoints
+                    </div>
+                </div>
+
+                <div class="option">
+                    <label>
+                        <input type="checkbox" id="optSort" checked>
+                        Line Sort
+                    </label>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                        Minimize pen-up travel distance
+                    </div>
+                </div>
+
+                <div class="option">
+                    <label>
+                        <input type="checkbox" id="optReloop" checked>
+                        Reloop
+                    </label>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                        Prevent ink blots on loops
+                    </div>
+                </div>
+
+                <div class="option">
+                    <label>
+                        <input type="checkbox" id="optSimplify" checked>
+                        Simplify
+                    </label>
+                    <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                        Reduce point count
+                    </div>
+                </div>
+            </div>
+
+            <div class="option" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 10px;">
+                    Simplification Tolerance: <span class="option-value" id="toleranceValue">0.1</span>mm
+                </label>
+                <input type="range" id="tolerance" min="0.01" max="2" value="0.1" step="0.01">
+                <div style="font-size: 12px; opacity: 0.7; margin-top: 5px;">
+                    Higher = more simplification, lower quality
+                </div>
+            </div>
+
+            <button class="btn btn-primary" id="optimizeBtn">⚡ Optimize Paths</button>
+            <button class="btn btn-secondary" id="downloadBtn" disabled>💾 Download Optimized SVG</button>
+        </div>
+
+        <div class="visualization" id="visualization">
+            <div class="viz-panel">
+                <div class="viz-title">Original</div>
+                <div class="viz-canvas" id="originalCanvas"></div>
+            </div>
+            <div class="viz-panel">
+                <div class="viz-title">Optimized</div>
+                <div class="viz-canvas" id="optimizedCanvas"></div>
+            </div>
+        </div>
+
+        <div class="stats-section" id="statsSection">
+            <h2 style="margin-bottom: 20px;">Optimization Results</h2>
+            <div class="stats-grid" id="statsGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        let originalPaths = [];
+        let optimizedPaths = [];
+        let svgWidth = 0;
+        let svgHeight = 0;
+        let optimizer;
+
+        // Upload handling
+        const uploadSection = document.getElementById('uploadSection');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadSection.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.svg')) {
+                alert('Please upload an SVG file');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                loadSVG(e.target.result);
+            };
+            reader.readAsText(file);
+        }
+
+        function loadSVG(svgText) {
+            const parser = new DOMParser();
+            const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+            const svgElement = svgDoc.querySelector('svg');
+
+            if (!svgElement) {
+                alert('Invalid SVG file');
+                return;
+            }
+
+            // Get SVG dimensions
+            svgWidth = parseInt(svgElement.getAttribute('width')) || 500;
+            svgHeight = parseInt(svgElement.getAttribute('height')) || 500;
+
+            // Parse paths
+            originalPaths = PathOptimizer.parseSVGPaths(svgElement);
+
+            if (originalPaths.length === 0) {
+                alert('No paths found in SVG');
+                return;
+            }
+
+            // Show options and visualization
+            document.getElementById('optionsSection').classList.add('visible');
+            document.getElementById('visualization').classList.add('visible');
+
+            // Display original
+            displaySVG(svgText, 'originalCanvas');
+        }
+
+        // Optimize button
+        document.getElementById('optimizeBtn').addEventListener('click', optimize);
+
+        document.getElementById('tolerance').addEventListener('input', (e) => {
+            document.getElementById('toleranceValue').textContent = e.target.value;
+        });
+
+        function optimize() {
+            const options = {
+                merge: document.getElementById('optMerge').checked,
+                sort: document.getElementById('optSort').checked,
+                reloop: document.getElementById('optReloop').checked,
+                simplify: document.getElementById('optSimplify').checked,
+                tolerance: parseFloat(document.getElementById('tolerance').value)
+            };
+
+            // Create optimizer
+            optimizer = new PathOptimizer({
+                penSpeed: 100,      // mm/s
+                travelSpeed: 200,   // mm/s
+                penUpDownTime: 0.1  // seconds
+            });
+
+            // Optimize
+            optimizedPaths = optimizer.optimize(originalPaths, options);
+
+            // Display optimized SVG
+            const optimizedSVG = PathOptimizer.pathsToSVG(optimizedPaths, svgWidth, svgHeight);
+            displaySVG(optimizedSVG, 'optimizedCanvas');
+
+            // Show stats
+            displayStats(optimizer.stats);
+
+            // Enable download
+            document.getElementById('downloadBtn').disabled = false;
+        }
+
+        function displaySVG(svgText, containerId) {
+            document.getElementById(containerId).innerHTML = svgText;
+        }
+
+        function displayStats(stats) {
+            const statsSection = document.getElementById('statsSection');
+            const statsGrid = document.getElementById('statsGrid');
+
+            statsSection.classList.add('visible');
+
+            const pathReduction = ((stats.originalPaths - stats.optimizedPaths) / stats.originalPaths * 100).toFixed(1);
+            const pointReduction = ((stats.originalPoints - stats.optimizedPoints) / stats.originalPoints * 100).toFixed(1);
+            const travelReduction = ((stats.originalTravelDistance - stats.optimizedTravelDistance) / stats.originalTravelDistance * 100).toFixed(1);
+
+            statsGrid.innerHTML = `
+                <div class="stat-card time-saved">
+                    <div class="stat-label">Time Saved</div>
+                    <div class="stat-value">${formatTime(stats.timeSaved)}</div>
+                    <div class="stat-change positive">
+                        ${((stats.timeSaved / stats.originalTime) * 100).toFixed(1)}% faster
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Paths</div>
+                    <div class="stat-value">${stats.optimizedPaths}</div>
+                    <div class="stat-change ${pathReduction > 0 ? 'positive' : ''}">
+                        ${pathReduction}% reduction
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Points</div>
+                    <div class="stat-value">${stats.optimizedPoints.toLocaleString()}</div>
+                    <div class="stat-change ${pointReduction > 0 ? 'positive' : ''}">
+                        ${pointReduction}% reduction
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Drawing Distance</div>
+                    <div class="stat-value">${(stats.optimizedDistance / 10).toFixed(1)}</div>
+                    <div class="stat-change">cm</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Travel Distance</div>
+                    <div class="stat-value">${(stats.optimizedTravelDistance / 10).toFixed(1)}</div>
+                    <div class="stat-change ${travelReduction > 0 ? 'positive' : ''}">
+                        ${travelReduction}% reduction
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-label">Total Time</div>
+                    <div class="stat-value">${formatTime(stats.optimizedTime)}</div>
+                    <div class="stat-change">
+                        vs ${formatTime(stats.originalTime)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function formatTime(seconds) {
+            if (seconds < 60) {
+                return `${seconds.toFixed(1)}s`;
+            } else if (seconds < 3600) {
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}m ${secs}s`;
+            } else {
+                const hours = Math.floor(seconds / 3600);
+                const mins = Math.floor((seconds % 3600) / 60);
+                return `${hours}h ${mins}m`;
+            }
+        }
+
+        // Download
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const optimizedSVG = PathOptimizer.pathsToSVG(optimizedPaths, svgWidth, svgHeight);
+
+            const blob = new Blob([optimizedSVG], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'optimized.svg';
+            a.click();
+
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>

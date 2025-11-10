@@ -436,18 +436,18 @@
       "icon": "🛠️",
       "algorithms": [
         {
-          "id": "preset-manager-demo",
-          "name": "Preset Manager Demo",
-          "description": "Interactive demo of the preset save/load system",
-          "path": "preset-manager-demo.html",
+          "id": "path-optimizer-tool",
+          "name": "Path Optimizer",
+          "description": "vpype-style optimization: merge, sort, reloop, simplify paths",
+          "path": "path-optimizer-tool.html",
           "featured": true,
           "complexity": "beginner"
         },
         {
-          "id": "path-optimizer",
-          "name": "Path Optimizer",
-          "description": "Optimize SVG paths for faster plotting",
-          "path": "pen-plotter/algorithms/tools/path-optimizer-gui.html",
+          "id": "preset-manager-demo",
+          "name": "Preset Manager Demo",
+          "description": "Interactive demo of the preset save/load system",
+          "path": "preset-manager-demo.html",
           "featured": true,
           "complexity": "beginner"
         },
@@ -476,8 +476,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 66,
+    "totalAlgorithms": 67,
     "totalCategories": 13,
-    "featuredCount": 8
+    "featuredCount": 9
   }
 }

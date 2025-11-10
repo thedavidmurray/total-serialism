@@ -65,9 +65,11 @@ total-serialism/
 - Parametric surfaces
 - Chladni patterns
 
-### Pen Plotter Tools
-- Path optimization
-- Stroke sorting
+### Pen Plotter Tools ✨ NEW!
+- **Path optimization** - vpype-style algorithms (merge, sort, reloop, simplify)
+- **Time estimation** - Calculate plot time before drawing
+- **Visual comparison** - See before/after optimization
+- Stroke sorting and path reordering
 - Debug preview
 - Export to various plotter formats
 
@@ -144,7 +146,7 @@ npm install  # If dependencies are added later
 
 - [x] **Algorithm browser with search and categorization** ✨ NEW!
 - [x] **Preset management system (save/load parameters)** ✨ NEW!
-- [ ] Path optimization tools (vpype-style)
+- [x] **Path optimization tools (vpype-style)** ✨ NEW!
 - [ ] Calibration wizard for pen plotters
 - [ ] Unified control interface across all tools
 - [ ] Better documentation and examples
