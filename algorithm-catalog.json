@@ -422,6 +422,14 @@
           "description": "Japanese kumiko woodwork patterns",
           "path": "pen-plotter/algorithms/symmetry/kumiko-pattern.html",
           "complexity": "intermediate"
+        },
+        {
+          "id": "truchet-tiles",
+          "name": "Truchet Tiles",
+          "description": "Classic maze-like patterns from rotated geometric tiles",
+          "path": "pen-plotter/algorithms/symmetry/truchet-tiles-gui.html",
+          "featured": true,
+          "complexity": "beginner"
         }
       ]
     },
@@ -514,8 +522,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 70,
+    "totalAlgorithms": 71,
     "totalCategories": 15,
-    "featuredCount": 12
+    "featuredCount": 13
   }
 }

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Truchet Tiles Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+    }
+
+    .control-group h3 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    input[type="range"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9em;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    .range-value {
+      float: right;
+      color: #a8edea;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: #333;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(168, 237, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: #6c757d;
+      color: white;
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.85em;
+    }
+
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #555;
+    }
+
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+
+    .stats .value {
+      font-weight: 600;
+      color: #a8edea;
+    }
+
+    .algorithm-info {
+      background: #d4f4f4;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85em;
+      color: #1a5f5f;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+
+    .tile-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tile-preview canvas {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .tile-preview canvas:hover {
+      border-color: #a8edea;
+    }
+
+    .tile-preview canvas.selected {
+      border-color: #a8edea;
+      border-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔲 Truchet Tiles</h1>
+  <p class="subtitle">Create mesmerizing maze-like patterns from simple geometric tiles</p>
+
+  <div class="container">
+    <!-- Controls Panel -->
+    <div class="panel">
+      <div class="algorithm-info">
+        <strong>Truchet Tiles:</strong> Named after Sébastien Truchet (1704), these tiles create complex patterns through simple rotation of basic geometric shapes. Perfect for pen plotting!
+      </div>
+
+      <!-- Preset Manager Container -->
+      <div id="preset-container"></div>
+
+      <!-- Tile Type -->
+      <div class="control-group">
+        <h3>🎨 Tile Style</h3>
+
+        <label>
+          Tile Type
+          <select id="tileType">
+            <option value="diagonal">Diagonal Lines</option>
+            <option value="quarter-circle">Quarter Circles (Smith)</option>
+            <option value="maze">Maze Tiles</option>
+            <option value="cross">Cross</option>
+            <option value="triangle">Triangles</option>
+            <option value="dots">Dots & Lines</option>
+            <option value="waves">Waves</option>
+          </select>
+        </label>
+
+        <label>
+          Rotation Mode
+          <select id="rotationMode">
+            <option value="random">Random</option>
+            <option value="flow">Flow Field</option>
+            <option value="alternating">Alternating</option>
+            <option value="mirrored">Mirrored</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Grid Settings -->
+      <div class="control-group">
+        <h3>📏 Grid Settings</h3>
+
+        <label>
+          Grid Size: <span class="range-value" id="gridSizeValue">20</span>
+          <input type="range" id="gridSize" min="5" max="50" value="20" step="1">
+        </label>
+
+        <label>
+          Tile Size: <span class="range-value" id="tileSizeValue">40</span>
+          <input type="range" id="tileSize" min="10" max="100" value="40" step="5">
+        </label>
+
+        <label>
+          Seed
+          <input type="number" id="seed" value="42" min="1" max="99999">
+        </label>
+      </div>
+
+      <!-- Style Options -->
+      <div class="control-group">
+        <h3>🎨 Style Options</h3>
+
+        <label>
+          Line Weight: <span class="range-value" id="lineWeightValue">2</span>
+          <input type="range" id="lineWeight" min="0.5" max="10" value="2" step="0.5">
+        </label>
+
+        <label>
+          Detail Level: <span class="range-value" id="detailLevelValue">1</span>
+          <input type="range" id="detailLevel" min="1" max="5" value="1" step="1">
+        </label>
+
+        <label>
+          Probability Bias: <span class="range-value" id="probabilityValue">0.5</span>
+          <input type="range" id="probability" min="0" max="1" value="0.5" step="0.1">
+        </label>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showGrid">
+          <label for="showGrid">Show Grid</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="invertColors">
+          <label for="invertColors">Invert Colors</label>
+        </div>
+      </div>
+
+      <!-- Flow Field (for flow rotation mode) -->
+      <div class="control-group" id="flowControls" style="display: none;">
+        <h3>🌊 Flow Field</h3>
+
+        <label>
+          Flow Scale: <span class="range-value" id="flowScaleValue">0.05</span>
+          <input type="range" id="flowScale" min="0.01" max="0.2" value="0.05" step="0.01">
+        </label>
+
+        <label>
+          Flow Strength: <span class="range-value" id="flowStrengthValue">1.0</span>
+          <input type="range" id="flowStrength" min="0.1" max="2" value="1.0" step="0.1">
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="control-group">
+        <h3>⚡ Actions</h3>
+
+        <button onclick="generateTiles()">Generate Tiles</button>
+
+        <div class="button-group">
+          <button class="secondary" onclick="randomizeSeed()">Random Seed</button>
+          <button class="secondary" onclick="clearCanvas()">Clear</button>
+        </div>
+
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats">
+        <div>
+          <span>Grid:</span>
+          <span class="value" id="statGrid">20x20</span>
+        </div>
+        <div>
+          <span>Total Tiles:</span>
+          <span class="value" id="statTiles">400</span>
+        </div>
+        <div>
+          <span>Tile Type:</span>
+          <span class="value" id="statType">Diagonal</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+      <div id="canvas"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let tiles = [];
+    let presetManager;
+
+    // Parameters
+    const params = {
+      tileType: 'diagonal',
+      rotationMode: 'random',
+      gridSize: 20,
+      tileSize: 40,
+      seed: 42,
+      lineWeight: 2,
+      detailLevel: 1,
+      probability: 0.5,
+      showGrid: false,
+      invertColors: false,
+      flowScale: 0.05,
+      flowStrength: 1.0
+    };
+
+    // p5.js setup
+    function setup() {
+      const canvasSize = Math.min(800, windowWidth - 400);
+      const canvas = createCanvas(canvasSize, canvasSize);
+      canvas.parent('canvas');
+      background(255);
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'truchet-tiles',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          generateTiles();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 99999);
+          params.gridSize = Math.floor(Math.random() * 40) + 10;
+          params.probability = Math.random();
+          params.lineWeight = Math.random() * 8 + 1;
+          params.detailLevel = Math.floor(Math.random() * 4) + 1;
+          updateUIFromParams();
+          generateTiles();
+        }
+      });
+
+      generateTiles();
+    }
+
+    // p5.js draw
+    function draw() {
+      // Static rendering, no animation needed
+      noLoop();
+    }
+
+    // Generate tiles
+    function generateTiles() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
+      background(params.invertColors ? 0 : 255);
+
+      const tileSize = width / params.gridSize;
+
+      // Generate tile grid
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          const x = i * tileSize;
+          const y = j * tileSize;
+
+          // Determine rotation
+          let rotation = 0;
+          switch (params.rotationMode) {
+            case 'random':
+              rotation = floor(random(4)) * HALF_PI;
+              break;
+
+            case 'flow':
+              const angle = noise(i * params.flowScale, j * params.flowScale) * TWO_PI * params.flowStrength;
+              rotation = floor((angle / HALF_PI) % 4) * HALF_PI;
+              break;
+
+            case 'alternating':
+              rotation = ((i + j) % 2) * PI;
+              break;
+
+            case 'mirrored':
+              rotation = (i % 2) * PI;
+              break;
+          }
+
+          // Apply probability bias for some randomness
+          if (random() > params.probability) {
+            rotation += PI;
+          }
+
+          // Draw tile
+          push();
+          translate(x + tileSize / 2, y + tileSize / 2);
+          rotate(rotation);
+          drawTile(tileSize, params.tileType);
+          pop();
+        }
+      }
+
+      // Draw grid if requested
+      if (params.showGrid) {
+        stroke(params.invertColors ? 255 : 0, 50);
+        strokeWeight(0.5);
+        for (let i = 0; i <= params.gridSize; i++) {
+          line(i * tileSize, 0, i * tileSize, height);
+          line(0, i * tileSize, width, i * tileSize);
+        }
+      }
+
+      updateStats();
+    }
+
+    // Draw a single tile
+    function drawTile(size, type) {
+      const half = size / 2;
+      stroke(params.invertColors ? 255 : 0);
+      strokeWeight(params.lineWeight);
+      noFill();
+
+      switch (type) {
+        case 'diagonal':
+          // Classic truchet: diagonal line
+          line(-half, -half, half, half);
+          for (let i = 1; i < params.detailLevel; i++) {
+            const offset = (i / params.detailLevel) * size * 0.1;
+            line(-half + offset, -half, half, half - offset);
+            line(-half, -half + offset, half - offset, half);
+          }
+          break;
+
+        case 'quarter-circle':
+          // Smith truchet: quarter circles
+          arc(-half, -half, size, size, 0, HALF_PI);
+          arc(half, half, size, size, PI, PI + HALF_PI);
+          for (let i = 1; i <= params.detailLevel; i++) {
+            const r = size * (1 - i / (params.detailLevel + 1));
+            arc(-half, -half, r, r, 0, HALF_PI);
+            arc(half, half, r, r, PI, PI + HALF_PI);
+          }
+          break;
+
+        case 'maze':
+          // Maze tiles: connected lines
+          line(-half, 0, 0, 0);
+          line(0, 0, 0, -half);
+          if (params.detailLevel > 1) {
+            line(0, half, half, half);
+            line(half, half, half, 0);
+          }
+          break;
+
+        case 'cross':
+          // Cross pattern
+          line(-half, 0, half, 0);
+          line(0, -half, 0, half);
+          for (let i = 1; i <= params.detailLevel; i++) {
+            const r = (half / (params.detailLevel + 1)) * i;
+            circle(0, 0, r * 2);
+          }
+          break;
+
+        case 'triangle':
+          // Triangle tiles
+          triangle(-half, half, 0, -half, half, half);
+          for (let i = 1; i < params.detailLevel; i++) {
+            const scale = 1 - i / (params.detailLevel + 1);
+            push();
+            scale(scale);
+            triangle(-half, half, 0, -half, half, half);
+            pop();
+          }
+          break;
+
+        case 'dots':
+          // Dots and lines
+          circle(-half / 2, -half / 2, size / 8);
+          circle(half / 2, half / 2, size / 8);
+          line(-half / 2, -half / 2, half / 2, half / 2);
+          for (let i = 1; i <= params.detailLevel; i++) {
+            const r = (size / 8) * (1 + i * 0.5);
+            noFill();
+            circle(-half / 2, -half / 2, r);
+            circle(half / 2, half / 2, r);
+          }
+          break;
+
+        case 'waves':
+          // Wave pattern
+          beginShape();
+          for (let i = 0; i <= 10; i++) {
+            const x = map(i, 0, 10, -half, half);
+            const y = sin(map(i, 0, 10, 0, PI)) * (half / 2);
+            vertex(x, y);
+          }
+          endShape();
+          for (let j = 1; j <= params.detailLevel; j++) {
+            beginShape();
+            for (let i = 0; i <= 10; i++) {
+              const x = map(i, 0, 10, -half, half);
+              const y = sin(map(i, 0, 10, 0, PI)) * (half / 2) + (j * size / (params.detailLevel + 2));
+              vertex(x, y);
+            }
+            endShape();
+          }
+          break;
+      }
+    }
+
+    // Clear canvas
+    function clearCanvas() {
+      background(params.invertColors ? 0 : 255);
+      updateStats();
+    }
+
+    // Randomize seed
+    function randomizeSeed() {
+      params.seed = Math.floor(Math.random() * 99999);
+      document.getElementById('seed').value = params.seed;
+      generateTiles();
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statGrid').textContent = `${params.gridSize}x${params.gridSize}`;
+      document.getElementById('statTiles').textContent = params.gridSize * params.gridSize;
+      document.getElementById('statType').textContent = params.tileType.charAt(0).toUpperCase() + params.tileType.slice(1).replace('-', ' ');
+    }
+
+    // UI event listeners
+    document.getElementById('tileType').addEventListener('change', (e) => {
+      params.tileType = e.target.value;
+      generateTiles();
+    });
+
+    document.getElementById('rotationMode').addEventListener('change', (e) => {
+      params.rotationMode = e.target.value;
+      document.getElementById('flowControls').style.display = params.rotationMode === 'flow' ? 'block' : 'none';
+      generateTiles();
+    });
+
+    document.getElementById('gridSize').addEventListener('input', (e) => {
+      params.gridSize = parseInt(e.target.value);
+      document.getElementById('gridSizeValue').textContent = params.gridSize;
+      generateTiles();
+    });
+
+    document.getElementById('tileSize').addEventListener('input', (e) => {
+      params.tileSize = parseInt(e.target.value);
+      document.getElementById('tileSizeValue').textContent = params.tileSize;
+    });
+
+    document.getElementById('seed').addEventListener('input', (e) => {
+      params.seed = parseInt(e.target.value);
+      generateTiles();
+    });
+
+    document.getElementById('lineWeight').addEventListener('input', (e) => {
+      params.lineWeight = parseFloat(e.target.value);
+      document.getElementById('lineWeightValue').textContent = params.lineWeight;
+      generateTiles();
+    });
+
+    document.getElementById('detailLevel').addEventListener('input', (e) => {
+      params.detailLevel = parseInt(e.target.value);
+      document.getElementById('detailLevelValue').textContent = params.detailLevel;
+      generateTiles();
+    });
+
+    document.getElementById('probability').addEventListener('input', (e) => {
+      params.probability = parseFloat(e.target.value);
+      document.getElementById('probabilityValue').textContent = params.probability.toFixed(1);
+      generateTiles();
+    });
+
+    document.getElementById('showGrid').addEventListener('change', (e) => {
+      params.showGrid = e.target.checked;
+      generateTiles();
+    });
+
+    document.getElementById('invertColors').addEventListener('change', (e) => {
+      params.invertColors = e.target.checked;
+      generateTiles();
+    });
+
+    document.getElementById('flowScale').addEventListener('input', (e) => {
+      params.flowScale = parseFloat(e.target.value);
+      document.getElementById('flowScaleValue').textContent = params.flowScale.toFixed(2);
+      generateTiles();
+    });
+
+    document.getElementById('flowStrength').addEventListener('input', (e) => {
+      params.flowStrength = parseFloat(e.target.value);
+      document.getElementById('flowStrengthValue').textContent = params.flowStrength.toFixed(1);
+      generateTiles();
+    });
+
+    // Update UI from params
+    function updateUIFromParams() {
+      document.getElementById('tileType').value = params.tileType;
+      document.getElementById('rotationMode').value = params.rotationMode;
+      document.getElementById('gridSize').value = params.gridSize;
+      document.getElementById('tileSize').value = params.tileSize;
+      document.getElementById('seed').value = params.seed;
+      document.getElementById('lineWeight').value = params.lineWeight;
+      document.getElementById('detailLevel').value = params.detailLevel;
+      document.getElementById('probability').value = params.probability;
+      document.getElementById('showGrid').checked = params.showGrid;
+      document.getElementById('invertColors').checked = params.invertColors;
+      document.getElementById('flowScale').value = params.flowScale;
+      document.getElementById('flowStrength').value = params.flowStrength;
+
+      document.getElementById('gridSizeValue').textContent = params.gridSize;
+      document.getElementById('tileSizeValue').textContent = params.tileSize;
+      document.getElementById('lineWeightValue').textContent = params.lineWeight;
+      document.getElementById('detailLevelValue').textContent = params.detailLevel;
+      document.getElementById('probabilityValue').textContent = params.probability.toFixed(1);
+      document.getElementById('flowScaleValue').textContent = params.flowScale.toFixed(2);
+      document.getElementById('flowStrengthValue').textContent = params.flowStrength.toFixed(1);
+
+      document.getElementById('flowControls').style.display = params.rotationMode === 'flow' ? 'block' : 'none';
+    }
+
+    // Export SVG
+    function exportSVG() {
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="${params.invertColors ? 'black' : 'white'}"/>
+  <g stroke="${params.invertColors ? 'white' : 'black'}" stroke-width="${params.lineWeight}" fill="none">
+`;
+
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
+      const tileSize = width / params.gridSize;
+
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          const x = i * tileSize + tileSize / 2;
+          const y = j * tileSize + tileSize / 2;
+
+          let rotation = 0;
+          switch (params.rotationMode) {
+            case 'random':
+              rotation = floor(random(4)) * 90;
+              break;
+            case 'flow':
+              const angle = noise(i * params.flowScale, j * params.flowScale) * 360 * params.flowStrength;
+              rotation = floor((angle / 90) % 4) * 90;
+              break;
+            case 'alternating':
+              rotation = ((i + j) % 2) * 180;
+              break;
+            case 'mirrored':
+              rotation = (i % 2) * 180;
+              break;
+          }
+
+          if (random() > params.probability) {
+            rotation += 180;
+          }
+
+          svg += `    <g transform="translate(${x},${y}) rotate(${rotation})">\n`;
+          svg += getTileSVG(tileSize, params.tileType);
+          svg += `    </g>\n`;
+        }
+      }
+
+      svg += `  </g>
+</svg>`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `truchet-tiles-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Get SVG path for a tile type
+    function getTileSVG(size, type) {
+      const half = size / 2;
+      let svg = '';
+
+      switch (type) {
+        case 'diagonal':
+          svg += `      <line x1="${-half}" y1="${-half}" x2="${half}" y2="${half}"/>\n`;
+          break;
+
+        case 'quarter-circle':
+          svg += `      <path d="M ${-half} 0 A ${half} ${half} 0 0 1 0 ${-half}"/>\n`;
+          svg += `      <path d="M ${half} 0 A ${half} ${half} 0 0 1 0 ${half}"/>\n`;
+          break;
+
+        case 'maze':
+          svg += `      <line x1="${-half}" y1="0" x2="0" y2="0"/>\n`;
+          svg += `      <line x1="0" y1="0" x2="0" y2="${-half}"/>\n`;
+          break;
+
+        case 'cross':
+          svg += `      <line x1="${-half}" y1="0" x2="${half}" y2="0"/>\n`;
+          svg += `      <line x1="0" y1="${-half}" x2="0" y2="${half}"/>\n`;
+          break;
+
+        case 'triangle':
+          svg += `      <polygon points="${-half},${half} 0,${-half} ${half},${half}"/>\n`;
+          break;
+      }
+
+      return svg;
+    }
+
+    // Export PNG
+    function exportPNG() {
+      saveCanvas(`truchet-tiles-${Date.now()}`, 'png');
+    }
+  </script>
+</body>
+</html>
