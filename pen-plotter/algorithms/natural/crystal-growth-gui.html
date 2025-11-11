@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crystal Growth - Pen Plotter Art</title>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
     <style>
         body {
             margin: 0;
@@ -142,8 +144,11 @@
 <body>
     <div class="container">
         <div class="controls">
+            <!-- Preset Manager Container -->
+            <div id="preset-container"></div>
+
             <h3>Crystal Parameters</h3>
-            
+
             <div class="control-group">
                 <label for="crystalType">Crystal Type</label>
                 <select id="crystalType">
@@ -253,11 +258,79 @@
         let crystalData = [];
         let animationFrames = [];
         let isGrowing = false;
-        
-        // Update value displays
-        document.querySelectorAll('input[type="range"]').forEach(input => {
+        let presetManager;
+
+        // Parameters object for preset management
+        const params = {
+            crystalType: 'dendritic',
+            seedPattern: 'point',
+            particles: 10000,
+            stickiness: 0.7,
+            growthBias: 1.0,
+            particleSize: 2,
+            colorMode: 'monochrome',
+            symmetry: 'none',
+            frameInterval: 500
+        };
+
+        // Initialize preset manager when DOM is loaded
+        window.addEventListener('DOMContentLoaded', () => {
+            presetManager = new PresetManager({
+                algorithmId: 'crystal-growth',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                },
+                onRandomize: () => {
+                    const crystalTypes = ['dendritic', 'cubic', 'hexagonal', 'needle', 'fractal'];
+                    const seedPatterns = ['point', 'line', 'circle', 'random', 'grid'];
+                    const colorModes = ['monochrome', 'depth', 'age', 'density'];
+                    const symmetries = ['none', '2', '4', '6', '8'];
+
+                    params.crystalType = crystalTypes[Math.floor(Math.random() * crystalTypes.length)];
+                    params.seedPattern = seedPatterns[Math.floor(Math.random() * seedPatterns.length)];
+                    params.particles = Math.floor(Math.random() * 49000) + 1000;
+                    params.stickiness = Math.random() * 0.9 + 0.1;
+                    params.growthBias = Math.random() * 2;
+                    params.particleSize = Math.floor(Math.random() * 5) + 1;
+                    params.colorMode = colorModes[Math.floor(Math.random() * colorModes.length)];
+                    params.symmetry = symmetries[Math.floor(Math.random() * symmetries.length)];
+                    params.frameInterval = Math.floor(Math.random() * 1900) + 100;
+
+                    updateUIFromParams();
+                }
+            });
+        });
+
+        // Helper function to update UI from params
+        function updateUIFromParams() {
+            document.getElementById('crystalType').value = params.crystalType;
+            document.getElementById('seedPattern').value = params.seedPattern;
+            document.getElementById('particles').value = params.particles;
+            document.getElementById('stickiness').value = params.stickiness;
+            document.getElementById('growthBias').value = params.growthBias;
+            document.getElementById('particleSize').value = params.particleSize;
+            document.getElementById('colorMode').value = params.colorMode;
+            document.getElementById('symmetry').value = params.symmetry;
+            document.getElementById('frameInterval').value = params.frameInterval;
+
+            // Update value displays
+            document.getElementById('particlesValue').textContent = params.particles;
+            document.getElementById('stickinessValue').textContent = params.stickiness;
+            document.getElementById('growthBiasValue').textContent = params.growthBias.toFixed(1);
+            document.getElementById('particleSizeValue').textContent = params.particleSize;
+            document.getElementById('frameIntervalValue').textContent = params.frameInterval;
+        }
+
+        // Update value displays and params on input
+        document.querySelectorAll('input[type="range"], select').forEach(input => {
             input.addEventListener('input', (e) => {
-                const valueDisplay = document.getElementById(e.target.id + 'Value');
+                const key = e.target.id;
+                params[key] = e.target.type === 'range' ? parseFloat(e.target.value) : e.target.value;
+
+                const valueDisplay = document.getElementById(key + 'Value');
                 if (valueDisplay) {
                     valueDisplay.textContent = e.target.value;
                 }
