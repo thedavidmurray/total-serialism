@@ -5,6 +5,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -71,7 +73,10 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Flow Field Controls</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Flow Field</h3>
       <div class="control">
@@ -141,11 +146,8 @@
     <div class="control-group">
       <h3>Actions</h3>
       <button onclick="regenerate()">Regenerate</button>
-      <button onclick="randomizeParams()">Randomize</button>
       <button onclick="exportSVG()">Export SVG</button>
       <button onclick="exportGIF()">Export GIF</button>
-      <button onclick="saveParams()">Save Parameters</button>
-      <button onclick="loadLastParams()">Load Last Saved</button>
       <div class="control">
         <label>Seed:</label>
         <div id="seed-display">-</div>
@@ -170,8 +172,9 @@
       fadeEdges: true,
       fadeStrength: 50
     };
-    
+
     let particles = [];
+    let presetManager;
     
     // Paper sizes in mm
     const paperSizes = {
@@ -183,13 +186,35 @@
       // Create canvas with A3 proportions
       const [w, h] = paperSizes.A3;
       const scale = Math.min(windowWidth * 0.7 / w, windowHeight / h);
-      
+
       let canvas = createCanvas(w * scale, h * scale, SVG);
       canvas.parent('canvas-container');
-      
+
       // Set up controls
       setupControls();
-      
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'flow-field',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 1000000);
+          params.noiseScale = random(0.0001, 0.01);
+          params.noiseStrength = random(0.1, 3);
+          params.particleCount = Math.floor(random(100, 5000));
+          params.stepLength = random(0.5, 10);
+          params.steps = Math.floor(random(10, 500));
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
       // Initial generation
       regenerate();
     }
@@ -393,79 +418,27 @@
       noLoop();
     }
     
-    // Action functions
-    function randomizeParams() {
-      params.seed = Math.floor(Math.random() * 1000000);
-      params.noiseScale = random(0.0001, 0.01);
-      params.noiseStrength = random(0.1, 3);
-      params.particleCount = Math.floor(random(100, 5000));
-      params.stepLength = random(0.5, 10);
-      params.steps = Math.floor(random(10, 500));
-      
-      // Update UI
+    // Helper function to update UI from params
+    function updateUIFromParams() {
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
-        if (element && element.type === 'range') {
-          element.value = params[key];
-          const valueDisplay = document.getElementById(key + '-value');
-          if (valueDisplay) valueDisplay.textContent = params[key];
+        if (element) {
+          if (element.type === 'range' || element.type === 'select-one') {
+            element.value = params[key];
+            const valueDisplay = document.getElementById(key + '-value');
+            if (valueDisplay) valueDisplay.textContent = params[key];
+          } else if (element.type === 'checkbox') {
+            element.checked = params[key];
+          }
         }
       });
-      
+
       document.getElementById('seed-display').textContent = params.seed;
-      regenerate();
     }
-    
+
+    // Export SVG
     function exportSVG() {
       save(`flow-field-${params.seed}.svg`);
-    }
-    
-    function saveParams() {
-      const paramData = {
-        algorithm: 'flow-field-p5-gui',
-        timestamp: new Date().toISOString(),
-        params: { ...params }
-      };
-      
-      localStorage.setItem('lastFlowFieldParams', JSON.stringify(paramData));
-      
-      // Also download as JSON
-      const dataStr = JSON.stringify(paramData, null, 2);
-      const dataBlob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(dataBlob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `flow-field-params-${params.seed}.json`;
-      link.click();
-      
-      alert('Parameters saved!');
-    }
-    
-    function loadLastParams() {
-      const saved = localStorage.getItem('lastFlowFieldParams');
-      if (saved) {
-        const data = JSON.parse(saved);
-        params = data.params;
-        
-        // Update UI
-        Object.keys(params).forEach(key => {
-          const element = document.getElementById(key);
-          if (element) {
-            if (element.type === 'range' || element.type === 'select-one') {
-              element.value = params[key];
-              const valueDisplay = document.getElementById(key + '-value');
-              if (valueDisplay) valueDisplay.textContent = params[key];
-            } else if (element.type === 'checkbox') {
-              element.checked = params[key];
-            }
-          }
-        });
-        
-        document.getElementById('seed-display').textContent = params.seed;
-        regenerate();
-      } else {
-        alert('No saved parameters found');
-      }
     }
     
     function exportGIF() {
