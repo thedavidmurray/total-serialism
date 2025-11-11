@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chladni Patterns - Vibration Visualization</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
     <style>
         body {
             margin: 0;
@@ -62,7 +64,10 @@
 <body>
     <div id="controls">
         <h3>Chladni Pattern Controls</h3>
-        
+
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
+
         <div class="control-group">
             <label>Plate Shape:</label>
             <select id="plateShape">
@@ -154,16 +159,70 @@
             showSand: true,
             animate: false
         };
-        
+
         let vibrationField = [];
         let sandParticles = [];
         let nodalLines = [];
         let time = 0;
-        
+        let presetManager;
+
         function setup() {
             createCanvas(windowWidth - 350, windowHeight - 40);
             setupControls();
+
+            // Initialize preset manager
+            presetManager = new PresetManager({
+                algorithmId: 'chladni-patterns',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    generatePattern();
+                },
+                onRandomize: () => {
+                    const shapes = ['square', 'circular', 'triangular', 'hexagonal'];
+                    params.plateShape = random(shapes);
+                    params.modeM = Math.floor(random(1, 11));
+                    params.modeN = Math.floor(random(1, 11));
+                    params.fundamental = Math.floor(random(50, 500));
+                    params.harmonic2 = Math.floor(random(0, 101));
+                    params.harmonic3 = Math.floor(random(0, 101));
+                    params.resolution = Math.floor(random(50, 200));
+                    params.sandDensity = Math.floor(random(1000, 10000));
+                    params.amplitude = Math.floor(random(10, 100));
+                    updateUIFromParams();
+                    generatePattern();
+                }
+            });
+
             generatePattern();
+        }
+
+        // Helper function to update UI from params
+        function updateUIFromParams() {
+            document.getElementById('plateShape').value = params.plateShape;
+            document.getElementById('modeM').value = params.modeM;
+            document.getElementById('modeN').value = params.modeN;
+            document.getElementById('fundamental').value = params.fundamental;
+            document.getElementById('harmonic2').value = params.harmonic2;
+            document.getElementById('harmonic3').value = params.harmonic3;
+            document.getElementById('resolution').value = params.resolution;
+            document.getElementById('sandDensity').value = params.sandDensity;
+            document.getElementById('amplitude').value = params.amplitude;
+            document.getElementById('showNodes').checked = params.showNodes;
+            document.getElementById('showSand').checked = params.showSand;
+            document.getElementById('animate').checked = params.animate;
+
+            // Update value displays
+            document.getElementById('modeMValue').textContent = params.modeM;
+            document.getElementById('modeNValue').textContent = params.modeN;
+            document.getElementById('fundamentalValue').textContent = params.fundamental;
+            document.getElementById('harmonic2Value').textContent = params.harmonic2;
+            document.getElementById('harmonic3Value').textContent = params.harmonic3;
+            document.getElementById('resolutionValue').textContent = params.resolution;
+            document.getElementById('sandDensityValue').textContent = params.sandDensity;
+            document.getElementById('amplitudeValue').textContent = params.amplitude;
         }
         
         function setupControls() {
