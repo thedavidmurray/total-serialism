@@ -5,6 +5,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -104,7 +106,10 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>BZ Reaction Controls</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Reaction Parameters</h3>
       <div class="control">
@@ -242,16 +247,76 @@
     let grid;
     let next;
     let svgCanvas;
-    
+    let presetManager;
+
     function setup() {
       const w = 600;
       const h = 600;
       
       svgCanvas = createCanvas(w, h, SVG);
       svgCanvas.parent('canvas-container');
-      
+
       setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'belousov-zhabotinsky',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          const patterns = ['spirals', 'waves', 'spots', 'stripes', 'chaos'];
+          const colorSchemes = ['classic', 'thermal', 'chemical', 'monochrome', 'contour'];
+          const seedPatterns = ['random', 'center', 'multiple', 'gradient', 'spiral'];
+          params.feedRate = random(0.01, 0.1);
+          params.killRate = random(0.03, 0.07);
+          params.diffusionA = random(0.5, 1.5);
+          params.diffusionB = random(0.1, 1.0);
+          params.gridSize = random([100, 150, 200, 250, 300, 350, 400]);
+          params.timeSteps = Math.floor(random(1, 50));
+          params.patternType = random(patterns);
+          params.colorScheme = random(colorSchemes);
+          params.contourLevels = Math.floor(random(5, 30));
+          params.showConcentrationA = random() > 0.5;
+          params.showVectorField = random() > 0.5;
+          params.seedPattern = random(seedPatterns);
+          params.running = true;
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
       regenerate();
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      document.getElementById('feedRate').value = params.feedRate;
+      document.getElementById('killRate').value = params.killRate;
+      document.getElementById('diffusionA').value = params.diffusionA;
+      document.getElementById('diffusionB').value = params.diffusionB;
+      document.getElementById('gridSize').value = params.gridSize;
+      document.getElementById('timeSteps').value = params.timeSteps;
+      document.getElementById('patternType').value = params.patternType;
+      document.getElementById('colorScheme').value = params.colorScheme;
+      document.getElementById('contourLevels').value = params.contourLevels;
+      document.getElementById('showConcentrationA').checked = params.showConcentrationA;
+      document.getElementById('showVectorField').checked = params.showVectorField;
+      document.getElementById('seedPattern').value = params.seedPattern;
+      document.getElementById('running').checked = params.running;
+
+      // Update value displays
+      document.getElementById('feedRate-val').textContent = params.feedRate.toFixed(3);
+      document.getElementById('killRate-val').textContent = params.killRate.toFixed(3);
+      document.getElementById('diffusionA-val').textContent = params.diffusionA.toFixed(2);
+      document.getElementById('diffusionB-val').textContent = params.diffusionB.toFixed(2);
+      document.getElementById('gridSize-val').textContent = params.gridSize;
+      document.getElementById('timeSteps-val').textContent = params.timeSteps;
+      document.getElementById('contourLevels-val').textContent = params.contourLevels;
     }
     
     function setupControls() {
