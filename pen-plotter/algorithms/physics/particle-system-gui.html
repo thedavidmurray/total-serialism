@@ -6,6 +6,8 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
   <script src="../../src/utils/gif-exporter.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -161,7 +163,10 @@
   </div>
   <div id="controls">
     <h2>Physics Particles</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Simulation</h3>
       <button id="play-pause">⏸ Pause</button>
@@ -439,7 +444,8 @@
     let showVectors = false;
     let showForceField = false;
     let gifExporter;
-    
+    let presetManager;
+
     // Parameters
     let params = {
       spawnRate: 5,
@@ -491,15 +497,114 @@
           link.click();
         }
       });
-      
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'particle-system',
+        container: '#preset-container',
+        onSave: () => {
+          return {
+            ...params,
+            showTrails: showTrails,
+            showVectors: showVectors,
+            showForceField: showForceField,
+            forces: forces.map(f => ({
+              type: f.type,
+              x: f.position.x,
+              y: f.position.y,
+              strength: f.strength,
+              radius: f.radius,
+              active: f.active
+            }))
+          };
+        },
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          showTrails = preset.data.showTrails !== undefined ? preset.data.showTrails : true;
+          showVectors = preset.data.showVectors !== undefined ? preset.data.showVectors : false;
+          showForceField = preset.data.showForceField !== undefined ? preset.data.showForceField : false;
+
+          // Restore forces
+          if (preset.data.forces) {
+            forces = preset.data.forces.map(f => {
+              const force = new Force(f.type, f.x, f.y);
+              force.strength = f.strength;
+              force.radius = f.radius;
+              force.active = f.active;
+              return force;
+            });
+          }
+
+          updateUIFromParams();
+          updateForceControls();
+        },
+        onRandomize: () => {
+          params.spawnRate = Math.floor(random(0, 21));
+          params.maxParticles = Math.floor(random(100, 2001));
+          params.initialVel = random(0, 10);
+          params.particleSize = Math.floor(random(1, 11));
+          const patterns = ['point', 'line', 'circle', 'random', 'grid'];
+          params.spawnPattern = random(patterns);
+          params.trailLength = Math.floor(random(2, 101));
+          const colorModes = ['monochrome', 'velocity', 'force', 'age', 'random'];
+          params.colorMode = random(colorModes);
+          const palettes = ['default', 'warm', 'cool', 'rainbow', 'custom'];
+          params.colorPalette = random(palettes);
+          const backgrounds = ['white', 'black', 'gradient'];
+          params.backgroundMode = random(backgrounds);
+          params.trailOpacity = random(0.1, 1);
+          params.baseHue = Math.floor(random(0, 361));
+          params.saturation = Math.floor(random(0, 101));
+          params.brightness = Math.floor(random(0, 101));
+
+          // Randomize forces
+          forces = [];
+          const numForces = Math.floor(random(1, 5));
+          const types = ['gravity', 'repeller', 'vortex', 'wind', 'damping', 'noise'];
+          for (let i = 0; i < numForces; i++) {
+            const force = new Force(random(types), random(width), random(height));
+            force.strength = random(-10, 10);
+            forces.push(force);
+          }
+
+          updateUIFromParams();
+          updateForceControls();
+        }
+      });
+
       setupControls();
-      
+
       // Add default gravity force
       forces.push(new Force('gravity', width/2, height/2));
       updateForceControls();
-      
+
       // Load first preset
       loadPreset('gravity');
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      // Update range inputs
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const valueDisplay = document.getElementById(key + '-val');
+            if (valueDisplay) valueDisplay.textContent = params[key];
+          } else if (element.tagName === 'SELECT') {
+            element.value = params[key];
+          }
+        }
+      });
+
+      // Update checkboxes
+      document.getElementById('showTrails').checked = showTrails;
+      document.getElementById('showVectors').checked = showVectors;
+      document.getElementById('showForceField').checked = showForceField;
+
+      // Update trail length for existing particles
+      particles.forEach(p => p.maxTrailLength = params.trailLength);
     }
     
     function setupControls() {

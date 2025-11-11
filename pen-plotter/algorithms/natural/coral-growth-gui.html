@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Coral Growth - Pen Plotter Art</title>
+    <script src="../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../preset-manager.css">
     <style>
         body {
             margin: 0;
@@ -136,7 +138,10 @@
     <div class="container">
         <div class="controls">
             <h3>Coral Parameters</h3>
-            
+
+            <!-- Preset Manager Container -->
+            <div id="preset-container"></div>
+
             <div class="control-group">
                 <label for="coralType">Coral Type</label>
                 <select id="coralType">
@@ -251,19 +256,115 @@
         const ctx = canvas.getContext('2d');
         let coralSystem = null;
         let animationFrames = [];
-        
-        // Update value displays
-        document.querySelectorAll('input[type="range"]').forEach(input => {
-            input.addEventListener('input', (e) => {
-                const valueDisplay = document.getElementById(e.target.id + 'Value');
-                if (valueDisplay) {
-                    let value = e.target.value;
-                    if (e.target.id.includes('Direction') || e.target.id === 'branchAngle') {
-                        value += '°';
-                    }
-                    valueDisplay.textContent = value;
+        let presetManager;
+
+        // Parameters object
+        let params = {
+            coralType: 'branching',
+            growthRate: 2,
+            branchProbability: 0.1,
+            branchAngle: 30,
+            maxDepth: 6,
+            generations: 50,
+            lightDirection: 270,
+            lightIntensity: 0.5,
+            currentStrength: 0.3,
+            currentDirection: 90,
+            multiSpecies: false,
+            speciesCount: 3
+        };
+
+        // Initialize preset manager
+        document.addEventListener('DOMContentLoaded', () => {
+            presetManager = new PresetManager({
+                algorithmId: 'coral-growth',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    growCoral();
+                },
+                onRandomize: () => {
+                    const types = ['branching', 'brain', 'staghorn', 'table', 'fan'];
+                    params.coralType = types[Math.floor(Math.random() * types.length)];
+                    params.growthRate = (Math.random() * 4.5 + 0.5).toFixed(1);
+                    params.branchProbability = (Math.random() * 0.29 + 0.01).toFixed(2);
+                    params.branchAngle = Math.floor(Math.random() * 80 + 10);
+                    params.maxDepth = Math.floor(Math.random() * 8 + 3);
+                    params.generations = Math.floor(Math.random() * 190 + 10);
+                    params.lightDirection = Math.floor(Math.random() * 360);
+                    params.lightIntensity = (Math.random()).toFixed(1);
+                    params.currentStrength = (Math.random()).toFixed(1);
+                    params.currentDirection = Math.floor(Math.random() * 360);
+                    params.multiSpecies = Math.random() > 0.5;
+                    params.speciesCount = Math.floor(Math.random() * 5 + 1);
+                    updateUIFromParams();
+                    growCoral();
                 }
             });
+        });
+
+        // Helper function to update UI from params
+        function updateUIFromParams() {
+            document.getElementById('coralType').value = params.coralType;
+            document.getElementById('growthRate').value = params.growthRate;
+            document.getElementById('branchProbability').value = params.branchProbability;
+            document.getElementById('branchAngle').value = params.branchAngle;
+            document.getElementById('maxDepth').value = params.maxDepth;
+            document.getElementById('generations').value = params.generations;
+            document.getElementById('lightDirection').value = params.lightDirection;
+            document.getElementById('lightIntensity').value = params.lightIntensity;
+            document.getElementById('currentStrength').value = params.currentStrength;
+            document.getElementById('currentDirection').value = params.currentDirection;
+            document.getElementById('multiSpecies').checked = params.multiSpecies;
+            document.getElementById('speciesCount').value = params.speciesCount;
+
+            // Update value displays
+            document.getElementById('growthRateValue').textContent = parseFloat(params.growthRate).toFixed(1);
+            document.getElementById('branchProbabilityValue').textContent = parseFloat(params.branchProbability).toFixed(2);
+            document.getElementById('branchAngleValue').textContent = params.branchAngle + '°';
+            document.getElementById('maxDepthValue').textContent = params.maxDepth;
+            document.getElementById('generationsValue').textContent = params.generations;
+            document.getElementById('lightDirectionValue').textContent = params.lightDirection + '°';
+            document.getElementById('lightIntensityValue').textContent = params.lightIntensity;
+            document.getElementById('currentStrengthValue').textContent = params.currentStrength;
+            document.getElementById('currentDirectionValue').textContent = params.currentDirection + '°';
+        }
+
+        // Update value displays and params
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const paramName = e.target.id;
+                const value = parseFloat(e.target.value);
+                params[paramName] = value;
+
+                const valueDisplay = document.getElementById(paramName + 'Value');
+                if (valueDisplay) {
+                    let displayValue = value;
+                    if (paramName.includes('Direction') || paramName === 'branchAngle') {
+                        displayValue = value + '°';
+                    } else if (paramName === 'branchProbability') {
+                        displayValue = value.toFixed(2);
+                    } else if (paramName === 'growthRate' || paramName === 'lightIntensity' || paramName === 'currentStrength') {
+                        displayValue = value.toFixed(1);
+                    }
+                    valueDisplay.textContent = displayValue;
+                }
+            });
+        });
+
+        // Update params for select and checkbox inputs
+        document.getElementById('coralType').addEventListener('change', (e) => {
+            params.coralType = e.target.value;
+        });
+
+        document.getElementById('multiSpecies').addEventListener('change', (e) => {
+            params.multiSpecies = e.target.checked;
+        });
+
+        document.getElementById('speciesCount').addEventListener('input', (e) => {
+            params.speciesCount = parseInt(e.target.value);
         });
         
         class CoralBranch {
@@ -282,15 +383,15 @@
             }
             
             grow(environment) {
-                const growthRate = parseFloat(document.getElementById('growthRate').value);
-                const branchProb = parseFloat(document.getElementById('branchProbability').value);
-                const maxDepth = parseInt(document.getElementById('maxDepth').value);
-                
+                const growthRate = parseFloat(params.growthRate);
+                const branchProb = parseFloat(params.branchProbability);
+                const maxDepth = parseInt(params.maxDepth);
+
                 // Environmental influences
-                const lightDir = parseInt(document.getElementById('lightDirection').value) * Math.PI / 180;
-                const lightIntensity = parseFloat(document.getElementById('lightIntensity').value);
-                const currentDir = parseInt(document.getElementById('currentDirection').value) * Math.PI / 180;
-                const currentStrength = parseFloat(document.getElementById('currentStrength').value);
+                const lightDir = parseInt(params.lightDirection) * Math.PI / 180;
+                const lightIntensity = parseFloat(params.lightIntensity);
+                const currentDir = parseInt(params.currentDirection) * Math.PI / 180;
+                const currentStrength = parseFloat(params.currentStrength);
                 
                 // Calculate growth direction influenced by environment
                 let growthAngle = this.angle;
@@ -316,7 +417,7 @@
                 
                 // Branching
                 if (Math.random() < branchProb && this.depth < maxDepth) {
-                    const branchAngleRange = parseInt(document.getElementById('branchAngle').value) * Math.PI / 180;
+                    const branchAngleRange = parseInt(params.branchAngle) * Math.PI / 180;
                     const newAngle1 = this.angle + branchAngleRange * (0.5 + Math.random() * 0.5);
                     const newAngle2 = this.angle - branchAngleRange * (0.5 + Math.random() * 0.5);
                     
@@ -331,7 +432,7 @@
             }
             
             draw(ctx) {
-                const coralType = document.getElementById('coralType').value;
+                const coralType = params.coralType;
                 const speciesColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffd93d', '#6bcf7f'];
                 const color = speciesColors[this.species % speciesColors.length];
                 
@@ -387,9 +488,9 @@
             }
             
             initialize() {
-                const coralType = document.getElementById('coralType').value;
-                const multiSpecies = document.getElementById('multiSpecies').checked;
-                const speciesCount = multiSpecies ? parseInt(document.getElementById('speciesCount').value) : 1;
+                const coralType = params.coralType;
+                const multiSpecies = params.multiSpecies;
+                const speciesCount = multiSpecies ? parseInt(params.speciesCount) : 1;
                 
                 this.colonies = [];
                 
@@ -423,7 +524,7 @@
             }
             
             grow() {
-                const generations = parseInt(document.getElementById('generations').value);
+                const generations = parseInt(params.generations);
                 
                 for (let gen = 0; gen < generations; gen++) {
                     this.colonies.forEach(colony => {
@@ -470,8 +571,8 @@
             animationFrames = [];
             coralSystem = new CoralSystem();
             coralSystem.initialize();
-            
-            const generations = parseInt(document.getElementById('generations').value);
+
+            const generations = parseInt(params.generations);
             const frameStep = Math.max(1, Math.floor(generations / 30));
             
             for (let gen = 0; gen <= generations; gen += frameStep) {
@@ -594,14 +695,14 @@
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
             
-            const multiSpecies = document.getElementById('multiSpecies').checked;
-            const species = multiSpecies ? Math.floor(Math.random() * parseInt(document.getElementById('speciesCount').value)) : 0;
-            
+            const multiSpecies = params.multiSpecies;
+            const species = multiSpecies ? Math.floor(Math.random() * parseInt(params.speciesCount)) : 0;
+
             const branch = new CoralBranch(x, y, -Math.PI / 2 + (Math.random() - 0.5) * 0.5, 0, species);
             coralSystem.colonies.push(branch);
-            
+
             coralSystem.colonies.forEach(colony => {
-                for (let i = 0; i < parseInt(document.getElementById('generations').value); i++) {
+                for (let i = 0; i < parseInt(params.generations); i++) {
                     colony.grow({generation: i});
                 }
             });
