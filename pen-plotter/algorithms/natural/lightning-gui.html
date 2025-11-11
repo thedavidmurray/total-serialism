@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lightning Generator - Pen Plotter Art</title>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
     <style>
         body {
             margin: 0;
@@ -127,7 +129,8 @@
     <div class="container">
         <div class="controls">
             <h3>Lightning Parameters</h3>
-            
+            <div id="preset-container"></div>
+
             <div class="control-group">
                 <label for="lightningType">Lightning Type</label>
                 <select id="lightningType">
@@ -222,10 +225,61 @@
         const ctx = canvas.getContext('2d');
         let currentPaths = [];
         let animationFrames = [];
+        let presetManager;
+
+        // Lightning parameters
+        let params = {
+            lightningType: 'cloud-to-ground',
+            branchProb: 0.05,
+            branchAngle: 45,
+            stepSize: 5,
+            maxSteps: 200,
+            lineWidth: 1.5,
+            fadeout: true,
+            glow: true,
+            multiStrike: false,
+            strikeCount: 3,
+            animationSpeed: 50
+        };
         
+        function updateUIFromParams() {
+            Object.keys(params).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = params[key];
+                    } else {
+                        element.value = params[key];
+                    }
+                    const valueDisplay = document.getElementById(key + 'Value');
+                    if (valueDisplay) {
+                        let value = params[key];
+                        if (key === 'branchAngle') value += '°';
+                        else if (key === 'animationSpeed') value += 'ms';
+                        valueDisplay.textContent = value;
+                    }
+                }
+            });
+        }
+
+        function syncParamsFromUI() {
+            params.lightningType = document.getElementById('lightningType').value;
+            params.branchProb = parseFloat(document.getElementById('branchProb').value);
+            params.branchAngle = parseInt(document.getElementById('branchAngle').value);
+            params.stepSize = parseInt(document.getElementById('stepSize').value);
+            params.maxSteps = parseInt(document.getElementById('maxSteps').value);
+            params.lineWidth = parseFloat(document.getElementById('lineWidth').value);
+            params.fadeout = document.getElementById('fadeout').checked;
+            params.glow = document.getElementById('glow').checked;
+            params.multiStrike = document.getElementById('multiStrike').checked;
+            params.strikeCount = parseInt(document.getElementById('strikeCount').value);
+            params.animationSpeed = parseInt(document.getElementById('animationSpeed').value);
+        }
+
         // Update value displays
         document.querySelectorAll('input[type="range"]').forEach(input => {
             input.addEventListener('input', (e) => {
+                syncParamsFromUI();
                 const valueDisplay = document.getElementById(e.target.id + 'Value');
                 if (valueDisplay) {
                     let value = e.target.value;
@@ -233,6 +287,13 @@
                     else if (e.target.id === 'animationSpeed') value += 'ms';
                     valueDisplay.textContent = value;
                 }
+            });
+        });
+
+        // Update params when other controls change
+        document.querySelectorAll('select, input[type="checkbox"], input[type="number"]').forEach(input => {
+            input.addEventListener('change', () => {
+                syncParamsFromUI();
             });
         });
         
@@ -243,12 +304,12 @@
                 this.startX = startX;
                 this.startY = startY;
             }
-            
+
             generate() {
-                const branchProb = parseFloat(document.getElementById('branchProb').value);
-                const branchAngle = parseInt(document.getElementById('branchAngle').value);
-                const stepSize = parseInt(document.getElementById('stepSize').value);
-                const maxSteps = parseInt(document.getElementById('maxSteps').value);
+                const branchProb = params.branchProb;
+                const branchAngle = params.branchAngle;
+                const stepSize = params.stepSize;
+                const maxSteps = params.maxSteps;
                 
                 this.paths = [];
                 
@@ -270,11 +331,11 @@
             
             generateVertical(x, y, baseAngle, depth, remainingSteps) {
                 if (remainingSteps <= 0 || y >= canvas.height - 20 || y <= 20) return;
-                
+
                 const path = [{x, y}];
-                const branchProb = parseFloat(document.getElementById('branchProb').value);
-                const branchAngle = parseInt(document.getElementById('branchAngle').value);
-                const stepSize = parseInt(document.getElementById('stepSize').value);
+                const branchProb = params.branchProb;
+                const branchAngle = params.branchAngle;
+                const stepSize = params.stepSize;
                 
                 let currentX = x;
                 let currentY = y;
@@ -306,11 +367,11 @@
             
             generateHorizontal(x, y, baseAngle, depth, remainingSteps) {
                 if (remainingSteps <= 0) return;
-                
+
                 const path = [{x, y}];
-                const branchProb = parseFloat(document.getElementById('branchProb').value);
-                const branchAngle = parseInt(document.getElementById('branchAngle').value);
-                const stepSize = parseInt(document.getElementById('stepSize').value);
+                const branchProb = params.branchProb;
+                const branchAngle = params.branchAngle;
+                const stepSize = params.stepSize;
                 
                 let currentX = x;
                 let currentY = y;
@@ -339,16 +400,16 @@
             
             generateBall(centerX, centerY, maxSteps) {
                 const numStrands = 8 + Math.floor(Math.random() * 8);
-                
+
                 for (let i = 0; i < numStrands; i++) {
                     const angle = (i / numStrands) * Math.PI * 2;
                     const path = [{x: centerX, y: centerY}];
-                    
+
                     let currentX = centerX;
                     let currentY = centerY;
                     let currentAngle = angle;
-                    
-                    const stepSize = parseInt(document.getElementById('stepSize').value);
+
+                    const stepSize = params.stepSize;
                     const steps = maxSteps / 2 + Math.random() * maxSteps / 2;
                     
                     for (let j = 0; j < steps; j++) {
@@ -370,9 +431,9 @@
             }
             
             draw(ctx, alpha = 1) {
-                const lineWidth = parseFloat(document.getElementById('lineWidth').value);
-                const fadeout = document.getElementById('fadeout').checked;
-                const glow = document.getElementById('glow').checked;
+                const lineWidth = params.lineWidth;
+                const fadeout = params.fadeout;
+                const glow = params.glow;
                 
                 this.paths.forEach(({path, depth}) => {
                     if (path.length < 2) return;
@@ -405,12 +466,13 @@
         }
         
         function generateLightning() {
+            syncParamsFromUI();
             clearCanvas();
             currentPaths = [];
-            
-            const type = document.getElementById('lightningType').value;
-            const multiStrike = document.getElementById('multiStrike').checked;
-            const strikeCount = multiStrike ? parseInt(document.getElementById('strikeCount').value) : 1;
+
+            const type = params.lightningType;
+            const multiStrike = params.multiStrike;
+            const strikeCount = multiStrike ? params.strikeCount : 1;
             
             for (let i = 0; i < strikeCount; i++) {
                 let startX, startY;
@@ -437,8 +499,8 @@
             if (currentPaths.length === 0) {
                 generateLightning();
             }
-            
-            const speed = parseInt(document.getElementById('animationSpeed').value);
+
+            const speed = params.animationSpeed;
             let frame = 0;
             const maxFrames = 20;
             
@@ -477,12 +539,12 @@
         
         function exportSVG() {
             if (currentPaths.length === 0) return;
-            
+
             let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
             svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="#000000"/>`;
-            
-            const lineWidth = parseFloat(document.getElementById('lineWidth').value);
-            const fadeout = document.getElementById('fadeout').checked;
+
+            const lineWidth = params.lineWidth;
+            const fadeout = params.fadeout;
             
             currentPaths.forEach(bolt => {
                 bolt.paths.forEach(({path, depth}) => {
@@ -535,7 +597,7 @@
             });
             
             animationFrames.forEach((frame, i) => {
-                gif.addFrame(frame, {delay: parseInt(document.getElementById('animationSpeed').value)});
+                gif.addFrame(frame, {delay: params.animationSpeed});
             });
             
             gif.on('finished', blob => {
@@ -554,15 +616,45 @@
             const rect = canvas.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
-            
+
             clearCanvas();
-            const type = document.getElementById('lightningType').value;
+            const type = params.lightningType;
             const bolt = new LightningBolt(x, y, type);
             bolt.generate();
             bolt.draw(ctx);
             currentPaths = [bolt];
         });
-        
+
+        // Initialize preset manager
+        window.addEventListener('DOMContentLoaded', () => {
+            presetManager = new PresetManager('lightning', {
+                onSave: () => {
+                    syncParamsFromUI();
+                    return params;
+                },
+                onLoad: (loadedParams) => {
+                    params = loadedParams;
+                    updateUIFromParams();
+                    generateLightning();
+                },
+                onRandomize: () => {
+                    params.lightningType = ['cloud-to-ground', 'horizontal', 'ball', 'upward'][Math.floor(Math.random() * 4)];
+                    params.branchProb = Math.random() * 0.15;
+                    params.branchAngle = 20 + Math.random() * 60;
+                    params.stepSize = 2 + Math.random() * 15;
+                    params.maxSteps = 100 + Math.random() * 700;
+                    params.lineWidth = 0.5 + Math.random() * 4;
+                    params.fadeout = Math.random() > 0.3;
+                    params.glow = Math.random() > 0.3;
+                    params.multiStrike = Math.random() > 0.6;
+                    params.strikeCount = 1 + Math.floor(Math.random() * 8);
+                    params.animationSpeed = 20 + Math.random() * 150;
+                    updateUIFromParams();
+                    generateLightning();
+                }
+            });
+        });
+
         // Initial generation
         generateLightning();
     </script>

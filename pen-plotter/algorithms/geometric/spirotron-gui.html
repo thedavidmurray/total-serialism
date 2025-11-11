@@ -5,6 +5,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -111,7 +113,8 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Spirotron Controls</h2>
-    
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Primary Wheel</h3>
       <div class="control">
@@ -240,18 +243,60 @@
     let svgCanvas;
     let animationProgress = 0;
     let isAnimating = false;
+    let presetManager;
     
     function setup() {
       const w = 800;
       const h = 600;
-      
+
       svgCanvas = createCanvas(w, h, SVG);
       svgCanvas.parent('canvas-container');
-      
+
+      // Initialize preset manager
+      presetManager = new PresetManager('spirotron', {
+        onSave: () => params,
+        onLoad: (loadedParams) => {
+          params = loadedParams;
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          params.outerRadius = random(100, 250);
+          params.innerRadius = random(20, min(params.outerRadius - 10, 120));
+          params.penDistance = random(10, params.innerRadius * 1.5);
+          params.resolution = random(0.005, 0.05);
+          params.rotations = random(5, 100);
+          params.patternType = ['hypotrochoid', 'epitrochoid', 'hybrid', 'compound'][floor(random(4))];
+          params.multiWheel = random() > 0.7;
+          params.secondaryRadius = random(10, 60);
+          params.secondaryPen = random(5, 50);
+          params.strokeWeight = random(0.5, 3);
+          params.colorMode = ['mono', 'gradient', 'rainbow', 'phase'][floor(random(4))];
+          params.seed = Math.floor(Math.random() * 1000000);
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
       setupControls();
       regenerate();
     }
     
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else {
+            element.value = params[key];
+          }
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = params[key];
+        }
+      });
+    }
+
     function setupControls() {
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
