@@ -5,6 +5,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
   <script src="../../src/utils/gif-exporter.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -163,7 +165,10 @@
   </div>
   <div id="controls">
     <h2>Reaction-Diffusion</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Simulation</h3>
       <button id="play-pause">⏸ Pause</button>
@@ -275,7 +280,8 @@
     let iteration = 0;
     let isPaused = false;
     let gifExporter;
-    
+    let presetManager;
+
     // Parameters
     let params = {
       feedRate: 0.055,
@@ -297,10 +303,32 @@
     function setup() {
       let canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
-      
+
       initializeGrid();
       setupControls();
-      
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'reaction-diffusion',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          initializeGrid();
+        },
+        onRandomize: () => {
+          params.feedRate = random(0.01, 0.1);
+          params.killRate = random(0.01, 0.1);
+          params.dA = random(0.5, 1.5);
+          params.dB = random(0.1, 0.8);
+          params.speed = Math.floor(random(1, 50));
+          params.threshold = random(0.1, 0.9);
+          updateUIFromParams();
+          initializeGrid();
+        }
+      });
+
       // Initialize GIF exporter
       gifExporter = new GifExporter({
         fps: 30,
@@ -309,17 +337,31 @@
         width: 800,
         height: 600
       });
-      
+
       gifExporter.init(canvas.canvas, {
         onProgress: (data) => {
           document.getElementById('gif-status').textContent = data.status;
-          document.getElementById('gif-progress-bar').style.width = 
+          document.getElementById('gif-progress-bar').style.width =
             (data.progress * 100) + '%';
         },
         onComplete: (result) => {
           document.getElementById('gif-progress').style.display = 'none';
           document.getElementById('gif-record-text').textContent = 'Record GIF';
           console.log('GIF created!', result);
+        }
+      });
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.value = params[param];
+          const valueDisplay = document.getElementById(param + '-val');
+          if (valueDisplay) {
+            valueDisplay.textContent = params[param];
+          }
         }
       });
     }
