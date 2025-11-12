@@ -152,6 +152,14 @@
           "description": "Fill shapes with spiral patterns",
           "path": "pen-plotter/algorithms/geometric/spiral-fill.html",
           "complexity": "intermediate"
+        },
+        {
+          "id": "hilbert-curve",
+          "name": "Hilbert Curve",
+          "description": "Space-filling curves: Hilbert, Peano, Moore, Dragon, Gosper, Sierpinski",
+          "path": "pen-plotter/algorithms/curves/hilbert-curve-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
         }
       ]
     },
@@ -430,6 +438,22 @@
           "path": "pen-plotter/algorithms/symmetry/truchet-tiles-gui.html",
           "featured": true,
           "complexity": "beginner"
+        },
+        {
+          "id": "penrose-tiling",
+          "name": "Penrose Tiling",
+          "description": "Aperiodic patterns with five-fold symmetry (kite-dart, rhombus)",
+          "path": "pen-plotter/algorithms/geometric/penrose-tiling-gui.html",
+          "featured": true,
+          "complexity": "advanced"
+        },
+        {
+          "id": "islamic-patterns",
+          "name": "Islamic Geometric Patterns",
+          "description": "Sacred geometry and tessellations from Islamic art (Girih, Zellige)",
+          "path": "pen-plotter/algorithms/geometric/islamic-patterns-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
         }
       ]
     },
@@ -522,8 +546,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 71,
+    "totalAlgorithms": 74,
     "totalCategories": 15,
-    "featuredCount": 13
+    "featuredCount": 16
   }
 }

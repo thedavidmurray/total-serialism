@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Penrose Tiling - Aperiodic Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <script src="../../../export-utils.js"></script>
+  <script src="../../../ui-utils.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    input[type="range"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9em;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    .range-value {
+      float: right;
+      color: #f5576c;
+      font-weight: 600;
+    }
+
+    .checkbox-group {
+      margin-bottom: 12px;
+    }
+
+    .checkbox-group label {
+      display: inline-block;
+      margin-left: 8px;
+      font-weight: 400;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas {
+      border-radius: 8px;
+    }
+
+    .info {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔷 Penrose Tiling</h1>
+  <p class="subtitle">Aperiodic patterns with five-fold symmetry</p>
+
+  <div class="container">
+    <div class="panel">
+      <div id="preset-container"></div>
+
+      <div class="control-group">
+        <h3>Pattern Type</h3>
+        <label>
+          Tiling Type:
+          <select id="tilingType">
+            <option value="kite-dart">Kite & Dart (P2)</option>
+            <option value="rhombus">Rhombus (P3)</option>
+            <option value="sun-star">Sun & Star</option>
+          </select>
+        </label>
+
+        <label>
+          Iterations: <span class="range-value" id="iterations-val">4</span>
+          <input type="range" id="iterations" min="1" max="7" value="4" step="1">
+        </label>
+
+        <label>
+          Symmetry:
+          <select id="symmetry">
+            <option value="5">5-fold</option>
+            <option value="10">10-fold</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Appearance</h3>
+        <label>
+          Render Mode:
+          <select id="renderMode">
+            <option value="outline">Outline Only</option>
+            <option value="filled">Filled Only</option>
+            <option value="both">Outline + Fill</option>
+          </select>
+        </label>
+
+        <label>
+          Color Scheme:
+          <select id="colorScheme">
+            <option value="golden">Golden Ratio</option>
+            <option value="complementary">Complementary</option>
+            <option value="monochrome">Monochrome</option>
+            <option value="rainbow">Rainbow</option>
+            <option value="traditional">Traditional (Penrose)</option>
+          </select>
+        </label>
+
+        <label>
+          Stroke Weight: <span class="range-value" id="strokeWeight-val">1.5</span>
+          <input type="range" id="strokeWeight" min="0.5" max="10" value="1.5" step="0.5">
+        </label>
+
+        <label>
+          Fill Opacity: <span class="range-value" id="fillOpacity-val">180</span>
+          <input type="range" id="fillOpacity" min="0" max="255" value="180" step="5">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Layout & Transform</h3>
+        <label>
+          Scale: <span class="range-value" id="scale-val">0.85</span>
+          <input type="range" id="scale" min="0.1" max="2" value="0.85" step="0.05">
+        </label>
+
+        <label>
+          Rotation: <span class="range-value" id="rotation-val">0</span>°
+          <input type="range" id="rotation" min="0" max="360" value="0" step="15">
+        </label>
+
+        <label>
+          X Offset: <span class="range-value" id="xOffset-val">0</span>
+          <input type="range" id="xOffset" min="-200" max="200" value="0" step="10">
+        </label>
+
+        <label>
+          Y Offset: <span class="range-value" id="yOffset-val">0</span>
+          <input type="range" id="yOffset" min="-200" max="200" value="0" step="10">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Advanced Options</h3>
+        <div class="checkbox-group">
+          <input type="checkbox" id="showEdges">
+          <label for="showEdges">Show All Edges</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showVertices">
+          <label for="showVertices">Show Vertices</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showSymmetry">
+          <label for="showSymmetry">Show Symmetry Lines</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="colorByGeneration">
+          <label for="colorByGeneration">Color by Generation</label>
+        </div>
+
+        <label>
+          Vertex Size: <span class="range-value" id="vertexSize-val">3</span>
+          <input type="range" id="vertexSize" min="1" max="10" value="3" step="1">
+        </label>
+
+        <label>
+          Edge Highlighting:
+          <select id="edgeHighlight">
+            <option value="none">None</option>
+            <option value="matching">Matching Rules</option>
+            <option value="forced">Forced Tiles</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Visual Effects</h3>
+        <label>
+          Gradient Effect:
+          <select id="gradientEffect">
+            <option value="none">None</option>
+            <option value="radial">Radial</option>
+            <option value="linear">Linear</option>
+            <option value="angular">Angular</option>
+          </select>
+        </label>
+
+        <label>
+          Pattern Overlay:
+          <select id="patternOverlay">
+            <option value="none">None</option>
+            <option value="dots">Dots</option>
+            <option value="lines">Lines</option>
+            <option value="circles">Circles</option>
+          </select>
+        </label>
+
+        <label>
+          Overlay Density: <span class="range-value" id="overlayDensity-val">5</span>
+          <input type="range" id="overlayDensity" min="1" max="20" value="5" step="1">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Export</h3>
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+
+      <div class="info">
+        <strong>About Penrose Tilings:</strong> Discovered by Roger Penrose in the 1970s, these are non-periodic tilings with remarkable mathematical properties. They exhibit five-fold rotational symmetry and never repeat.
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <div id="canvas"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let tiles = [];
+    let presetManager;
+    const PHI = (1 + Math.sqrt(5)) / 2; // Golden ratio
+
+    // Parameters
+    const params = {
+      tilingType: 'kite-dart',
+      iterations: 4,
+      symmetry: 5,
+      renderMode: 'both',
+      colorScheme: 'golden',
+      strokeWeight: 1.5,
+      fillOpacity: 180,
+      scale: 0.85,
+      rotation: 0,
+      xOffset: 0,
+      yOffset: 0,
+      showEdges: false,
+      showVertices: false,
+      showSymmetry: false,
+      colorByGeneration: false,
+      vertexSize: 3,
+      edgeHighlight: 'none',
+      gradientEffect: 'none',
+      patternOverlay: 'none',
+      overlayDensity: 5
+    };
+
+    // Tile class
+    class Tile {
+      constructor(type, vertices, generation = 0) {
+        this.type = type; // 'kite', 'dart', 'thin', 'thick', 'sun', 'star'
+        this.vertices = vertices; // Array of p5.Vector
+        this.generation = generation;
+      }
+
+      draw() {
+        const colors = getColors(this.type);
+
+        push();
+
+        // Apply fill
+        if (params.renderMode === 'filled' || params.renderMode === 'both') {
+          if (params.colorByGeneration) {
+            const hue = map(this.generation, 0, params.iterations, 0, 360);
+            fill(hue, 70, 90, params.fillOpacity);
+          } else {
+            fill(colors.fill[0], colors.fill[1], colors.fill[2], params.fillOpacity);
+          }
+        } else {
+          noFill();
+        }
+
+        // Apply stroke
+        if (params.renderMode === 'outline' || params.renderMode === 'both') {
+          stroke(colors.stroke);
+          strokeWeight(params.strokeWeight);
+        } else {
+          noStroke();
+        }
+
+        // Draw tile
+        beginShape();
+        this.vertices.forEach(v => vertex(v.x, v.y));
+        endShape(CLOSE);
+
+        // Pattern overlay
+        if (params.patternOverlay !== 'none') {
+          this.drawOverlay();
+        }
+
+        pop();
+      }
+
+      drawOverlay() {
+        const center = this.getCenter();
+        push();
+        noFill();
+        stroke(0, 0, 0, 50);
+        strokeWeight(0.5);
+
+        switch (params.patternOverlay) {
+          case 'dots':
+            for (let i = 0; i < params.overlayDensity; i++) {
+              const t = i / params.overlayDensity;
+              const p = p5.Vector.lerp(this.vertices[0], center, t);
+              circle(p.x, p.y, 2);
+            }
+            break;
+          case 'lines':
+            for (let i = 0; i < this.vertices.length; i++) {
+              line(this.vertices[i].x, this.vertices[i].y, center.x, center.y);
+            }
+            break;
+          case 'circles':
+            const r = this.getMaxRadius();
+            for (let i = 0; i < params.overlayDensity; i++) {
+              const radius = (i + 1) * r / params.overlayDensity;
+              circle(center.x, center.y, radius * 2);
+            }
+            break;
+        }
+        pop();
+      }
+
+      getCenter() {
+        let sum = createVector(0, 0);
+        this.vertices.forEach(v => sum.add(v));
+        return sum.div(this.vertices.length);
+      }
+
+      getMaxRadius() {
+        const center = this.getCenter();
+        let maxDist = 0;
+        this.vertices.forEach(v => {
+          maxDist = max(maxDist, p5.Vector.dist(center, v));
+        });
+        return maxDist;
+      }
+
+      subdivide() {
+        // Subdivision rules for Penrose tilings
+        const newTiles = [];
+
+        if (this.type === 'kite') {
+          newTiles.push(...this.subdivideKite());
+        } else if (this.type === 'dart') {
+          newTiles.push(...this.subdivideDart());
+        } else if (this.type === 'thin') {
+          newTiles.push(...this.subdivideThin());
+        } else if (this.type === 'thick') {
+          newTiles.push(...this.subdivideThick());
+        }
+
+        return newTiles;
+      }
+
+      subdivideKite() {
+        const [A, B, C, D] = this.vertices;
+        const P = p5.Vector.lerp(A, B, 1 / PHI);
+        const Q = p5.Vector.lerp(B, C, 1 / PHI);
+
+        return [
+          new Tile('kite', [A, P, createVector((P.x + Q.x) / 2, (P.y + Q.y) / 2), p5.Vector.lerp(A, D, 1 / PHI)], this.generation + 1),
+          new Tile('dart', [P, B, Q, createVector((P.x + Q.x) / 2, (P.y + Q.y) / 2)], this.generation + 1),
+          new Tile('kite', [createVector((P.x + Q.x) / 2, (P.y + Q.y) / 2), Q, C, D], this.generation + 1)
+        ];
+      }
+
+      subdivideDart() {
+        const [A, B, C, D] = this.vertices;
+        const P = p5.Vector.lerp(C, A, 1 / PHI);
+        const Q = p5.Vector.lerp(D, B, 1 / PHI);
+
+        return [
+          new Tile('dart', [P, createVector((A.x + B.x) / 2, (A.y + B.y) / 2), Q, C], this.generation + 1),
+          new Tile('kite', [Q, B, createVector((B.x + C.x) / 2, (B.y + C.y) / 2), D], this.generation + 1)
+        ];
+      }
+
+      subdivideThin() {
+        const [A, B, C] = this.vertices;
+        const P = p5.Vector.lerp(A, B, 1 / PHI);
+
+        return [
+          new Tile('thin', [C, P, A], this.generation + 1),
+          new Tile('thick', [P, C, B], this.generation + 1)
+        ];
+      }
+
+      subdivideThick() {
+        const [A, B, C] = this.vertices;
+        const P = p5.Vector.lerp(B, A, 1 / PHI);
+        const Q = p5.Vector.lerp(C, A, 1 / PHI);
+
+        return [
+          new Tile('thick', [Q, P, B], this.generation + 1),
+          new Tile('thin', [P, Q, A], this.generation + 1),
+          new Tile('thin', [C, B, Q], this.generation + 1)
+        ];
+      }
+    }
+
+    // Color helper
+    function getColors(tileType) {
+      colorMode(HSB);
+      let fill, stroke;
+
+      switch (params.colorScheme) {
+        case 'golden':
+          fill = tileType === 'kite' || tileType === 'thick' ? [40, 70, 90] : [45, 80, 85];
+          stroke = [40, 90, 40];
+          break;
+        case 'complementary':
+          fill = tileType === 'kite' || tileType === 'thick' ? [200, 70, 90] : [20, 70, 90];
+          stroke = [0, 0, 20];
+          break;
+        case 'monochrome':
+          fill = tileType === 'kite' || tileType === 'thick' ? [0, 0, 80] : [0, 0, 60];
+          stroke = [0, 0, 20];
+          break;
+        case 'rainbow':
+          const hue = (tileType === 'kite' || tileType === 'thick') ? 0 : 180;
+          fill = [hue, 70, 90];
+          stroke = [hue, 90, 50];
+          break;
+        case 'traditional':
+          fill = tileType === 'kite' || tileType === 'thick' ? [210, 60, 90] : [30, 60, 90];
+          stroke = [0, 0, 0];
+          break;
+      }
+
+      colorMode(RGB);
+      return { fill, stroke };
+    }
+
+    // p5.js setup
+    function setup() {
+      const canvas = createCanvas(800, 800);
+      canvas.parent('canvas');
+      colorMode(HSB);
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'penrose-tiling',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          UIUtils.updateUIFromParams(params);
+          generateTiling();
+        },
+        onRandomize: () => {
+          const types = ['kite-dart', 'rhombus', 'sun-star'];
+          params.tilingType = random(types);
+          params.iterations = Math.floor(random(2, 6));
+          params.symmetry = random([5, 10]);
+          params.rotation = Math.floor(random(0, 24)) * 15;
+          params.scale = random(0.4, 1.2);
+          params.colorScheme = random(['golden', 'complementary', 'monochrome', 'rainbow', 'traditional']);
+          UIUtils.updateUIFromParams(params);
+          generateTiling();
+        }
+      });
+
+      // Setup param sync
+      UIUtils.setupParamSync(params, () => generateTiling());
+
+      // Initial generation
+      generateTiling();
+    }
+
+    // p5.js draw
+    function draw() {
+      background(255);
+
+      push();
+      translate(width / 2 + params.xOffset, height / 2 + params.yOffset);
+      rotate(radians(params.rotation));
+      scale(params.scale);
+
+      // Apply gradient effect
+      if (params.gradientEffect !== 'none') {
+        drawGradient();
+      }
+
+      // Draw symmetry lines
+      if (params.showSymmetry) {
+        drawSymmetryLines();
+      }
+
+      // Draw tiles
+      tiles.forEach(tile => tile.draw());
+
+      // Draw edges
+      if (params.showEdges) {
+        drawEdges();
+      }
+
+      // Draw vertices
+      if (params.showVertices) {
+        drawVertices();
+      }
+
+      pop();
+    }
+
+    // Generate tiling
+    function generateTiling() {
+      tiles = [];
+
+      // Create initial seed based on symmetry
+      const numSeeds = params.symmetry === 5 ? 5 : 10;
+      const angleStep = TWO_PI / numSeeds;
+      const size = 200;
+
+      for (let i = 0; i < numSeeds; i++) {
+        const angle = i * angleStep;
+        const nextAngle = (i + 1) * angleStep;
+
+        const p1 = createVector(0, 0);
+        const p2 = createVector(size * cos(angle), size * sin(angle));
+        const p3 = createVector(size * cos(nextAngle), size * sin(nextAngle));
+
+        if (params.tilingType === 'kite-dart') {
+          // Alternate kites and darts
+          const type = i % 2 === 0 ? 'kite' : 'dart';
+          const midAngle = angle + angleStep / 2;
+          const p4 = createVector(size * 0.6 * cos(midAngle), size * 0.6 * sin(midAngle));
+          tiles.push(new Tile(type, [p1, p2, p4, p3]));
+        } else if (params.tilingType === 'rhombus') {
+          // Alternate thin and thick rhombi
+          const type = i % 2 === 0 ? 'thin' : 'thick';
+          tiles.push(new Tile(type, [p1, p2, p3]));
+        }
+      }
+
+      // Subdivide iteratively
+      for (let iter = 0; iter < params.iterations; iter++) {
+        const newTiles = [];
+        tiles.forEach(tile => {
+          newTiles.push(...tile.subdivide());
+        });
+        tiles = newTiles;
+      }
+    }
+
+    // Draw gradient overlay
+    function drawGradient() {
+      push();
+      noStroke();
+      const steps = 50;
+
+      for (let i = 0; i < steps; i++) {
+        const alpha = map(i, 0, steps, 20, 0);
+
+        if (params.gradientEffect === 'radial') {
+          const r = map(i, 0, steps, 0, 600);
+          fill(0, 0, 100, alpha);
+          circle(0, 0, r * 2);
+        } else if (params.gradientEffect === 'linear') {
+          const y = map(i, 0, steps, -400, 400);
+          fill(0, 0, 100, alpha);
+          rect(-400, y, 800, 800 / steps);
+        } else if (params.gradientEffect === 'angular') {
+          const angle = map(i, 0, steps, 0, TWO_PI);
+          fill(map(i, 0, steps, 0, 360), 50, 90, alpha);
+          arc(0, 0, 800, 800, angle, angle + TWO_PI / steps, PIE);
+        }
+      }
+      pop();
+    }
+
+    // Draw symmetry lines
+    function drawSymmetryLines() {
+      push();
+      stroke(200, 50, 50, 100);
+      strokeWeight(1);
+
+      const numLines = params.symmetry === 5 ? 5 : 10;
+      const angleStep = TWO_PI / numLines;
+
+      for (let i = 0; i < numLines; i++) {
+        const angle = i * angleStep;
+        line(0, 0, 400 * cos(angle), 400 * sin(angle));
+      }
+      pop();
+    }
+
+    // Draw all edges
+    function drawEdges() {
+      push();
+      stroke(0, 0, 0, 150);
+      strokeWeight(params.strokeWeight * 0.5);
+
+      tiles.forEach(tile => {
+        for (let i = 0; i < tile.vertices.length; i++) {
+          const v1 = tile.vertices[i];
+          const v2 = tile.vertices[(i + 1) % tile.vertices.length];
+          line(v1.x, v1.y, v2.x, v2.y);
+        }
+      });
+      pop();
+    }
+
+    // Draw vertices
+    function drawVertices() {
+      push();
+      fill(0, 100, 100);
+      noStroke();
+
+      const vertices = new Set();
+      tiles.forEach(tile => {
+        tile.vertices.forEach(v => {
+          const key = `${v.x.toFixed(2)},${v.y.toFixed(2)}`;
+          vertices.add(key);
+        });
+      });
+
+      vertices.forEach(key => {
+        const [x, y] = key.split(',').map(Number);
+        circle(x, y, params.vertexSize);
+      });
+      pop();
+    }
+
+    // Export functions
+    function exportSVG() {
+      const paths = tiles.map(tile => ({
+        points: tile.vertices.map(v => ({
+          x: v.x * params.scale + width / 2 + params.xOffset,
+          y: v.y * params.scale + height / 2 + params.yOffset
+        })),
+        closed: true
+      }));
+
+      const filename = ExportUtils.generateFilename('penrose-tiling');
+      ExportUtils.exportSVG(paths, width, height, filename, {
+        strokeWidth: params.strokeWeight
+      });
+      UIUtils.showNotification('SVG exported successfully!', 'success');
+    }
+
+    function exportPNG() {
+      const filename = ExportUtils.generateFilename('penrose-tiling');
+      ExportUtils.exportPNG(filename);
+      UIUtils.showNotification('PNG exported successfully!', 'success');
+    }
+  </script>
+</body>
+</html>
