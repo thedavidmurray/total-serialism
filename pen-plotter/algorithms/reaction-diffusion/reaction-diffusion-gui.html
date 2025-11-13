@@ -4,7 +4,6 @@
   <title>Reaction-Diffusion System - Pen Plotter Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-  <script src="../../src/utils/gif-exporter.js"></script>
   <script src="../../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
@@ -21,6 +20,10 @@
       justify-content: center;
       align-items: center;
       background: #2a2a2a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
       position: relative;
     }
     #controls {

@@ -807,8 +807,16 @@
             gif.render();
         });
         
-        // Initialize
+        // Initialize and generate initial pattern
+        currentTime = 0;
         initializeFields();
+
+        // Run initial simulation to create visible pattern
+        const steps = parseInt(timeSteps.value);
+        for (let t = 0; t < steps; t++) {
+            simulate();
+        }
+
         drawPattern();
     </script>
 </body>
