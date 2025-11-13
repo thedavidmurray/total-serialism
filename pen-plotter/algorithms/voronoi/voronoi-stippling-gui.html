@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voronoi Stippling - Pen Plotter Art</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2a2a2a;
+        }
+
+        #controls {
+            width: 340px;
+            padding: 20px;
+            background: #1a1a1a;
+            height: 100vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+            font-size: 22px;
+        }
+
+        .subtitle {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #4CAF50;
+            font-size: 15px;
+        }
+
+        .control {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        .value {
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        .upload-btn {
+            background: #2196F3;
+        }
+
+        .upload-btn:hover {
+            background: #1976D2;
+        }
+
+        .export-btn {
+            background: #FF6B6B;
+        }
+
+        .export-btn:hover {
+            background: #FF5252;
+        }
+
+        .status {
+            font-size: 12px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-container input {
+            width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="controls">
+        <h2>🔷 Voronoi Stippling</h2>
+        <div class="subtitle">Weighted point distribution for pen plotting</div>
+
+        <div class="control-group">
+            <h3>Image Input</h3>
+            <input type="file" id="imageInput" accept="image/*">
+            <button class="upload-btn" onclick="document.getElementById('imageInput').click()">
+                📁 Upload Image
+            </button>
+            <div id="imageStatus" class="status" style="display:none;"></div>
+        </div>
+
+        <div class="control-group">
+            <h3>Stipple Settings</h3>
+            <div class="control">
+                <label>Point Count: <span class="value" id="pointCount-val">2000</span></label>
+                <input type="range" id="pointCount" min="100" max="10000" value="2000" step="100">
+            </div>
+            <div class="control">
+                <label>Point Size: <span class="value" id="pointSize-val">2</span>px</label>
+                <input type="range" id="pointSize" min="0.5" max="10" value="2" step="0.5">
+            </div>
+            <div class="control">
+                <label>Iterations: <span class="value" id="iterations-val">50</span></label>
+                <input type="range" id="iterations" min="1" max="200" value="50" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Distribution</h3>
+            <div class="control">
+                <label>Mode:</label>
+                <select id="mode">
+                    <option value="weighted">Weighted (Image-based)</option>
+                    <option value="uniform">Uniform Distribution</option>
+                    <option value="random">Random</option>
+                    <option value="grid">Grid-based</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Density Bias: <span class="value" id="densityBias-val">2</span></label>
+                <input type="range" id="densityBias" min="0.1" max="5" value="2" step="0.1">
+            </div>
+            <div class="control checkbox-container">
+                <input type="checkbox" id="invertImage">
+                <label>Invert Image</label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Display</h3>
+            <div class="control checkbox-container">
+                <input type="checkbox" id="showVoronoi">
+                <label>Show Voronoi Cells</label>
+            </div>
+            <div class="control checkbox-container">
+                <input type="checkbox" id="showDelaunay">
+                <label>Show Delaunay Triangulation</label>
+            </div>
+            <div class="control checkbox-container">
+                <input type="checkbox" id="showImage" checked>
+                <label>Show Source Image</label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Generation</h3>
+            <button onclick="generate()">🔄 Generate</button>
+            <button onclick="step()">▶️ Step Once</button>
+            <button onclick="autoRelax()">🎯 Auto Relax</button>
+        </div>
+
+        <!-- Preset Manager -->
+        <div id="preset-container"></div>
+
+        <div class="control-group">
+            <h3>Export</h3>
+            <button class="export-btn" onclick="exportSVG()">💾 Export SVG</button>
+            <button class="export-btn" onclick="exportPNG()">🖼️ Export PNG</button>
+        </div>
+    </div>
+
+    <script>
+        let params = {
+            pointCount: 2000,
+            pointSize: 2,
+            iterations: 50,
+            mode: 'weighted',
+            densityBias: 2,
+            invertImage: false,
+            showVoronoi: false,
+            showDelaunay: false,
+            showImage: true
+        };
+
+        let points = [];
+        let sourceImage = null;
+        let imagePixels = [];
+        let currentIteration = 0;
+        let isRelaxing = false;
+
+        function setup() {
+            const canvas = createCanvas(800, 800);
+            canvas.parent('canvas-container');
+            background(255);
+
+            // Setup UI event listeners
+            setupUIListeners();
+
+            // Generate initial pattern
+            initializePoints();
+            drawStipples();
+        }
+
+        function draw() {
+            if (isRelaxing && currentIteration < params.iterations) {
+                relaxStep();
+                currentIteration++;
+                drawStipples();
+
+                if (currentIteration >= params.iterations) {
+                    isRelaxing = false;
+                }
+            }
+        }
+
+        function setupUIListeners() {
+            // Point count
+            document.getElementById('pointCount').addEventListener('input', (e) => {
+                params.pointCount = parseInt(e.target.value);
+                document.getElementById('pointCount-val').textContent = params.pointCount;
+            });
+
+            // Point size
+            document.getElementById('pointSize').addEventListener('input', (e) => {
+                params.pointSize = parseFloat(e.target.value);
+                document.getElementById('pointSize-val').textContent = params.pointSize;
+                drawStipples();
+            });
+
+            // Iterations
+            document.getElementById('iterations').addEventListener('input', (e) => {
+                params.iterations = parseInt(e.target.value);
+                document.getElementById('iterations-val').textContent = params.iterations;
+            });
+
+            // Mode
+            document.getElementById('mode').addEventListener('change', (e) => {
+                params.mode = e.target.value;
+            });
+
+            // Density bias
+            document.getElementById('densityBias').addEventListener('input', (e) => {
+                params.densityBias = parseFloat(e.target.value);
+                document.getElementById('densityBias-val').textContent = params.densityBias;
+            });
+
+            // Checkboxes
+            document.getElementById('invertImage').addEventListener('change', (e) => {
+                params.invertImage = e.target.checked;
+                if (sourceImage) {
+                    processImage();
+                    drawStipples();
+                }
+            });
+
+            document.getElementById('showVoronoi').addEventListener('change', (e) => {
+                params.showVoronoi = e.target.checked;
+                drawStipples();
+            });
+
+            document.getElementById('showDelaunay').addEventListener('change', (e) => {
+                params.showDelaunay = e.target.checked;
+                drawStipples();
+            });
+
+            document.getElementById('showImage').addEventListener('change', (e) => {
+                params.showImage = e.target.checked;
+                drawStipples();
+            });
+
+            // Image upload
+            document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    loadImage(e.target.result, (img) => {
+                        sourceImage = img;
+                        processImage();
+                        document.getElementById('imageStatus').style.display = 'block';
+                        document.getElementById('imageStatus').textContent = `✓ Loaded: ${img.width}×${img.height}`;
+                        generate();
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function processImage() {
+            if (!sourceImage) return;
+
+            sourceImage.loadPixels();
+            imagePixels = [];
+
+            for (let y = 0; y < sourceImage.height; y++) {
+                for (let x = 0; x < sourceImage.width; x++) {
+                    const index = (x + y * sourceImage.width) * 4;
+                    const r = sourceImage.pixels[index];
+                    const g = sourceImage.pixels[index + 1];
+                    const b = sourceImage.pixels[index + 2];
+
+                    // Convert to grayscale
+                    let brightness = (r + g + b) / 3 / 255;
+
+                    if (params.invertImage) {
+                        brightness = 1 - brightness;
+                    }
+
+                    imagePixels.push(brightness);
+                }
+            }
+        }
+
+        function initializePoints() {
+            points = [];
+
+            for (let i = 0; i < params.pointCount; i++) {
+                let x, y;
+
+                switch (params.mode) {
+                    case 'weighted':
+                        if (sourceImage && imagePixels.length > 0) {
+                            ({ x, y } = getWeightedPoint());
+                        } else {
+                            x = random(width);
+                            y = random(height);
+                        }
+                        break;
+
+                    case 'uniform':
+                        x = random(width);
+                        y = random(height);
+                        break;
+
+                    case 'random':
+                        x = random(width);
+                        y = random(height);
+                        break;
+
+                    case 'grid':
+                        const cols = Math.floor(sqrt(params.pointCount));
+                        const rows = Math.ceil(params.pointCount / cols);
+                        const col = i % cols;
+                        const row = Math.floor(i / cols);
+                        x = (col + 0.5 + random(-0.3, 0.3)) * (width / cols);
+                        y = (row + 0.5 + random(-0.3, 0.3)) * (height / rows);
+                        break;
+                }
+
+                points.push({ x, y });
+            }
+
+            currentIteration = 0;
+        }
+
+        function getWeightedPoint() {
+            // Rejection sampling based on image brightness
+            let x, y, brightness;
+            let attempts = 0;
+            const maxAttempts = 100;
+
+            do {
+                x = Math.floor(random(sourceImage.width));
+                y = Math.floor(random(sourceImage.height));
+                const index = x + y * sourceImage.width;
+                brightness = imagePixels[index] || 0;
+                attempts++;
+            } while (random() > Math.pow(1 - brightness, params.densityBias) && attempts < maxAttempts);
+
+            // Scale to canvas
+            return {
+                x: map(x, 0, sourceImage.width, 0, width),
+                y: map(y, 0, sourceImage.height, 0, height)
+            };
+        }
+
+        function relaxStep() {
+            // Lloyd's relaxation: move points to centroids of their Voronoi cells
+            const newPoints = [];
+
+            for (let i = 0; i < points.length; i++) {
+                const cell = getVoronoiCell(i);
+                const centroid = getCellCentroid(cell);
+                newPoints.push(centroid);
+            }
+
+            points = newPoints;
+        }
+
+        function getVoronoiCell(index) {
+            // Simplified Voronoi cell calculation
+            // Returns the region closest to this point
+            const cell = [];
+            const p = points[index];
+
+            // Sample points in a grid to approximate the cell
+            const samples = 20;
+            const range = width / sqrt(params.pointCount) * 2;
+
+            for (let dy = -range; dy <= range; dy += range / samples) {
+                for (let dx = -range; dx <= range; dx += range / samples) {
+                    const testX = p.x + dx;
+                    const testY = p.y + dy;
+
+                    if (testX < 0 || testX >= width || testY < 0 || testY >= height) continue;
+
+                    // Check if this point is closest to our point
+                    let closest = true;
+                    const distToP = dist(testX, testY, p.x, p.y);
+
+                    for (let j = 0; j < points.length; j++) {
+                        if (j === index) continue;
+                        const distToOther = dist(testX, testY, points[j].x, points[j].y);
+                        if (distToOther < distToP) {
+                            closest = false;
+                            break;
+                        }
+                    }
+
+                    if (closest) {
+                        cell.push({ x: testX, y: testY });
+                    }
+                }
+            }
+
+            return cell;
+        }
+
+        function getCellCentroid(cell) {
+            if (cell.length === 0) return { x: random(width), y: random(height) };
+
+            let sumX = 0, sumY = 0, totalWeight = 0;
+
+            for (const p of cell) {
+                let weight = 1;
+
+                // Weight by image if available
+                if (sourceImage && imagePixels.length > 0) {
+                    const imgX = Math.floor(map(p.x, 0, width, 0, sourceImage.width));
+                    const imgY = Math.floor(map(p.y, 0, height, 0, sourceImage.height));
+                    const index = imgX + imgY * sourceImage.width;
+                    const brightness = imagePixels[index] || 0;
+                    weight = Math.pow(1 - brightness, params.densityBias) + 0.1;
+                }
+
+                sumX += p.x * weight;
+                sumY += p.y * weight;
+                totalWeight += weight;
+            }
+
+            return {
+                x: sumX / totalWeight,
+                y: sumY / totalWeight
+            };
+        }
+
+        function drawStipples() {
+            background(255);
+
+            // Draw source image
+            if (params.showImage && sourceImage) {
+                push();
+                tint(255, 100);
+                image(sourceImage, 0, 0, width, height);
+                pop();
+            }
+
+            // Draw Voronoi cells
+            if (params.showVoronoi) {
+                stroke(200);
+                strokeWeight(0.5);
+                noFill();
+                // Simplified Voronoi visualization
+                for (let i = 0; i < points.length; i++) {
+                    const cell = getVoronoiCell(i);
+                    if (cell.length > 2) {
+                        beginShape();
+                        for (const p of cell) {
+                            vertex(p.x, p.y);
+                        }
+                        endShape(CLOSE);
+                    }
+                }
+            }
+
+            // Draw Delaunay triangulation
+            if (params.showDelaunay) {
+                stroke(150, 150, 255, 100);
+                strokeWeight(0.5);
+                noFill();
+                // Simple nearest-neighbor connections
+                for (let i = 0; i < points.length; i++) {
+                    const neighbors = findNearestNeighbors(i, 3);
+                    for (const j of neighbors) {
+                        line(points[i].x, points[i].y, points[j].x, points[j].y);
+                    }
+                }
+            }
+
+            // Draw stipples
+            fill(0);
+            noStroke();
+            for (const p of points) {
+                circle(p.x, p.y, params.pointSize);
+            }
+        }
+
+        function findNearestNeighbors(index, count) {
+            const distances = points.map((p, i) => ({
+                index: i,
+                dist: dist(points[index].x, points[index].y, p.x, p.y)
+            }));
+
+            distances.sort((a, b) => a.dist - b.dist);
+            return distances.slice(1, count + 1).map(d => d.index);
+        }
+
+        function generate() {
+            initializePoints();
+            currentIteration = 0;
+            drawStipples();
+        }
+
+        function step() {
+            if (currentIteration < params.iterations) {
+                relaxStep();
+                currentIteration++;
+                drawStipples();
+            }
+        }
+
+        function autoRelax() {
+            currentIteration = 0;
+            isRelaxing = true;
+        }
+
+        function exportSVG() {
+            beginRecord(SVG, `voronoi-stippling-${Date.now()}.svg`);
+            drawStipples();
+            endRecord();
+        }
+
+        function exportPNG() {
+            save(`voronoi-stippling-${Date.now()}.png`);
+        }
+
+        // Initialize Preset Manager
+        const presetManager = new PresetManager({
+            algorithmId: 'voronoi-stippling',
+            container: '#preset-container',
+
+            onSave: () => {
+                return { ...params };
+            },
+
+            onLoad: (preset) => {
+                const data = preset.data;
+                params = { ...data };
+
+                // Update UI
+                Object.keys(params).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element) {
+                        if (element.type === 'checkbox') {
+                            element.checked = params[key];
+                        } else if (element.type === 'select-one') {
+                            element.value = params[key];
+                        } else {
+                            element.value = params[key];
+                        }
+
+                        const display = document.getElementById(key + '-val');
+                        if (display) {
+                            display.textContent = params[key];
+                        }
+                    }
+                });
+
+                generate();
+            },
+
+            onRandomize: () => {
+                params.pointCount = Math.floor(random(500, 5000));
+                params.pointSize = random(0.5, 5);
+                params.iterations = Math.floor(random(10, 100));
+                params.densityBias = random(0.5, 4);
+
+                // Update UI
+                Object.keys(params).forEach(key => {
+                    const element = document.getElementById(key);
+                    if (element && element.type === 'range') {
+                        element.value = params[key];
+                        const display = document.getElementById(key + '-val');
+                        if (display) {
+                            display.textContent = params[key];
+                        }
+                    }
+                });
+
+                generate();
+            }
+        });
+    </script>
+</body>
+</html>

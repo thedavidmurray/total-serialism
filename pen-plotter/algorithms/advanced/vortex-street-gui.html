@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kármán Vortex Street Simulation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
     <style>
         body {
             margin: 0;
@@ -70,7 +72,10 @@
 <body>
     <div id="controls">
         <h3>Vortex Street Controls</h3>
-        
+
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
+
         <div class="control-group">
             <label>Obstacle Shape:</label>
             <select id="obstacleShape">
@@ -155,7 +160,8 @@
         let streamlines = [];
         let vortices = [];
         let time = 0;
-        
+        let presetManager;
+
         let params = {
             obstacleShape: 'cylinder',
             reynolds: 150,
@@ -407,7 +413,57 @@
         function setup() {
             createCanvas(windowWidth - 350, windowHeight - 40);
             setupControls();
+
+            // Initialize preset manager
+            presetManager = new PresetManager({
+                algorithmId: 'vortex-street',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    resetSimulation();
+                },
+                onRandomize: () => {
+                    const shapes = ['cylinder', 'square', 'airfoil', 'triangle'];
+                    const vizModes = ['streamlines', 'vorticity', 'pressure', 'velocity', 'combined'];
+                    params.obstacleShape = random(shapes);
+                    params.reynolds = Math.floor(random(10, 500));
+                    params.flowSpeed = random(0.5, 5);
+                    params.obstacleSize = Math.floor(random(20, 80));
+                    params.vizMode = random(vizModes);
+                    params.resolution = random([32, 64, 128]);
+                    params.shedding = random(0.1, 0.5);
+                    params.showVectors = random() > 0.5;
+                    params.showTrails = random() > 0.5;
+                    params.animate = true;
+                    updateUIFromParams();
+                    resetSimulation();
+                }
+            });
+
             resetSimulation();
+        }
+
+        // Helper function to update UI from params
+        function updateUIFromParams() {
+            document.getElementById('obstacleShape').value = params.obstacleShape;
+            document.getElementById('reynolds').value = params.reynolds;
+            document.getElementById('flowSpeed').value = params.flowSpeed;
+            document.getElementById('obstacleSize').value = params.obstacleSize;
+            document.getElementById('vizMode').value = params.vizMode;
+            document.getElementById('resolution').value = params.resolution;
+            document.getElementById('shedding').value = params.shedding;
+            document.getElementById('showVectors').checked = params.showVectors;
+            document.getElementById('showTrails').checked = params.showTrails;
+            document.getElementById('animate').checked = params.animate;
+
+            // Update value displays
+            document.getElementById('reynoldsValue').textContent = params.reynolds;
+            document.getElementById('flowSpeedValue').textContent = params.flowSpeed.toFixed(1);
+            document.getElementById('obstacleSizeValue').textContent = params.obstacleSize;
+            document.getElementById('resolutionValue').textContent = params.resolution;
+            document.getElementById('sheddingValue').textContent = params.shedding.toFixed(2);
         }
         
         function setupControls() {

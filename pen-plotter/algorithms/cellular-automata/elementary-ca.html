@@ -4,6 +4,8 @@
   <title>Elementary Cellular Automata - Pen Plotter Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -129,7 +131,10 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Elementary CA</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Rule Selection</h3>
       <div class="control">
@@ -233,7 +238,18 @@
     let cellHeight = 200;
     let cellSize = 3;
     let history = [];
-    
+    let presetManager;
+
+    let params = {
+      rule: 30,
+      cellWidth: 200,
+      cellHeight: 200,
+      cellSize: 3,
+      startPattern: 'single',
+      colorScheme: 'bw',
+      showHistory: true
+    };
+
     // Color schemes
     const colorSchemes = {
       bw: { 0: [255, 255, 255], 1: [0, 0, 0] },
@@ -246,11 +262,65 @@
     function setup() {
       let canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
-      
+
       // Initialize
-      initializeCells();
       setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'elementary-ca',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          rule = params.rule;
+          cellWidth = params.cellWidth;
+          cellHeight = params.cellHeight;
+          cellSize = params.cellSize;
+          updateUIFromParams();
+          updateRuleVisualization();
+          generate();
+        },
+        onRandomize: () => {
+          const patterns = ['single', 'random', 'random25', 'random75', 'alternating', 'symmetric'];
+          const schemes = ['bw', 'green', 'blue', 'heat', 'rainbow'];
+          params.rule = Math.floor(random(0, 256));
+          params.cellWidth = random([50, 100, 150, 200, 250, 300, 350, 400]);
+          params.cellHeight = random([50, 100, 150, 200, 250, 300, 350, 400]);
+          params.cellSize = Math.floor(random(1, 10));
+          params.startPattern = random(patterns);
+          params.colorScheme = random(schemes);
+          params.showHistory = random() > 0.3;
+          rule = params.rule;
+          cellWidth = params.cellWidth;
+          cellHeight = params.cellHeight;
+          cellSize = params.cellSize;
+          updateUIFromParams();
+          updateRuleVisualization();
+          generate();
+        }
+      });
+
+      initializeCells();
       updateRuleVisualization();
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      document.getElementById('rule').value = params.rule;
+      document.getElementById('ruleInput').value = params.rule;
+      document.getElementById('cellWidth').value = params.cellWidth;
+      document.getElementById('cellHeight').value = params.cellHeight;
+      document.getElementById('cellSize').value = params.cellSize;
+      document.getElementById('startPattern').value = params.startPattern;
+      document.getElementById('colorScheme').value = params.colorScheme;
+      document.getElementById('showHistory').checked = params.showHistory;
+
+      // Update value displays
+      document.getElementById('rule-val').textContent = params.rule;
+      document.getElementById('width-val').textContent = params.cellWidth;
+      document.getElementById('height-val').textContent = params.cellHeight;
+      document.getElementById('cellSize-val').textContent = params.cellSize;
     }
     
     function initializeCells() {
@@ -299,34 +369,54 @@
       // Rule slider
       document.getElementById('rule').addEventListener('input', (e) => {
         rule = parseInt(e.target.value);
+        params.rule = rule;
         document.getElementById('rule-val').textContent = rule;
         document.getElementById('ruleInput').value = rule;
         updateRuleVisualization();
       });
-      
+
       // Rule input
       document.getElementById('ruleInput').addEventListener('change', (e) => {
         rule = Math.max(0, Math.min(255, parseInt(e.target.value) || 0));
+        params.rule = rule;
         document.getElementById('rule').value = rule;
         document.getElementById('rule-val').textContent = rule;
         document.getElementById('ruleInput').value = rule;
         updateRuleVisualization();
       });
-      
+
       // Other controls
       document.getElementById('cellWidth').addEventListener('input', (e) => {
         cellWidth = parseInt(e.target.value);
+        params.cellWidth = cellWidth;
         document.getElementById('width-val').textContent = cellWidth;
       });
-      
+
       document.getElementById('cellHeight').addEventListener('input', (e) => {
         cellHeight = parseInt(e.target.value);
+        params.cellHeight = cellHeight;
         document.getElementById('height-val').textContent = cellHeight;
       });
-      
+
       document.getElementById('cellSize').addEventListener('input', (e) => {
         cellSize = parseInt(e.target.value);
+        params.cellSize = cellSize;
         document.getElementById('cellSize-val').textContent = cellSize;
+      });
+
+      // Start pattern
+      document.getElementById('startPattern').addEventListener('change', (e) => {
+        params.startPattern = e.target.value;
+      });
+
+      // Color scheme
+      document.getElementById('colorScheme').addEventListener('change', (e) => {
+        params.colorScheme = e.target.value;
+      });
+
+      // Show history
+      document.getElementById('showHistory').addEventListener('change', (e) => {
+        params.showHistory = e.target.checked;
       });
     }
     

@@ -1,0 +1,386 @@
+/**
+ * Preset Manager Styles
+ * Drop-in styling for the preset management system
+ */
+
+.preset-manager {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.preset-manager-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.preset-manager-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preset-collapse-btn {
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-collapse-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.preset-manager-content {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.preset-manager-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Save Section */
+.preset-save-section {
+  margin-bottom: 15px;
+}
+
+.preset-name-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 8px;
+  box-sizing: border-box;
+}
+
+.preset-name-input:focus {
+  outline: none;
+  border-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.1);
+}
+
+.preset-action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.preset-save-btn,
+.preset-random-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-save-btn {
+  background: #4CAF50;
+  color: white;
+}
+
+.preset-save-btn:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.preset-random-btn {
+  background: #9C27B0;
+  color: white;
+}
+
+.preset-random-btn:hover {
+  background: #8e24aa;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Search Section */
+.preset-search-section {
+  margin-bottom: 12px;
+}
+
+.preset-search-input {
+  width: 100%;
+  padding: 6px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.preset-search-input:focus {
+  outline: none;
+  border-color: #2196F3;
+}
+
+/* Preset List */
+.preset-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 15px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  background: white;
+}
+
+.preset-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.preset-list::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.preset-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.preset-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.preset-empty {
+  padding: 30px 20px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.4);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.preset-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  transition: background 0.2s ease;
+}
+
+.preset-item:last-child {
+  border-bottom: none;
+}
+
+.preset-item:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.preset-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.preset-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preset-meta {
+  font-size: 11px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.preset-badge {
+  background: #FFC107;
+  color: #333;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 500;
+  font-size: 10px;
+}
+
+.preset-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: 12px;
+}
+
+.preset-load-btn,
+.preset-export-btn,
+.preset-delete-btn {
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  background: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-load-btn:hover {
+  background: #4CAF50;
+  color: white;
+  border-color: #4CAF50;
+  transform: scale(1.1);
+}
+
+.preset-export-btn:hover {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+  transform: scale(1.1);
+}
+
+.preset-delete-btn:hover {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+  transform: scale(1.1);
+}
+
+/* Import Section */
+.preset-import-section {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.preset-import-btn,
+.preset-export-all-btn,
+.preset-clear-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 6px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  background: white;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preset-import-btn:hover {
+  background: #2196F3;
+  color: white;
+  border-color: #2196F3;
+}
+
+.preset-export-all-btn:hover {
+  background: #FF9800;
+  color: white;
+  border-color: #FF9800;
+}
+
+.preset-clear-btn:hover {
+  background: #f44336;
+  color: white;
+  border-color: #f44336;
+}
+
+/* Notifications */
+.preset-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.preset-notification.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.preset-notification-success {
+  background: #4CAF50;
+  color: white;
+}
+
+.preset-notification-error {
+  background: #f44336;
+  color: white;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .preset-manager {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .preset-manager-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .preset-name-input,
+  .preset-search-input {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .preset-list {
+    background: rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .preset-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .preset-name {
+    color: #fff;
+  }
+
+  .preset-meta {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .preset-load-btn,
+  .preset-export-btn,
+  .preset-delete-btn,
+  .preset-import-btn,
+  .preset-export-all-btn,
+  .preset-clear-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .preset-import-section {
+    flex-direction: column;
+  }
+
+  .preset-import-btn,
+  .preset-export-all-btn,
+  .preset-clear-btn {
+    min-width: 100%;
+  }
+}

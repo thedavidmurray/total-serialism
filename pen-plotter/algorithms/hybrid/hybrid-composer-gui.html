@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hybrid Algorithm Composer</title>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
     <style>
         * {
             margin: 0;
@@ -269,6 +271,9 @@
     <div class="control-panel">
         <h1>Hybrid Algorithm Composer</h1>
 
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
+
         <div class="section">
             <h2>Presets</h2>
             <div class="preset-section">
@@ -347,6 +352,26 @@
         const engine = new HybridEngine();
         const canvas = document.getElementById('preview-canvas');
         const ctx = canvas.getContext('2d');
+        let presetManager;
+
+        // Initialize preset manager when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            presetManager = new PresetManager({
+                algorithmId: 'hybrid-composer',
+                container: '#preset-container',
+                onSave: () => engine.getConfiguration(),
+                onLoad: (preset) => {
+                    if (preset.data && typeof engine.loadConfiguration === 'function') {
+                        engine.loadConfiguration(preset.data);
+                        renderPreview();
+                    }
+                },
+                onRandomize: () => {
+                    // Randomize is complex for hybrid composer - just regenerate
+                    renderPreview();
+                }
+            });
+        });
 
         // Algorithm implementations
         const algorithms = {

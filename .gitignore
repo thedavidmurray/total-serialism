@@ -55,3 +55,12 @@ archive/
 build/
 dist/
 *.egg-info/
+
+# Test artifacts
+coverage/
+.nyc_output/
+test-results/
+*.lcov
+
+# GitHub workflows (add manually - can't be pushed via Claude Code)
+.github/

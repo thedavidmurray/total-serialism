@@ -4,6 +4,8 @@
   <title>Game of Life - Pen Plotter Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -114,9 +116,12 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Game of Life</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div id="generation">Generation: 0</div>
-    
+
     <div class="control-group">
       <h3>Simulation</h3>
       <button id="play-pause">▶ Play</button>
@@ -206,7 +211,8 @@
     let isPlaying = false;
     let lastUpdate = 0;
     let trailGrid = [];
-    
+    let presetManager;
+
     // Parameters
     let params = {
       gridSize: 50,
@@ -262,15 +268,54 @@
     function setup() {
       let canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
-      
+
       // Initialize grids
       initializeGrid();
-      
+
       // Setup controls
       setupControls();
-      
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'game-of-life',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          initializeGrid();
+        },
+        onRandomize: () => {
+          params.gridSize = Math.floor(random(20, 200));
+          params.cellSize = Math.floor(random(2, 20));
+          params.speed = Math.floor(random(1, 60));
+          const boundaries = ['wrap', 'dead', 'alive'];
+          params.boundary = random(boundaries);
+          const styles = ['squares', 'circles', 'diamonds'];
+          params.renderStyle = random(styles);
+          updateUIFromParams();
+          initializeGrid();
+        }
+      });
+
       // Start with a glider
       loadPattern('glider');
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      document.getElementById('gridSize').value = params.gridSize;
+      document.getElementById('cellSize').value = params.cellSize;
+      document.getElementById('speed').value = params.speed;
+      document.getElementById('boundary').value = params.boundary;
+      document.getElementById('renderStyle').value = params.renderStyle;
+      document.getElementById('showGrid').checked = params.showGrid;
+      document.getElementById('showTrails').checked = params.showTrails;
+
+      // Update value displays
+      document.getElementById('gridSize-val').textContent = params.gridSize;
+      document.getElementById('cellSize-val').textContent = params.cellSize;
+      document.getElementById('speed-val').textContent = params.speed;
     }
     
     function initializeGrid() {

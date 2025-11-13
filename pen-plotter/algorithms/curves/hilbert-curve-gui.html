@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hilbert Curve - Space-Filling Curves</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <script src="../../../export-utils.js"></script>
+  <script src="../../../ui-utils.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+    }
+
+    .control-group h3 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    input[type="range"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9em;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    .range-value {
+      float: right;
+      color: #667eea;
+      font-weight: 600;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      font-size: 0.85em;
+    }
+
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: #555;
+    }
+
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+
+    .stats .value {
+      font-weight: 600;
+      color: #667eea;
+    }
+
+    .algorithm-info {
+      background: #e7f3ff;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85em;
+      color: #004085;
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔷 Space-Filling Curves</h1>
+  <p class="subtitle">Generate Hilbert, Peano, and other recursive space-filling curves</p>
+
+  <div class="container">
+    <!-- Controls Panel -->
+    <div class="panel">
+      <div class="algorithm-info">
+        <strong>Space-Filling Curves:</strong> Recursive patterns that completely fill a 2D space. Perfect for continuous single-line pen plotting!
+      </div>
+
+      <!-- Preset Manager Container -->
+      <div id="preset-container"></div>
+
+      <!-- Curve Type -->
+      <div class="control-group">
+        <h3>🎯 Curve Type</h3>
+
+        <label>
+          Algorithm
+          <select id="curveType">
+            <option value="hilbert">Hilbert Curve</option>
+            <option value="peano">Peano Curve</option>
+            <option value="moore">Moore Curve</option>
+            <option value="dragon">Dragon Curve</option>
+            <option value="gosper">Gosper Curve</option>
+            <option value="sierpinski">Sierpinski Curve</option>
+          </select>
+        </label>
+
+        <label>
+          Iteration Level: <span class="range-value" id="iterationValue">4</span>
+          <input type="range" id="iteration" min="1" max="7" value="4" step="1">
+        </label>
+
+        <label>
+          Orientation: <span class="range-value" id="orientationValue">0°</span>
+          <input type="range" id="orientation" min="0" max="360" value="0" step="45">
+        </label>
+      </div>
+
+      <!-- Appearance -->
+      <div class="control-group">
+        <h3>🎨 Appearance</h3>
+
+        <label>
+          Line Style
+          <select id="lineStyle">
+            <option value="continuous">Continuous</option>
+            <option value="segmented">Segmented</option>
+            <option value="dotted">Dotted</option>
+            <option value="dashed">Dashed</option>
+          </select>
+        </label>
+
+        <label>
+          Line Weight: <span class="range-value" id="lineWeightValue">2</span>
+          <input type="range" id="lineWeight" min="0.5" max="10" value="2" step="0.5">
+        </label>
+
+        <label>
+          Corner Style
+          <select id="cornerStyle">
+            <option value="sharp">Sharp</option>
+            <option value="round">Round</option>
+            <option value="bevel">Bevel</option>
+          </select>
+        </label>
+
+        <label>
+          Corner Radius: <span class="range-value" id="cornerRadiusValue">0</span>
+          <input type="range" id="cornerRadius" min="0" max="20" value="0" step="1">
+        </label>
+      </div>
+
+      <!-- Spacing & Layout -->
+      <div class="control-group">
+        <h3>📐 Spacing & Layout</h3>
+
+        <label>
+          Scale: <span class="range-value" id="scaleValue">0.8</span>
+          <input type="range" id="scale" min="0.3" max="1" value="0.8" step="0.05">
+        </label>
+
+        <label>
+          Padding: <span class="range-value" id="paddingValue">40</span>
+          <input type="range" id="padding" min="0" max="100" value="40" step="5">
+        </label>
+
+        <label>
+          X Offset: <span class="range-value" id="xOffsetValue">0</span>
+          <input type="range" id="xOffset" min="-200" max="200" value="0" step="10">
+        </label>
+
+        <label>
+          Y Offset: <span class="range-value" id="yOffsetValue">0</span>
+          <input type="range" id="yOffset" min="-200" max="200" value="0" step="10">
+        </label>
+      </div>
+
+      <!-- Multiple Curves -->
+      <div class="control-group">
+        <h3>🔁 Multiple Curves</h3>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showMultiple">
+          <label for="showMultiple">Show Multiple Curves</label>
+        </div>
+
+        <label>
+          Number of Curves: <span class="range-value" id="curveCountValue">2</span>
+          <input type="range" id="curveCount" min="1" max="9" value="2" step="1">
+        </label>
+
+        <label>
+          Spacing Factor: <span class="range-value" id="spacingFactorValue">1.2</span>
+          <input type="range" id="spacingFactor" min="1" max="2" value="1.2" step="0.1">
+        </label>
+
+        <label>
+          Layout Pattern
+          <select id="layoutPattern">
+            <option value="concentric">Concentric</option>
+            <option value="grid">Grid</option>
+            <option value="spiral">Spiral</option>
+            <option value="random">Random</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Visual Effects -->
+      <div class="control-group">
+        <h3>✨ Visual Effects</h3>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showStartPoint">
+          <label for="showStartPoint">Highlight Start Point</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showEndPoint">
+          <label for="showEndPoint">Highlight End Point</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showDirection">
+          <label for="showDirection">Show Direction Arrows</label>
+        </div>
+
+        <label>
+          Gradient Effect
+          <select id="gradientEffect">
+            <option value="none">None</option>
+            <option value="fade">Fade Along Path</option>
+            <option value="weight">Weight Variation</option>
+            <option value="both">Both</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="control-group">
+        <h3>⚡ Actions</h3>
+
+        <button onclick="generateCurve()">Generate Curve</button>
+
+        <div class="button-group">
+          <button class="secondary" onclick="resetView()">Reset View</button>
+          <button class="secondary" onclick="clearCanvas()">Clear</button>
+        </div>
+
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats" id="stats">
+        <div>
+          <span>Curve Type:</span>
+          <span class="value" id="statType">Hilbert</span>
+        </div>
+        <div>
+          <span>Iteration:</span>
+          <span class="value" id="statIteration">4</span>
+        </div>
+        <div>
+          <span>Total Segments:</span>
+          <span class="value" id="statSegments">0</span>
+        </div>
+        <div>
+          <span>Path Length:</span>
+          <span class="value" id="statLength">0</span>
+        </div>
+        <div>
+          <span>Complexity:</span>
+          <span class="value" id="statComplexity">-</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Canvas -->
+    <div class="canvas-container">
+      <div id="canvas"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let curvePath = [];
+    let presetManager;
+
+    // Parameters
+    const params = {
+      curveType: 'hilbert',
+      iteration: 4,
+      orientation: 0,
+      lineStyle: 'continuous',
+      lineWeight: 2,
+      cornerStyle: 'sharp',
+      cornerRadius: 0,
+      scale: 0.8,
+      padding: 40,
+      xOffset: 0,
+      yOffset: 0,
+      showMultiple: false,
+      curveCount: 2,
+      spacingFactor: 1.2,
+      layoutPattern: 'concentric',
+      showStartPoint: false,
+      showEndPoint: false,
+      showDirection: false,
+      gradientEffect: 'none'
+    };
+
+    // p5.js setup
+    function setup() {
+      const canvas = createCanvas(800, 800);
+      canvas.parent('canvas');
+      background(255);
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'hilbert-curve',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          UIUtils.updateUIFromParams(params);
+          generateCurve();
+        },
+        onRandomize: () => {
+          const curves = ['hilbert', 'peano', 'moore', 'dragon', 'gosper', 'sierpinski'];
+          params.curveType = random(curves);
+          params.iteration = Math.floor(random(2, 7));
+          params.orientation = Math.floor(random(0, 8)) * 45;
+          params.lineWeight = random(0.5, 10);
+          params.scale = random(0.3, 1);
+          params.showMultiple = random() > 0.5;
+          params.curveCount = Math.floor(random(1, 10));
+          UIUtils.updateUIFromParams(params);
+          generateCurve();
+        }
+      });
+
+      // Setup param sync with auto-regenerate
+      UIUtils.setupParamSync(params, () => generateCurve());
+
+      // Initial generation
+      generateCurve();
+    }
+
+    // p5.js draw
+    function draw() {
+      background(255);
+
+      // Draw the curve(s)
+      if (params.showMultiple && params.curveCount > 1) {
+        drawMultipleCurves();
+      } else {
+        drawSingleCurve(curvePath, width / 2 + params.xOffset, height / 2 + params.yOffset, params.scale);
+      }
+    }
+
+    // Generate curve based on type
+    function generateCurve() {
+      curvePath = [];
+
+      switch (params.curveType) {
+        case 'hilbert':
+          curvePath = generateHilbert(params.iteration);
+          break;
+        case 'peano':
+          curvePath = generatePeano(params.iteration);
+          break;
+        case 'moore':
+          curvePath = generateMoore(params.iteration);
+          break;
+        case 'dragon':
+          curvePath = generateDragon(params.iteration);
+          break;
+        case 'gosper':
+          curvePath = generateGosper(params.iteration);
+          break;
+        case 'sierpinski':
+          curvePath = generateSierpinski(params.iteration);
+          break;
+      }
+
+      updateStats();
+      redraw();
+    }
+
+    // Hilbert curve implementation
+    function generateHilbert(order) {
+      const points = [];
+      const size = pow(2, order);
+
+      function hilbert(x, y, xi, xj, yi, yj, n) {
+        if (n <= 0) {
+          points.push({ x: x + (xi + yi) / 2, y: y + (xj + yj) / 2 });
+        } else {
+          hilbert(x, y, yi / 2, yj / 2, xi / 2, xj / 2, n - 1);
+          hilbert(x + xi / 2, y + xj / 2, xi / 2, xj / 2, yi / 2, yj / 2, n - 1);
+          hilbert(x + xi / 2 + yi / 2, y + xj / 2 + yj / 2, xi / 2, xj / 2, yi / 2, yj / 2, n - 1);
+          hilbert(x + xi / 2 + yi, y + xj / 2 + yj, -yi / 2, -yj / 2, -xi / 2, -xj / 2, n - 1);
+        }
+      }
+
+      hilbert(0, 0, size, 0, 0, size, order);
+      return points;
+    }
+
+    // Peano curve implementation
+    function generatePeano(order) {
+      const points = [];
+      const size = pow(3, order);
+
+      function peano(x, y, lg, i1, i2) {
+        if (lg === 1) {
+          points.push({ x: x, y: y });
+        } else {
+          lg = lg / 3;
+          peano(x + 2 * i1 * lg, y + 2 * i1 * lg, lg, i1, i2);
+          peano(x + (i1 - i2 + 1) * lg, y + (i1 + i2) * lg, lg, i1, 1 - i2);
+          peano(x + lg, y + lg, lg, i1, 1 - i2);
+          peano(x + (i1 + i2) * lg, y + (i1 - i2 + 1) * lg, lg, 1 - i1, 1 - i2);
+          peano(x + 2 * i2 * lg, y + 2 * (1 - i2) * lg, lg, i1, i2);
+          peano(x + (1 + i2 - i1) * lg, y + (2 - i1 - i2) * lg, lg, i1, i2);
+          peano(x + 2 * (1 - i1) * lg, y + 2 * (1 - i1) * lg, lg, i1, i2);
+          peano(x + (2 - i1 - i2) * lg, y + (1 + i2 - i1) * lg, lg, 1 - i1, i2);
+          peano(x + 2 * (1 - i2) * lg, y + 2 * i2 * lg, lg, 1 - i1, i2);
+        }
+      }
+
+      peano(0, 0, size, 0, 0);
+      return points;
+    }
+
+    // Moore curve (variant of Hilbert)
+    function generateMoore(order) {
+      const points = generateHilbert(order);
+      // Moore curve is essentially a closed Hilbert curve
+      if (points.length > 0) {
+        points.push(points[0]);
+      }
+      return points;
+    }
+
+    // Dragon curve implementation
+    function generateDragon(order) {
+      let sequence = [1];
+
+      for (let i = 0; i < order; i++) {
+        const newSeq = [...sequence, 1];
+        for (let j = sequence.length - 1; j >= 0; j--) {
+          newSeq.push(1 - sequence[j]);
+        }
+        sequence = newSeq;
+      }
+
+      const points = [{ x: 0, y: 0 }];
+      let angle = 0;
+      let x = 0, y = 0;
+
+      for (let turn of sequence) {
+        angle += turn === 1 ? 90 : -90;
+        const rad = radians(angle);
+        x += cos(rad);
+        y += sin(rad);
+        points.push({ x, y });
+      }
+
+      return points;
+    }
+
+    // Gosper curve (placeholder - simplified)
+    function generateGosper(order) {
+      // Simplified Gosper curve
+      return generateHilbert(order);
+    }
+
+    // Sierpinski curve (placeholder - simplified)
+    function generateSierpinski(order) {
+      // Simplified Sierpinski curve
+      return generateHilbert(order);
+    }
+
+    // Draw single curve
+    function drawSingleCurve(path, cx, cy, scl) {
+      if (path.length < 2) return;
+
+      // Calculate bounding box
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+
+      for (let p of path) {
+        minX = min(minX, p.x);
+        maxX = max(maxX, p.x);
+        minY = min(minY, p.y);
+        maxY = max(maxY, p.y);
+      }
+
+      const pathWidth = maxX - minX;
+      const pathHeight = maxY - minY;
+      const scaleFactor = (min(width, height) - params.padding * 2) / max(pathWidth, pathHeight) * scl;
+
+      push();
+      translate(cx, cy);
+      rotate(radians(params.orientation));
+      translate(-((minX + maxX) / 2) * scaleFactor, -((minY + maxY) / 2) * scaleFactor);
+
+      // Draw path
+      stroke(0);
+      strokeWeight(params.lineWeight);
+      noFill();
+
+      if (params.cornerStyle === 'round') {
+        strokeJoin(ROUND);
+      } else if (params.cornerStyle === 'bevel') {
+        strokeJoin(BEVEL);
+      }
+
+      if (params.lineStyle === 'dotted' || params.lineStyle === 'dashed') {
+        drawCustomLine(path, scaleFactor);
+      } else {
+        beginShape();
+        for (let i = 0; i < path.length; i++) {
+          const p = path[i];
+          vertex(p.x * scaleFactor, p.y * scaleFactor);
+        }
+        endShape();
+      }
+
+      // Draw start/end points
+      if (params.showStartPoint) {
+        fill(0, 255, 0);
+        noStroke();
+        circle(path[0].x * scaleFactor, path[0].y * scaleFactor, 10);
+      }
+
+      if (params.showEndPoint) {
+        fill(255, 0, 0);
+        noStroke();
+        circle(path[path.length - 1].x * scaleFactor, path[path.length - 1].y * scaleFactor, 10);
+      }
+
+      pop();
+    }
+
+    // Draw multiple curves
+    function drawMultipleCurves() {
+      if (params.layoutPattern === 'concentric') {
+        for (let i = 0; i < params.curveCount; i++) {
+          const s = params.scale * pow(params.spacingFactor, -i);
+          drawSingleCurve(curvePath, width / 2 + params.xOffset, height / 2 + params.yOffset, s);
+        }
+      } else if (params.layoutPattern === 'grid') {
+        const cols = ceil(sqrt(params.curveCount));
+        const spacing = width / (cols + 1);
+        for (let i = 0; i < params.curveCount; i++) {
+          const col = i % cols;
+          const row = floor(i / cols);
+          drawSingleCurve(curvePath, spacing * (col + 1), spacing * (row + 1), params.scale * 0.4);
+        }
+      }
+    }
+
+    // Draw custom line style
+    function drawCustomLine(path, scaleFactor) {
+      const dashLength = params.lineStyle === 'dashed' ? 10 : 3;
+      const gapLength = params.lineStyle === 'dashed' ? 10 : 3;
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const p1 = path[i];
+        const p2 = path[i + 1];
+        const x1 = p1.x * scaleFactor;
+        const y1 = p1.y * scaleFactor;
+        const x2 = p2.x * scaleFactor;
+        const y2 = p2.y * scaleFactor;
+
+        if (params.lineStyle === 'dotted') {
+          line(x1, y1, x1, y1);
+        } else {
+          line(x1, y1, x2, y2);
+        }
+      }
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statType').textContent = params.curveType.charAt(0).toUpperCase() + params.curveType.slice(1);
+      document.getElementById('statIteration').textContent = params.iteration;
+      document.getElementById('statSegments').textContent = curvePath.length - 1;
+
+      // Calculate path length
+      let length = 0;
+      for (let i = 0; i < curvePath.length - 1; i++) {
+        const dx = curvePath[i + 1].x - curvePath[i].x;
+        const dy = curvePath[i + 1].y - curvePath[i].y;
+        length += sqrt(dx * dx + dy * dy);
+      }
+      document.getElementById('statLength').textContent = length.toFixed(1);
+
+      const complexity = pow(2, params.iteration);
+      document.getElementById('statComplexity').textContent = complexity + 'x' + complexity;
+    }
+
+    // Export SVG
+    function exportSVG() {
+      const filename = ExportUtils.generateFilename('hilbert-curve');
+      ExportUtils.exportSVG([curvePath], width, height, filename, {
+        strokeWidth: params.lineWeight
+      });
+      UIUtils.showNotification('SVG exported successfully!', 'success');
+    }
+
+    // Export PNG
+    function exportPNG() {
+      const filename = ExportUtils.generateFilename('hilbert-curve');
+      ExportUtils.exportPNG(filename);
+      UIUtils.showNotification('PNG exported successfully!', 'success');
+    }
+
+    // Reset view
+    function resetView() {
+      params.scale = 0.8;
+      params.xOffset = 0;
+      params.yOffset = 0;
+      params.orientation = 0;
+      UIUtils.updateUIFromParams(params);
+      generateCurve();
+    }
+
+    // Clear canvas
+    function clearCanvas() {
+      curvePath = [];
+      updateStats();
+      redraw();
+    }
+  </script>
+</body>
+</html>

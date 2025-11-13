@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Islamic Geometric Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <script src="../../../export-utils.js"></script>
+  <script src="../../../ui-utils.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      max-height: 95vh;
+      overflow-y: auto;
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 20px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin-bottom: 12px;
+      color: #333;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      color: #555;
+      font-size: 0.9em;
+      font-weight: 500;
+    }
+
+    input[type="range"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 0.9em;
+    }
+
+    input[type="range"] {
+      padding: 0;
+    }
+
+    .range-value {
+      float: right;
+      color: #00f2fe;
+      font-weight: 600;
+    }
+
+    .checkbox-group {
+      margin-bottom: 12px;
+    }
+
+    .checkbox-group label {
+      display: inline-block;
+      margin-left: 8px;
+      font-weight: 400;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 242, 254, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .canvas-container {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #canvas {
+      border-radius: 8px;
+    }
+
+    .info {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.85em;
+      color: #666;
+      margin-top: 12px;
+    }
+
+    .sub-controls {
+      margin-left: 20px;
+      padding-left: 15px;
+      border-left: 2px solid #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>☪️ Islamic Geometric Patterns</h1>
+  <p class="subtitle">Sacred geometry and tessellations from Islamic art</p>
+
+  <div class="container">
+    <div class="panel">
+      <div id="preset-container"></div>
+
+      <div class="control-group">
+        <h3>Pattern Style</h3>
+        <label>
+          Pattern Type:
+          <select id="patternType">
+            <option value="girih">Girih (Star & Polygon)</option>
+            <option value="zellige">Zellige (Moroccan)</option>
+            <option value="arabesque">Arabesque</option>
+            <option value="star-rosette">Star Rosette</option>
+            <option value="tessellation">Tessellation</option>
+            <option value="interlace">Interlacing</option>
+          </select>
+        </label>
+
+        <label>
+          Base Polygon:
+          <select id="basePolygon">
+            <option value="3">Triangle</option>
+            <option value="4">Square</option>
+            <option value="5">Pentagon</option>
+            <option value="6">Hexagon</option>
+            <option value="8">Octagon</option>
+            <option value="10">Decagon</option>
+            <option value="12">Dodecagon</option>
+          </select>
+        </label>
+
+        <label>
+          Star Points: <span class="range-value" id="starPoints-val">8</span>
+          <input type="range" id="starPoints" min="4" max="16" value="8" step="1">
+        </label>
+
+        <label>
+          Complexity: <span class="range-value" id="complexity-val">3</span>
+          <input type="range" id="complexity" min="1" max="7" value="3" step="1">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Grid & Layout</h3>
+        <label>
+          Grid Type:
+          <select id="gridType">
+            <option value="square">Square Grid</option>
+            <option value="triangular">Triangular</option>
+            <option value="hexagonal">Hexagonal</option>
+            <option value="octagonal">Octagonal-Square</option>
+            <option value="radial">Radial</option>
+          </select>
+        </label>
+
+        <label>
+          Grid Divisions: <span class="range-value" id="gridDivisions-val">6</span>
+          <input type="range" id="gridDivisions" min="2" max="12" value="6" step="1">
+        </label>
+
+        <label>
+          Tile Size: <span class="range-value" id="tileSize-val">80</span>
+          <input type="range" id="tileSize" min="20" max="200" value="80" step="5">
+        </label>
+
+        <label>
+          Spacing: <span class="range-value" id="spacing-val">2</span>
+          <input type="range" id="spacing" min="0" max="20" value="2" step="1">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Star Configuration</h3>
+        <label>
+          Star Inner Radius: <span class="range-value" id="starInnerRadius-val">0.4</span>
+          <input type="range" id="starInnerRadius" min="0.1" max="0.9" value="0.4" step="0.05">
+        </label>
+
+        <label>
+          Star Rotation: <span class="range-value" id="starRotation-val">0</span>°
+          <input type="range" id="starRotation" min="0" max="360" value="0" step="15">
+        </label>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="concentricStars" checked>
+          <label for="concentricStars">Concentric Stars</label>
+        </div>
+
+        <div class="sub-controls" id="concentricControls">
+          <label>
+            Star Layers: <span class="range-value" id="starLayers-val">2</span>
+            <input type="range" id="starLayers" min="1" max="5" value="2" step="1">
+          </label>
+
+          <label>
+            Layer Scale: <span class="range-value" id="layerScale-val">0.6</span>
+            <input type="range" id="layerScale" min="0.2" max="0.9" value="0.6" step="0.05">
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Interlacing</h3>
+        <div class="checkbox-group">
+          <input type="checkbox" id="enableInterlace">
+          <label for="enableInterlace">Enable Interlacing</label>
+        </div>
+
+        <div class="sub-controls" id="interlaceControls">
+          <label>
+            Weave Width: <span class="range-value" id="weaveWidth-val">8</span>
+            <input type="range" id="weaveWidth" min="2" max="20" value="8" step="1">
+          </label>
+
+          <label>
+            Gap Size: <span class="range-value" id="gapSize-val">2</span>
+            <input type="range" id="gapSize" min="0" max="10" value="2" step="1">
+          </label>
+
+          <label>
+            Interlace Style:
+            <select id="interlaceStyle">
+              <option value="over-under">Over-Under</option>
+              <option value="Celtic">Celtic Knot</option>
+              <option value="braided">Braided</option>
+            </select>
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Appearance</h3>
+        <label>
+          Color Scheme:
+          <select id="colorScheme">
+            <option value="traditional">Traditional (Blue/Gold)</option>
+            <option value="moorish">Moorish (Red/Green)</option>
+            <option value="persian">Persian (Turquoise)</option>
+            <option value="ottoman">Ottoman (Red/Blue)</option>
+            <option value="modern">Modern Minimal</option>
+            <option value="monochrome">Monochrome</option>
+          </select>
+        </label>
+
+        <label>
+          Render Mode:
+          <select id="renderMode">
+            <option value="outline">Outline Only</option>
+            <option value="filled">Filled Only</option>
+            <option value="both">Outline + Fill</option>
+          </select>
+        </label>
+
+        <label>
+          Stroke Weight: <span class="range-value" id="strokeWeight-val">2</span>
+          <input type="range" id="strokeWeight" min="0.5" max="10" value="2" step="0.5">
+        </label>
+
+        <label>
+          Fill Opacity: <span class="range-value" id="fillOpacity-val">200</span>
+          <input type="range" id="fillOpacity" min="0" max="255" value="200" step="5">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Border & Frame</h3>
+        <div class="checkbox-group">
+          <input type="checkbox" id="showBorder" checked>
+          <label for="showBorder">Show Border</label>
+        </div>
+
+        <div class="sub-controls" id="borderControls">
+          <label>
+            Border Style:
+            <select id="borderStyle">
+              <option value="simple">Simple Frame</option>
+              <option value="ornate">Ornate</option>
+              <option value="calligraphic">Calligraphic</option>
+              <option value="geometric">Geometric</option>
+            </select>
+          </label>
+
+          <label>
+            Border Width: <span class="range-value" id="borderWidth-val">40</span>
+            <input type="range" id="borderWidth" min="10" max="100" value="40" step="5">
+          </label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Advanced Options</h3>
+        <div class="checkbox-group">
+          <input type="checkbox" id="showConstruction">
+          <label for="showConstruction">Show Construction Lines</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="symmetryGuides">
+          <label for="symmetryGuides">Show Symmetry Guides</label>
+        </div>
+
+        <label>
+          Symmetry Type:
+          <select id="symmetryType">
+            <option value="rotational">Rotational</option>
+            <option value="reflective">Reflective</option>
+            <option value="both">Both</option>
+          </select>
+        </label>
+
+        <label>
+          Rotation: <span class="range-value" id="rotation-val">0</span>°
+          <input type="range" id="rotation" min="0" max="360" value="0" step="15">
+        </label>
+
+        <label>
+          Scale: <span class="range-value" id="scale-val">0.9</span>
+          <input type="range" id="scale" min="0.3" max="1.5" value="0.9" step="0.05">
+        </label>
+      </div>
+
+      <div class="control-group">
+        <h3>Export</h3>
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+
+      <div class="info">
+        <strong>About Islamic Patterns:</strong> These geometric patterns combine mathematical precision with artistic beauty. Based on principles of symmetry and tessellation, they have adorned mosques, palaces, and manuscripts for over a thousand years.
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <div id="canvas"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let patterns = [];
+    let presetManager;
+
+    // Parameters
+    const params = {
+      patternType: 'girih',
+      basePolygon: 8,
+      starPoints: 8,
+      complexity: 3,
+      gridType: 'square',
+      gridDivisions: 6,
+      tileSize: 80,
+      spacing: 2,
+      starInnerRadius: 0.4,
+      starRotation: 0,
+      concentricStars: true,
+      starLayers: 2,
+      layerScale: 0.6,
+      enableInterlace: false,
+      weaveWidth: 8,
+      gapSize: 2,
+      interlaceStyle: 'over-under',
+      colorScheme: 'traditional',
+      renderMode: 'both',
+      strokeWeight: 2,
+      fillOpacity: 200,
+      showBorder: true,
+      borderStyle: 'ornate',
+      borderWidth: 40,
+      showConstruction: false,
+      symmetryGuides: false,
+      symmetryType: 'rotational',
+      rotation: 0,
+      scale: 0.9
+    };
+
+    // Color palettes
+    const colorPalettes = {
+      traditional: {
+        primary: [200, 80, 90],
+        secondary: [40, 90, 80],
+        accent: [180, 70, 85],
+        background: [0, 0, 98]
+      },
+      moorish: {
+        primary: [0, 80, 85],
+        secondary: [140, 70, 70],
+        accent: [30, 85, 90],
+        background: [0, 0, 98]
+      },
+      persian: {
+        primary: [180, 80, 85],
+        secondary: [200, 60, 90],
+        accent: [160, 70, 80],
+        background: [0, 0, 98]
+      },
+      ottoman: {
+        primary: [0, 85, 80],
+        secondary: [210, 80, 85],
+        accent: [30, 90, 90],
+        background: [0, 0, 98]
+      },
+      modern: {
+        primary: [0, 0, 20],
+        secondary: [0, 0, 50],
+        accent: [0, 0, 80],
+        background: [0, 0, 98]
+      },
+      monochrome: {
+        primary: [0, 0, 0],
+        secondary: [0, 0, 40],
+        accent: [0, 0, 70],
+        background: [0, 0, 98]
+      }
+    };
+
+    // Star pattern generator
+    function createStarPattern(x, y, size, points, innerRad) {
+      const vertices = [];
+      const angle = TWO_PI / points;
+
+      for (let i = 0; i < points * 2; i++) {
+        const r = i % 2 === 0 ? size : size * innerRad;
+        const a = i * angle / 2 + radians(params.starRotation);
+        vertices.push(createVector(x + r * cos(a), y + r * sin(a)));
+      }
+
+      return vertices;
+    }
+
+    // Polygon generator
+    function createPolygon(x, y, size, sides) {
+      const vertices = [];
+      const angle = TWO_PI / sides;
+
+      for (let i = 0; i < sides; i++) {
+        const a = i * angle - PI / 2;
+        vertices.push(createVector(x + size * cos(a), y + size * sin(a)));
+      }
+
+      return vertices;
+    }
+
+    // Girih tile patterns
+    function createGirihPattern(x, y, size) {
+      const shapes = [];
+
+      // Create star
+      shapes.push({
+        type: 'star',
+        vertices: createStarPattern(x, y, size * 0.5, params.starPoints, params.starInnerRadius),
+        color: 'primary'
+      });
+
+      // Add concentric layers
+      if (params.concentricStars) {
+        for (let i = 1; i <= params.starLayers; i++) {
+          const layerSize = size * 0.5 * Math.pow(params.layerScale, i);
+          shapes.push({
+            type: 'star',
+            vertices: createStarPattern(x, y, layerSize, params.starPoints, params.starInnerRadius),
+            color: i % 2 === 0 ? 'secondary' : 'accent'
+          });
+        }
+      }
+
+      // Add polygon frame
+      shapes.push({
+        type: 'polygon',
+        vertices: createPolygon(x, y, size * 0.8, parseInt(params.basePolygon)),
+        color: 'secondary'
+      });
+
+      return shapes;
+    }
+
+    // Tessellation patterns
+    function createTessellation(x, y, size) {
+      const shapes = [];
+      const sides = parseInt(params.basePolygon);
+
+      // Create main polygon
+      const mainPoly = createPolygon(x, y, size * 0.9, sides);
+      shapes.push({
+        type: 'polygon',
+        vertices: mainPoly,
+        color: 'primary'
+      });
+
+      // Add interior pattern based on complexity
+      for (let level = 1; level <= params.complexity; level++) {
+        const levelSize = size * 0.9 * (1 - level * 0.2);
+        const rotation = level * 15;
+
+        push();
+        translate(x, y);
+        rotate(radians(rotation));
+
+        const poly = createPolygon(0, 0, levelSize, sides);
+        shapes.push({
+          type: 'polygon',
+          vertices: poly.map(v => createVector(v.x + x, v.y + y)),
+          color: level % 2 === 0 ? 'secondary' : 'accent'
+        });
+
+        pop();
+      }
+
+      return shapes;
+    }
+
+    // Rosette pattern
+    function createRosette(x, y, size) {
+      const shapes = [];
+      const petalCount = params.starPoints;
+
+      for (let i = 0; i < petalCount; i++) {
+        const angle = (TWO_PI / petalCount) * i;
+        const petalX = x + (size * 0.4) * cos(angle);
+        const petalY = y + (size * 0.4) * sin(angle);
+
+        // Create petal
+        shapes.push({
+          type: 'star',
+          vertices: createStarPattern(petalX, petalY, size * 0.25, 4, 0.5),
+          color: i % 3 === 0 ? 'primary' : i % 3 === 1 ? 'secondary' : 'accent'
+        });
+      }
+
+      // Center star
+      shapes.push({
+        type: 'star',
+        vertices: createStarPattern(x, y, size * 0.3, petalCount, params.starInnerRadius),
+        color: 'primary'
+      });
+
+      return shapes;
+    }
+
+    // Draw shape with interlacing
+    function drawShape(shape) {
+      const palette = colorPalettes[params.colorScheme];
+      const color = palette[shape.color];
+
+      push();
+
+      // Set fill
+      if (params.renderMode === 'filled' || params.renderMode === 'both') {
+        fill(color[0], color[1], color[2], params.fillOpacity);
+      } else {
+        noFill();
+      }
+
+      // Set stroke
+      if (params.renderMode === 'outline' || params.renderMode === 'both') {
+        stroke(color[0], color[1], color[2] * 0.5);
+        strokeWeight(params.strokeWeight);
+      } else {
+        noStroke();
+      }
+
+      // Draw shape
+      beginShape();
+      shape.vertices.forEach(v => vertex(v.x, v.y));
+      endShape(CLOSE);
+
+      // Draw interlacing if enabled
+      if (params.enableInterlace) {
+        drawInterlacing(shape.vertices);
+      }
+
+      pop();
+    }
+
+    // Interlacing effect
+    function drawInterlacing(vertices) {
+      push();
+      strokeWeight(params.weaveWidth);
+      strokeCap(ROUND);
+
+      for (let i = 0; i < vertices.length; i++) {
+        const v1 = vertices[i];
+        const v2 = vertices[(i + 1) % vertices.length];
+        const mid = p5.Vector.lerp(v1, v2, 0.5);
+
+        // Alternate over/under
+        if (i % 2 === 0) {
+          stroke(0, 0, 0, 100);
+        } else {
+          stroke(0, 0, 100, 100);
+        }
+
+        line(v1.x, v1.y, mid.x, mid.y);
+
+        if (params.gapSize > 0) {
+          const gap1 = p5.Vector.lerp(v1, mid, 0.4);
+          const gap2 = p5.Vector.lerp(v1, mid, 0.6);
+          stroke(255, 0);
+          line(gap1.x, gap1.y, gap2.x, gap2.y);
+        }
+      }
+
+      pop();
+    }
+
+    // Draw border
+    function drawBorder() {
+      if (!params.showBorder) return;
+
+      push();
+      const palette = colorPalettes[params.colorScheme];
+      const bw = params.borderWidth;
+
+      stroke(palette.primary[0], palette.primary[1], palette.primary[2]);
+      strokeWeight(params.strokeWeight * 1.5);
+      noFill();
+
+      // Outer frame
+      rect(bw / 2, bw / 2, width - bw, height - bw, 8);
+
+      if (params.borderStyle === 'ornate' || params.borderStyle === 'geometric') {
+        // Inner decorative frame
+        rect(bw, bw, width - bw * 2, height - bw * 2, 4);
+
+        // Corner ornaments
+        const corners = [
+          [bw, bw],
+          [width - bw, bw],
+          [width - bw, height - bw],
+          [bw, height - bw]
+        ];
+
+        corners.forEach(([x, y], idx) => {
+          push();
+          translate(x, y);
+          rotate(radians(idx * 90));
+
+          const ornament = createStarPattern(0, 0, bw * 0.4, 8, 0.5);
+          beginShape();
+          ornament.forEach(v => vertex(v.x, v.y));
+          endShape(CLOSE);
+
+          pop();
+        });
+      }
+
+      pop();
+    }
+
+    // p5.js setup
+    function setup() {
+      const canvas = createCanvas(800, 800);
+      canvas.parent('canvas');
+      colorMode(HSB);
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'islamic-patterns',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          UIUtils.updateUIFromParams(params);
+          generatePattern();
+        },
+        onRandomize: () => {
+          const types = ['girih', 'zellige', 'arabesque', 'star-rosette', 'tessellation', 'interlace'];
+          params.patternType = random(types);
+          params.starPoints = Math.floor(random(4, 17));
+          params.basePolygon = random([3, 4, 5, 6, 8, 10, 12]);
+          params.complexity = Math.floor(random(1, 6));
+          params.colorScheme = random(['traditional', 'moorish', 'persian', 'ottoman', 'modern']);
+          UIUtils.updateUIFromParams(params);
+          generatePattern();
+        }
+      });
+
+      // Setup param sync
+      UIUtils.setupParamSync(params, () => generatePattern());
+
+      // Handle conditional controls
+      document.getElementById('concentricStars').addEventListener('change', updateConditionalControls);
+      document.getElementById('enableInterlace').addEventListener('change', updateConditionalControls);
+      document.getElementById('showBorder').addEventListener('change', updateConditionalControls);
+
+      updateConditionalControls();
+      generatePattern();
+    }
+
+    // Update conditional control visibility
+    function updateConditionalControls() {
+      document.getElementById('concentricControls').style.display =
+        params.concentricStars ? 'block' : 'none';
+      document.getElementById('interlaceControls').style.display =
+        params.enableInterlace ? 'block' : 'none';
+      document.getElementById('borderControls').style.display =
+        params.showBorder ? 'block' : 'none';
+    }
+
+    // p5.js draw
+    function draw() {
+      const palette = colorPalettes[params.colorScheme];
+      background(palette.background[0], palette.background[1], palette.background[2]);
+
+      push();
+      translate(width / 2, height / 2);
+      rotate(radians(params.rotation));
+      scale(params.scale);
+      translate(-width / 2, -height / 2);
+
+      // Draw construction lines
+      if (params.showConstruction) {
+        drawConstructionLines();
+      }
+
+      // Draw symmetry guides
+      if (params.symmetryGuides) {
+        drawSymmetryGuides();
+      }
+
+      // Draw patterns
+      patterns.forEach(pattern => {
+        pattern.shapes.forEach(shape => drawShape(shape));
+      });
+
+      pop();
+
+      // Draw border (not affected by transforms)
+      drawBorder();
+    }
+
+    // Generate pattern
+    function generatePattern() {
+      patterns = [];
+
+      const effectiveSize = width - params.borderWidth * 2;
+      const startX = params.borderWidth;
+      const startY = params.borderWidth;
+
+      if (params.gridType === 'radial') {
+        // Radial layout
+        const rings = params.gridDivisions;
+        for (let ring = 1; ring <= rings; ring++) {
+          const numInRing = ring * params.starPoints;
+          const ringRadius = (ring / rings) * effectiveSize / 2;
+
+          for (let i = 0; i < numInRing; i++) {
+            const angle = (TWO_PI / numInRing) * i;
+            const x = width / 2 + ringRadius * cos(angle);
+            const y = height / 2 + ringRadius * sin(angle);
+
+            let shapes;
+            if (params.patternType === 'girih') {
+              shapes = createGirihPattern(x, y, params.tileSize);
+            } else if (params.patternType === 'star-rosette') {
+              shapes = createRosette(x, y, params.tileSize);
+            } else {
+              shapes = createTessellation(x, y, params.tileSize);
+            }
+
+            patterns.push({ x, y, shapes });
+          }
+        }
+      } else {
+        // Grid layout
+        const cols = params.gridDivisions;
+        const rows = params.gridDivisions;
+        const cellWidth = effectiveSize / cols;
+        const cellHeight = effectiveSize / rows;
+
+        for (let i = 0; i < cols; i++) {
+          for (let j = 0; j < rows; j++) {
+            const x = startX + i * cellWidth + cellWidth / 2;
+            const y = startY + j * cellHeight + cellHeight / 2;
+
+            let shapes;
+            if (params.patternType === 'girih') {
+              shapes = createGirihPattern(x, y, min(cellWidth, cellHeight) - params.spacing);
+            } else if (params.patternType === 'star-rosette') {
+              shapes = createRosette(x, y, min(cellWidth, cellHeight) - params.spacing);
+            } else {
+              shapes = createTessellation(x, y, min(cellWidth, cellHeight) - params.spacing);
+            }
+
+            patterns.push({ x, y, shapes });
+          }
+        }
+      }
+    }
+
+    // Draw construction lines
+    function drawConstructionLines() {
+      push();
+      stroke(0, 0, 0, 50);
+      strokeWeight(0.5);
+
+      const effectiveSize = width - params.borderWidth * 2;
+      const startX = params.borderWidth;
+      const startY = params.borderWidth;
+
+      if (params.gridType === 'radial') {
+        // Radial guides
+        const rings = params.gridDivisions;
+        for (let ring = 1; ring <= rings; ring++) {
+          const ringRadius = (ring / rings) * effectiveSize / 2;
+          noFill();
+          circle(width / 2, height / 2, ringRadius * 2);
+        }
+
+        for (let i = 0; i < params.starPoints * 2; i++) {
+          const angle = (TWO_PI / (params.starPoints * 2)) * i;
+          line(width / 2, height / 2,
+               width / 2 + effectiveSize / 2 * cos(angle),
+               height / 2 + effectiveSize / 2 * sin(angle));
+        }
+      } else {
+        // Grid guides
+        const cols = params.gridDivisions;
+        const rows = params.gridDivisions;
+        const cellWidth = effectiveSize / cols;
+        const cellHeight = effectiveSize / rows;
+
+        for (let i = 0; i <= cols; i++) {
+          line(startX + i * cellWidth, startY, startX + i * cellWidth, height - params.borderWidth);
+        }
+
+        for (let j = 0; j <= rows; j++) {
+          line(startX, startY + j * cellHeight, width - params.borderWidth, startY + j * cellHeight);
+        }
+      }
+
+      pop();
+    }
+
+    // Draw symmetry guides
+    function drawSymmetryGuides() {
+      push();
+      stroke(300, 70, 70, 150);
+      strokeWeight(1);
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const maxDist = width / 2;
+
+      if (params.symmetryType === 'rotational' || params.symmetryType === 'both') {
+        for (let i = 0; i < params.starPoints; i++) {
+          const angle = (TWO_PI / params.starPoints) * i;
+          line(cx, cy, cx + maxDist * cos(angle), cy + maxDist * sin(angle));
+        }
+      }
+
+      if (params.symmetryType === 'reflective' || params.symmetryType === 'both') {
+        line(0, cy, width, cy);
+        line(cx, 0, cx, height);
+      }
+
+      pop();
+    }
+
+    // Export functions
+    function exportSVG() {
+      const allShapes = [];
+
+      patterns.forEach(pattern => {
+        pattern.shapes.forEach(shape => {
+          allShapes.push({
+            points: shape.vertices.map(v => ({ x: v.x, y: v.y })),
+            closed: true
+          });
+        });
+      });
+
+      const filename = ExportUtils.generateFilename('islamic-pattern');
+      ExportUtils.exportSVG(allShapes, width, height, filename, {
+        strokeWidth: params.strokeWeight
+      });
+      UIUtils.showNotification('SVG exported successfully!', 'success');
+    }
+
+    function exportPNG() {
+      const filename = ExportUtils.generateFilename('islamic-pattern');
+      ExportUtils.exportPNG(filename);
+      UIUtils.showNotification('PNG exported successfully!', 'success');
+    }
+  </script>
+</body>
+</html>

@@ -6,6 +6,8 @@
     <title>Sound Waveform Visualization</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
+    <script src="../../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../../preset-manager.css">
     <style>
         body {
             margin: 0;
@@ -85,7 +87,10 @@
 <body>
     <div id="controls">
         <h3>Sound Waveform Controls</h3>
-        
+
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
+
         <div id="status" class="status inactive">Microphone Inactive</div>
         
         <div class="control-group">
@@ -170,7 +175,8 @@
         let history = [];
         let recordedPaths = [];
         let isRecording = false;
-        
+        let presetManager;
+
         let params = {
             vizStyle: 'oscilloscope',
             fftBins: 256,
@@ -186,15 +192,71 @@
         
         function setup() {
             createCanvas(windowWidth - 350, windowHeight - 40);
-            
+
             // Initialize audio analysis
             fft = new p5.FFT(params.smoothing, params.fftBins);
             amplitude = new p5.Amplitude();
-            
+
             setupControls();
-            
+
+            // Initialize preset manager
+            presetManager = new PresetManager({
+                algorithmId: 'sound-waveform',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    if (micActive) {
+                        fft.smooth(params.smoothing);
+                    }
+                },
+                onRandomize: () => {
+                    const vizStyles = ['oscilloscope', 'radial', 'spiral', 'waterfall', 'frequency', 'circular'];
+                    params.vizStyle = random(vizStyles);
+                    params.fftBins = random([64, 128, 256, 512, 1024]);
+                    params.freqMin = Math.floor(random(20, 200));
+                    params.freqMax = Math.floor(random(5000, 20000));
+                    params.smoothing = random(0, 0.99);
+                    params.scale = random(0.5, 3);
+                    params.lineWeight = random(1, 5);
+                    params.showPeaks = random() > 0.5;
+                    params.trails = random() > 0.5;
+                    updateUIFromParams();
+                    if (micActive) {
+                        fft = new p5.FFT(params.smoothing, params.fftBins);
+                        fft.setInput(mic);
+                    }
+                }
+            });
+
             // Start with a simple sine wave for testing
             noLoop();
+        }
+
+        // Helper function to update UI from params
+        function updateUIFromParams() {
+            document.getElementById('vizStyle').value = params.vizStyle;
+            document.getElementById('fftBins').value = params.fftBins;
+            document.getElementById('freqMin').value = params.freqMin;
+            document.getElementById('freqMax').value = params.freqMax;
+            document.getElementById('smoothing').value = params.smoothing;
+            document.getElementById('scale').value = params.scale;
+            document.getElementById('lineWeight').value = params.lineWeight;
+            document.getElementById('showPeaks').checked = params.showPeaks;
+            document.getElementById('trails').checked = params.trails;
+            document.getElementById('recording').checked = params.recording;
+
+            // Update value displays
+            document.getElementById('fftBinsValue').textContent = params.fftBins;
+            document.getElementById('freqMinValue').textContent = params.freqMin;
+            document.getElementById('freqMaxValue').textContent = params.freqMax;
+            document.getElementById('smoothingValue').textContent = params.smoothing.toFixed(2);
+            document.getElementById('scaleValue').textContent = params.scale.toFixed(1);
+            document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(1);
+
+            // Clear history when changing styles
+            history = [];
         }
         
         function setupControls() {
