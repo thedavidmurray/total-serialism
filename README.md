@@ -159,7 +159,7 @@ See [IMPROVEMENT-ROADMAP.md](IMPROVEMENT-ROADMAP.md) for detailed plans.
 
 ## Contributing
 
-This is a private repository. Please create feature branches and submit pull requests for any changes.
+This is a personal repository. Please create feature branches and submit pull requests for any changes.
 
 ## License
 
