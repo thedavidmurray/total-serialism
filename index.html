@@ -1,165 +1,418 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Total Serialism Generative Art</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 40px;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            max-width: 800px;
-            text-align: center;
-        }
-        h1 {
-            color: #ffa500;
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-        h2 {
-            color: #ffa500;
-            font-size: 24px;
-            margin-top: 40px;
-        }
-        .subtitle {
-            font-size: 20px;
-            color: #999;
-            margin-bottom: 60px;
-        }
-        .versions {
-            display: flex;
-            gap: 40px;
-            justify-content: center;
-            margin-bottom: 60px;
-        }
-        .version-card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid #333;
-            border-radius: 10px;
-            padding: 30px;
-            width: 300px;
-            transition: all 0.3s;
-        }
-        .version-card:hover {
-            background: rgba(255,255,255,0.1);
-            border-color: #ffa500;
-            transform: translateY(-5px);
-        }
-        .version-card h3 {
-            color: #ffa500;
-            font-size: 28px;
-            margin: 0 0 15px 0;
-        }
-        .version-card p {
-            color: #ccc;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        .features {
-            text-align: left;
-            font-size: 14px;
-            color: #999;
-            margin: 20px 0;
-        }
-        .features li {
-            margin: 5px 0;
-        }
-        .launch-btn {
-            display: inline-block;
-            background: #ffa500;
-            color: #000;
-            text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 5px;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-        .launch-btn:hover {
-            background: #ffb520;
-            transform: translateY(-2px);
-        }
-        .info {
-            background: rgba(255,165,0,0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 40px;
-        }
-        .tech-stack {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
-            flex-wrap: wrap;
-        }
-        .tech {
-            background: rgba(255,255,255,0.1);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Total Serialism - Generative Art & Pen Plotting Tool</title>
+  <meta name="description" content="74 algorithms for creating generative art and pen plotter designs. No installation required.">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 40px;
+      padding: 40px 20px;
+    }
+
+    .header h1 {
+      font-size: 3.5em;
+      margin-bottom: 15px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .header p {
+      font-size: 1.3em;
+      opacity: 0.95;
+      margin-bottom: 10px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .controls {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 250px;
+      padding: 12px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      transition: border-color 0.2s;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    select {
+      padding: 12px 20px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1em;
+      background: white;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 25px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      font-size: 1.3em;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .featured-badge {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75em;
+      font-weight: 600;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85em;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .complexity {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.8em;
+      font-weight: 500;
+      margin-left: 8px;
+    }
+
+    .complexity-beginner { background: #d4edda; color: #155724; }
+    .complexity-intermediate { background: #fff3cd; color: #856404; }
+    .complexity-advanced { background: #f8d7da; color: #721c24; }
+
+    .card p {
+      color: #666;
+      line-height: 1.5;
+      margin-bottom: 15px;
+    }
+
+    .launch-btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+      width: 100%;
+      text-align: center;
+    }
+
+    .launch-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 60px 20px;
+      color: white;
+      font-size: 1.2em;
+    }
+
+    .footer {
+      text-align: center;
+      color: white;
+      padding: 40px 20px;
+      margin-top: 40px;
+    }
+
+    .footer a {
+      color: white;
+      text-decoration: underline;
+      margin: 0 10px;
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2em;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Category colors */
+    .cat-core { background: #e3f2fd; color: #1565c0; }
+    .cat-geometric { background: #f3e5f5; color: #6a1b9a; }
+    .cat-flow-fields { background: #e0f2f1; color: #00695c; }
+    .cat-natural { background: #f1f8e9; color: #558b2f; }
+    .cat-chemical { background: #fff3e0; color: #ef6c00; }
+    .cat-cellular-automata { background: #fce4ec; color: #c2185b; }
+    .cat-advanced { background: #e8eaf6; color: #3949ab; }
+    .cat-lsystems { background: #f1f8e9; color: #689f38; }
+    .cat-image-processing { background: #e1f5fe; color: #0277bd; }
+    .cat-symmetry { background: #f3e5f5; color: #7b1fa2; }
+    .cat-physics { background: #e0f7fa; color: #00838f; }
+    .cat-voronoi { background: #e8f5e9; color: #2e7d32; }
+    .cat-packing { background: #fff9c4; color: #f57f17; }
+    .cat-hybrid { background: #ede7f6; color: #512da8; }
+    .cat-ai { background: #fbe9e7; color: #d84315; }
+    .cat-tools { background: #eceff1; color: #455a64; }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Total Serialism × Generative Art</h1>
-        <p class="subtitle">Algorithmic composition meets visual art</p>
-        
-        <div class="versions">
-            <div class="version-card">
-                <h3>Version 1</h3>
-                <p>Simple & Elegant</p>
-                <ul class="features">
-                    <li>Quick keyboard controls</li>
-                    <li>5 color presets</li>
-                    <li>PNG export</li>
-                    <li>Minimal interface</li>
-                    <li>Perfect for exploration</li>
-                </ul>
-                <a href="total-serialism-fidenza.html" class="launch-btn">Launch V1</a>
-            </div>
-            
-            <div class="version-card">
-                <h3>Version 2</h3>
-                <p>Professional Control</p>
-                <ul class="features">
-                    <li>20+ real-time parameters</li>
-                    <li>SVG & PNG export</li>
-                    <li>Preset save/load system</li>
-                    <li>5 render modes</li>
-                    <li>Advanced control panel</li>
-                </ul>
-                <a href="total-serialism-fidenza-v2.html" class="launch-btn">Launch V2</a>
-            </div>
-        </div>
-        
-        <div class="info">
-            <h2>About This Project</h2>
-            <p>
-                This generative art system uses Total Serialism's algorithmic composition techniques
-                to create Fidenza-inspired flowing artworks. Mathematical patterns from music
-                (Euclidean rhythms, harmonic progressions) drive visual elements.
-            </p>
-            <p style="margin-top: 20px;">
-                Each refresh generates a completely unique A3-sized artwork (297×420mm @ 150 DPI).
-            </p>
-        </div>
-        
-        <div class="tech-stack">
-            <span class="tech">Total Serialism</span>
-            <span class="tech">p5.js</span>
-            <span class="tech">Euclidean Rhythms</span>
-            <span class="tech">Flow Fields</span>
-            <span class="tech">SVG Export</span>
-        </div>
+  <div class="header">
+    <h1>🎨 Generative Art Studio</h1>
+    <p>74 algorithms for creating stunning generative art and pen plotter designs</p>
+    <div class="stats">
+      <span class="stat" id="total-algorithms">74 Algorithms</span>
+      <span class="stat" id="total-categories">15 Categories</span>
+      <span class="stat" id="featured-count">16 Featured</span>
     </div>
+  </div>
+
+  <div class="container">
+    <div class="controls">
+      <div class="search-bar">
+        <input
+          type="search"
+          id="search"
+          class="search-input"
+          placeholder="Search algorithms...">
+
+        <select id="category-filter">
+          <option value="">All Categories</option>
+        </select>
+
+        <select id="complexity-filter">
+          <option value="">All Levels</option>
+          <option value="beginner">Beginner</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="advanced">Advanced</option>
+        </select>
+
+        <select id="sort">
+          <option value="name">Sort: A-Z</option>
+          <option value="complexity">Sort: Complexity</option>
+          <option value="featured">Sort: Featured First</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid" id="algorithm-grid"></div>
+    <div class="no-results" id="no-results" style="display: none;">
+      No algorithms found. Try adjusting your filters.
+    </div>
+  </div>
+
+  <div class="footer">
+    <p>Open source generative art tool • Built with p5.js</p>
+    <p>
+      <a href="https://github.com/thedavidmurray/total-serialism" target="_blank">GitHub</a>
+      <a href="ARCHITECTURE.md">Documentation</a>
+    </p>
+  </div>
+
+  <script>
+    let allAlgorithms = [];
+    let categories = {};
+
+    // Load algorithm catalog
+    fetch('algorithm-catalog.json')
+      .then(response => response.json())
+      .then(data => {
+        categories = data.categories;
+
+        // Update stats
+        document.getElementById('total-algorithms').textContent =
+          `${data.stats.totalAlgorithms} Algorithms`;
+        document.getElementById('total-categories').textContent =
+          `${data.stats.totalCategories} Categories`;
+        document.getElementById('featured-count').textContent =
+          `${data.stats.featuredCount} Featured`;
+
+        // Flatten algorithms with category info
+        Object.keys(categories).forEach(catKey => {
+          const category = categories[catKey];
+          category.algorithms.forEach(algo => {
+            allAlgorithms.push({
+              ...algo,
+              categoryKey: catKey,
+              categoryName: category.name,
+              categoryIcon: category.icon
+            });
+          });
+        });
+
+        // Populate category filter
+        const categoryFilter = document.getElementById('category-filter');
+        Object.keys(categories).forEach(catKey => {
+          const option = document.createElement('option');
+          option.value = catKey;
+          option.textContent = `${categories[catKey].icon} ${categories[catKey].name}`;
+          categoryFilter.appendChild(option);
+        });
+
+        renderAlgorithms();
+      })
+      .catch(error => {
+        console.error('Error loading catalog:', error);
+        document.getElementById('no-results').style.display = 'block';
+        document.getElementById('no-results').textContent =
+          'Error loading algorithms. Please refresh the page.';
+      });
+
+    // Event listeners
+    document.getElementById('search').addEventListener('input', renderAlgorithms);
+    document.getElementById('category-filter').addEventListener('change', renderAlgorithms);
+    document.getElementById('complexity-filter').addEventListener('change', renderAlgorithms);
+    document.getElementById('sort').addEventListener('change', renderAlgorithms);
+
+    function renderAlgorithms() {
+      const search = document.getElementById('search').value.toLowerCase();
+      const categoryFilter = document.getElementById('category-filter').value;
+      const complexityFilter = document.getElementById('complexity-filter').value;
+      const sort = document.getElementById('sort').value;
+
+      // Filter
+      let filtered = allAlgorithms.filter(algo => {
+        const matchesSearch = !search ||
+          algo.name.toLowerCase().includes(search) ||
+          algo.description.toLowerCase().includes(search);
+
+        const matchesCategory = !categoryFilter || algo.categoryKey === categoryFilter;
+        const matchesComplexity = !complexityFilter || algo.complexity === complexityFilter;
+
+        return matchesSearch && matchesCategory && matchesComplexity;
+      });
+
+      // Sort
+      if (sort === 'name') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sort === 'complexity') {
+        const complexityOrder = { beginner: 1, intermediate: 2, advanced: 3 };
+        filtered.sort((a, b) =>
+          complexityOrder[a.complexity || 'intermediate'] -
+          complexityOrder[b.complexity || 'intermediate']
+        );
+      } else if (sort === 'featured') {
+        filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
+      }
+
+      const grid = document.getElementById('algorithm-grid');
+      const noResults = document.getElementById('no-results');
+
+      if (filtered.length === 0) {
+        grid.style.display = 'none';
+        noResults.style.display = 'block';
+      } else {
+        grid.style.display = 'grid';
+        noResults.style.display = 'none';
+
+        grid.innerHTML = filtered.map(algo => {
+          const catClass = `cat-${algo.categoryKey}`;
+          const complexityClass = `complexity-${algo.complexity || 'intermediate'}`;
+
+          return `
+            <div class="card" onclick="window.location.href='${algo.path}'">
+              <div class="card-header">
+                <div>
+                  <span class="category-badge ${catClass}">
+                    ${algo.categoryIcon} ${algo.categoryName}
+                  </span>
+                  <span class="complexity ${complexityClass}">
+                    ${algo.complexity || 'intermediate'}
+                  </span>
+                </div>
+                ${algo.featured ? '<span class="featured-badge">⭐ Featured</span>' : ''}
+              </div>
+              <h3>${algo.name}</h3>
+              <p>${algo.description}</p>
+              <a href="${algo.path}" class="launch-btn" onclick="event.stopPropagation()">
+                Launch Algorithm →
+              </a>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+  </script>
 </body>
 </html>
