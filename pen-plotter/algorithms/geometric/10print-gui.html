@@ -5,7 +5,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-  <script src="../../src/utils/gif-exporter.js"></script>
   <script src="../../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
@@ -22,6 +21,10 @@
       justify-content: center;
       align-items: center;
       background: #2a2a2a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
     }
     #controls {
       width: 320px;
@@ -233,7 +236,6 @@
 
     let grid = [];
     let svgCanvas;
-    let gifExporter;
     let animationFrame = 0;
     let isAnimating = false;
     let presetManager;
@@ -245,39 +247,6 @@
       
       svgCanvas = createCanvas(w, h, SVG);
       svgCanvas.parent('canvas-container');
-      
-      // Initialize GIF exporter
-      gifExporter = new GifExporter({
-        fps: 30,
-        duration: 3,
-        quality: 10,
-        width: w,
-        height: h,
-        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
-      });
-      
-      gifExporter.init(svgCanvas.canvas, {
-        onProgress: (data) => {
-          let statusText = data.phase === 'recording' 
-            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
-            : `Encoding: ${Math.round(data.progress * 100)}%`;
-          document.getElementById('gif-status').textContent = statusText;
-          document.getElementById('gif-progress-bar').style.width = 
-            (data.progress * 100) + '%';
-        },
-        onComplete: (result) => {
-          document.getElementById('gif-progress').style.display = 'none';
-          document.getElementById('gif-record-text').textContent = 'Record GIF';
-          isAnimating = false;
-          noLoop();
-          
-          // Auto-download
-          const link = document.createElement('a');
-          link.href = result.url;
-          link.download = `10print-${params.variation}-${Date.now()}.gif`;
-          link.click();
-        }
-      });
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -404,19 +373,11 @@
         }
         
         animationFrame++;
-        
-        // Capture frame for GIF
-        if (gifExporter && gifExporter.isRecording()) {
-          gifExporter.captureFrame();
-        }
-        
+
         // Stop when complete
         if (currentCell >= totalCells) {
-          setTimeout(() => {
-            if (gifExporter && gifExporter.isRecording()) {
-              gifExporter.stop();
-            }
-          }, 500);
+          isAnimating = false;
+          noLoop();
         }
       } else {
         // Draw all cells at once
@@ -585,23 +546,7 @@
     }
     
     function toggleGifRecording() {
-      if (gifExporter && gifExporter.isRecording()) {
-        gifExporter.stop();
-        document.getElementById('gif-record-text').textContent = 'Record GIF';
-        isAnimating = false;
-        noLoop();
-      } else if (gifExporter) {
-        document.getElementById('gif-progress').style.display = 'block';
-        document.getElementById('gif-record-text').textContent = 'Stop Recording';
-        
-        // Reset and start animation
-        animationFrame = 0;
-        isAnimating = true;
-        regenerate();
-        loop();
-        
-        gifExporter.start();
-      }
+      alert('GIF recording feature coming soon! Use PNG export for now.');
     }
   </script>
 </body>

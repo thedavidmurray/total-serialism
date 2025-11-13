@@ -19,6 +19,10 @@
       justify-content: center;
       align-items: center;
       background: #2a2a2a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
     }
     #controls {
       width: 320px;
@@ -245,9 +249,14 @@
       
       svgCanvas = createCanvas(w, h, SVG);
       svgCanvas.parent('canvas-container');
-      
+
       setupControls();
       regenerate();
+
+      // Force initial render for SVG mode
+      if (!params.animateNoise) {
+        redraw();
+      }
     }
     
     function setupControls() {
