@@ -6,6 +6,32 @@
   <title>Total Serialism Graphic Design Studio</title>
   <meta name="description" content="Algorithmic composition meets graphic design. 74 algorithms for creating stunning generative art and pen plotter designs. No installation required.">
   <style>
+    :root {
+      --bg-gradient-start: #667eea;
+      --bg-gradient-end: #764ba2;
+      --text-primary: #333;
+      --text-secondary: #666;
+      --text-header: white;
+      --card-bg: white;
+      --control-bg: white;
+      --control-border: #e0e0e0;
+      --shadow: rgba(0, 0, 0, 0.1);
+      --shadow-hover: rgba(0, 0, 0, 0.15);
+    }
+
+    body.dark-mode {
+      --bg-gradient-start: #1a1a2e;
+      --bg-gradient-end: #16213e;
+      --text-primary: #e0e0e0;
+      --text-secondary: #b0b0b0;
+      --text-header: #f0f0f0;
+      --card-bg: #2a2a3e;
+      --control-bg: #2a2a3e;
+      --control-border: #444;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --shadow-hover: rgba(0, 0, 0, 0.5);
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -14,17 +40,51 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
       min-height: 100vh;
       padding: 20px;
-      color: #333;
+      color: var(--text-primary);
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .header {
       text-align: center;
-      color: white;
+      color: var(--text-header);
       margin-bottom: 40px;
       padding: 40px 20px;
+      position: relative;
+    }
+
+    .header-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2em;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+      transform: scale(1.1);
+    }
+
+    .icon-btn.active {
+      background: rgba(255, 255, 255, 0.4);
     }
 
     .header h1 {
@@ -60,11 +120,12 @@
     }
 
     .controls {
-      background: white;
+      background: var(--card-bg);
       border-radius: 12px;
       padding: 20px;
       margin-bottom: 30px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 10px 40px var(--shadow);
+      transition: background 0.3s ease;
     }
 
     .search-bar {
@@ -78,10 +139,12 @@
       flex: 1;
       min-width: 250px;
       padding: 12px 20px;
-      border: 2px solid #e0e0e0;
+      border: 2px solid var(--control-border);
       border-radius: 8px;
       font-size: 1em;
       transition: border-color 0.2s;
+      background: var(--control-bg);
+      color: var(--text-primary);
     }
 
     .search-input:focus {
@@ -91,10 +154,11 @@
 
     select {
       padding: 12px 20px;
-      border: 2px solid #e0e0e0;
+      border: 2px solid var(--control-border);
       border-radius: 8px;
       font-size: 1em;
-      background: white;
+      background: var(--control-bg);
+      color: var(--text-primary);
       cursor: pointer;
     }
 
@@ -105,11 +169,16 @@
       margin-bottom: 40px;
     }
 
+    .grid.rows-view {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+
     .card {
-      background: white;
+      background: var(--card-bg);
       border-radius: 12px;
       padding: 25px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 15px var(--shadow);
       transition: all 0.3s ease;
       cursor: pointer;
       position: relative;
@@ -117,7 +186,49 @@
 
     .card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 8px 25px var(--shadow-hover);
+    }
+
+    /* Rows view styling */
+    .rows-view .card {
+      display: flex;
+      align-items: center;
+      padding: 15px 20px;
+      gap: 20px;
+    }
+
+    .rows-view .card:hover {
+      transform: translateY(0);
+      transform: translateX(5px);
+    }
+
+    .rows-view .card-header {
+      margin-bottom: 0;
+      flex-shrink: 0;
+    }
+
+    .rows-view .card-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .rows-view .card h3 {
+      margin-bottom: 0;
+      min-width: 200px;
+    }
+
+    .rows-view .card p {
+      margin-bottom: 0;
+      flex: 1;
+      font-size: 0.9em;
+    }
+
+    .rows-view .launch-btn {
+      width: auto;
+      padding: 8px 20px;
+      white-space: nowrap;
     }
 
     .card-header {
@@ -129,7 +240,7 @@
 
     .card h3 {
       font-size: 1.3em;
-      color: #333;
+      color: var(--text-primary);
       margin-bottom: 8px;
     }
 
@@ -165,7 +276,7 @@
     .complexity-advanced { background: #f8d7da; color: #721c24; }
 
     .card p {
-      color: #666;
+      color: var(--text-secondary);
       line-height: 1.5;
       margin-bottom: 15px;
     }
@@ -191,19 +302,19 @@
     .no-results {
       text-align: center;
       padding: 60px 20px;
-      color: white;
+      color: var(--text-header);
       font-size: 1.2em;
     }
 
     .footer {
       text-align: center;
-      color: white;
+      color: var(--text-header);
       padding: 40px 20px;
       margin-top: 40px;
     }
 
     .footer a {
-      color: white;
+      color: var(--text-header);
       text-decoration: underline;
       margin: 0 10px;
     }
@@ -213,8 +324,27 @@
         font-size: 2em;
       }
 
+      .header-controls {
+        position: static;
+        justify-content: center;
+        margin-bottom: 20px;
+      }
+
       .grid {
         grid-template-columns: 1fr;
+      }
+
+      .rows-view .card {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .rows-view .card h3 {
+        min-width: auto;
+      }
+
+      .rows-view .launch-btn {
+        width: 100%;
       }
     }
 
@@ -239,6 +369,15 @@
 </head>
 <body>
   <div class="header">
+    <div class="header-controls">
+      <button class="icon-btn" id="view-toggle" title="Toggle view">
+        <span id="view-icon">☰</span>
+      </button>
+      <button class="icon-btn" id="dark-mode-toggle" title="Toggle dark mode">
+        <span id="theme-icon">🌙</span>
+      </button>
+    </div>
+
     <h1>Total Serialism Graphic Design Studio</h1>
     <p>Algorithmic composition meets graphic design</p>
     <div class="stats">
@@ -270,7 +409,10 @@
 
         <select id="sort">
           <option value="name">Sort: A-Z</option>
-          <option value="complexity">Sort: Complexity</option>
+          <option value="name-desc">Sort: Z-A</option>
+          <option value="complexity">Sort: Complexity ↑</option>
+          <option value="complexity-desc">Sort: Complexity ↓</option>
+          <option value="category">Sort: Category</option>
           <option value="featured">Sort: Featured First</option>
         </select>
       </div>
@@ -293,6 +435,38 @@
   <script>
     let allAlgorithms = [];
     let categories = {};
+    let currentView = localStorage.getItem('view') || 'cards';
+    let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+    // Initialize theme
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+      document.getElementById('theme-icon').textContent = '☀️';
+    }
+
+    // Initialize view
+    if (currentView === 'rows') {
+      document.getElementById('algorithm-grid').classList.add('rows-view');
+      document.getElementById('view-icon').textContent = '⊞';
+    }
+
+    // Dark mode toggle
+    document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark-mode');
+      document.getElementById('theme-icon').textContent = isDarkMode ? '☀️' : '🌙';
+      localStorage.setItem('darkMode', isDarkMode);
+    });
+
+    // View toggle
+    document.getElementById('view-toggle').addEventListener('click', () => {
+      currentView = currentView === 'cards' ? 'rows' : 'cards';
+      const grid = document.getElementById('algorithm-grid');
+      grid.classList.toggle('rows-view');
+      document.getElementById('view-icon').textContent = currentView === 'rows' ? '⊞' : '☰';
+      localStorage.setItem('view', currentView);
+      renderAlgorithms();
+    });
 
     // Load algorithm catalog
     fetch('algorithm-catalog.json')
@@ -366,12 +540,22 @@
       // Sort
       if (sort === 'name') {
         filtered.sort((a, b) => a.name.localeCompare(b.name));
+      } else if (sort === 'name-desc') {
+        filtered.sort((a, b) => b.name.localeCompare(a.name));
       } else if (sort === 'complexity') {
         const complexityOrder = { beginner: 1, intermediate: 2, advanced: 3 };
         filtered.sort((a, b) =>
           complexityOrder[a.complexity || 'intermediate'] -
           complexityOrder[b.complexity || 'intermediate']
         );
+      } else if (sort === 'complexity-desc') {
+        const complexityOrder = { beginner: 1, intermediate: 2, advanced: 3 };
+        filtered.sort((a, b) =>
+          complexityOrder[b.complexity || 'intermediate'] -
+          complexityOrder[a.complexity || 'intermediate']
+        );
+      } else if (sort === 'category') {
+        filtered.sort((a, b) => a.categoryName.localeCompare(b.categoryName));
       } else if (sort === 'featured') {
         filtered.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
       }
@@ -390,26 +574,53 @@
           const catClass = `cat-${algo.categoryKey}`;
           const complexityClass = `complexity-${algo.complexity || 'intermediate'}`;
 
-          return `
-            <div class="card" onclick="window.location.href='${algo.path}'">
-              <div class="card-header">
-                <div>
-                  <span class="category-badge ${catClass}">
-                    ${algo.categoryIcon} ${algo.categoryName}
-                  </span>
-                  <span class="complexity ${complexityClass}">
-                    ${algo.complexity || 'intermediate'}
-                  </span>
+          if (currentView === 'rows') {
+            // Rows view
+            return `
+              <div class="card" onclick="window.location.href='${algo.path}'">
+                <div class="card-content">
+                  <div class="card-header">
+                    <div>
+                      <span class="category-badge ${catClass}">
+                        ${algo.categoryIcon} ${algo.categoryName}
+                      </span>
+                      <span class="complexity ${complexityClass}">
+                        ${algo.complexity || 'intermediate'}
+                      </span>
+                      ${algo.featured ? '<span class="featured-badge">⭐</span>' : ''}
+                    </div>
+                  </div>
+                  <h3>${algo.name}</h3>
+                  <p>${algo.description}</p>
+                  <a href="${algo.path}" class="launch-btn" onclick="event.stopPropagation()">
+                    Launch →
+                  </a>
                 </div>
-                ${algo.featured ? '<span class="featured-badge">⭐ Featured</span>' : ''}
               </div>
-              <h3>${algo.name}</h3>
-              <p>${algo.description}</p>
-              <a href="${algo.path}" class="launch-btn" onclick="event.stopPropagation()">
-                Launch Algorithm →
-              </a>
-            </div>
-          `;
+            `;
+          } else {
+            // Cards view
+            return `
+              <div class="card" onclick="window.location.href='${algo.path}'">
+                <div class="card-header">
+                  <div>
+                    <span class="category-badge ${catClass}">
+                      ${algo.categoryIcon} ${algo.categoryName}
+                    </span>
+                    <span class="complexity ${complexityClass}">
+                      ${algo.complexity || 'intermediate'}
+                    </span>
+                  </div>
+                  ${algo.featured ? '<span class="featured-badge">⭐ Featured</span>' : ''}
+                </div>
+                <h3>${algo.name}</h3>
+                <p>${algo.description}</p>
+                <a href="${algo.path}" class="launch-btn" onclick="event.stopPropagation()">
+                  Launch Algorithm →
+                </a>
+              </div>
+            `;
+          }
         }).join('');
       }
     }
