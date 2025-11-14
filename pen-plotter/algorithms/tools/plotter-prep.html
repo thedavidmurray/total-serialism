@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plotter Prep - Layer Splitting & Path Optimization</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../../../path-optimizer.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: white;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .panel h3 {
+      margin-bottom: 16px;
+      color: #333;
+      font-size: 1.1em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 8px;
+    }
+
+    .upload-area {
+      border: 3px dashed #667eea;
+      border-radius: 12px;
+      padding: 40px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 20px;
+      background: #f8f9fa;
+    }
+
+    .upload-area:hover {
+      background: #e3f2fd;
+      border-color: #764ba2;
+    }
+
+    .upload-area.dragover {
+      background: #bbdefb;
+      border-color: #1565c0;
+    }
+
+    .upload-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+
+    .upload-text {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    button.secondary {
+      background: #6c757d;
+    }
+
+    button.secondary:hover {
+      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
+
+    .layers-list {
+      margin-top: 16px;
+    }
+
+    .layer-item {
+      background: #f8f9fa;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.2s;
+    }
+
+    .layer-item:hover {
+      background: #e9ecef;
+    }
+
+    .layer-color {
+      width: 30px;
+      height: 30px;
+      border-radius: 4px;
+      border: 2px solid #ddd;
+      flex-shrink: 0;
+    }
+
+    .layer-info {
+      flex: 1;
+    }
+
+    .layer-name {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9em;
+    }
+
+    .layer-stats {
+      font-size: 0.75em;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .layer-checkbox {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat-box {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.75em;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-size: 1.5em;
+      font-weight: 600;
+      color: #667eea;
+      margin-top: 4px;
+    }
+
+    .canvas-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 600px;
+    }
+
+    .preview-placeholder {
+      text-align: center;
+      color: #999;
+    }
+
+    .preview-placeholder-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .checkbox-group label {
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+    }
+
+    .section {
+      margin-bottom: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .status-message {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      font-size: 0.9em;
+      text-align: center;
+      display: none;
+    }
+
+    .status-message.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status-message.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    .status-message.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛠️ Plotter Prep</h1>
+    <p class="subtitle">Upload SVG files to split layers, optimize paths, and prepare for plotting</p>
+
+    <div class="main-content">
+      <!-- Controls Panel -->
+      <div class="panel">
+        <div id="status-message" class="status-message"></div>
+
+        <!-- Upload Section -->
+        <div class="section">
+          <h3>📁 Upload SVG</h3>
+          <div id="upload-area" class="upload-area">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Drop SVG file here or click to browse</div>
+            <input type="file" id="file-input" accept=".svg,image/svg+xml">
+          </div>
+        </div>
+
+        <!-- Layers Section -->
+        <div class="section">
+          <h3>🎨 Layers</h3>
+          <div id="layers-list" class="layers-list"></div>
+        </div>
+
+        <!-- Optimization Options -->
+        <div class="section">
+          <h3>⚙️ Optimization</h3>
+          <div class="checkbox-group">
+            <input type="checkbox" id="opt-merge" checked>
+            <label for="opt-merge">Merge connected paths</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="opt-sort" checked>
+            <label for="opt-sort">Sort paths (TSP)</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="opt-reloop" checked>
+            <label for="opt-reloop">Reloop (prevent ink blots)</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="opt-simplify" checked>
+            <label for="opt-simplify">Simplify paths</label>
+          </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="section">
+          <h3>📊 Statistics</h3>
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-label">Paths</div>
+              <div class="stat-value" id="stat-paths">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Points</div>
+              <div class="stat-value" id="stat-points">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Travel (mm)</div>
+              <div class="stat-value" id="stat-travel">-</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Time Saved</div>
+              <div class="stat-value" id="stat-time">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="section">
+          <h3>💾 Export</h3>
+          <button id="btn-optimize" disabled>Optimize Selected Layers</button>
+          <button id="btn-export-svg" class="secondary" disabled>Export SVG</button>
+          <button id="btn-export-layers" class="secondary" disabled>Export Separate Layers</button>
+        </div>
+      </div>
+
+      <!-- Canvas Panel -->
+      <div class="canvas-panel" id="canvas-panel">
+        <div class="preview-placeholder">
+          <div class="preview-placeholder-icon">🎨</div>
+          <div>Upload an SVG file to begin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let svgData = null;
+    let layers = [];
+    let optimizer = new PathOptimizer();
+    let canvas;
+
+    // Setup file upload
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        loadSVGFile(e.target.files[0]);
+      }
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+
+      if (e.dataTransfer.files.length > 0) {
+        loadSVGFile(e.dataTransfer.files[0]);
+      }
+    });
+
+    function loadSVGFile(file) {
+      if (!file.type.match('svg.*') && !file.name.endsWith('.svg')) {
+        showStatus('Please upload an SVG file', 'error');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        parseSVG(e.target.result);
+      };
+      reader.readAsText(file);
+    }
+
+    function parseSVG(svgText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgText, 'image/svg+xml');
+      const svg = doc.documentElement;
+
+      if (svg.tagName !== 'svg') {
+        showStatus('Invalid SVG file', 'error');
+        return;
+      }
+
+      svgData = svgText;
+      layers = [];
+
+      // Extract layers by color/stroke
+      const pathElements = svg.querySelectorAll('path, line, polyline, polygon, rect, circle, ellipse');
+      const colorMap = new Map();
+
+      pathElements.forEach(el => {
+        const stroke = el.getAttribute('stroke') || el.style.stroke || '#000000';
+        const fill = el.getAttribute('fill') || el.style.fill || 'none';
+        const color = stroke !== 'none' ? stroke : fill;
+
+        if (!colorMap.has(color)) {
+          colorMap.set(color, []);
+        }
+        colorMap.get(color).push(el);
+      });
+
+      // Create layers from colors
+      let layerIndex = 0;
+      colorMap.forEach((elements, color) => {
+        layers.push({
+          id: layerIndex++,
+          color: color,
+          name: `Layer ${layerIndex} (${color})`,
+          elements: elements,
+          pathCount: elements.length,
+          enabled: true
+        });
+      });
+
+      renderLayers();
+      renderPreview();
+      updateStats();
+      showStatus(`Loaded ${layers.length} layers with ${pathElements.length} paths`, 'success');
+
+      // Enable buttons
+      document.getElementById('btn-optimize').disabled = false;
+      document.getElementById('btn-export-svg').disabled = false;
+      document.getElementById('btn-export-layers').disabled = false;
+    }
+
+    function renderLayers() {
+      const layersList = document.getElementById('layers-list');
+
+      if (layers.length === 0) {
+        layersList.innerHTML = '<p style="color: #999; text-align: center;">No layers loaded</p>';
+        return;
+      }
+
+      layersList.innerHTML = layers.map(layer => `
+        <div class="layer-item">
+          <input type="checkbox" class="layer-checkbox"
+                 data-layer-id="${layer.id}"
+                 ${layer.enabled ? 'checked' : ''}>
+          <div class="layer-color" style="background: ${layer.color}"></div>
+          <div class="layer-info">
+            <div class="layer-name">${layer.name}</div>
+            <div class="layer-stats">${layer.pathCount} paths</div>
+          </div>
+        </div>
+      `).join('');
+
+      // Add event listeners to checkboxes
+      document.querySelectorAll('.layer-checkbox').forEach(cb => {
+        cb.addEventListener('change', (e) => {
+          const layerId = parseInt(e.target.dataset.layerId);
+          const layer = layers.find(l => l.id === layerId);
+          if (layer) {
+            layer.enabled = e.target.checked;
+            renderPreview();
+            updateStats();
+          }
+        });
+      });
+    }
+
+    function renderPreview() {
+      const canvasPanel = document.getElementById('canvas-panel');
+
+      if (!svgData || layers.length === 0) {
+        canvasPanel.innerHTML = `
+          <div class="preview-placeholder">
+            <div class="preview-placeholder-icon">🎨</div>
+            <div>Upload an SVG file to begin</div>
+          </div>
+        `;
+        return;
+      }
+
+      // Create a preview using p5.js would be complex
+      // For now, show the SVG directly
+      const enabledLayers = layers.filter(l => l.enabled);
+      canvasPanel.innerHTML = `<div style="max-width: 100%; max-height: 100%; overflow: auto;">
+        <p style="text-align: center; color: #666; margin-bottom: 10px;">Preview (${enabledLayers.length} layers enabled)</p>
+        <div style="background: white; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
+          ${svgData}
+        </div>
+      </div>`;
+    }
+
+    function updateStats() {
+      const enabledLayers = layers.filter(l => l.enabled);
+      const totalPaths = enabledLayers.reduce((sum, l) => sum + l.pathCount, 0);
+
+      document.getElementById('stat-paths').textContent = totalPaths;
+      document.getElementById('stat-points').textContent = '-';
+      document.getElementById('stat-travel').textContent = '-';
+      document.getElementById('stat-time').textContent = '-';
+    }
+
+    function showStatus(message, type = 'info') {
+      const statusEl = document.getElementById('status-message');
+      statusEl.textContent = message;
+      statusEl.className = `status-message ${type}`;
+      statusEl.style.display = 'block';
+
+      if (type !== 'error') {
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Button handlers
+    document.getElementById('btn-optimize').addEventListener('click', () => {
+      showStatus('Optimization feature coming soon!', 'info');
+    });
+
+    document.getElementById('btn-export-svg').addEventListener('click', () => {
+      if (!svgData) return;
+
+      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `plotter-prep-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showStatus('SVG exported successfully', 'success');
+    });
+
+    document.getElementById('btn-export-layers').addEventListener('click', () => {
+      showStatus('Export separate layers feature coming soon!', 'info');
+    });
+  </script>
+</body>
+</html>

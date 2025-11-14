@@ -293,6 +293,17 @@
     .complexity-intermediate { background: #fff3cd; color: #856404; }
     .complexity-advanced { background: #f8d7da; color: #721c24; }
 
+    .tag-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 8px;
+      font-size: 0.7em;
+      font-weight: 600;
+      margin-left: 4px;
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
     .card p {
       color: var(--text-secondary);
       line-height: 1.5;
@@ -608,6 +619,10 @@
           const catClass = `cat-${algo.categoryKey}`;
           const complexityClass = `complexity-${algo.complexity || 'intermediate'}`;
 
+          const tagsHTML = algo.tags ? algo.tags.map(tag =>
+            `<span class="tag-badge" title="${tag}">🏷️ ${tag}</span>`
+          ).join(' ') : '';
+
           if (currentView === 'rows') {
             // Rows view
             return `
@@ -622,6 +637,7 @@
                         ${algo.complexity || 'intermediate'}
                       </span>
                       ${algo.featured ? '<span class="featured-badge">⭐</span>' : ''}
+                      ${tagsHTML}
                     </div>
                   </div>
                   <h3>${algo.name}</h3>
@@ -644,6 +660,7 @@
                     <span class="complexity ${complexityClass}" onclick="event.stopPropagation(); filterByComplexity('${algo.complexity || 'intermediate'}')" title="Filter by ${algo.complexity || 'intermediate'}">
                       ${algo.complexity || 'intermediate'}
                     </span>
+                    ${tagsHTML}
                   </div>
                   ${algo.featured ? '<span class="featured-badge">⭐ Featured</span>' : ''}
                 </div>

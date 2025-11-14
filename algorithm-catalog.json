@@ -43,7 +43,8 @@
           "description": "Weighted point distribution with Lloyd's relaxation for TSP art",
           "path": "pen-plotter/algorithms/voronoi/voronoi-stippling-gui.html",
           "featured": true,
-          "complexity": "intermediate"
+          "complexity": "intermediate",
+          "tags": ["image-upload"]
         },
         {
           "id": "tsp-art",
@@ -51,7 +52,8 @@
           "description": "Traveling Salesman Problem solver for continuous single-line drawings",
           "path": "pen-plotter/algorithms/voronoi/tsp-art-gui.html",
           "featured": true,
-          "complexity": "intermediate"
+          "complexity": "intermediate",
+          "tags": ["image-upload"]
         }
       ]
     },
@@ -66,7 +68,8 @@
           "description": "Pack circles without overlapping for organic patterns",
           "path": "pen-plotter/algorithms/packing/circle-packing-gui.html",
           "featured": true,
-          "complexity": "intermediate"
+          "complexity": "intermediate",
+          "tags": ["image-upload"]
         }
       ]
     },
@@ -394,21 +397,25 @@
           "name": "Halftone",
           "description": "Convert images to halftone circle patterns",
           "path": "pen-plotter/algorithms/image-processing/halftone.html",
-          "complexity": "intermediate"
+          "complexity": "intermediate",
+          "tags": ["image-upload"],
+          "featured": true
         },
         {
           "id": "hatching",
           "name": "Hatching",
           "description": "Convert images to cross-hatching patterns",
           "path": "pen-plotter/algorithms/image-processing/hatching.html",
-          "complexity": "intermediate"
+          "complexity": "intermediate",
+          "tags": ["image-upload"]
         },
         {
           "id": "squigglecam",
           "name": "SquiggleCam",
           "description": "Convert images to flowing squiggly lines",
           "path": "pen-plotter/algorithms/image-processing/squigglecam.html",
-          "complexity": "intermediate"
+          "complexity": "intermediate",
+          "tags": ["image-upload"]
         }
       ]
     },
@@ -496,7 +503,8 @@
           "name": "ML5 Pattern Generator",
           "description": "AI-powered pattern generation using ML5",
           "path": "pen-plotter/algorithms/ai/ml5-patterns-gui.html",
-          "complexity": "advanced"
+          "complexity": "advanced",
+          "tags": ["image-upload"]
         }
       ]
     },
@@ -541,13 +549,22 @@
           "description": "Texture and hatching pattern library",
           "path": "pen-plotter/algorithms/textures/hatching-demo.html",
           "complexity": "intermediate"
+        },
+        {
+          "id": "plotter-prep",
+          "name": "Plotter Prep",
+          "description": "Upload SVG files to split layers, optimize paths, and prep for plotting",
+          "path": "pen-plotter/algorithms/tools/plotter-prep.html",
+          "featured": true,
+          "complexity": "beginner",
+          "tags": ["image-upload", "file-upload"]
         }
       ]
     }
   },
   "stats": {
-    "totalAlgorithms": 74,
+    "totalAlgorithms": 75,
     "totalCategories": 15,
-    "featuredCount": 16
+    "featuredCount": 18
   }
 }
