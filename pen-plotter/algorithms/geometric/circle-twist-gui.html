@@ -463,40 +463,40 @@
     function draw() {
       background(255);
       translate(width/2, height/2);
-      
+
       if (params.animateTwist) {
         animationTime += params.animationSpeed;
       }
-      
+
       // Apply twist center offset
       const centerOffsetX = (params.twistCenterX / 100) * width;
       const centerOffsetY = (params.twistCenterY / 100) * height;
       translate(centerOffsetX, centerOffsetY);
-      
+
       // Draw each layer
       layers.forEach((layer, layerIndex) => {
         push();
-        
+
         // Apply twist rotation
         const totalTwist = layer.twistOffset + (params.animateTwist ? sin(animationTime) * PI / 4 : 0);
         rotate(totalTwist);
-        
+
         // Apply styling
-        applyLayerStyle(layerIndex, params.layerCount);
+        const layerColor = applyLayerStyle(layerIndex, params.layerCount);
         strokeWeight(layer.strokeWeight);
         noFill();
-        
+
         // Set opacity
         const alpha = map(params.opacity, 0, 100, 0, 255);
-        stroke(red(g.strokeColor), green(g.strokeColor), blue(g.strokeColor), alpha);
-        
+        stroke(red(layerColor), green(layerColor), blue(layerColor), alpha);
+
         // Draw the layer shape
         beginShape();
         layer.points.forEach(point => {
           vertex(point.x, point.y);
         });
         endShape(CLOSE);
-        
+
         // Show center point if enabled
         if (params.showCenterPoint) {
           push();
@@ -505,7 +505,7 @@
           ellipse(0, 0, 3);
           pop();
         }
-        
+
         pop();
       });
       
@@ -536,38 +536,38 @@
     }
     
     function applyLayerStyle(index, total) {
-      const g = drawingContext;
-      
+      let strokeColor;
+
       switch (params.colorMode) {
         case 'mono':
-          g.strokeColor = color(0);
+          strokeColor = color(0);
           break;
-          
+
         case 'gradient':
           const gray = map(index, 0, total - 1, 0, 200);
-          g.strokeColor = color(gray);
+          strokeColor = color(gray);
           break;
-          
+
         case 'alternating':
-          g.strokeColor = index % 2 === 0 ? color(0) : color(100, 100, 200);
+          strokeColor = index % 2 === 0 ? color(0) : color(100, 100, 200);
           break;
-          
+
         case 'rainbow':
           colorMode(HSB);
-          g.strokeColor = color(map(index, 0, total, 0, 360), 80, 80);
+          strokeColor = color(map(index, 0, total, 0, 360), 80, 80);
           colorMode(RGB);
           break;
-          
+
         case 'depth':
           const depth = map(index, 0, total - 1, 255, 50);
-          g.strokeColor = color(depth, depth * 0.8, depth * 0.6);
+          strokeColor = color(depth, depth * 0.8, depth * 0.6);
           break;
-          
+
         default:
-          g.strokeColor = color(0);
+          strokeColor = color(0);
       }
-      
-      stroke(g.strokeColor);
+
+      return strokeColor;
     }
     
     function randomSeed() {

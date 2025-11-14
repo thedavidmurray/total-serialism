@@ -296,16 +296,13 @@
       const canvasSize = parseInt(document.getElementById('canvasSize').value);
       canvas = createCanvas(canvasSize, canvasSize);
       canvas.parent('canvas-wrapper');
-      
+
       // Initialize SVG canvas for export
       svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
-      
+
       background(255);
       strokeWeight(1);
       noFill();
-      
-      // Setup image upload
-      setupImageUpload();
     }
 
     function draw() {
@@ -739,6 +736,9 @@
     // Checkbox handlers
     document.getElementById('showOriginal').addEventListener('change', () => redraw());
     document.getElementById('showHalftone').addEventListener('change', () => redraw());
+
+    // Setup image upload - moved outside p5.js setup() for reliability
+    setupImageUpload();
   </script>
 </body>
 </html>
