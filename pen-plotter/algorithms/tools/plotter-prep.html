@@ -39,7 +39,7 @@
 
     .main-content {
       display: grid;
-      grid-template-columns: 350px 1fr;
+      grid-template-columns: 380px 1fr;
       gap: 20px;
       align-items: start;
     }
@@ -95,6 +95,11 @@
       margin-bottom: 10px;
     }
 
+    .upload-hint {
+      color: #999;
+      font-size: 12px;
+    }
+
     input[type="file"] {
       display: none;
     }
@@ -113,7 +118,7 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    button:hover {
+    button:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
@@ -128,12 +133,21 @@
       background: #6c757d;
     }
 
-    button.secondary:hover {
+    button.secondary:hover:not(:disabled) {
       box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    }
+
+    button.small {
+      padding: 6px 12px;
+      font-size: 0.85em;
+      width: auto;
+      margin: 0;
     }
 
     .layers-list {
       margin-top: 16px;
+      max-height: 300px;
+      overflow-y: auto;
     }
 
     .layer-item {
@@ -151,22 +165,58 @@
       background: #e9ecef;
     }
 
+    .layer-item.optimized {
+      border: 2px solid #28a745;
+      background: #d4edda;
+    }
+
     .layer-color {
       width: 30px;
       height: 30px;
       border-radius: 4px;
       border: 2px solid #ddd;
       flex-shrink: 0;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .layer-color:hover::after {
+      content: '🎨';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 16px;
     }
 
     .layer-info {
       flex: 1;
+      min-width: 0;
     }
 
     .layer-name {
       font-weight: 600;
       color: #333;
       font-size: 0.9em;
+      cursor: text;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .layer-name:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .layer-name-input {
+      font-weight: 600;
+      color: #333;
+      font-size: 0.9em;
+      padding: 2px 4px;
+      border: 2px solid #667eea;
+      border-radius: 4px;
+      width: 100%;
+      outline: none;
     }
 
     .layer-stats {
@@ -179,6 +229,11 @@
       width: 20px;
       height: 20px;
       cursor: pointer;
+    }
+
+    .layer-actions {
+      display: flex;
+      gap: 4px;
     }
 
     .stats-grid {
@@ -195,6 +250,11 @@
       text-align: center;
     }
 
+    .stat-box.optimized {
+      background: #d4edda;
+      border: 2px solid #28a745;
+    }
+
     .stat-label {
       font-size: 0.75em;
       color: #666;
@@ -207,6 +267,16 @@
       font-weight: 600;
       color: #667eea;
       margin-top: 4px;
+    }
+
+    .stat-value.improved {
+      color: #28a745;
+    }
+
+    .stat-comparison {
+      font-size: 0.7em;
+      color: #28a745;
+      margin-top: 2px;
     }
 
     .canvas-panel {
@@ -287,6 +357,37 @@
       color: #0c5460;
       border: 1px solid #bee5eb;
     }
+
+    .batch-files {
+      margin-top: 12px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .batch-file-item {
+      background: #f8f9fa;
+      padding: 8px;
+      margin-bottom: 6px;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85em;
+    }
+
+    .batch-file-item.processing {
+      background: #d1ecf1;
+    }
+
+    .batch-file-item.completed {
+      background: #d4edda;
+    }
+
+    .merge-controls {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #e9ecef;
+    }
   </style>
 </head>
 <body>
@@ -304,15 +405,20 @@
           <h3>📁 Upload SVG</h3>
           <div id="upload-area" class="upload-area">
             <div class="upload-icon">📄</div>
-            <div class="upload-text">Drop SVG file here or click to browse</div>
-            <input type="file" id="file-input" accept=".svg,image/svg+xml">
+            <div class="upload-text">Drop SVG file(s) here or click to browse</div>
+            <div class="upload-hint">Supports single or multiple files</div>
+            <input type="file" id="file-input" accept=".svg,image/svg+xml" multiple>
           </div>
+          <div id="batch-files" class="batch-files" style="display: none;"></div>
         </div>
 
         <!-- Layers Section -->
         <div class="section">
           <h3>🎨 Layers</h3>
           <div id="layers-list" class="layers-list"></div>
+          <div class="merge-controls" id="merge-controls" style="display: none;">
+            <button class="secondary" onclick="mergeSelectedLayers()">Merge Selected Layers</button>
+          </div>
         </div>
 
         <!-- Optimization Options -->
@@ -340,19 +446,22 @@
         <div class="section">
           <h3>📊 Statistics</h3>
           <div class="stats-grid">
-            <div class="stat-box">
+            <div class="stat-box" id="stat-box-paths">
               <div class="stat-label">Paths</div>
               <div class="stat-value" id="stat-paths">-</div>
+              <div class="stat-comparison" id="stat-paths-comp"></div>
             </div>
-            <div class="stat-box">
+            <div class="stat-box" id="stat-box-points">
               <div class="stat-label">Points</div>
               <div class="stat-value" id="stat-points">-</div>
+              <div class="stat-comparison" id="stat-points-comp"></div>
             </div>
-            <div class="stat-box">
+            <div class="stat-box" id="stat-box-travel">
               <div class="stat-label">Travel (mm)</div>
               <div class="stat-value" id="stat-travel">-</div>
+              <div class="stat-comparison" id="stat-travel-comp"></div>
             </div>
-            <div class="stat-box">
+            <div class="stat-box" id="stat-box-time">
               <div class="stat-label">Time Saved</div>
               <div class="stat-value" id="stat-time">-</div>
             </div>
@@ -363,8 +472,9 @@
         <div class="section">
           <h3>💾 Export</h3>
           <button id="btn-optimize" disabled>Optimize Selected Layers</button>
-          <button id="btn-export-svg" class="secondary" disabled>Export SVG</button>
+          <button id="btn-export-svg" class="secondary" disabled>Export Combined SVG</button>
           <button id="btn-export-layers" class="secondary" disabled>Export Separate Layers</button>
+          <button id="btn-reset" class="secondary" disabled>Reset to Original</button>
         </div>
       </div>
 
@@ -380,9 +490,12 @@
 
   <script>
     let svgData = null;
+    let originalSvgData = null;
     let layers = [];
     let optimizer = new PathOptimizer();
     let canvas;
+    let batchFiles = [];
+    let optimizationStats = null;
 
     // Setup file upload
     const uploadArea = document.getElementById('upload-area');
@@ -392,7 +505,7 @@
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
-        loadSVGFile(e.target.files[0]);
+        handleFileUpload(e.target.files);
       }
     });
 
@@ -410,24 +523,84 @@
       uploadArea.classList.remove('dragover');
 
       if (e.dataTransfer.files.length > 0) {
-        loadSVGFile(e.dataTransfer.files[0]);
+        handleFileUpload(e.dataTransfer.files);
       }
     });
 
-    function loadSVGFile(file) {
-      if (!file.type.match('svg.*') && !file.name.endsWith('.svg')) {
-        showStatus('Please upload an SVG file', 'error');
+    function handleFileUpload(files) {
+      const svgFiles = Array.from(files).filter(f =>
+        f.type.match('svg.*') || f.name.endsWith('.svg')
+      );
+
+      if (svgFiles.length === 0) {
+        showStatus('Please upload SVG file(s)', 'error');
         return;
       }
 
+      if (svgFiles.length === 1) {
+        // Single file mode
+        loadSVGFile(svgFiles[0]);
+      } else {
+        // Batch mode
+        loadBatchFiles(svgFiles);
+      }
+    }
+
+    function loadSVGFile(file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        parseSVG(e.target.result);
+        parseSVG(e.target.result, file.name);
       };
       reader.readAsText(file);
     }
 
-    function parseSVG(svgText) {
+    function loadBatchFiles(files) {
+      batchFiles = files.map((file, index) => ({
+        id: index,
+        file: file,
+        status: 'pending'
+      }));
+
+      renderBatchFiles();
+      document.getElementById('batch-files').style.display = 'block';
+
+      // Process first file
+      processBatchFile(0);
+    }
+
+    function processBatchFile(index) {
+      if (index >= batchFiles.length) {
+        showStatus('All files processed!', 'success');
+        return;
+      }
+
+      const batchFile = batchFiles[index];
+      batchFile.status = 'processing';
+      renderBatchFiles();
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        parseSVG(e.target.result, batchFile.file.name);
+        batchFile.status = 'completed';
+        renderBatchFiles();
+
+        // Auto-export or move to next
+        setTimeout(() => processBatchFile(index + 1), 500);
+      };
+      reader.readAsText(batchFile.file);
+    }
+
+    function renderBatchFiles() {
+      const container = document.getElementById('batch-files');
+      container.innerHTML = batchFiles.map(bf => `
+        <div class="batch-file-item ${bf.status}">
+          <span>${bf.file.name}</span>
+          <span>${bf.status === 'completed' ? '✓' : bf.status === 'processing' ? '⏳' : '○'}</span>
+        </div>
+      `).join('');
+    }
+
+    function parseSVG(svgText, filename = 'upload') {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgText, 'image/svg+xml');
       const svg = doc.documentElement;
@@ -438,7 +611,9 @@
       }
 
       svgData = svgText;
+      originalSvgData = svgText;
       layers = [];
+      optimizationStats = null;
 
       // Extract layers by color/stroke
       const pathElements = svg.querySelectorAll('path, line, polyline, polygon, rect, circle, ellipse');
@@ -458,13 +633,18 @@
       // Create layers from colors
       let layerIndex = 0;
       colorMap.forEach((elements, color) => {
+        const paths = extractPathsFromElements(elements);
         layers.push({
           id: layerIndex++,
           color: color,
-          name: `Layer ${layerIndex} (${color})`,
+          name: `Layer ${layerIndex}`,
           elements: elements,
-          pathCount: elements.length,
-          enabled: true
+          paths: paths,
+          pathCount: paths.length,
+          pointCount: paths.reduce((sum, p) => sum + p.points.length, 0),
+          enabled: true,
+          optimized: false,
+          optimizedPaths: null
         });
       });
 
@@ -477,6 +657,102 @@
       document.getElementById('btn-optimize').disabled = false;
       document.getElementById('btn-export-svg').disabled = false;
       document.getElementById('btn-export-layers').disabled = false;
+      document.getElementById('btn-reset').disabled = false;
+      document.getElementById('merge-controls').style.display = layers.length > 1 ? 'block' : 'none';
+    }
+
+    function extractPathsFromElements(elements) {
+      const paths = [];
+
+      elements.forEach(el => {
+        const tagName = el.tagName.toLowerCase();
+        let pathData = [];
+
+        if (tagName === 'path') {
+          // Parse path d attribute
+          const d = el.getAttribute('d');
+          pathData = parsePathD(d);
+        } else if (tagName === 'line') {
+          pathData = [
+            { x: parseFloat(el.getAttribute('x1')), y: parseFloat(el.getAttribute('y1')) },
+            { x: parseFloat(el.getAttribute('x2')), y: parseFloat(el.getAttribute('y2')) }
+          ];
+        } else if (tagName === 'polyline' || tagName === 'polygon') {
+          const points = el.getAttribute('points').trim().split(/\s+/);
+          pathData = points.map(p => {
+            const [x, y] = p.split(',').map(parseFloat);
+            return { x, y };
+          });
+        } else if (tagName === 'rect') {
+          const x = parseFloat(el.getAttribute('x') || 0);
+          const y = parseFloat(el.getAttribute('y') || 0);
+          const w = parseFloat(el.getAttribute('width'));
+          const h = parseFloat(el.getAttribute('height'));
+          pathData = [
+            { x, y },
+            { x: x + w, y },
+            { x: x + w, y: y + h },
+            { x, y: y + h },
+            { x, y }
+          ];
+        } else if (tagName === 'circle') {
+          const cx = parseFloat(el.getAttribute('cx'));
+          const cy = parseFloat(el.getAttribute('cy'));
+          const r = parseFloat(el.getAttribute('r'));
+          // Approximate circle with points
+          for (let i = 0; i <= 36; i++) {
+            const angle = (i / 36) * Math.PI * 2;
+            pathData.push({
+              x: cx + r * Math.cos(angle),
+              y: cy + r * Math.sin(angle)
+            });
+          }
+        }
+
+        if (pathData.length > 0) {
+          paths.push({
+            points: pathData,
+            closed: tagName === 'polygon' || tagName === 'circle' || tagName === 'rect'
+          });
+        }
+      });
+
+      return paths;
+    }
+
+    function parsePathD(d) {
+      // Simple path parser - handles M, L, H, V, Z commands
+      const points = [];
+      const commands = d.match(/[MLHVZ][^MLHVZ]*/gi);
+      let currentX = 0, currentY = 0;
+
+      commands?.forEach(cmd => {
+        const type = cmd[0];
+        const values = cmd.slice(1).trim().split(/[\s,]+/).map(parseFloat);
+
+        switch (type.toUpperCase()) {
+          case 'M':
+            currentX = values[0];
+            currentY = values[1];
+            points.push({ x: currentX, y: currentY });
+            break;
+          case 'L':
+            currentX = values[0];
+            currentY = values[1];
+            points.push({ x: currentX, y: currentY });
+            break;
+          case 'H':
+            currentX = values[0];
+            points.push({ x: currentX, y: currentY });
+            break;
+          case 'V':
+            currentY = values[0];
+            points.push({ x: currentX, y: currentY });
+            break;
+        }
+      });
+
+      return points;
     }
 
     function renderLayers() {
@@ -488,30 +764,113 @@
       }
 
       layersList.innerHTML = layers.map(layer => `
-        <div class="layer-item">
+        <div class="layer-item ${layer.optimized ? 'optimized' : ''}">
           <input type="checkbox" class="layer-checkbox"
                  data-layer-id="${layer.id}"
-                 ${layer.enabled ? 'checked' : ''}>
-          <div class="layer-color" style="background: ${layer.color}"></div>
+                 ${layer.enabled ? 'checked' : ''}
+                 onchange="toggleLayer(${layer.id})">
+          <div class="layer-color" style="background: ${layer.color}"
+               onclick="changeLayerColor(${layer.id})"
+               title="Click to change color"></div>
           <div class="layer-info">
-            <div class="layer-name">${layer.name}</div>
-            <div class="layer-stats">${layer.pathCount} paths</div>
+            <div class="layer-name" id="layer-name-${layer.id}"
+                 onclick="editLayerName(${layer.id})">${layer.name}</div>
+            <div class="layer-stats">
+              ${layer.pathCount} paths • ${layer.pointCount} points
+              ${layer.optimized ? ' • ✓ Optimized' : ''}
+            </div>
           </div>
         </div>
       `).join('');
+    }
 
-      // Add event listeners to checkboxes
-      document.querySelectorAll('.layer-checkbox').forEach(cb => {
-        cb.addEventListener('change', (e) => {
-          const layerId = parseInt(e.target.dataset.layerId);
-          const layer = layers.find(l => l.id === layerId);
-          if (layer) {
-            layer.enabled = e.target.checked;
-            renderPreview();
-            updateStats();
-          }
-        });
+    function toggleLayer(layerId) {
+      const layer = layers.find(l => l.id === layerId);
+      if (layer) {
+        layer.enabled = !layer.enabled;
+        renderPreview();
+        updateStats();
+      }
+    }
+
+    function editLayerName(layerId) {
+      const layer = layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      const nameEl = document.getElementById(`layer-name-${layerId}`);
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'layer-name-input';
+      input.value = layer.name;
+
+      input.onblur = () => {
+        layer.name = input.value || `Layer ${layerId + 1}`;
+        renderLayers();
+      };
+
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') input.blur();
+        if (e.key === 'Escape') {
+          input.value = layer.name;
+          input.blur();
+        }
+      };
+
+      nameEl.replaceWith(input);
+      input.focus();
+      input.select();
+    }
+
+    function changeLayerColor(layerId) {
+      const layer = layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      const newColor = prompt('Enter new color (hex):', layer.color);
+      if (newColor) {
+        layer.color = newColor;
+        renderLayers();
+        renderPreview();
+      }
+    }
+
+    function mergeSelectedLayers() {
+      const selectedLayers = layers.filter(l => l.enabled);
+      if (selectedLayers.length < 2) {
+        showStatus('Select at least 2 layers to merge', 'error');
+        return;
+      }
+
+      const mergedPaths = [];
+      const mergedElements = [];
+      let totalPoints = 0;
+
+      selectedLayers.forEach(layer => {
+        mergedPaths.push(...layer.paths);
+        mergedElements.push(...layer.elements);
+        totalPoints += layer.pointCount;
       });
+
+      // Remove selected layers
+      layers = layers.filter(l => !l.enabled);
+
+      // Add merged layer
+      layers.push({
+        id: layers.length,
+        color: selectedLayers[0].color,
+        name: `Merged (${selectedLayers.length} layers)`,
+        elements: mergedElements,
+        paths: mergedPaths,
+        pathCount: mergedPaths.length,
+        pointCount: totalPoints,
+        enabled: true,
+        optimized: false,
+        optimizedPaths: null
+      });
+
+      renderLayers();
+      renderPreview();
+      updateStats();
+      showStatus(`Merged ${selectedLayers.length} layers`, 'success');
     }
 
     function renderPreview() {
@@ -527,11 +886,12 @@
         return;
       }
 
-      // Create a preview using p5.js would be complex
-      // For now, show the SVG directly
       const enabledLayers = layers.filter(l => l.enabled);
       canvasPanel.innerHTML = `<div style="max-width: 100%; max-height: 100%; overflow: auto;">
-        <p style="text-align: center; color: #666; margin-bottom: 10px;">Preview (${enabledLayers.length} layers enabled)</p>
+        <p style="text-align: center; color: #666; margin-bottom: 10px;">
+          Preview (${enabledLayers.length} layers enabled)
+          ${optimizationStats ? ' • Optimized' : ''}
+        </p>
         <div style="background: white; border: 1px solid #ddd; padding: 10px; border-radius: 8px;">
           ${svgData}
         </div>
@@ -541,11 +901,43 @@
     function updateStats() {
       const enabledLayers = layers.filter(l => l.enabled);
       const totalPaths = enabledLayers.reduce((sum, l) => sum + l.pathCount, 0);
+      const totalPoints = enabledLayers.reduce((sum, l) => sum + l.pointCount, 0);
 
       document.getElementById('stat-paths').textContent = totalPaths;
-      document.getElementById('stat-points').textContent = '-';
-      document.getElementById('stat-travel').textContent = '-';
-      document.getElementById('stat-time').textContent = '-';
+      document.getElementById('stat-points').textContent = totalPoints;
+
+      if (optimizationStats) {
+        const travelReduction = ((1 - optimizationStats.optimizedTravelDistance / optimizationStats.originalTravelDistance) * 100).toFixed(1);
+        const timeSaved = (optimizationStats.timeSaved / 60).toFixed(1);
+
+        document.getElementById('stat-travel').textContent = optimizationStats.optimizedTravelDistance.toFixed(1);
+        document.getElementById('stat-travel-comp').textContent = `↓ ${travelReduction}%`;
+        document.getElementById('stat-time').textContent = `${timeSaved}m`;
+
+        document.getElementById('stat-paths').textContent = optimizationStats.optimizedPaths;
+        document.getElementById('stat-paths-comp').textContent = `(was ${optimizationStats.originalPaths})`;
+
+        document.getElementById('stat-points').textContent = optimizationStats.optimizedPoints;
+        document.getElementById('stat-points-comp').textContent = `(was ${optimizationStats.originalPoints})`;
+
+        // Highlight optimized stats
+        document.getElementById('stat-box-paths').classList.add('optimized');
+        document.getElementById('stat-box-points').classList.add('optimized');
+        document.getElementById('stat-box-travel').classList.add('optimized');
+        document.getElementById('stat-box-time').classList.add('optimized');
+      } else {
+        document.getElementById('stat-travel').textContent = '-';
+        document.getElementById('stat-time').textContent = '-';
+        document.getElementById('stat-paths-comp').textContent = '';
+        document.getElementById('stat-points-comp').textContent = '';
+        document.getElementById('stat-travel-comp').textContent = '';
+
+        // Remove optimization highlighting
+        document.getElementById('stat-box-paths').classList.remove('optimized');
+        document.getElementById('stat-box-points').classList.remove('optimized');
+        document.getElementById('stat-box-travel').classList.remove('optimized');
+        document.getElementById('stat-box-time').classList.remove('optimized');
+      }
     }
 
     function showStatus(message, type = 'info') {
@@ -563,13 +955,41 @@
 
     // Button handlers
     document.getElementById('btn-optimize').addEventListener('click', () => {
-      showStatus('Optimization feature coming soon!', 'info');
+      const enabledLayers = layers.filter(l => l.enabled);
+      if (enabledLayers.length === 0) {
+        showStatus('Enable at least one layer to optimize', 'error');
+        return;
+      }
+
+      showStatus('Optimizing paths...', 'info');
+
+      const options = {
+        merge: document.getElementById('opt-merge').checked,
+        sort: document.getElementById('opt-sort').checked,
+        reloop: document.getElementById('opt-reloop').checked,
+        simplify: document.getElementById('opt-simplify').checked,
+        tolerance: 0.5
+      };
+
+      enabledLayers.forEach(layer => {
+        const optimized = optimizer.optimize(layer.paths, options);
+        layer.optimizedPaths = optimized;
+        layer.optimized = true;
+      });
+
+      optimizationStats = optimizer.stats;
+      renderLayers();
+      updateStats();
+      showStatus('Optimization complete!', 'success');
     });
 
     document.getElementById('btn-export-svg').addEventListener('click', () => {
       if (!svgData) return;
 
-      const blob = new Blob([svgData], { type: 'image/svg+xml' });
+      const enabledLayers = layers.filter(l => l.enabled);
+      const svgContent = generateSVG(enabledLayers);
+
+      const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -580,8 +1000,54 @@
     });
 
     document.getElementById('btn-export-layers').addEventListener('click', () => {
-      showStatus('Export separate layers feature coming soon!', 'info');
+      const enabledLayers = layers.filter(l => l.enabled);
+      if (enabledLayers.length === 0) {
+        showStatus('Enable at least one layer to export', 'error');
+        return;
+      }
+
+      enabledLayers.forEach(layer => {
+        const svgContent = generateSVG([layer]);
+        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${layer.name.replace(/\s+/g, '-')}-${Date.now()}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      showStatus(`Exported ${enabledLayers.length} layers`, 'success');
     });
+
+    document.getElementById('btn-reset').addEventListener('click', () => {
+      if (confirm('Reset to original SVG? This will lose all optimizations.')) {
+        parseSVG(originalSvgData);
+        showStatus('Reset to original', 'info');
+      }
+    });
+
+    function generateSVG(layersToExport) {
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="white"/>
+`;
+
+      layersToExport.forEach(layer => {
+        const paths = layer.optimized && layer.optimizedPaths ? layer.optimizedPaths : layer.paths;
+
+        paths.forEach(path => {
+          const d = path.points.map((p, i) =>
+            `${i === 0 ? 'M' : 'L'} ${p.x.toFixed(2)},${p.y.toFixed(2)}`
+          ).join(' ') + (path.closed ? ' Z' : '');
+
+          svg += `  <path d="${d}" stroke="${layer.color}" fill="none" stroke-width="1"/>\n`;
+        });
+      });
+
+      svg += `</svg>`;
+      return svg;
+    }
   </script>
 </body>
 </html>
