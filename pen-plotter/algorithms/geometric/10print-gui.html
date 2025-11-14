@@ -25,6 +25,20 @@
       top: 0;
       height: 100vh;
       overflow: hidden;
+      position: relative;
+    }
+    .paper-size-badge {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(76, 175, 80, 0.9);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 100;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
     }
     #controls {
       width: 320px;
@@ -120,12 +134,29 @@
   </style>
 </head>
 <body>
-  <div id="canvas-container"></div>
+  <div id="canvas-container">
+    <div class="paper-size-badge" id="paper-size-badge">A4 (210×297mm)</div>
+  </div>
   <div id="controls">
     <h2>10PRINT Pattern Controls</h2>
 
     <!-- Preset Manager Container -->
     <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="a4">A4 (210×297mm)</option>
+          <option value="a3">A3 (297×420mm)</option>
+          <option value="a5">A5 (148×210mm)</option>
+          <option value="letter">US Letter (216×279mm)</option>
+          <option value="square">Square (300×300mm)</option>
+          <option value="custom" selected>Custom (800×600px)</option>
+        </select>
+      </div>
+    </div>
 
     <div class="control-group">
       <h3>Pattern Settings</h3>
@@ -221,8 +252,19 @@
   </div>
 
   <script>
+    // Paper size presets at 150 DPI for print quality
+    const PAPER_SIZES = {
+      a4: { width: 1240, height: 1754, label: 'A4 (210×297mm)', mm: '210×297' },
+      a3: { width: 1754, height: 2480, label: 'A3 (297×420mm)', mm: '297×420' },
+      a5: { width: 874, height: 1240, label: 'A5 (148×210mm)', mm: '148×210' },
+      letter: { width: 1275, height: 1650, label: 'US Letter (216×279mm)', mm: '216×279' },
+      square: { width: 1772, height: 1772, label: 'Square (300×300mm)', mm: '300×300' },
+      custom: { width: 800, height: 600, label: 'Custom', mm: '800×600px' }
+    };
+
     let params = {
       seed: Math.floor(Math.random() * 1000000),
+      paperSize: 'custom',
       gridSize: 20,
       cellSize: 20,
       lineType: 'diagonal',
@@ -239,13 +281,12 @@
     let animationFrame = 0;
     let isAnimating = false;
     let presetManager;
-    
+    let canvasWidth = 800;
+    let canvasHeight = 600;
+
     function setup() {
-      // Create canvas with A3 proportions
-      const w = 800;
-      const h = 600;
-      
-      svgCanvas = createCanvas(w, h, SVG);
+      updateCanvasSize();
+      svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
       svgCanvas.parent('canvas-container');
 
       // Initialize preset manager
@@ -276,6 +317,29 @@
       regenerate();
     }
 
+    function updateCanvasSize() {
+      const size = PAPER_SIZES[params.paperSize] || PAPER_SIZES.custom;
+      canvasWidth = size.width;
+      canvasHeight = size.height;
+      updatePaperSizeBadge();
+    }
+
+    function updatePaperSizeBadge() {
+      const size = PAPER_SIZES[params.paperSize] || PAPER_SIZES.custom;
+      const badge = document.getElementById('paper-size-badge');
+      if (params.paperSize === 'custom') {
+        badge.textContent = `${size.mm}`;
+      } else {
+        badge.textContent = `${size.label}`;
+      }
+    }
+
+    function changeCanvasSize() {
+      updateCanvasSize();
+      resizeCanvas(canvasWidth, canvasHeight);
+      regenerate();
+    }
+
     // Helper function to update UI from params
     function updateUIFromParams() {
       Object.keys(params).forEach(key => {
@@ -294,8 +358,19 @@
     }
     
     function setupControls() {
+      // Handle paper size separately
+      const paperSizeSelect = document.getElementById('paperSize');
+      if (paperSizeSelect) {
+        paperSizeSelect.addEventListener('change', (e) => {
+          params.paperSize = e.target.value;
+          changeCanvasSize();
+        });
+      }
+
       // Setup all control event listeners
       Object.keys(params).forEach(key => {
+        if (key === 'paperSize') return; // Already handled above
+
         const element = document.getElementById(key);
         if (element) {
           if (element.type === 'range') {

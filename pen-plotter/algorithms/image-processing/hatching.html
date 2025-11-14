@@ -293,12 +293,6 @@
       background(255);
       strokeWeight(1);
       noFill();
-      
-      // Setup image upload
-      setupImageUpload();
-      
-      // Setup control listeners
-      setupControlListeners();
     }
 
     function draw() {
@@ -774,6 +768,10 @@
     // Checkbox handlers
     document.getElementById('showOriginal').addEventListener('change', () => redraw());
     document.getElementById('showHatching').addEventListener('change', () => redraw());
+
+    // Setup image upload and control listeners - moved outside p5.js setup() for reliability
+    setupImageUpload();
+    setupControlListeners();
   </script>
 </body>
 </html>

@@ -284,9 +284,6 @@
       background(255);
       strokeWeight(1);
       noFill();
-      
-      // Setup image upload
-      setupImageUpload();
     }
 
     function draw() {
@@ -573,6 +570,9 @@
     // Checkbox handlers
     document.getElementById('showOriginal').addEventListener('change', () => redraw());
     document.getElementById('showPreview').addEventListener('change', () => redraw());
+
+    // Setup image upload - moved outside p5.js setup() for reliability
+    setupImageUpload();
   </script>
 </body>
 </html>
