@@ -285,10 +285,11 @@
     function setup() {
       const w = 800;
       const h = 600;
-      
+
       svgCanvas = createCanvas(w, h, SVG);
       svgCanvas.parent('canvas-container');
-      
+      noLoop(); // We'll use redraw() for updates
+
       // Initialize GIF exporter
       gifExporter = new GifExporter({
         fps: 30,
@@ -533,10 +534,6 @@
       // Capture frame for GIF if recording
       if (isAnimating && gifExporter && gifExporter.isRecording()) {
         gifExporter.captureFrame();
-      }
-      
-      if (!isAnimating) {
-        noLoop();
       }
     }
     
