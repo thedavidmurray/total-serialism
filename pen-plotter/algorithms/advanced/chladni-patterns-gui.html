@@ -10,9 +10,18 @@
     <style>
         body {
             margin: 0;
-            padding: 20px;
+            padding: 0;
             font-family: Arial, sans-serif;
             background-color: #f0f0f0;
+            display: flex;
+        }
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2a2a2a;
+            min-height: 100vh;
         }
         #controls {
             position: fixed;
@@ -23,6 +32,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             max-width: 300px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
         }
         .control-group {
             margin-bottom: 15px;
@@ -62,6 +73,7 @@
     </style>
 </head>
 <body>
+    <div id="canvas-container"></div>
     <div id="controls">
         <h3>Chladni Pattern Controls</h3>
 
@@ -167,7 +179,8 @@
         let presetManager;
 
         function setup() {
-            createCanvas(windowWidth - 350, windowHeight - 40);
+            let canvas = createCanvas(windowWidth - 350, windowHeight - 40);
+            canvas.parent('canvas-container');
             setupControls();
 
             // Initialize preset manager

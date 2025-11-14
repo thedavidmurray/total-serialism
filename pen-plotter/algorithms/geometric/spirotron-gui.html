@@ -263,6 +263,7 @@
           params = loadedParams;
           updateUIFromParams();
           regenerate();
+      noLoop();
         },
         onRandomize: () => {
           params.outerRadius = random(100, 250);
@@ -279,11 +280,13 @@
           params.seed = Math.floor(Math.random() * 1000000);
           updateUIFromParams();
           regenerate();
+      noLoop();
         }
       });
 
       setupControls();
       regenerate();
+      noLoop();
     }
     
     function updateUIFromParams() {
