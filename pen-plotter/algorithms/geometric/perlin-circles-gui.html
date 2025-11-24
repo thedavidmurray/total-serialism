@@ -5,6 +5,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -103,7 +105,10 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Perlin Circle Controls</h2>
-    
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
     <div class="control-group">
       <h3>Circle Settings</h3>
       <div class="control">
@@ -242,6 +247,7 @@
     let svgCanvas;
     let timeOffset = 0;
     let noiseOffset = 0;
+    let presetManager;
     
     function setup() {
       const w = 800;
@@ -251,6 +257,33 @@
       svgCanvas.parent('canvas-container');
 
       setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'perlin-circles',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 1000000);
+          params.circleCount = Math.floor(random(1, 20));
+          params.baseRadius = Math.floor(random(10, 200));
+          params.radiusSpacing = Math.floor(random(5, 100));
+          params.pointsPerCircle = Math.floor(random(20, 500) / 10) * 10;
+          params.noiseScale = random(0.001, 0.1);
+          params.noiseAmplitude = random(0, 2);
+          params.timeSpeed = random(0, 0.01);
+          params.octaves = Math.floor(random(1, 5));
+          params.strokeWeight = random(0.5, 5);
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
       regenerate();
 
       // Force initial render for SVG mode
@@ -287,6 +320,27 @@
           }
         }
       });
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const display = document.getElementById(key + '-val');
+            if (display) display.textContent = params[key];
+          } else if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else if (element.tagName === 'SELECT') {
+            element.value = params[key];
+          }
+        }
+      });
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
     }
     
     function regenerate() {
