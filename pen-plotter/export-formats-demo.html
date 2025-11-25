@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>DXF & HPGL Export Demo - Professional Plotter Formats</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="plotter-formats.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      background: #0a0a0a;
+      color: #00ff00;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #1a1a1a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+    }
+    #controls {
+      width: 400px;
+      padding: 20px;
+      background: #0a0a0a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-right: 2px solid #00ff00;
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      color: #00ff00;
+      font-size: 24px;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #00aa00;
+      margin-bottom: 20px;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #003300;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00ff00;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 11px;
+      color: #00aa00;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    input[type="range"],
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #001100;
+      color: #00ff00;
+      border: 1px solid #003300;
+      font-family: monospace;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      background: #001100;
+      color: #00ff00;
+      border: 1px solid #003300;
+      font-family: monospace;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #003300;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      cursor: pointer;
+      font-family: monospace;
+      font-weight: bold;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #00ff00;
+      color: #000;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    button.export {
+      background: #004400;
+      margin-top: 10px;
+    }
+    button.export:hover {
+      background: #00ff00;
+      box-shadow: 0 0 30px #00ff00;
+    }
+    .value {
+      font-weight: bold;
+      color: #00ff00;
+      float: right;
+    }
+    .info-box {
+      background: #001100;
+      padding: 15px;
+      border: 1px solid #003300;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.6;
+      margin-bottom: 15px;
+    }
+    .info-box h4 {
+      margin: 0 0 10px 0;
+      color: #00ff00;
+      font-size: 12px;
+    }
+    .format-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #003300;
+      border: 1px solid #00ff00;
+      border-radius: 3px;
+      font-size: 10px;
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="controls">
+    <h2>⚙️ EXPORT FORMATS</h2>
+    <div class="subtitle">DXF & HPGL Professional Plotter Support</div>
+
+    <div class="info-box">
+      <h4>📋 FORMAT SUPPORT</h4>
+      <span class="format-badge">SVG</span>
+      <span class="format-badge">PNG</span>
+      <span class="format-badge">DXF</span>
+      <span class="format-badge">HPGL</span>
+      <div style="margin-top: 10px;">
+        DXF: AutoCAD, laser cutters, CNC<br>
+        HPGL: Vintage plotters, professional plotting
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🎨 Pattern Generator</h3>
+      <div class="control">
+        <label>Pattern Type:</label>
+        <select id="pattern">
+          <option value="spiral">Spiral</option>
+          <option value="circles">Concentric Circles</option>
+          <option value="grid">Grid</option>
+          <option value="flowfield">Flow Field</option>
+          <option value="lissajous">Lissajous Curve</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Complexity: <span class="value" id="complexity-val">50</span></label>
+        <input type="range" id="complexity" min="10" max="200" value="50" step="5">
+      </div>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="lineweight-val">1.5</span></label>
+        <input type="range" id="lineweight" min="0.5" max="5" value="1.5" step="0.5">
+      </div>
+      <button onclick="regenerate()">🔄 REGENERATE</button>
+    </div>
+
+    <div class="control-group">
+      <h3>📐 DXF Options</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="dxf-paper">
+          <option value="A4">A4 (210×297mm)</option>
+          <option value="A3">A3 (297×420mm)</option>
+          <option value="Letter">Letter (8.5×11")</option>
+          <option value="Tabloid">Tabloid (11×17")</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Units:</label>
+        <select id="dxf-units">
+          <option value="mm">Millimeters</option>
+          <option value="inch">Inches</option>
+          <option value="px">Pixels</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="dxf-layercolor" checked>
+          Separate layers by color
+        </label>
+      </div>
+      <button class="export" onclick="exportDXF()">💾 EXPORT DXF</button>
+    </div>
+
+    <div class="control-group">
+      <h3>🖊️ HPGL Options</h3>
+      <div class="control">
+        <label>Pen Speed: <span class="value" id="hpgl-speed-val">38</span> cm/s</label>
+        <input type="range" id="hpgl-speed" min="10" max="100" value="38" step="2">
+      </div>
+      <div class="control">
+        <label>Pen Force: <span class="value" id="hpgl-force-val">3</span></label>
+        <input type="range" id="hpgl-force" min="1" max="8" value="3" step="1">
+      </div>
+      <div class="control">
+        <label>Scaling: <span class="value" id="hpgl-scale-val">1.0</span></label>
+        <input type="range" id="hpgl-scale" min="0.1" max="3" value="1.0" step="0.1">
+      </div>
+      <button class="export" onclick="exportHPGL()">💾 EXPORT HPGL</button>
+    </div>
+
+    <div class="control-group">
+      <h3>📤 Standard Formats</h3>
+      <button onclick="exportSVG()">💾 EXPORT SVG</button>
+      <button onclick="exportPNG()">💾 EXPORT PNG</button>
+    </div>
+
+    <div class="info-box">
+      <h4>ℹ️ FORMAT GUIDE</h4>
+      <strong>DXF:</strong> Universal CAD format. Use for laser cutting, CNC routing, or importing into professional design software.<br><br>
+      <strong>HPGL:</strong> Native plotter language. Best for vintage HP plotters and modern plotters that support HPGL commands.<br><br>
+      <strong>SVG:</strong> Web standard vector format. Use for modern pen plotters (AxiDraw, etc.) and digital display.<br><br>
+      <strong>PNG:</strong> Raster preview format.
+    </div>
+
+    <div class="info-box">
+      <h4>🎯 HPGL PEN MAPPING</h4>
+      Pen 1: Black (#000000)<br>
+      Pen 2: Red (#ff0000)<br>
+      Pen 3: Blue (#0000ff)<br>
+      Pen 4: Green (#00ff00)<br>
+      Pen 5: Yellow (#ffff00)<br>
+      Pen 6: Magenta (#ff00ff)<br>
+      Pen 7: Cyan (#00ffff)<br>
+      Pen 8: White (#ffffff)
+    </div>
+  </div>
+
+  <script>
+    let canvas;
+    let exporter;
+    let params = {
+      pattern: 'spiral',
+      complexity: 50,
+      lineweight: 1.5
+    };
+
+    function setup() {
+      canvas = createCanvas(800, 800, SVG);
+      canvas.parent('canvas-container');
+
+      exporter = new PlotterFormats();
+
+      setupControls();
+      regenerate();
+    }
+
+    function setupControls() {
+      document.getElementById('pattern').addEventListener('change', (e) => {
+        params.pattern = e.target.value;
+        regenerate();
+      });
+
+      document.getElementById('complexity').addEventListener('input', (e) => {
+        params.complexity = parseInt(e.target.value);
+        document.getElementById('complexity-val').textContent = params.complexity;
+        regenerate();
+      });
+
+      document.getElementById('lineweight').addEventListener('input', (e) => {
+        params.lineweight = parseFloat(e.target.value);
+        document.getElementById('lineweight-val').textContent = params.lineweight;
+        regenerate();
+      });
+
+      // HPGL controls
+      document.getElementById('hpgl-speed').addEventListener('input', (e) => {
+        document.getElementById('hpgl-speed-val').textContent = e.target.value;
+      });
+
+      document.getElementById('hpgl-force').addEventListener('input', (e) => {
+        document.getElementById('hpgl-force-val').textContent = e.target.value;
+      });
+
+      document.getElementById('hpgl-scale').addEventListener('input', (e) => {
+        document.getElementById('hpgl-scale-val').textContent = e.target.value;
+      });
+    }
+
+    function regenerate() {
+      clear();
+      background(255);
+
+      noFill();
+      stroke(0);
+      strokeWeight(params.lineweight);
+
+      switch (params.pattern) {
+        case 'spiral':
+          drawSpiral();
+          break;
+        case 'circles':
+          drawCircles();
+          break;
+        case 'grid':
+          drawGrid();
+          break;
+        case 'flowfield':
+          drawFlowField();
+          break;
+        case 'lissajous':
+          drawLissajous();
+          break;
+      }
+
+      noLoop();
+    }
+
+    function drawSpiral() {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const maxRadius = min(width, height) / 2 - 50;
+      const turns = params.complexity / 10;
+
+      beginShape();
+      for (let i = 0; i < params.complexity * 10; i++) {
+        const angle = (i / (params.complexity * 10)) * TWO_PI * turns;
+        const radius = (i / (params.complexity * 10)) * maxRadius;
+        const x = centerX + cos(angle) * radius;
+        const y = centerY + sin(angle) * radius;
+        vertex(x, y);
+      }
+      endShape();
+    }
+
+    function drawCircles() {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const maxRadius = min(width, height) / 2 - 50;
+      const count = params.complexity / 5;
+
+      for (let i = 0; i < count; i++) {
+        const radius = (i + 1) * (maxRadius / count);
+        circle(centerX, centerY, radius * 2);
+      }
+    }
+
+    function drawGrid() {
+      const margin = 50;
+      const cols = floor(params.complexity / 5);
+      const rows = floor(params.complexity / 5);
+      const cellWidth = (width - 2 * margin) / cols;
+      const cellHeight = (height - 2 * margin) / rows;
+
+      // Horizontal lines
+      for (let i = 0; i <= rows; i++) {
+        const y = margin + i * cellHeight;
+        line(margin, y, width - margin, y);
+      }
+
+      // Vertical lines
+      for (let i = 0; i <= cols; i++) {
+        const x = margin + i * cellWidth;
+        line(x, margin, x, height - margin);
+      }
+    }
+
+    function drawFlowField() {
+      const margin = 50;
+      const particleCount = params.complexity;
+
+      for (let p = 0; p < particleCount; p++) {
+        let x = random(margin, width - margin);
+        let y = random(margin, height - margin);
+
+        beginShape();
+        for (let i = 0; i < 50; i++) {
+          vertex(x, y);
+          const angle = noise(x * 0.01, y * 0.01) * TWO_PI * 2;
+          x += cos(angle) * 3;
+          y += sin(angle) * 3;
+
+          if (x < margin || x > width - margin || y < margin || y > height - margin) break;
+        }
+        endShape();
+      }
+    }
+
+    function drawLissajous() {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const size = min(width, height) / 2 - 50;
+      const a = 3;
+      const b = 2;
+      const delta = PI / 4;
+
+      beginShape();
+      for (let i = 0; i < params.complexity * 10; i++) {
+        const t = (i / (params.complexity * 10)) * TWO_PI;
+        const x = centerX + sin(a * t + delta) * size;
+        const y = centerY + sin(b * t) * size;
+        vertex(x, y);
+      }
+      endShape();
+    }
+
+    function exportDXF() {
+      const paperSize = document.getElementById('dxf-paper').value;
+      const units = document.getElementById('dxf-units').value;
+      const layerByColor = document.getElementById('dxf-layercolor').checked;
+
+      const paperSizes = {
+        'A4': { width: 210, height: 297 },
+        'A3': { width: 297, height: 420 },
+        'Letter': { width: 215.9, height: 279.4 },
+        'Tabloid': { width: 279.4, height: 431.8 }
+      };
+
+      const options = {
+        unit: units,
+        paperWidth: paperSizes[paperSize].width,
+        paperHeight: paperSizes[paperSize].height,
+        layerByColor: layerByColor
+      };
+
+      exporter.exportSVGCanvasToDXF(canvas, `${params.pattern}-${Date.now()}.dxf`, options);
+    }
+
+    function exportHPGL() {
+      const speed = parseInt(document.getElementById('hpgl-speed').value);
+      const force = parseInt(document.getElementById('hpgl-force').value);
+      const scale = parseFloat(document.getElementById('hpgl-scale').value);
+
+      const options = {
+        penSpeed: speed,
+        penForce: force,
+        scaling: scale
+      };
+
+      exporter.exportSVGCanvasToHPGL(canvas, `${params.pattern}-${Date.now()}.hpgl`, options);
+    }
+
+    function exportSVG() {
+      save(canvas, `${params.pattern}-${Date.now()}.svg`);
+    }
+
+    function exportPNG() {
+      save(`${params.pattern}-${Date.now()}.png`);
+    }
+  </script>
+</body>
+</html>
