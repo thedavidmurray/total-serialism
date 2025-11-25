@@ -6,6 +6,8 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../../../preset-manager.js"></script>
+  <script src="../../../../layer-export.js"></script>
+  <script src="../../../../layer-export-ui.js"></script>
   <link rel="stylesheet" href="../../../../preset-manager.css">
   <style>
     body {
@@ -161,6 +163,10 @@
       </div>
       <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
     </div>
+
+    <div class="control-group">
+      <div id="layer-export-controls"></div>
+    </div>
   </div>
 
   <script>
@@ -182,6 +188,7 @@
 
     let particles = [];
     let presetManager;
+    let layerExportUI;
     
     // Paper sizes in mm
     const paperSizes = {
@@ -221,6 +228,10 @@
           regenerate();
         }
       });
+
+      // Initialize layer export UI
+      layerExportUI = new LayerExportUI(canvas, '#layer-export-controls');
+      layerExportUI.render();
 
       // Initial generation
       regenerate();
@@ -390,8 +401,13 @@
       
       // Redraw
       redraw();
+
+      // Update layer export UI
+      if (layerExportUI) {
+        layerExportUI.updateInfo();
+      }
     }
-    
+
     function draw() {
       background(255);
       
