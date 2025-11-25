@@ -416,6 +416,15 @@
           "path": "pen-plotter/algorithms/image-processing/squigglecam.html",
           "complexity": "intermediate",
           "tags": ["image-upload"]
+        },
+        {
+          "id": "image-to-ascii",
+          "name": "Image to ASCII",
+          "description": "Convert images to ASCII art with pen plotter support",
+          "path": "pen-plotter/algorithms/image-processing/image-to-ascii-gui.html",
+          "complexity": "beginner",
+          "tags": ["image-upload"],
+          "featured": true
         }
       ]
     },
@@ -563,8 +572,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 75,
+    "totalAlgorithms": 76,
     "totalCategories": 15,
-    "featuredCount": 18
+    "featuredCount": 19
   }
 }
