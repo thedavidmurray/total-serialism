@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Plot Simulator - Pen Plotter Tool</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      display: flex;
+      background: #0a0a0a;
+      color: #00ff00;
+      min-height: 100vh;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .canvas-wrapper {
+      position: relative;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 40px rgba(0, 255, 0, 0.2);
+    }
+    canvas {
+      display: block;
+      border-radius: 8px;
+    }
+    .canvas-label {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.7);
+      color: #00ff00;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    #controls {
+      width: 360px;
+      padding: 20px;
+      background: #0a0a0a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 2px solid #00ff00;
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      color: #00ff00;
+      font-size: 24px;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #00aa00;
+      margin-bottom: 20px;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #003300;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00ff00;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #003300;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      font-weight: 500;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #00ff00;
+      color: #000;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    button.active {
+      background: #00ff00;
+      color: #000;
+    }
+    button.secondary {
+      background: #001100;
+    }
+    button.secondary:hover {
+      background: #00ff00;
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .stat-box {
+      background: #001100;
+      padding: 12px;
+      border-radius: 4px;
+      border: 1px solid #003300;
+    }
+    .stat-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #00ff00;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 10px;
+      color: #00aa00;
+      text-transform: uppercase;
+    }
+    .progress-bar {
+      height: 8px;
+      background: #001100;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      border: 1px solid #003300;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #00ff00, #00cc00);
+      transition: width 0.1s linear;
+    }
+    .progress-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #00aa00;
+      margin-bottom: 15px;
+    }
+    .playback-controls {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .playback-controls button {
+      font-size: 16px;
+    }
+    button.play {
+      background: #00ff00;
+      color: #000;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #00ff00;
+    }
+    .range-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .value {
+      font-weight: 600;
+      color: #00ff00;
+    }
+    label.checkbox {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 8px 0;
+    }
+    .toggle {
+      width: 40px;
+      height: 20px;
+      background: #003300;
+      border-radius: 10px;
+      position: relative;
+      transition: background 0.3s;
+      border: 1px solid #00ff00;
+    }
+    .toggle.active {
+      background: #00ff00;
+    }
+    .toggle-knob {
+      width: 16px;
+      height: 16px;
+      background: #00ff00;
+      border-radius: 50%;
+      position: absolute;
+      top: 1px;
+      left: 2px;
+      transition: all 0.3s;
+    }
+    .toggle.active .toggle-knob {
+      background: #000;
+      left: 20px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .info-box {
+      background: #001100;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #00aa00;
+      border: 1px solid #003300;
+      margin-top: 10px;
+    }
+    .legend {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 11px;
+      color: #00aa00;
+      background: #001100;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #003300;
+    }
+    .legend-item {
+      display: inline-block;
+      margin: 0 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div class="canvas-wrapper">
+      <canvas id="plotCanvas" width="600" height="600"></canvas>
+      <div class="canvas-label">600 × 600 px</div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <h2>🖊️ Plot Simulator</h2>
+    <div class="subtitle">Visualize pen plotter movements</div>
+
+    <div class="control-group">
+      <h3>📁 Sample Patterns</h3>
+      <div class="button-grid">
+        <button onclick="loadSample('spiral')" id="btn-spiral" class="active">Spiral</button>
+        <button onclick="loadSample('grid')" id="btn-grid">Grid</button>
+        <button onclick="loadSample('circles')" id="btn-circles">Circles</button>
+        <button onclick="loadSample('star')" id="btn-star">Star</button>
+      </div>
+      <input type="file" id="svgUpload" accept=".svg">
+      <button class="secondary" onclick="document.getElementById('svgUpload').click()" style="margin-top: 10px;">
+        📤 Upload SVG
+      </button>
+      <div class="info-box">
+        Upload your own SVG files or use built-in sample patterns to preview plotting.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📊 Statistics</h3>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="stat-paths">0</div>
+          <div class="stat-label">Paths</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-time">0:00</div>
+          <div class="stat-label">Est. Time</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-pendown">0</div>
+          <div class="stat-label">Pen Down (px)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-penup">0</div>
+          <div class="stat-label">Pen Up (px)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>▶️ Playback</h3>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress" style="width: 0%"></div>
+      </div>
+      <div class="progress-time">
+        <span id="time-current">0:00</span>
+        <span id="time-total">0:00</span>
+      </div>
+
+      <div class="playback-controls">
+        <button onclick="reset()">⏮</button>
+        <button class="play" onclick="togglePlay()" id="playBtn">▶ Play</button>
+        <button onclick="skipToEnd()">⏭</button>
+      </div>
+
+      <div class="range-label">
+        <span>Speed</span>
+        <span class="value" id="speed-val">1.0x</span>
+      </div>
+      <input type="range" id="speed" min="0.5" max="10" step="0.5" value="1" oninput="updateSpeed(this.value)">
+    </div>
+
+    <div class="control-group">
+      <h3>⚙️ Options</h3>
+      <label class="checkbox">
+        <span>Show Pen-Up Travel</span>
+        <div class="toggle active" id="toggle-penup" onclick="togglePenUp()">
+          <div class="toggle-knob"></div>
+        </div>
+      </label>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item">🔴 Red dashed = pen-up travel</div>
+      <div class="legend-item">⚫ Black solid = pen-down drawing</div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('plotCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let paths = [];
+    let isPlaying = false;
+    let progress = 0;
+    let speed = 1.0;
+    let showPenUp = true;
+    let animationId = null;
+    let startTime = 0;
+    let totalTime = 10;
+    let currentSample = 'spiral';
+
+    // Generate sample patterns
+    function generatePaths(type) {
+      const generated = [];
+      const centerX = 300, centerY = 300;
+
+      if (type === 'spiral') {
+        const points = [];
+        for (let i = 0; i < 720; i++) {
+          const angle = (i / 180) * Math.PI;
+          const radius = 20 + i * 0.35;
+          points.push({
+            x: centerX + Math.cos(angle) * radius,
+            y: centerY + Math.sin(angle) * radius
+          });
+        }
+        generated.push(points);
+      } else if (type === 'grid') {
+        const step = 40;
+        const margin = 50;
+        for (let y = margin; y <= 550; y += step) {
+          generated.push([
+            { x: margin, y },
+            { x: 550, y }
+          ]);
+        }
+        for (let x = margin; x <= 550; x += step) {
+          generated.push([
+            { x, y: margin },
+            { x, y: 550 }
+          ]);
+        }
+      } else if (type === 'circles') {
+        for (let r = 30; r <= 250; r += 30) {
+          const points = [];
+          for (let a = 0; a <= Math.PI * 2; a += Math.PI / 32) {
+            points.push({
+              x: centerX + Math.cos(a) * r,
+              y: centerY + Math.sin(a) * r
+            });
+          }
+          generated.push(points);
+        }
+      } else if (type === 'star') {
+        for (let i = 0; i < 5; i++) {
+          const angle1 = (i * 72 - 90) * Math.PI / 180;
+          const angle2 = ((i * 72 + 144) - 90) * Math.PI / 180;
+          generated.push([
+            { x: centerX + Math.cos(angle1) * 200, y: centerY + Math.sin(angle1) * 200 },
+            { x: centerX + Math.cos(angle2) * 200, y: centerY + Math.sin(angle2) * 200 }
+          ]);
+        }
+      }
+
+      return generated;
+    }
+
+    // Calculate statistics
+    function calculateStats(pathList) {
+      let penDown = 0, penUp = 0;
+      let lastPoint = null;
+
+      pathList.forEach(path => {
+        if (lastPoint && path.length > 0) {
+          penUp += Math.hypot(path[0].x - lastPoint.x, path[0].y - lastPoint.y);
+        }
+        for (let i = 1; i < path.length; i++) {
+          penDown += Math.hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y);
+        }
+        if (path.length > 0) lastPoint = path[path.length - 1];
+      });
+
+      const time = (penDown / 30) + (penUp / 100) + (pathList.length * 0.3);
+      totalTime = time;
+
+      return {
+        paths: pathList.length,
+        time: Math.round(time),
+        penDown: Math.round(penDown),
+        penUp: Math.round(penUp)
+      };
+    }
+
+    // Update UI with stats
+    function updateStats(stats) {
+      document.getElementById('stat-paths').textContent = stats.paths;
+      document.getElementById('stat-time').textContent = formatTime(stats.time);
+      document.getElementById('stat-pendown').textContent = stats.penDown;
+      document.getElementById('stat-penup').textContent = stats.penUp;
+      document.getElementById('time-total').textContent = formatTime(stats.time);
+    }
+
+    // Format time
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Load sample
+    function loadSample(type) {
+      currentSample = type;
+      paths = generatePaths(type);
+      const stats = calculateStats(paths);
+      updateStats(stats);
+      reset();
+
+      // Update button states
+      ['spiral', 'grid', 'circles', 'star'].forEach(t => {
+        document.getElementById(`btn-${t}`).classList.toggle('active', t === type);
+      });
+
+      // Draw initial state
+      clearCanvas();
+    }
+
+    // Clear canvas
+    function clearCanvas() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Animation loop
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+
+      const elapsed = ((timestamp - startTime) / 1000) * speed;
+      const progressRatio = Math.min(elapsed / totalTime, 1);
+      progress = progressRatio * 100;
+
+      // Update UI
+      document.getElementById('progress').style.width = `${progress}%`;
+      document.getElementById('time-current').textContent = formatTime(elapsed);
+
+      // Clear and redraw
+      clearCanvas();
+
+      let accumulatedTime = 0;
+      let lastPoint = null;
+
+      for (let pathIdx = 0; pathIdx < paths.length; pathIdx++) {
+        const path = paths[pathIdx];
+        if (path.length === 0) continue;
+
+        // Pen up travel
+        if (lastPoint) {
+          const travelDist = Math.hypot(path[0].x - lastPoint.x, path[0].y - lastPoint.y);
+          const travelTime = travelDist / 100 + 0.3;
+
+          if (accumulatedTime + travelTime > elapsed) {
+            // Partial travel
+            if (showPenUp) {
+              const ratio = (elapsed - accumulatedTime) / travelTime;
+              ctx.beginPath();
+              ctx.strokeStyle = '#ef4444';
+              ctx.setLineDash([5, 5]);
+              ctx.lineWidth = 1.5;
+              ctx.moveTo(lastPoint.x, lastPoint.y);
+              ctx.lineTo(
+                lastPoint.x + (path[0].x - lastPoint.x) * ratio,
+                lastPoint.y + (path[0].y - lastPoint.y) * ratio
+              );
+              ctx.stroke();
+            }
+            break;
+          }
+
+          if (showPenUp) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#ef4444';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(lastPoint.x, lastPoint.y);
+            ctx.lineTo(path[0].x, path[0].y);
+            ctx.stroke();
+          }
+          accumulatedTime += travelTime;
+        }
+
+        // Draw path
+        ctx.beginPath();
+        ctx.strokeStyle = '#000000';
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2;
+        ctx.moveTo(path[0].x, path[0].y);
+
+        let pathComplete = true;
+        for (let i = 1; i < path.length; i++) {
+          const segDist = Math.hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y);
+          const segTime = segDist / 30;
+
+          if (accumulatedTime + segTime > elapsed) {
+            // Partial segment
+            const ratio = (elapsed - accumulatedTime) / segTime;
+            ctx.lineTo(
+              path[i-1].x + (path[i].x - path[i-1].x) * ratio,
+              path[i-1].y + (path[i].y - path[i-1].y) * ratio
+            );
+            pathComplete = false;
+            break;
+          }
+
+          ctx.lineTo(path[i].x, path[i].y);
+          accumulatedTime += segTime;
+        }
+        ctx.stroke();
+
+        if (!pathComplete) break;
+        lastPoint = path[path.length - 1];
+      }
+
+      if (progressRatio < 1) {
+        animationId = requestAnimationFrame(animate);
+      } else {
+        isPlaying = false;
+        document.getElementById('playBtn').innerHTML = '▶ Play';
+      }
+    }
+
+    // Toggle play/pause
+    function togglePlay() {
+      if (isPlaying) {
+        cancelAnimationFrame(animationId);
+        isPlaying = false;
+        document.getElementById('playBtn').innerHTML = '▶ Play';
+      } else {
+        if (progress >= 100) {
+          reset();
+        }
+        startTime = 0;
+        isPlaying = true;
+        document.getElementById('playBtn').innerHTML = '⏸ Pause';
+        animationId = requestAnimationFrame(animate);
+      }
+    }
+
+    // Reset
+    function reset() {
+      cancelAnimationFrame(animationId);
+      isPlaying = false;
+      progress = 0;
+      startTime = 0;
+      document.getElementById('progress').style.width = '0%';
+      document.getElementById('time-current').textContent = '0:00';
+      document.getElementById('playBtn').innerHTML = '▶ Play';
+      clearCanvas();
+    }
+
+    // Skip to end
+    function skipToEnd() {
+      cancelAnimationFrame(animationId);
+      isPlaying = false;
+      progress = 100;
+      document.getElementById('progress').style.width = '100%';
+      document.getElementById('time-current').textContent = document.getElementById('time-total').textContent;
+      document.getElementById('playBtn').innerHTML = '▶ Play';
+
+      clearCanvas();
+
+      let lastPoint = null;
+      paths.forEach(path => {
+        if (showPenUp && lastPoint && path.length > 0) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#ef4444';
+          ctx.setLineDash([5, 5]);
+          ctx.lineWidth = 1.5;
+          ctx.moveTo(lastPoint.x, lastPoint.y);
+          ctx.lineTo(path[0].x, path[0].y);
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#000000';
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2;
+        path.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+
+        if (path.length > 0) lastPoint = path[path.length - 1];
+      });
+    }
+
+    // Update speed
+    function updateSpeed(value) {
+      speed = parseFloat(value);
+      document.getElementById('speed-val').textContent = `${speed.toFixed(1)}x`;
+    }
+
+    // Toggle pen-up visibility
+    function togglePenUp() {
+      showPenUp = !showPenUp;
+      document.getElementById('toggle-penup').classList.toggle('active', showPenUp);
+      if (progress === 100) {
+        skipToEnd();
+      }
+    }
+
+    // SVG upload handler
+    document.getElementById('svgUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        parseSVG(event.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    // Parse SVG file
+    function parseSVG(svgText) {
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+      const svgElement = svgDoc.querySelector('svg');
+
+      if (!svgElement) {
+        alert('Invalid SVG file');
+        return;
+      }
+
+      const extractedPaths = [];
+
+      // Extract path elements
+      svgElement.querySelectorAll('path, line, polyline, polygon').forEach(element => {
+        const points = [];
+
+        if (element.tagName === 'path') {
+          const d = element.getAttribute('d');
+          if (d) {
+            const pathPoints = parsePathData(d);
+            if (pathPoints.length > 0) extractedPaths.push(pathPoints);
+          }
+        } else if (element.tagName === 'line') {
+          const x1 = parseFloat(element.getAttribute('x1') || 0);
+          const y1 = parseFloat(element.getAttribute('y1') || 0);
+          const x2 = parseFloat(element.getAttribute('x2') || 0);
+          const y2 = parseFloat(element.getAttribute('y2') || 0);
+          extractedPaths.push([{x: x1, y: y1}, {x: x2, y: y2}]);
+        } else if (element.tagName === 'polyline' || element.tagName === 'polygon') {
+          const pointsAttr = element.getAttribute('points');
+          if (pointsAttr) {
+            const coords = pointsAttr.trim().split(/[\s,]+/).map(parseFloat);
+            for (let i = 0; i < coords.length; i += 2) {
+              points.push({x: coords[i], y: coords[i+1]});
+            }
+            if (points.length > 0) extractedPaths.push(points);
+          }
+        }
+      });
+
+      if (extractedPaths.length > 0) {
+        paths = extractedPaths;
+        const stats = calculateStats(paths);
+        updateStats(stats);
+        reset();
+        currentSample = 'custom';
+        ['spiral', 'grid', 'circles', 'star'].forEach(t => {
+          document.getElementById(`btn-${t}`).classList.remove('active');
+        });
+      } else {
+        alert('No paths found in SVG');
+      }
+    }
+
+    // Simple SVG path parser (M, L commands only)
+    function parsePathData(d) {
+      const points = [];
+      const commands = d.match(/[MLHVCSQTAZmlhvcsqtaz][^MLHVCSQTAZmlhvcsqtaz]*/g);
+
+      let currentX = 0, currentY = 0;
+
+      if (!commands) return points;
+
+      commands.forEach(cmd => {
+        const type = cmd[0];
+        const coords = cmd.slice(1).trim().split(/[\s,]+/).map(parseFloat).filter(n => !isNaN(n));
+
+        if (type === 'M' || type === 'm') {
+          for (let i = 0; i < coords.length; i += 2) {
+            currentX = type === 'M' ? coords[i] : currentX + coords[i];
+            currentY = type === 'M' ? coords[i+1] : currentY + coords[i+1];
+            points.push({x: currentX, y: currentY});
+          }
+        } else if (type === 'L' || type === 'l') {
+          for (let i = 0; i < coords.length; i += 2) {
+            currentX = type === 'L' ? coords[i] : currentX + coords[i];
+            currentY = type === 'L' ? coords[i+1] : currentY + coords[i+1];
+            points.push({x: currentX, y: currentY});
+          }
+        } else if (type === 'H' || type === 'h') {
+          coords.forEach(x => {
+            currentX = type === 'H' ? x : currentX + x;
+            points.push({x: currentX, y: currentY});
+          });
+        } else if (type === 'V' || type === 'v') {
+          coords.forEach(y => {
+            currentY = type === 'V' ? y : currentY + y;
+            points.push({x: currentX, y: currentY});
+          });
+        }
+      });
+
+      return points;
+    }
+
+    // Initialize
+    loadSample('spiral');
+  </script>
+</body>
+</html>

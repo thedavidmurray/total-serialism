@@ -416,6 +416,24 @@
           "path": "pen-plotter/algorithms/image-processing/squigglecam.html",
           "complexity": "intermediate",
           "tags": ["image-upload"]
+        },
+        {
+          "id": "image-to-ascii",
+          "name": "Image to ASCII",
+          "description": "Convert images to ASCII art with pen plotter support",
+          "path": "pen-plotter/algorithms/image-processing/image-to-ascii-gui.html",
+          "complexity": "beginner",
+          "tags": ["image-upload"],
+          "featured": true
+        },
+        {
+          "id": "dithering",
+          "name": "Image Dithering",
+          "description": "Floyd-Steinberg, Atkinson, Bayer, and Sierra dithering for pen plotting",
+          "path": "pen-plotter/algorithms/image-processing/dithering-gui.html",
+          "complexity": "intermediate",
+          "tags": ["image-upload"],
+          "featured": true
         }
       ]
     },
@@ -558,13 +576,31 @@
           "featured": true,
           "complexity": "beginner",
           "tags": ["image-upload", "file-upload"]
+        },
+        {
+          "id": "export-formats",
+          "name": "DXF & HPGL Export",
+          "description": "Professional plotter format exports: DXF (CAD/laser) and HPGL (vintage plotters)",
+          "path": "pen-plotter/export-formats-demo.html",
+          "featured": true,
+          "complexity": "beginner",
+          "tags": []
+        },
+        {
+          "id": "plot-simulator",
+          "name": "Plot Simulator",
+          "description": "Animated visualization of pen plotting with pen-up/pen-down movements and timing",
+          "path": "pen-plotter/algorithms/tools/plot-simulator.html",
+          "featured": true,
+          "complexity": "beginner",
+          "tags": ["file-upload"]
         }
       ]
     }
   },
   "stats": {
-    "totalAlgorithms": 75,
+    "totalAlgorithms": 79,
     "totalCategories": 15,
-    "featuredCount": 18
+    "featuredCount": 22
   }
 }
