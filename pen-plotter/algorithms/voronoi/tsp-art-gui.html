@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TSP Art Generator - Traveling Salesman Art</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../../../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../../../preset-manager.css">
   <style>
@@ -886,30 +887,47 @@
         return;
       }
 
-      let svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <rect width="${width}" height="${height}" fill="white"/>
-  <path d="`;
+      // Create temporary SVG canvas
+      const svgCanvas = createGraphics(width, height, SVG);
 
-      for (let i = 0; i < tspPath.length; i++) {
-        const p = points[tspPath[i]];
-        svg += i === 0 ? `M ${p.x},${p.y} ` : `L ${p.x},${p.y} `;
+      svgCanvas.background(255);
+
+      // Show source image if requested
+      if (params.showSourceImage && sourceImage) {
+        svgCanvas.push();
+        svgCanvas.tint(255, 100);
+        svgCanvas.image(sourceImage, 0, 0, width, height);
+        svgCanvas.pop();
       }
 
-      // Close path
-      const p = points[tspPath[0]];
-      svg += `L ${p.x},${p.y}`;
+      // Draw TSP path
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(params.lineWeight);
+      svgCanvas.noFill();
 
-      svg += `" stroke="black" stroke-width="${params.lineWeight}" fill="none"/>
-</svg>`;
+      svgCanvas.beginShape();
+      for (let i = 0; i < tspPath.length; i++) {
+        const p = points[tspPath[i]];
+        svgCanvas.vertex(p.x, p.y);
+      }
+      // Close the loop
+      if (tspPath.length > 0) {
+        const p = points[tspPath[0]];
+        svgCanvas.vertex(p.x, p.y);
+      }
+      svgCanvas.endShape();
 
-      const blob = new Blob([svg], { type: 'image/svg+xml' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `tsp-art-${Date.now()}.svg`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // Draw points if requested
+      if (params.showPoints) {
+        svgCanvas.fill(255, 0, 0);
+        svgCanvas.noStroke();
+        for (let p of points) {
+          svgCanvas.circle(p.x, p.y, params.pointSize);
+        }
+      }
+
+      // Save SVG
+      save(svgCanvas, `tsp-art-${Date.now()}.svg`);
     }
 
     // Export PNG
