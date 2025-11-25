@@ -1,6 +1,6 @@
 # Algorithm Reference Guide
 
-Complete reference for all 77 pen plotter algorithms with parameters, outputs, and best practices.
+Complete reference for all 78 pen plotter algorithms with parameters, outputs, and best practices.
 
 ## Quick Reference
 
@@ -8,10 +8,10 @@ Complete reference for all 77 pen plotter algorithms with parameters, outputs, a
 
 | Format | Count | Coverage |
 |--------|-------|----------|
-| SVG | 77/77 | 100% |
-| PNG | 58/77 | 75% |
-| GIF | 48/77 | 62% |
-| Multi-Layer SVG | 1/77 | 1% |
+| SVG | 78/78 | 100% |
+| PNG | 59/78 | 76% |
+| GIF | 48/78 | 62% |
+| Multi-Layer SVG | 1/78 | 1% |
 | DXF | Available via module | ✓ |
 | HPGL | Available via module | ✓ |
 
@@ -126,6 +126,55 @@ Converts images to flowing squiggly lines following brightness contours.
 - Organic, flowing artwork
 - Portrait stylization
 - Abstract interpretations
+
+---
+
+### Image Dithering
+**Path:** `pen-plotter/algorithms/image-processing/dithering-gui.html`
+**Complexity:** Intermediate | **Featured:** ✓
+
+Converts grayscale/color images to binary black-and-white patterns using classic dithering algorithms.
+
+**Algorithms:**
+- **Floyd-Steinberg**: Classic error diffusion (7/16, 3/16, 5/16, 1/16 distribution)
+- **Atkinson**: Mac 1984 aesthetic (3/4 error, 6 neighbors, brighter output)
+- **Bayer**: Ordered dithering with threshold matrices (2×2, 4×4, 8×8)
+- **Sierra**: Fast error diffusion (10 neighbors, simpler fractions)
+- **Simple Threshold**: Binary cutoff (fastest, no diffusion)
+
+**Parameters:**
+- **Algorithm**: Floyd-Steinberg, Atkinson, Bayer 2×2/4×4/8×8, Sierra, Threshold
+- **Threshold**: 0-255 (brightness cutoff, lower = more black pixels)
+- **Resolution Scale**: 0.1-2.0 (downscale for faster processing)
+- **Export Mode**: Dots (circles), Lines (horizontal regions), Stipple (random)
+- **Dot/Line Size**: 0.5-5px
+- **Spacing**: 1-5px (pixel sampling interval)
+
+**Export Formats:**
+- SVG (vector dots/lines)
+- PNG (raster preview)
+
+**Best Use Cases:**
+- Photo portraits with Floyd-Steinberg
+- Game Boy aesthetic with Bayer 4×4
+- Vintage Mac look with Atkinson
+- High-contrast silhouettes with Threshold
+- Stippled art with dots mode
+- Fast plotting with lines mode
+
+**Tips:**
+- Floyd-Steinberg produces photorealistic results but complex paths
+- Bayer creates consistent patterns, ideal for textures
+- Atkinson creates brighter, higher-contrast images
+- Lower threshold = darker overall image
+- Dots mode best for pen plotting (predictable strokes)
+- Lines mode fastest to plot (fewer pen lifts)
+- Use scale < 1.0 to reduce detail and plotting time
+
+**Plotting Time Estimates:**
+- Dots mode: ~1-5 minutes per 10,000 black pixels
+- Lines mode: ~30 seconds per 1,000 lines
+- Coverage: 30-70% black typical for good images
 
 ---
 

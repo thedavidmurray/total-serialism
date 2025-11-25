@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ASCII Art - Pen Plotter Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../shared/ascii-art.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      background: #0a0a0a;
+      color: #00ff00;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #controls {
+      width: 360px;
+      padding: 20px;
+      background: #0a0a0a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 2px solid #00ff00;
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      color: #00ff00;
+      font-size: 24px;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #00aa00;
+      margin-bottom: 20px;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #003300;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00ff00;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #00cc00;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="file"],
+    input[type="checkbox"] {
+      display: none;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #001100;
+      color: #00ff00;
+      border: 1px solid #003300;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #003300;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      font-weight: 500;
+      font-family: 'Courier New', monospace;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #00ff00;
+      color: #000;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    button.secondary {
+      background: #001100;
+    }
+    button.secondary:hover {
+      background: #00ff00;
+    }
+    .value {
+      font-weight: 600;
+      color: #00ff00;
+      float: right;
+    }
+    .stats {
+      background: #001100;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid #003300;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .stats .value {
+      float: none;
+    }
+    .info-box {
+      background: #001100;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #00aa00;
+      border: 1px solid #003300;
+    }
+    .ascii-preview {
+      background: #000;
+      padding: 10px;
+      border: 1px solid #00ff00;
+      border-radius: 4px;
+      font-size: 6px;
+      line-height: 1.2;
+      color: #00ff00;
+      overflow: auto;
+      max-height: 200px;
+      white-space: pre;
+      font-family: 'Courier New', monospace;
+    }
+    .char-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #003300;
+      border: 1px solid #00ff00;
+      border-radius: 3px;
+      font-size: 10px;
+      margin: 2px;
+    }
+    label.checkbox {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    label.checkbox input {
+      display: inline-block;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="controls">
+    <h2>💻 ASCII Art</h2>
+    <div class="subtitle">Convert images to terminal-style art</div>
+
+    <div class="control-group">
+      <h3>📁 Image Input</h3>
+      <input type="file" id="imageInput" accept="image/*">
+      <button class="secondary" onclick="document.getElementById('imageInput').click()">
+        Upload Image
+      </button>
+      <div class="info-box" style="margin-top: 10px;">
+        Upload any image. Works best with high-contrast photos, portraits, or logos.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🔧 Character Set</h3>
+      <div class="control">
+        <label>Character Set:</label>
+        <select id="charSet">
+          <option value="detailed">Detailed (10 chars)</option>
+          <option value="simple">Simple (6 chars)</option>
+          <option value="blocks">Blocks (5 chars)</option>
+          <option value="binary">Binary (2 chars)</option>
+        </select>
+      </div>
+
+      <div class="info-box">
+        <span class="char-badge">detailed</span> @%#*+=-:. <br>
+        <span class="char-badge">simple</span> @%*+. <br>
+        <span class="char-badge">blocks</span> █▓▒░ <br>
+        <span class="char-badge">binary</span> █
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚙️ Parameters</h3>
+      <div class="control">
+        <label>Cell Width: <span class="value" id="cellWidth-val">8</span>px</label>
+        <input type="range" id="cellWidth" min="4" max="20" value="8" step="1">
+      </div>
+      <div class="control">
+        <label>Cell Height: <span class="value" id="cellHeight-val">12</span>px</label>
+        <input type="range" id="cellHeight" min="6" max="30" value="12" step="1">
+      </div>
+      <div class="control">
+        <label class="checkbox">
+          <input type="checkbox" id="invert">
+          Invert Colors
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📤 Export Mode</h3>
+      <div class="control">
+        <label>Output Style:</label>
+        <select id="exportMode">
+          <option value="text">Text Characters (SVG)</option>
+          <option value="dots">Dots (density-based)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Font Size: <span class="value" id="fontSize-val">10</span>px</label>
+        <input type="range" id="fontSize" min="6" max="20" value="10" step="1">
+      </div>
+      <div class="control">
+        <label>Dot Size: <span class="value" id="dotSize-val">2</span>px</label>
+        <input type="range" id="dotSize" min="0.5" max="5" value="2" step="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📊 ASCII Preview</h3>
+      <div id="ascii-preview" class="ascii-preview">
+        No image loaded
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📊 Statistics</h3>
+      <div id="stats" class="stats">
+        <div><span>Lines:</span> <span class="value">-</span></div>
+        <div><span>Columns:</span> <span class="value">-</span></div>
+        <div><span>Total Chars:</span> <span class="value">-</span></div>
+        <div><span>Coverage:</span> <span class="value">-</span></div>
+      </div>
+    </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>💾 Export</h3>
+      <button onclick="regenerate()">🔄 Generate ASCII</button>
+      <button onclick="exportSVG()">📥 Export SVG</button>
+      <button onclick="exportTXT()">📥 Export TXT</button>
+      <button onclick="exportPNG()">📥 Export PNG</button>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 Tips:</strong><br>
+      • Use 'detailed' for photorealistic results<br>
+      • Use 'blocks' for modern aesthetic<br>
+      • Use 'binary' for high-contrast art<br>
+      • Smaller cells = more detail<br>
+      • Dots mode is best for plotting
+    </div>
+  </div>
+
+  <script>
+    let sourceImage = null;
+    let asciiText = '';
+    let canvas;
+    let presetManager;
+
+    let params = {
+      charSet: 'detailed',
+      cellWidth: 8,
+      cellHeight: 12,
+      invert: false,
+      exportMode: 'text',
+      fontSize: 10,
+      dotSize: 2
+    };
+
+    function setup() {
+      canvas = createCanvas(800, 800);
+      canvas.parent('canvas-container');
+      background(0);
+
+      setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'ascii-art',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          if (sourceImage) regenerate();
+        },
+        onRandomize: () => {
+          params.charSet = ['detailed', 'simple', 'blocks', 'binary'][Math.floor(Math.random() * 4)];
+          params.cellWidth = Math.floor(Math.random() * 8) + 6;
+          params.cellHeight = Math.floor(Math.random() * 12) + 10;
+          params.invert = Math.random() > 0.5;
+          updateUIFromParams();
+          if (sourceImage) regenerate();
+        }
+      });
+
+      // Show placeholder
+      fill(0, 255, 0);
+      textAlign(CENTER, CENTER);
+      textSize(20);
+      text('Upload an image to begin', width / 2, height / 2);
+    }
+
+    function setupControls() {
+      // Image upload
+      document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+
+      // Character set
+      document.getElementById('charSet').addEventListener('change', (e) => {
+        params.charSet = e.target.value;
+        if (sourceImage) regenerate();
+      });
+
+      // Cell width
+      document.getElementById('cellWidth').addEventListener('input', (e) => {
+        params.cellWidth = parseInt(e.target.value);
+        document.getElementById('cellWidth-val').textContent = params.cellWidth;
+        if (sourceImage) regenerate();
+      });
+
+      // Cell height
+      document.getElementById('cellHeight').addEventListener('input', (e) => {
+        params.cellHeight = parseInt(e.target.value);
+        document.getElementById('cellHeight-val').textContent = params.cellHeight;
+        if (sourceImage) regenerate();
+      });
+
+      // Invert
+      document.getElementById('invert').addEventListener('change', (e) => {
+        params.invert = e.target.checked;
+        if (sourceImage) regenerate();
+      });
+
+      // Export mode
+      document.getElementById('exportMode').addEventListener('change', (e) => {
+        params.exportMode = e.target.value;
+      });
+
+      // Font size
+      document.getElementById('fontSize').addEventListener('input', (e) => {
+        params.fontSize = parseFloat(e.target.value);
+        document.getElementById('fontSize-val').textContent = params.fontSize;
+      });
+
+      // Dot size
+      document.getElementById('dotSize').addEventListener('input', (e) => {
+        params.dotSize = parseFloat(e.target.value);
+        document.getElementById('dotSize-val').textContent = params.dotSize;
+      });
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (img) => {
+          sourceImage = img;
+          regenerate();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function regenerate() {
+      if (!sourceImage) return;
+
+      // Convert to grayscale
+      const grayImage = sourceImage.get();
+      grayImage.filter(GRAY);
+
+      // Generate ASCII
+      asciiText = ASCIIArt.imageToASCII(grayImage, {
+        charSet: params.charSet,
+        cellWidth: params.cellWidth,
+        cellHeight: params.cellHeight,
+        invert: params.invert
+      });
+
+      // Display preview
+      document.getElementById('ascii-preview').textContent = asciiText;
+
+      // Render to canvas
+      renderASCII();
+
+      // Update stats
+      updateStats();
+    }
+
+    function renderASCII() {
+      background(0);
+      fill(0, 255, 0);
+      textAlign(LEFT, TOP);
+      textFont('Courier New');
+      textSize(8);
+
+      const lines = asciiText.split('\n');
+      const lineHeight = 10;
+
+      for (let i = 0; i < lines.length; i++) {
+        text(lines[i], 20, 20 + i * lineHeight);
+      }
+    }
+
+    function updateStats() {
+      if (!asciiText) return;
+
+      const stats = ASCIIArt.getStats(asciiText);
+
+      document.getElementById('stats').innerHTML = `
+        <div><span>Lines:</span> <span class="value">${stats.lines}</span></div>
+        <div><span>Columns:</span> <span class="value">${stats.columns}</span></div>
+        <div><span>Total Chars:</span> <span class="value">${stats.totalChars.toLocaleString()}</span></div>
+        <div><span>Coverage:</span> <span class="value">${stats.coverage}%</span></div>
+      `;
+    }
+
+    function updateUIFromParams() {
+      document.getElementById('charSet').value = params.charSet;
+
+      document.getElementById('cellWidth').value = params.cellWidth;
+      document.getElementById('cellWidth-val').textContent = params.cellWidth;
+
+      document.getElementById('cellHeight').value = params.cellHeight;
+      document.getElementById('cellHeight-val').textContent = params.cellHeight;
+
+      document.getElementById('invert').checked = params.invert;
+
+      document.getElementById('exportMode').value = params.exportMode;
+
+      document.getElementById('fontSize').value = params.fontSize;
+      document.getElementById('fontSize-val').textContent = params.fontSize;
+
+      document.getElementById('dotSize').value = params.dotSize;
+      document.getElementById('dotSize-val').textContent = params.dotSize;
+    }
+
+    function exportSVG() {
+      if (!asciiText) {
+        alert('Please upload and process an image first!');
+        return;
+      }
+
+      let svg;
+      if (params.exportMode === 'text') {
+        svg = ASCIIArt.asciiToSVG(asciiText, {
+          charWidth: params.cellWidth,
+          charHeight: params.cellHeight,
+          fontSize: params.fontSize,
+          font: 'Courier New, monospace'
+        });
+      } else {
+        svg = ASCIIArt.asciiToDots(asciiText, {
+          dotSize: params.dotSize,
+          spacing: params.cellWidth
+        });
+      }
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ascii-art-${params.charSet}-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportTXT() {
+      if (!asciiText) {
+        alert('Please upload and process an image first!');
+        return;
+      }
+
+      const blob = new Blob([asciiText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ascii-art-${params.charSet}-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPNG() {
+      if (!asciiText) {
+        alert('Please upload and process an image first!');
+        return;
+      }
+
+      save(`ascii-art-${params.charSet}-${Date.now()}.png`);
+    }
+  </script>
+</body>
+</html>
