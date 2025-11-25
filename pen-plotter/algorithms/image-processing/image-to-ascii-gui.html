@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image to ASCII Art - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../../preset-manager.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      display: flex;
+      background: #0a0a0a;
+      color: #00ff00;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #000;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: #0a0a0a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 2px solid #00ff00;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+      font-size: 24px;
+      letter-spacing: 2px;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #003300;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00cc00;
+      font-size: 14px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 12px;
+      color: #00aa00;
+    }
+    input[type="range"] {
+      width: 100%;
+      background: #001100;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 8px;
+      background: #001100;
+      color: #00ff00;
+      border: 1px solid #003300;
+      font-family: 'Monaco', monospace;
+      font-size: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: #003300;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: 'Monaco', monospace;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      transition: all 0.3s;
+    }
+    button:hover {
+      background: #00ff00;
+      color: #000;
+      box-shadow: 0 0 20px #00ff00;
+    }
+    .upload-btn {
+      background: #004400;
+      border-color: #00ff00;
+    }
+    .export-btn {
+      background: #002200;
+      border-color: #00cc00;
+    }
+    .value {
+      font-weight: bold;
+      color: #00ff00;
+      text-shadow: 0 0 5px #00ff00;
+    }
+    #image-upload {
+      display: none;
+    }
+    .file-info {
+      background: #001100;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      font-size: 11px;
+      border: 1px solid #003300;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+    #preview-section {
+      margin: 15px 0;
+      padding: 10px;
+      background: #001100;
+      border: 1px solid #003300;
+      border-radius: 4px;
+    }
+    #char-preview {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      color: #00ff00;
+      background: #000;
+      padding: 10px;
+      border: 1px solid #003300;
+      overflow: auto;
+      max-height: 100px;
+    }
+    .info-text {
+      font-size: 11px;
+      color: #00aa00;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>ASCII ART</h2>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Image Upload</h3>
+      <input type="file" id="image-upload" accept="image/*">
+      <button class="upload-btn" onclick="document.getElementById('image-upload').click()">
+        📁 Upload Image
+      </button>
+      <div class="file-info" id="file-info">No image loaded</div>
+      <div class="info-text">Supported: JPG, PNG, GIF, BMP</div>
+    </div>
+
+    <div class="control-group">
+      <h3>Paper Size</h3>
+      <div class="control">
+        <label>Preset Size:</label>
+        <select id="paperSize">
+          <option value="A3">A3 (297 × 420 mm)</option>
+          <option value="A4" selected>A4 (210 × 297 mm)</option>
+          <option value="A5">A5 (148 × 210 mm)</option>
+          <option value="Letter">Letter (8.5" × 11")</option>
+          <option value="Legal">Legal (8.5" × 14")</option>
+          <option value="Tabloid">Tabloid (11" × 17")</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="control" id="custom-width-control" style="display: none;">
+        <label>Custom Width (mm):</label>
+        <input type="number" id="customWidth" value="210" min="50" max="1000">
+      </div>
+      <div class="control" id="custom-height-control" style="display: none;">
+        <label>Custom Height (mm):</label>
+        <input type="number" id="customHeight" value="297" min="50" max="1000">
+      </div>
+      <div class="control">
+        <label>Orientation:</label>
+        <select id="orientation">
+          <option value="portrait">Portrait</option>
+          <option value="landscape">Landscape</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>ASCII Settings</h3>
+      <div class="control">
+        <label>Character Set:</label>
+        <select id="charSet">
+          <option value="standard">Standard (10 levels)</option>
+          <option value="detailed">Detailed (70 levels)</option>
+          <option value="blocks">Block Characters</option>
+          <option value="simple">Simple (. : - = + * # @ )</option>
+          <option value="binary">Binary (0 and 1)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="control" id="custom-chars-control" style="display: none;">
+        <label>Custom Characters (dark to light):</label>
+        <input type="text" id="customChars" value=" .:-=+*#%@" style="width: 100%;">
+      </div>
+      <div id="preview-section">
+        <div style="font-size: 11px; margin-bottom: 5px;">Preview:</div>
+        <div id="char-preview"></div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Resolution</h3>
+      <div class="control">
+        <label>Columns: <span class="value" id="cols-val">80</span></label>
+        <input type="range" id="cols" min="20" max="300" value="80" step="10">
+      </div>
+      <div class="control">
+        <label>Font Size: <span class="value" id="fontSize-val">10</span>px</label>
+        <input type="range" id="fontSize" min="4" max="20" value="10" step="1">
+      </div>
+      <div class="control">
+        <label>Line Height: <span class="value" id="lineHeight-val">1.0</span></label>
+        <input type="range" id="lineHeight" min="0.5" max="2.0" value="1.0" step="0.1">
+      </div>
+      <div class="control">
+        <label>Letter Spacing: <span class="value" id="letterSpacing-val">0</span>px</label>
+        <input type="range" id="letterSpacing" min="-2" max="5" value="0" step="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Image Processing</h3>
+      <div class="control">
+        <label>Brightness: <span class="value" id="brightness-val">1.0</span></label>
+        <input type="range" id="brightness" min="0.1" max="2.0" value="1.0" step="0.1">
+      </div>
+      <div class="control">
+        <label>Contrast: <span class="value" id="contrast-val">1.0</span></label>
+        <input type="range" id="contrast" min="0.1" max="3.0" value="1.0" step="0.1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="invert">
+        <label for="invert">Invert Colors</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="edgeDetect">
+        <label for="edgeDetect">Edge Detection</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Text Color:</label>
+        <select id="textColor">
+          <option value="#00ff00">Terminal Green</option>
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="#ff0000">Red</option>
+          <option value="#0000ff">Blue</option>
+          <option value="gradient">Gradient (maintains luminance)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <select id="bgColor">
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="transparent">Transparent</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export Options</h3>
+      <button class="export-btn" onclick="exportSVG()">Export SVG</button>
+      <button class="export-btn" onclick="exportPNG()">Export PNG</button>
+      <button class="export-btn" onclick="exportTXT()">Export TXT</button>
+      <button class="export-btn" onclick="exportHTML()">Export HTML</button>
+      <div class="info-text" style="margin-top: 10px;">
+        SVG exports are perfect for pen plotters!<br>
+        Maintains exact sizing for your chosen paper.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Character sets for different detail levels
+    const charSets = {
+      standard: ' .:-=+*#%@',
+      detailed: ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$',
+      blocks: ' ░▒▓█',
+      simple: ' .:+-*#@',
+      binary: ' █'
+    };
+
+    let params = {
+      paperSize: 'A4',
+      orientation: 'portrait',
+      customWidth: 210,
+      customHeight: 297,
+      charSet: 'standard',
+      customChars: ' .:-=+*#%@',
+      cols: 80,
+      fontSize: 10,
+      lineHeight: 1.0,
+      letterSpacing: 0,
+      brightness: 1.0,
+      contrast: 1.0,
+      invert: false,
+      edgeDetect: false,
+      textColor: '#00ff00',
+      bgColor: '#000000'
+    };
+
+    let sourceImage = null;
+    let asciiText = '';
+    let svgCanvas;
+    let presetManager;
+
+    // Paper sizes in mm
+    const paperSizes = {
+      A3: [297, 420],
+      A4: [210, 297],
+      A5: [148, 210],
+      Letter: [215.9, 279.4],
+      Legal: [215.9, 355.6],
+      Tabloid: [279.4, 431.8]
+    };
+
+    function setup() {
+      // Start with A4 portrait
+      let [w, h] = paperSizes.A4;
+      const scale = Math.min(windowWidth * 0.6 / w, windowHeight * 0.9 / h);
+
+      svgCanvas = createCanvas(w * scale, h * scale, SVG);
+      svgCanvas.parent('canvas-container');
+      noLoop();
+
+      setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'image-to-ascii',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          if (sourceImage) {
+            generateASCII();
+          }
+        },
+        onRandomize: () => {
+          params.cols = Math.floor(random(20, 200));
+          params.fontSize = Math.floor(random(4, 20));
+          params.lineHeight = random(0.5, 2.0);
+          params.brightness = random(0.5, 1.5);
+          params.contrast = random(0.5, 2.0);
+          const charSetKeys = Object.keys(charSets);
+          params.charSet = random(charSetKeys);
+          updateUIFromParams();
+          if (sourceImage) {
+            generateASCII();
+          }
+        }
+      });
+
+      // Draw initial placeholder
+      drawPlaceholder();
+    }
+
+    function setupControls() {
+      // Image upload
+      document.getElementById('image-upload').addEventListener('change', handleImageUpload);
+
+      // Paper size controls
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const customControls = e.target.value === 'custom';
+        document.getElementById('custom-width-control').style.display = customControls ? 'block' : 'none';
+        document.getElementById('custom-height-control').style.display = customControls ? 'block' : 'none';
+        updateCanvasSize();
+        if (sourceImage) generateASCII();
+      });
+
+      document.getElementById('orientation').addEventListener('change', (e) => {
+        params.orientation = e.target.value;
+        updateCanvasSize();
+        if (sourceImage) generateASCII();
+      });
+
+      document.getElementById('customWidth').addEventListener('input', (e) => {
+        params.customWidth = parseFloat(e.target.value);
+        if (params.paperSize === 'custom') {
+          updateCanvasSize();
+          if (sourceImage) generateASCII();
+        }
+      });
+
+      document.getElementById('customHeight').addEventListener('input', (e) => {
+        params.customHeight = parseFloat(e.target.value);
+        if (params.paperSize === 'custom') {
+          updateCanvasSize();
+          if (sourceImage) generateASCII();
+        }
+      });
+
+      // Character set
+      document.getElementById('charSet').addEventListener('change', (e) => {
+        params.charSet = e.target.value;
+        document.getElementById('custom-chars-control').style.display =
+          e.target.value === 'custom' ? 'block' : 'none';
+        updateCharPreview();
+        if (sourceImage) generateASCII();
+      });
+
+      document.getElementById('customChars').addEventListener('input', (e) => {
+        params.customChars = e.target.value;
+        if (params.charSet === 'custom') {
+          updateCharPreview();
+          if (sourceImage) generateASCII();
+        }
+      });
+
+      // Range inputs
+      ['cols', 'fontSize', 'lineHeight', 'letterSpacing', 'brightness', 'contrast'].forEach(param => {
+        const element = document.getElementById(param);
+        element.addEventListener('input', (e) => {
+          params[param] = parseFloat(e.target.value);
+          document.getElementById(param + '-val').textContent = params[param];
+          if (sourceImage) generateASCII();
+        });
+      });
+
+      // Checkboxes
+      ['invert', 'edgeDetect'].forEach(param => {
+        document.getElementById(param).addEventListener('change', (e) => {
+          params[param] = e.target.checked;
+          if (sourceImage) generateASCII();
+        });
+      });
+
+      // Select dropdowns
+      ['textColor', 'bgColor'].forEach(param => {
+        document.getElementById(param).addEventListener('change', (e) => {
+          params[param] = e.target.value;
+          if (sourceImage) generateASCII();
+        });
+      });
+
+      updateCharPreview();
+    }
+
+    function updateCanvasSize() {
+      let w, h;
+
+      if (params.paperSize === 'custom') {
+        w = params.customWidth;
+        h = params.customHeight;
+      } else {
+        [w, h] = paperSizes[params.paperSize];
+      }
+
+      if (params.orientation === 'landscape') {
+        [w, h] = [h, w];
+      }
+
+      const scale = Math.min(windowWidth * 0.6 / w, windowHeight * 0.9 / h);
+      resizeCanvas(w * scale, h * scale);
+      redraw();
+    }
+
+    function updateCharPreview() {
+      const chars = params.charSet === 'custom' ? params.customChars : charSets[params.charSet];
+      const preview = chars.split('').map(c => c === ' ' ? '&nbsp;' : c).join('');
+      document.getElementById('char-preview').innerHTML = `Palette: ${preview}`;
+    }
+
+    function updateUIFromParams() {
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('orientation').value = params.orientation;
+      document.getElementById('charSet').value = params.charSet;
+      document.getElementById('customChars').value = params.customChars;
+      document.getElementById('cols').value = params.cols;
+      document.getElementById('fontSize').value = params.fontSize;
+      document.getElementById('lineHeight').value = params.lineHeight;
+      document.getElementById('letterSpacing').value = params.letterSpacing;
+      document.getElementById('brightness').value = params.brightness;
+      document.getElementById('contrast').value = params.contrast;
+      document.getElementById('invert').checked = params.invert;
+      document.getElementById('edgeDetect').checked = params.edgeDetect;
+      document.getElementById('textColor').value = params.textColor;
+      document.getElementById('bgColor').value = params.bgColor;
+
+      // Update value displays
+      document.getElementById('cols-val').textContent = params.cols;
+      document.getElementById('fontSize-val').textContent = params.fontSize;
+      document.getElementById('lineHeight-val').textContent = params.lineHeight;
+      document.getElementById('letterSpacing-val').textContent = params.letterSpacing;
+      document.getElementById('brightness-val').textContent = params.brightness;
+      document.getElementById('contrast-val').textContent = params.contrast;
+
+      updateCharPreview();
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      document.getElementById('file-info').textContent =
+        `📷 ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (img) => {
+          sourceImage = img;
+          generateASCII();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function generateASCII() {
+      if (!sourceImage) return;
+
+      const chars = params.charSet === 'custom' ? params.customChars : charSets[params.charSet];
+
+      // Calculate dimensions
+      const aspectRatio = sourceImage.height / sourceImage.width;
+      const rows = Math.floor(params.cols * aspectRatio);
+
+      // Create off-screen graphics for image processing
+      const processImg = createGraphics(params.cols, rows);
+      processImg.image(sourceImage, 0, 0, params.cols, rows);
+      processImg.loadPixels();
+
+      // Apply image processing
+      applyImageProcessing(processImg);
+
+      // Convert to ASCII
+      asciiText = '';
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < params.cols; x++) {
+          const idx = (y * params.cols + x) * 4;
+          const r = processImg.pixels[idx];
+          const g = processImg.pixels[idx + 1];
+          const b = processImg.pixels[idx + 2];
+
+          const brightness = (r + g + b) / 3;
+          const charIndex = floor(map(brightness, 0, 255, 0, chars.length));
+          asciiText += chars[constrain(charIndex, 0, chars.length - 1)];
+        }
+        asciiText += '\n';
+      }
+
+      processImg.remove();
+      redraw();
+    }
+
+    function applyImageProcessing(img) {
+      img.loadPixels();
+
+      // Apply brightness and contrast
+      for (let i = 0; i < img.pixels.length; i += 4) {
+        let r = img.pixels[i];
+        let g = img.pixels[i + 1];
+        let b = img.pixels[i + 2];
+
+        // Brightness
+        r *= params.brightness;
+        g *= params.brightness;
+        b *= params.brightness;
+
+        // Contrast
+        r = ((r / 255 - 0.5) * params.contrast + 0.5) * 255;
+        g = ((g / 255 - 0.5) * params.contrast + 0.5) * 255;
+        b = ((b / 255 - 0.5) * params.contrast + 0.5) * 255;
+
+        // Invert
+        if (params.invert) {
+          r = 255 - r;
+          g = 255 - g;
+          b = 255 - b;
+        }
+
+        img.pixels[i] = constrain(r, 0, 255);
+        img.pixels[i + 1] = constrain(g, 0, 255);
+        img.pixels[i + 2] = constrain(b, 0, 255);
+      }
+
+      // Edge detection (simple Sobel)
+      if (params.edgeDetect) {
+        const edges = [];
+        for (let y = 1; y < img.height - 1; y++) {
+          for (let x = 1; x < img.width - 1; x++) {
+            const idx = (y * img.width + x) * 4;
+
+            // Sobel operators
+            const gx =
+              -img.pixels[((y-1) * img.width + (x-1)) * 4] +
+              img.pixels[((y-1) * img.width + (x+1)) * 4] +
+              -2 * img.pixels[(y * img.width + (x-1)) * 4] +
+              2 * img.pixels[(y * img.width + (x+1)) * 4] +
+              -img.pixels[((y+1) * img.width + (x-1)) * 4] +
+              img.pixels[((y+1) * img.width + (x+1)) * 4];
+
+            const gy =
+              -img.pixels[((y-1) * img.width + (x-1)) * 4] +
+              -2 * img.pixels[((y-1) * img.width + x) * 4] +
+              -img.pixels[((y-1) * img.width + (x+1)) * 4] +
+              img.pixels[((y+1) * img.width + (x-1)) * 4] +
+              2 * img.pixels[((y+1) * img.width + x) * 4] +
+              img.pixels[((y+1) * img.width + (x+1)) * 4];
+
+            const magnitude = Math.sqrt(gx * gx + gy * gy);
+            edges.push(constrain(magnitude, 0, 255));
+          }
+        }
+
+        let edgeIdx = 0;
+        for (let y = 1; y < img.height - 1; y++) {
+          for (let x = 1; x < img.width - 1; x++) {
+            const idx = (y * img.width + x) * 4;
+            const edge = edges[edgeIdx++];
+            img.pixels[idx] = edge;
+            img.pixels[idx + 1] = edge;
+            img.pixels[idx + 2] = edge;
+          }
+        }
+      }
+
+      img.updatePixels();
+    }
+
+    function draw() {
+      // Background
+      if (params.bgColor === 'transparent') {
+        clear();
+      } else {
+        background(params.bgColor);
+      }
+
+      if (!sourceImage) {
+        drawPlaceholder();
+        return;
+      }
+
+      // Draw ASCII text
+      textFont('Courier New');
+      textSize(params.fontSize);
+      textAlign(LEFT, TOP);
+
+      if (params.textColor === 'gradient' && sourceImage) {
+        // Draw with original colors (grayscale to maintain luminance)
+        fill(0);
+      } else {
+        fill(params.textColor);
+      }
+
+      const lines = asciiText.split('\n');
+      const lineHeightPx = params.fontSize * params.lineHeight;
+
+      for (let i = 0; i < lines.length; i++) {
+        const y = i * lineHeightPx;
+        text(lines[i], 0, y);
+      }
+    }
+
+    function drawPlaceholder() {
+      fill(0, 255, 0, 30);
+      noStroke();
+      rect(width / 4, height / 4, width / 2, height / 2);
+
+      fill(0, 255, 0);
+      textAlign(CENTER, CENTER);
+      textSize(20);
+      text('Upload an image to begin', width / 2, height / 2);
+      textSize(14);
+      text('ASCII Art Generator', width / 2, height / 2 + 30);
+    }
+
+    function exportSVG() {
+      if (!sourceImage) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      save(`ascii-art-${Date.now()}.svg`);
+    }
+
+    function exportPNG() {
+      if (!sourceImage) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      save(`ascii-art-${Date.now()}.png`);
+    }
+
+    function exportTXT() {
+      if (!asciiText) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      const blob = new Blob([asciiText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ascii-art-${Date.now()}.txt`;
+      a.click();
+    }
+
+    function exportHTML() {
+      if (!asciiText) {
+        alert('Please upload an image first!');
+        return;
+      }
+
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ASCII Art</title>
+  <style>
+    body {
+      background: ${params.bgColor};
+      color: ${params.textColor === 'gradient' ? '#000000' : params.textColor};
+      font-family: 'Courier New', monospace;
+      font-size: ${params.fontSize}px;
+      line-height: ${params.lineHeight};
+      letter-spacing: ${params.letterSpacing}px;
+      padding: 20px;
+      margin: 0;
+      white-space: pre;
+    }
+  </style>
+</head>
+<body>${asciiText}</body>
+</html>`;
+
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ascii-art-${Date.now()}.html`;
+      a.click();
+    }
+  </script>
+</body>
+</html>

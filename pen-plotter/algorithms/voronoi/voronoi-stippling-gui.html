@@ -603,9 +603,30 @@
         }
 
         function exportSVG() {
-            beginRecord(SVG, `voronoi-stippling-${Date.now()}.svg`);
-            drawStipples();
-            endRecord();
+            // Create temporary SVG canvas
+            const prevCanvas = canvas;
+            const svgCanvas = createGraphics(width, height, SVG);
+
+            // Draw to SVG canvas
+            svgCanvas.background(255);
+
+            // Draw source image
+            if (params.showImage && sourceImage) {
+                svgCanvas.push();
+                svgCanvas.tint(255, 100);
+                svgCanvas.image(sourceImage, 0, 0, width, height);
+                svgCanvas.pop();
+            }
+
+            // Draw stipples
+            svgCanvas.fill(0);
+            svgCanvas.noStroke();
+            for (const p of points) {
+                svgCanvas.circle(p.x, p.y, params.pointSize);
+            }
+
+            // Save SVG
+            save(svgCanvas, `voronoi-stippling-${Date.now()}.svg`);
         }
 
         function exportPNG() {

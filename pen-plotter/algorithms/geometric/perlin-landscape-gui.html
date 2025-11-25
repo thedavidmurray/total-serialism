@@ -241,11 +241,9 @@
       <button onclick="exportSVG()">Export SVG</button>
       <button onclick="exportPNG()">Export PNG</button>
       <button onclick="exportLayers()">Export as Layers</button>
-      <button class="export-btn" onclick="toggleGifRecording()">
-        <span id="gif-record-text">Record GIF</span>
-      </button>
-      <div id="gif-progress">
-        <div>Recording: <span id="gif-status">Preparing...</span></div>
+      <button class="export-btn" onclick="exportGIF()">Export Rotating GIF</button>
+      <div id="gif-progress" style="display: none;">
+        <div><span id="gif-status">Preparing...</span></div>
         <div class="progress-bar">
           <div class="progress-fill" id="gif-progress-bar"></div>
         </div>
@@ -276,9 +274,6 @@
     let heightMap = [];
     let contours = [];
     let svgCanvas;
-    let gifExporter;
-    let animationTime = 0;
-    let isAnimating = false;
     
     const gridResolution = 100;
     
@@ -290,38 +285,6 @@
       svgCanvas.parent('canvas-container');
       noLoop(); // We'll use redraw() for updates
 
-      // Initialize GIF exporter
-      gifExporter = new GifExporter({
-        fps: 30,
-        duration: 3,
-        quality: 10,
-        width: w,
-        height: h,
-        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
-      });
-      
-      gifExporter.init(svgCanvas.canvas, {
-        onProgress: (data) => {
-          let statusText = data.phase === 'recording' 
-            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
-            : `Encoding: ${Math.round(data.progress * 100)}%`;
-          document.getElementById('gif-status').textContent = statusText;
-          document.getElementById('gif-progress-bar').style.width = 
-            (data.progress * 100) + '%';
-        },
-        onComplete: (result) => {
-          document.getElementById('gif-progress').style.display = 'none';
-          document.getElementById('gif-record-text').textContent = 'Record GIF';
-          isAnimating = false;
-          noLoop();
-          
-          const link = document.createElement('a');
-          link.href = result.url;
-          link.download = `perlin-landscape-${Date.now()}.gif`;
-          link.click();
-        }
-      });
-      
       setupControls();
       regenerate();
     }
@@ -530,11 +493,6 @@
       }
       
       pop();
-      
-      // Capture frame for GIF if recording
-      if (isAnimating && gifExporter && gifExporter.isRecording()) {
-        gifExporter.captureFrame();
-      }
     }
     
     function drawTopView() {
@@ -748,23 +706,103 @@
       }
     }
     
-    function toggleGifRecording() {
-      if (gifExporter && gifExporter.isRecording()) {
-        gifExporter.stop();
-        document.getElementById('gif-record-text').textContent = 'Record GIF';
-        isAnimating = false;
-        noLoop();
-      } else if (gifExporter) {
-        document.getElementById('gif-progress').style.display = 'block';
-        document.getElementById('gif-record-text').textContent = 'Stop Recording';
-        
-        // Start animation
-        animationTime = 0;
-        isAnimating = true;
-        loop();
-        
-        gifExporter.start();
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      if (!statusEl) return;
+
+      statusEl.textContent = 'Preparing GIF export...';
+      const progressBar = document.getElementById('gif-progress-bar');
+      const gifProgress = document.getElementById('gif-progress');
+      if (gifProgress) gifProgress.style.display = 'block';
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/dist/gif.worker.js'
+      });
+
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+
+      // Store original rotation
+      const originalRotation = params.rotation;
+
+      // Generate frames by rotating the view
+      const totalFrames = 60;
+      const frameDelay = 50;
+
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Update rotation for animation
+        params.rotation = (frame / totalFrames) * 360;
+
+        // Clear and draw frame
+        clear();
+        background(255);
+
+        push();
+        translate(width/2, height/2);
+        scale(params.zoom);
+        rotate(radians(params.rotation));
+        translate(-width/2, -height/2);
+
+        // Draw based on view mode
+        switch (params.viewMode) {
+          case 'top':
+            drawTopView();
+            break;
+          case 'perspective':
+            drawPerspectiveView();
+            break;
+          case 'cross-section':
+            drawCrossSection();
+            break;
+          case 'dual':
+            drawDualView();
+            break;
+        }
+
+        pop();
+
+        // Copy p5 canvas to offscreen canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(drawingContext.canvas, 0, 0);
+
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+        if (progressBar) progressBar.style.width = progress + '%';
       }
+
+      // Restore original rotation
+      params.rotation = originalRotation;
+      redraw();
+
+      statusEl.textContent = 'Encoding GIF...';
+
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `perlin-landscape-${params.viewMode}-${params.seed}.gif`;
+        a.click();
+
+        setTimeout(() => {
+          statusEl.textContent = '';
+          if (gifProgress) gifProgress.style.display = 'none';
+        }, 3000);
+      });
+
+      gif.render();
     }
     
     // Helper function for smooth interpolation

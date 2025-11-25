@@ -613,7 +613,7 @@
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -621,79 +621,97 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Store original state
-      const originalRunning = running;
+      const originalPlaying = isPlaying;
       const originalGeneration = generation;
       const originalGrid = grid.map(row => [...row]);
-      
-      running = false;
-      
-      // Reset to initial state or pattern
-      if (params.pattern !== 'random') {
-        clearGrid();
-        placePattern(params.pattern);
-      } else {
-        randomize();
-      }
+
+      isPlaying = false;
+
+      // Start fresh with current pattern
+      loadPattern('glider');
       generation = 0;
-      
+
       // Generate frames
       const totalFrames = 50;
+      const frameDelay = 100;
+
       for (let frame = 0; frame < totalFrames; frame++) {
         statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
-        
+
         // Create offscreen canvas
         const offscreenCanvas = document.createElement('canvas');
         offscreenCanvas.width = width;
         offscreenCanvas.height = height;
         const ctx = offscreenCanvas.getContext('2d');
-        
-        // Draw current state
-        ctx.fillStyle = 'white';
+
+        // Calculate drawing parameters
+        const offsetX = (width - params.gridSize * params.cellSize) / 2;
+        const offsetY = (height - params.gridSize * params.cellSize) / 2;
+
+        // Draw background
+        ctx.fillStyle = '#1e1e1e';
         ctx.fillRect(0, 0, width, height);
-        
-        const cellSize = params.cellSize;
-        ctx.fillStyle = 'black';
-        
-        for (let i = 0; i < cols; i++) {
-          for (let j = 0; j < rows; j++) {
+
+        // Draw grid if enabled
+        if (params.showGrid) {
+          ctx.strokeStyle = '#323232';
+          ctx.lineWidth = 0.5;
+          for (let i = 0; i <= params.gridSize; i++) {
+            ctx.beginPath();
+            ctx.moveTo(offsetX + i * params.cellSize, offsetY);
+            ctx.lineTo(offsetX + i * params.cellSize, offsetY + params.gridSize * params.cellSize);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(offsetX, offsetY + i * params.cellSize);
+            ctx.lineTo(offsetX + params.gridSize * params.cellSize, offsetY + i * params.cellSize);
+            ctx.stroke();
+          }
+        }
+
+        // Draw cells
+        ctx.fillStyle = '#4CAF50';
+        for (let i = 0; i < params.gridSize; i++) {
+          for (let j = 0; j < params.gridSize; j++) {
             if (grid[i][j] === 1) {
-              ctx.fillRect(i * cellSize, j * cellSize, cellSize - 1, cellSize - 1);
+              const x = offsetX + i * params.cellSize;
+              const y = offsetY + j * params.cellSize;
+              ctx.fillRect(x, y, params.cellSize, params.cellSize);
             }
           }
         }
-        
-        // Add frame
-        gif.addFrame(ctx, {delay: 100});
-        
+
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+
         // Update grid for next frame
         if (frame < totalFrames - 1) {
-          updateGrid();
-          generation++;
+          stepSimulation();
         }
       }
-      
+
       // Restore original state
       grid = originalGrid;
       generation = originalGeneration;
-      running = originalRunning;
-      
+      isPlaying = originalPlaying;
+
       statusEl.textContent = 'Encoding GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF export complete!';
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `game-of-life-${params.pattern}.gif`;
+        link.download = `game-of-life-gen${originalGeneration}.gif`;
         link.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>
