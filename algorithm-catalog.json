@@ -567,13 +567,22 @@
           "featured": true,
           "complexity": "beginner",
           "tags": ["image-upload", "file-upload"]
+        },
+        {
+          "id": "export-formats",
+          "name": "DXF & HPGL Export",
+          "description": "Professional plotter format exports: DXF (CAD/laser) and HPGL (vintage plotters)",
+          "path": "pen-plotter/export-formats-demo.html",
+          "featured": true,
+          "complexity": "beginner",
+          "tags": []
         }
       ]
     }
   },
   "stats": {
-    "totalAlgorithms": 76,
+    "totalAlgorithms": 77,
     "totalCategories": 15,
-    "featuredCount": 19
+    "featuredCount": 20
   }
 }

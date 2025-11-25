@@ -1,6 +1,6 @@
 # Algorithm Reference Guide
 
-Complete reference for all 76 pen plotter algorithms with parameters, outputs, and best practices.
+Complete reference for all 77 pen plotter algorithms with parameters, outputs, and best practices.
 
 ## Quick Reference
 
@@ -8,10 +8,12 @@ Complete reference for all 76 pen plotter algorithms with parameters, outputs, a
 
 | Format | Count | Coverage |
 |--------|-------|----------|
-| SVG | 76/76 | 100% |
-| PNG | 58/76 | 76% |
-| GIF | 48/76 | 63% |
-| Multi-Layer SVG | 1/76 | 1% |
+| SVG | 77/77 | 100% |
+| PNG | 58/77 | 75% |
+| GIF | 48/77 | 62% |
+| Multi-Layer SVG | 1/77 | 1% |
+| DXF | Available via module | ✓ |
+| HPGL | Available via module | ✓ |
 
 ### Paper Size Support
 
@@ -777,15 +779,50 @@ Upload SVG files to split layers, optimize paths, and prepare for physical plott
 - **Registration** - Perfect alignment across layers
 - **Best for** - Multi-pen/multi-color plotting
 
-### DXF (Coming Soon)
-- **CAD format** - Industry standard
-- **CNC compatibility** - Laser cutters, routers
-- **Layer support** - Native multi-layer
+### DXF (✓ Available)
+- **CAD format** - Industry standard, AutoCAD-compatible
+- **CNC compatibility** - Laser cutters, routers, professional CAD software
+- **Layer support** - Native multi-layer by color or stroke weight
+- **Precision** - Exact coordinate geometry preservation
+- **Use cases**: Professional fabrication, laser cutting, CNC routing, CAD workflows
 
-### HPGL (Coming Soon)
-- **Plotter format** - Vintage pen plotter native format
-- **Direct control** - Pen up/down commands
-- **Legacy hardware** - HP plotters, vintage machines
+**Implementation:** Use `plotter-formats.js` module:
+```javascript
+const exporter = new PlotterFormats();
+exporter.exportSVGCanvasToDXF(canvas, 'drawing.dxf', {
+  unit: 'mm',
+  paperWidth: 297,  // A4
+  paperHeight: 210,
+  layerByColor: true
+});
+```
+
+### HPGL (✓ Available)
+- **Plotter format** - Hewlett-Packard Graphics Language
+- **Direct control** - Pen up/down, speed, force commands
+- **Hardware** - HP plotters, vintage machines, professional plotters
+- **8-pen support** - Automatic color-to-pen mapping
+- **Use cases**: Vintage HP plotters, museum reproductions, specialized hardware
+
+**Implementation:** Use `plotter-formats.js` module:
+```javascript
+const exporter = new PlotterFormats();
+exporter.exportSVGCanvasToHPGL(canvas, 'drawing.hpgl', {
+  penSpeed: 38,  // cm/s
+  penForce: 3,   // 1-8
+  scaling: 1.0
+});
+```
+
+**HPGL Pen Color Mapping:**
+- Pen 1: Black (#000000)
+- Pen 2: Red (#ff0000)
+- Pen 3: Blue (#0000ff)
+- Pen 4: Green (#00ff00)
+- Pen 5: Yellow (#ffff00)
+- Pen 6: Magenta (#ff00ff)
+- Pen 7: Cyan (#00ffff)
+- Pen 8: White (#ffffff)
 
 ---
 
@@ -942,6 +979,7 @@ To add documentation for a new algorithm:
 ---
 
 **Last Updated:** 2024-11-25
-**Total Algorithms:** 76
+**Total Algorithms:** 77
 **Total Categories:** 15
 **Documented:** 30+ (ongoing)
+**Export Formats:** SVG, PNG, GIF, Multi-Layer SVG, DXF, HPGL
