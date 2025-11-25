@@ -280,8 +280,24 @@
     }
     
     function exportSVG() {
-      // Create SVG canvas temporarily
+      // // Try SVG mode with fallback to canvas mode
+ let usingSVG = true;
+ try {
+   Create SVG canvas temporarily
       let svgCanvas = createCanvas(800, 600, SVG);
+ } catch (e) {
+   console.warn('SVG mode failed, using canvas mode:', e);
+   Create SVG canvas temporarily
+      let svgCanvas = createCanvas(800, 600);
+   usingSVG = false;
+   // Disable SVG export button since we're in canvas mode
+    const svgBtn = document.querySelector('[onclick*="exportSVG"]');
+    if (svgBtn) {
+      svgBtn.disabled = true;
+      svgBtn.title = 'SVG export unavailable (using canvas fallback)';
+      svgBtn.style.opacity = '0.5';
+    }
+  }
       svgCanvas.parent('canvas-container');
       generate();
       save('lsystem-tree.svg');

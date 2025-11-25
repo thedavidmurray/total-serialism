@@ -3,7 +3,7 @@
 <head>
   <title>L-System Tree Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/p5.js-svg@1.5.1/dist/p5.svg.min.js" onerror="console.error('p5.js-svg failed to load from CDN')"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <link rel="stylesheet" href="../../pen-plotter/shared/responsive.css">
   <style>
@@ -279,7 +279,38 @@
       const [w, h] = paperSizes.A3;
       const scale = Math.min(windowWidth * 0.7 / w, windowHeight / h);
       
-      let canvas = createCanvas(w * scale, h * scale, SVG);
+      // Try SVG mode with fallback to canvas mode
+
+      
+      let usingSVG = true;
+
+      
+      try {
+
+      
+        let canvas =createCanvas(w * scale, h * scale, SVG);
+
+      
+      } catch (e) {
+
+      
+        console.warn('SVG mode failed, using canvas mode:', e);
+
+      
+        let canvas =createCanvas(w * scale, h * scale);
+
+      
+        usingSVG = false;
+
+      
+        // Disable SVG export button since we're in canvas mode
+    const svgBtn = document.querySelector('[onclick*="exportSVG"]');
+    if (svgBtn) {
+      svgBtn.disabled = true;
+      svgBtn.title = 'SVG export unavailable (using canvas fallback)';
+      svgBtn.style.opacity = '0.5';
+    }
+  }
       canvas.parent('canvas-container');
       
       setupControls();
