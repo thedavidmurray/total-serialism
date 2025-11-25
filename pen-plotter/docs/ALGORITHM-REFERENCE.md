@@ -1,6 +1,6 @@
 # Algorithm Reference Guide
 
-Complete reference for all 78 pen plotter algorithms with parameters, outputs, and best practices.
+Complete reference for all 79 pen plotter algorithms with parameters, outputs, and best practices.
 
 ## Quick Reference
 
@@ -8,10 +8,10 @@ Complete reference for all 78 pen plotter algorithms with parameters, outputs, a
 
 | Format | Count | Coverage |
 |--------|-------|----------|
-| SVG | 78/78 | 100% |
-| PNG | 59/78 | 76% |
-| GIF | 48/78 | 62% |
-| Multi-Layer SVG | 1/78 | 1% |
+| SVG | 79/79 | 100% |
+| PNG | 59/79 | 75% |
+| GIF | 48/79 | 61% |
+| Multi-Layer SVG | 1/79 | 1% |
 | DXF | Available via module | ✓ |
 | HPGL | Available via module | ✓ |
 

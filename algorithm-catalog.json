@@ -585,13 +585,22 @@
           "featured": true,
           "complexity": "beginner",
           "tags": []
+        },
+        {
+          "id": "plot-simulator",
+          "name": "Plot Simulator",
+          "description": "Animated visualization of pen plotting with pen-up/pen-down movements and timing",
+          "path": "pen-plotter/algorithms/tools/plot-simulator.html",
+          "featured": true,
+          "complexity": "beginner",
+          "tags": ["file-upload"]
         }
       ]
     }
   },
   "stats": {
-    "totalAlgorithms": 78,
+    "totalAlgorithms": 79,
     "totalCategories": 15,
-    "featuredCount": 21
+    "featuredCount": 22
   }
 }
