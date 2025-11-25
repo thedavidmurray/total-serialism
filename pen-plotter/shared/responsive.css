@@ -1,0 +1,234 @@
+/**
+ * Responsive Mobile CSS for Total Serialism Pen Plotter Toolkit
+ *
+ * Include this stylesheet in all algorithm pages for mobile support:
+ * <link rel="stylesheet" href="../../../pen-plotter/shared/responsive.css">
+ *
+ * Adjust path depth as needed (../../../ from algorithms/category/page.html)
+ */
+
+/* Tablet breakpoint (≤ 1024px) */
+@media (max-width: 1024px) {
+  body {
+    flex-direction: column !important;
+  }
+
+  /* Canvas container - reduce height, allow scrolling */
+  #canvas-container {
+    height: 50vh !important;
+    position: relative !important;
+    min-height: 300px;
+  }
+
+  /* Controls sidebar - full width on mobile */
+  #controls {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    position: relative !important;
+    border-left: none !important;
+    border-top: 2px solid currentColor;
+  }
+
+  /* Make canvas scale down to fit */
+  canvas {
+    max-width: 90vw !important;
+    max-height: 45vh !important;
+    height: auto !important;
+    width: auto !important;
+  }
+
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px !important; /* Apple HIG minimum touch target */
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+
+  /* Touch-friendly inputs */
+  input[type="range"] {
+    min-height: 44px !important;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select {
+    min-height: 44px !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+
+  /* Larger tap targets for checkboxes */
+  input[type="checkbox"] {
+    min-width: 24px !important;
+    min-height: 24px !important;
+  }
+
+  /* Make control groups more compact */
+  .control-group {
+    margin-bottom: 20px !important;
+  }
+
+  /* Stack button grids on very small screens */
+  @media (max-width: 480px) {
+    .button-grid {
+      grid-template-columns: 1fr !important;
+    }
+
+    .playback-controls {
+      grid-template-columns: 1fr !important;
+    }
+
+    .stats-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
+}
+
+/* Mobile breakpoint (≤ 640px) */
+@media (max-width: 640px) {
+  /* Reduce padding for more screen space */
+  #controls {
+    padding: 15px !important;
+  }
+
+  /* Smaller headings */
+  h2 {
+    font-size: 20px !important;
+  }
+
+  h3 {
+    font-size: 12px !important;
+  }
+
+  /* Compact labels */
+  label {
+    font-size: 12px !important;
+  }
+
+  /* Make canvas even smaller on phones */
+  #canvas-container {
+    height: 40vh !important;
+    min-height: 250px;
+  }
+
+  canvas {
+    max-width: 95vw !important;
+    max-height: 35vh !important;
+  }
+
+  /* Hide decorative elements on small screens */
+  .paper-size-badge {
+    font-size: 11px !important;
+    padding: 6px 12px !important;
+  }
+
+  .canvas-label {
+    font-size: 9px !important;
+  }
+
+  /* More compact stat boxes */
+  .stat-box {
+    padding: 8px !important;
+  }
+
+  .stat-value {
+    font-size: 16px !important;
+  }
+
+  .stat-label {
+    font-size: 9px !important;
+  }
+
+  /* Compact preset manager */
+  #preset-container {
+    font-size: 14px !important;
+  }
+
+  #preset-container button {
+    padding: 8px !important;
+    font-size: 14px !important;
+  }
+}
+
+/* Landscape mobile (common issue) */
+@media (max-width: 1024px) and (orientation: landscape) {
+  body {
+    flex-direction: row !important;
+  }
+
+  #canvas-container {
+    height: 100vh !important;
+    flex: 1;
+  }
+
+  #controls {
+    width: 320px !important;
+    height: 100vh !important;
+    border-left: 2px solid currentColor !important;
+    border-top: none !important;
+  }
+
+  canvas {
+    max-width: 60vw !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* Ensure scrollable controls on all mobile */
+@media (max-width: 1024px) {
+  #controls {
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  }
+}
+
+/* Prevent text selection on buttons and controls (better touch UX) */
+@media (hover: none) and (pointer: coarse) {
+  button,
+  .toggle,
+  .stat-box {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+    user-select: none;
+  }
+}
+
+/* Fix iOS Safari 100vh issue */
+@supports (-webkit-touch-callout: none) {
+  #canvas-container {
+    min-height: -webkit-fill-available !important;
+  }
+}
+
+/* Print styles - hide controls, show only canvas */
+@media print {
+  #controls {
+    display: none !important;
+  }
+
+  #canvas-container {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  canvas {
+    max-width: 100% !important;
+    max-height: none !important;
+  }
+}
+
+/* Accessibility: Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Dark mode support (if not already dark) */
+@media (prefers-color-scheme: dark) {
+  /* Most pages already have dark themes, but this ensures consistency */
+  body:not([style*="background"]) {
+    background: #1a1a1a;
+    color: #ffffff;
+  }
+}
