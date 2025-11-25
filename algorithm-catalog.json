@@ -425,6 +425,15 @@
           "complexity": "beginner",
           "tags": ["image-upload"],
           "featured": true
+        },
+        {
+          "id": "dithering",
+          "name": "Image Dithering",
+          "description": "Floyd-Steinberg, Atkinson, Bayer, and Sierra dithering for pen plotting",
+          "path": "pen-plotter/algorithms/image-processing/dithering-gui.html",
+          "complexity": "intermediate",
+          "tags": ["image-upload"],
+          "featured": true
         }
       ]
     },
@@ -581,8 +590,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 77,
+    "totalAlgorithms": 78,
     "totalCategories": 15,
-    "featuredCount": 20
+    "featuredCount": 21
   }
 }

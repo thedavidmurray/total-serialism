@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Dithering - Pen Plotter Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../shared/dithering.js"></script>
+  <script src="../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../preset-manager.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #controls {
+      width: 360px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      color: #4CAF50;
+      font-size: 24px;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    button.secondary {
+      background: #2196F3;
+    }
+    button.secondary:hover {
+      background: #1976D2;
+    }
+    .value {
+      font-weight: 600;
+      color: #4CAF50;
+      float: right;
+    }
+    .stats {
+      background: #2a2a2a;
+      padding: 15px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .stats .value {
+      float: none;
+    }
+    .info-box {
+      background: #2a2a2a;
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #aaa;
+    }
+    .algorithm-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      background: #333;
+      border-radius: 3px;
+      font-size: 10px;
+      margin: 2px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="controls">
+    <h2>🎨 Image Dithering</h2>
+    <div class="subtitle">Convert images to pen-plottable patterns</div>
+
+    <div class="control-group">
+      <h3>📁 Image Input</h3>
+      <input type="file" id="imageInput" accept="image/*">
+      <button class="secondary" onclick="document.getElementById('imageInput').click()">
+        Upload Image
+      </button>
+      <div class="info-box" style="margin-top: 10px;">
+        Upload any image. Works best with high-contrast photos, portraits, or logos.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>🔧 Dithering Algorithm</h3>
+      <div class="control">
+        <label>Algorithm:</label>
+        <select id="algorithm">
+          <option value="floydSteinberg">Floyd-Steinberg (Classic)</option>
+          <option value="atkinson">Atkinson (Mac 1984)</option>
+          <option value="bayer">Bayer 4×4 (Game Boy)</option>
+          <option value="bayer2">Bayer 2×2 (Simple)</option>
+          <option value="bayer8">Bayer 8×8 (Fine)</option>
+          <option value="sierra">Sierra (Fast)</option>
+          <option value="threshold">Simple Threshold</option>
+        </select>
+      </div>
+
+      <div class="info-box">
+        <span class="algorithm-badge">Floyd-Steinberg</span> Classic error diffusion<br>
+        <span class="algorithm-badge">Atkinson</span> Brighter, Mac aesthetic<br>
+        <span class="algorithm-badge">Bayer</span> Ordered pattern, no artifacts<br>
+        <span class="algorithm-badge">Sierra</span> Fast alternative
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚙️ Parameters</h3>
+      <div class="control">
+        <label>Threshold: <span class="value" id="threshold-val">128</span></label>
+        <input type="range" id="threshold" min="0" max="255" value="128" step="1">
+      </div>
+      <div class="control">
+        <label>Resolution Scale: <span class="value" id="scale-val">1.0</span></label>
+        <input type="range" id="scale" min="0.1" max="2.0" value="1.0" step="0.1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📤 SVG Export Mode</h3>
+      <div class="control">
+        <label>Output Style:</label>
+        <select id="exportMode">
+          <option value="dots">Dots (circles at black pixels)</option>
+          <option value="lines">Lines (connect regions)</option>
+          <option value="stipple">Stipple (random placement)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Dot/Line Size: <span class="value" id="dotSize-val">2</span>px</label>
+        <input type="range" id="dotSize" min="0.5" max="5" value="2" step="0.5">
+      </div>
+      <div class="control">
+        <label>Spacing: <span class="value" id="spacing-val">1</span>px</label>
+        <input type="range" id="spacing" min="1" max="5" value="1" step="1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>📊 Statistics</h3>
+      <div id="stats" class="stats">
+        <div><span>Black Pixels:</span> <span class="value">-</span></div>
+        <div><span>White Pixels:</span> <span class="value">-</span></div>
+        <div><span>Coverage:</span> <span class="value">-</span></div>
+        <div><span>Estimated Plot Time:</span> <span class="value">-</span></div>
+      </div>
+    </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>💾 Export</h3>
+      <button onclick="regenerate()">🔄 Apply Dithering</button>
+      <button onclick="exportSVG()">📥 Export SVG</button>
+      <button onclick="exportPNG()">📥 Export PNG</button>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 Tips:</strong><br>
+      • Use Floyd-Steinberg for photorealistic results<br>
+      • Use Bayer for consistent patterns<br>
+      • Use Atkinson for high-contrast art<br>
+      • Lower threshold = more black pixels<br>
+      • Dots mode is best for plotting
+    </div>
+  </div>
+
+  <script>
+    let sourceImage = null;
+    let ditheredImage = null;
+    let canvas;
+    let presetManager;
+
+    let params = {
+      algorithm: 'floydSteinberg',
+      threshold: 128,
+      scale: 1.0,
+      exportMode: 'dots',
+      dotSize: 2,
+      spacing: 1
+    };
+
+    function setup() {
+      canvas = createCanvas(800, 800);
+      canvas.parent('canvas-container');
+      background(255);
+
+      setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'dithering',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          if (sourceImage) regenerate();
+        },
+        onRandomize: () => {
+          params.algorithm = ['floydSteinberg', 'atkinson', 'bayer', 'sierra'][Math.floor(Math.random() * 4)];
+          params.threshold = Math.floor(Math.random() * 128) + 64;
+          params.scale = Math.random() * 1.5 + 0.5;
+          params.dotSize = Math.random() * 3 + 1;
+          updateUIFromParams();
+          if (sourceImage) regenerate();
+        }
+      });
+
+      // Show placeholder
+      textAlign(CENTER, CENTER);
+      fill(128);
+      textSize(20);
+      text('Upload an image to begin', width / 2, height / 2);
+    }
+
+    function setupControls() {
+      // Image upload
+      document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+
+      // Algorithm
+      document.getElementById('algorithm').addEventListener('change', (e) => {
+        params.algorithm = e.target.value.replace(/\d+$/, ''); // Strip number
+        if (e.target.value.includes('bayer')) {
+          params.bayerSize = parseInt(e.target.value.match(/\d+/)?.[0] || '4');
+        }
+        if (sourceImage) regenerate();
+      });
+
+      // Threshold
+      document.getElementById('threshold').addEventListener('input', (e) => {
+        params.threshold = parseInt(e.target.value);
+        document.getElementById('threshold-val').textContent = params.threshold;
+        if (sourceImage) regenerate();
+      });
+
+      // Scale
+      document.getElementById('scale').addEventListener('input', (e) => {
+        params.scale = parseFloat(e.target.value);
+        document.getElementById('scale-val').textContent = params.scale.toFixed(1);
+        if (sourceImage) regenerate();
+      });
+
+      // Export mode
+      document.getElementById('exportMode').addEventListener('change', (e) => {
+        params.exportMode = e.target.value;
+      });
+
+      // Dot size
+      document.getElementById('dotSize').addEventListener('input', (e) => {
+        params.dotSize = parseFloat(e.target.value);
+        document.getElementById('dotSize-val').textContent = params.dotSize;
+      });
+
+      // Spacing
+      document.getElementById('spacing').addEventListener('input', (e) => {
+        params.spacing = parseInt(e.target.value);
+        document.getElementById('spacing-val').textContent = params.spacing;
+      });
+    }
+
+    function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (img) => {
+          sourceImage = img;
+          regenerate();
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function regenerate() {
+      if (!sourceImage) return;
+
+      // Resize source if needed
+      const scaledImage = sourceImage.get();
+      if (params.scale !== 1.0) {
+        scaledImage.resize(
+          Math.floor(sourceImage.width * params.scale),
+          Math.floor(sourceImage.height * params.scale)
+        );
+      }
+
+      // Convert to grayscale
+      scaledImage.filter(GRAY);
+
+      // Apply dithering
+      const options = {
+        threshold: params.threshold,
+        matrixSize: params.bayerSize || 4
+      };
+
+      switch (params.algorithm) {
+        case 'floydSteinberg':
+          ditheredImage = Dithering.floydSteinberg(scaledImage, options);
+          break;
+        case 'atkinson':
+          ditheredImage = Dithering.atkinson(scaledImage, options);
+          break;
+        case 'bayer':
+          ditheredImage = Dithering.bayer(scaledImage, options);
+          break;
+        case 'sierra':
+          ditheredImage = Dithering.sierra(scaledImage, options);
+          break;
+        case 'threshold':
+          ditheredImage = scaledImage.get();
+          ditheredImage.filter(THRESHOLD, params.threshold / 255);
+          break;
+      }
+
+      // Display
+      resizeCanvas(ditheredImage.width, ditheredImage.height);
+      background(255);
+      image(ditheredImage, 0, 0);
+
+      // Update stats
+      updateStats();
+    }
+
+    function updateStats() {
+      if (!ditheredImage) return;
+
+      const stats = Dithering.getStats(ditheredImage);
+      const estimatedTime = (stats.blackPixels * params.dotSize * 0.001).toFixed(1);
+
+      document.getElementById('stats').innerHTML = `
+        <div><span>Black Pixels:</span> <span class="value">${stats.blackPixels.toLocaleString()}</span></div>
+        <div><span>White Pixels:</span> <span class="value">${stats.whitePixels.toLocaleString()}</span></div>
+        <div><span>Coverage:</span> <span class="value">${stats.blackPercent}%</span></div>
+        <div><span>Estimated Plot Time:</span> <span class="value">${estimatedTime}min</span></div>
+      `;
+    }
+
+    function updateUIFromParams() {
+      // Update algorithm dropdown
+      let algoValue = params.algorithm;
+      if (params.bayerSize) algoValue += params.bayerSize;
+      document.getElementById('algorithm').value = algoValue;
+
+      // Update sliders
+      document.getElementById('threshold').value = params.threshold;
+      document.getElementById('threshold-val').textContent = params.threshold;
+
+      document.getElementById('scale').value = params.scale;
+      document.getElementById('scale-val').textContent = params.scale.toFixed(1);
+
+      document.getElementById('exportMode').value = params.exportMode;
+
+      document.getElementById('dotSize').value = params.dotSize;
+      document.getElementById('dotSize-val').textContent = params.dotSize;
+
+      document.getElementById('spacing').value = params.spacing;
+      document.getElementById('spacing-val').textContent = params.spacing;
+    }
+
+    function exportSVG() {
+      if (!ditheredImage) {
+        alert('Please upload and process an image first!');
+        return;
+      }
+
+      const svg = Dithering.toSVG(ditheredImage, params.exportMode, {
+        dotSize: params.dotSize,
+        lineThickness: params.dotSize,
+        spacing: params.spacing
+      });
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `dithered-${params.algorithm}-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPNG() {
+      if (!ditheredImage) {
+        alert('Please upload and process an image first!');
+        return;
+      }
+
+      save(`dithered-${params.algorithm}-${Date.now()}.png`);
+    }
+  </script>
+</body>
+</html>
