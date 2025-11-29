@@ -4,6 +4,7 @@
   <title>10PRINT Pattern Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../../preset-manager.js"></script>
+  <script src="../../canvas-layout.js"></script>
   <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
@@ -237,6 +238,10 @@
       <div class="control">
         <label>Seed: <span id="seed-display">12345</span></label>
       </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate" checked>
+        <label for="autoRegenerate">Auto regenerate on change</label>
+      </div>
       <button onclick="regenerate()">Regenerate</button>
       <button onclick="generateNewSeed()">Random Seed</button>
       <button onclick="saveParams()">Save Parameters</button>
@@ -260,7 +265,7 @@
 
   <script>
     // Paper size presets at 150 DPI for print quality
-    const PAPER_SIZES = {
+    const PAPER_SIZES = (window.CanvasLayout && CanvasLayout.paperPresets) ? CanvasLayout.paperPresets : {
       a4: { width: 1240, height: 1754, label: 'A4 (210×297mm)', mm: '210×297' },
       a3: { width: 1754, height: 2480, label: 'A3 (297×420mm)', mm: '297×420' },
       a5: { width: 874, height: 1240, label: 'A5 (148×210mm)', mm: '148×210' },
@@ -289,6 +294,9 @@
     let presetManager;
     let canvasWidth = 800;
     let canvasHeight = 600;
+    let autoRegenerate = true;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
 
     function setup() {
       updateCanvasSize();
@@ -334,7 +342,7 @@
     }
 
     function updateCanvasSize() {
-      const size = PAPER_SIZES[params.paperSize] || PAPER_SIZES.custom;
+      const size = (window.CanvasLayout ? CanvasLayout.getSize(params.paperSize) : (PAPER_SIZES[params.paperSize] || PAPER_SIZES.custom));
       canvasWidth = size.width;
       canvasHeight = size.height;
       updatePaperSizeBadge();
@@ -394,22 +402,39 @@
               params[key] = element.type === 'range' ? parseFloat(e.target.value) : e.target.value;
               const display = document.getElementById(key + '-val');
               if (display) display.textContent = params[key];
-              if (!isAnimating) regenerate();
+              if (!isAnimating) queueRegenerate();
             });
           } else if (element.tagName === 'SELECT') {
             element.addEventListener('change', (e) => {
               params[key] = e.target.value;
-              if (!isAnimating) regenerate();
+              if (!isAnimating) queueRegenerate();
             });
           }
         }
       });
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) {
+            queueRegenerate();
+          }
+        });
+      }
     }
 
     function regenerate() {
       randomSeed(params.seed);
       generatePattern();
       redraw();
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
 
     function generatePattern() {

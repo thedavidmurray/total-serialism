@@ -313,6 +313,15 @@
       </div>
 
       <div class="control-group">
+        <h3>Generation</h3>
+        <div class="checkbox-group">
+          <input type="checkbox" id="autoRegenerate" checked>
+          <label for="autoRegenerate">Auto regenerate on change</label>
+        </div>
+        <button onclick="regenerate()">Regenerate</button>
+      </div>
+
+      <div class="control-group">
         <h3>Export</h3>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="exportPNG()">Export PNG</button>
@@ -357,6 +366,9 @@
       patternOverlay: 'none',
       overlayDensity: 5
     };
+    let autoRegenerate = true;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
 
     // Tile class
     class Tile {
@@ -576,10 +588,30 @@
       });
 
       // Setup param sync
-      UIUtils.setupParamSync(params, () => generateTiling());
+      UIUtils.setupParamSync(params, () => queueRegenerate());
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) queueRegenerate();
+        });
+      }
 
       // Initial generation
       generateTiling();
+    }
+
+    function regenerate() {
+      generateTiling();
+      redraw();
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
 
     // p5.js draw

@@ -232,6 +232,10 @@
       <div class="control">
         <label>Seed: <span id="seed-display">12345</span></label>
       </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate" checked>
+        <label for="autoRegenerate">Auto regenerate on change</label>
+      </div>
       <button onclick="regenerate()">Regenerate</button>
       <button onclick="randomizeSeed()">Random Seed</button>
       <button onclick="saveParams()">Save Parameters</button>
@@ -271,6 +275,9 @@
     };
     
     let svgCanvas;
+    let autoRegenerate = true;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
     
     function setup() {
       const w = 800;
@@ -292,26 +299,43 @@
               params[key] = parseFloat(e.target.value);
               const display = document.getElementById(key + '-val');
               if (display) display.textContent = params[key];
-              regenerate();
+              queueRegenerate();
             });
           } else if (element.type === 'checkbox') {
             element.addEventListener('change', (e) => {
               params[key] = e.target.checked;
-              regenerate();
+              queueRegenerate();
             });
           } else if (element.tagName === 'SELECT') {
             element.addEventListener('change', (e) => {
               params[key] = e.target.value;
-              regenerate();
+              queueRegenerate();
             });
           }
         }
       });
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) {
+            queueRegenerate();
+          }
+        });
+      }
     }
     
     function regenerate() {
       window.randomSeed(params.seed);
       redraw();
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
     
     function draw() {

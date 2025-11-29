@@ -6,6 +6,7 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../shared/ascii-art.js"></script>
   <script src="../../../preset-manager.js"></script>
+  <script src="../../upload-helper.js"></script>
   <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
@@ -179,10 +180,13 @@
 
     <div class="control-group">
       <h3>📁 Image Input</h3>
+      <div id="uploadArea" class="upload-area" tabindex="0">
+        Drop image or click to browse
+      </div>
       <input type="file" id="imageInput" accept="image/*">
-      <button class="secondary" onclick="document.getElementById('imageInput').click()">
-        Upload Image
-      </button>
+      <div class="info-box" id="uploadStatus" style="margin-top: 10px;">
+        No image loaded.
+      </div>
       <div class="info-box" style="margin-top: 10px;">
         Upload any image. Works best with high-contrast photos, portraits, or logos.
       </div>
@@ -336,6 +340,13 @@
     function setupControls() {
       // Image upload
       document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+      if (window.UploadHelper) {
+        new UploadHelper({
+          dropArea: '#uploadArea',
+          input: '#imageInput',
+          onFile: (file) => handleImageUpload({ target: { files: [file] } })
+        });
+      }
 
       // Character set
       document.getElementById('charSet').addEventListener('change', (e) => {
@@ -390,7 +401,16 @@
         loadImage(e.target.result, (img) => {
           sourceImage = img;
           regenerate();
+          const status = document.getElementById('uploadStatus');
+          if (status) status.textContent = `Loaded ${file.name}`;
+        }, () => {
+          const status = document.getElementById('uploadStatus');
+          if (status) status.textContent = 'Could not read that image';
         });
+      };
+      reader.onerror = () => {
+        const status = document.getElementById('uploadStatus');
+        if (status) status.textContent = 'Could not read that image';
       };
       reader.readAsDataURL(file);
     }

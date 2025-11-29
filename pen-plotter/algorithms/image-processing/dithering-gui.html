@@ -6,6 +6,7 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../shared/dithering.js"></script>
   <script src="../../../preset-manager.js"></script>
+  <script src="../../upload-helper.js"></script>
   <link rel="stylesheet" href="../../../preset-manager.css">
   <style>
     body {
@@ -70,6 +71,18 @@
     }
     input[type="file"] {
       display: none;
+    }
+    .upload-area {
+      border: 2px dashed #444;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+      cursor: pointer;
+      background: #222;
+    }
+    .upload-area:hover, .upload-area:focus {
+      border-color: #4CAF50;
+      outline: none;
     }
     select {
       width: 100%;
@@ -146,10 +159,13 @@
 
     <div class="control-group">
       <h3>📁 Image Input</h3>
+      <div id="uploadArea" class="upload-area" tabindex="0">
+        Drop image or click to browse
+      </div>
       <input type="file" id="imageInput" accept="image/*">
-      <button class="secondary" onclick="document.getElementById('imageInput').click()">
-        Upload Image
-      </button>
+      <div class="info-box" id="uploadStatus" style="margin-top: 10px;">
+        No image loaded.
+      </div>
       <div class="info-box" style="margin-top: 10px;">
         Upload any image. Works best with high-contrast photos, portraits, or logos.
       </div>
@@ -292,6 +308,13 @@
     function setupControls() {
       // Image upload
       document.getElementById('imageInput').addEventListener('change', handleImageUpload);
+      if (window.UploadHelper) {
+        new UploadHelper({
+          dropArea: '#uploadArea',
+          input: '#imageInput',
+          onFile: (file) => processImageFile(file)
+        });
+      }
 
       // Algorithm
       document.getElementById('algorithm').addEventListener('change', (e) => {
@@ -335,17 +358,31 @@
     }
 
     function handleImageUpload(event) {
-      const file = event.target.files[0];
+      processImageFile(event.target.files ? event.target.files[0] : null);
+    }
+
+    function processImageFile(file) {
       if (!file) return;
+
+      setUploadStatus(`Loading ${file.name}...`);
 
       const reader = new FileReader();
       reader.onload = (e) => {
         loadImage(e.target.result, (img) => {
           sourceImage = img;
+          setUploadStatus(`Loaded ${file.name}`);
           regenerate();
+        }, () => {
+          setUploadStatus('Could not read that image');
         });
       };
+      reader.onerror = () => setUploadStatus('Could not read that image');
       reader.readAsDataURL(file);
+    }
+
+    function setUploadStatus(text) {
+      const el = document.getElementById('uploadStatus');
+      if (el) el.textContent = text;
     }
 
     function regenerate() {

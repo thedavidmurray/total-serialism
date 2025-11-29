@@ -184,7 +184,7 @@
     
     <div class="control-group">
       <h3>📷 Image Input</h3>
-      <div id="image-upload-area">
+      <div id="image-upload-area" tabindex="0">
         <div class="upload-icon">📁</div>
         <div class="upload-text">Drop image here or click to browse</div>
         <input type="file" id="imageUpload" accept="image/*" style="display: none;">
@@ -332,6 +332,12 @@
       const fileInput = document.getElementById('imageUpload');
       
       uploadArea.addEventListener('click', () => fileInput.click());
+      uploadArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
       
       fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
@@ -374,6 +380,8 @@
         return;
       }
       
+      showStatus(`Loading ${file.name}...`, 'processing');
+      
       const reader = new FileReader();
       reader.onload = (e) => {
         loadImage(e.target.result, (loadedImg) => {
@@ -383,8 +391,11 @@
           document.getElementById('exportBtn').disabled = true;
           document.getElementById('exportPNGBtn').disabled = true;
           redraw();
+        }, () => {
+          showStatus('Could not read that image', 'error');
         });
       };
+      reader.onerror = () => showStatus('Could not read that image', 'error');
       reader.readAsDataURL(file);
     }
 
