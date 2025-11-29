@@ -2,11 +2,35 @@
 // Handles saving, loading, and managing parameter presets
 
 class PresetManager {
-  constructor(toolName) {
-    this.toolName = toolName;
-    this.storageKey = `penplotter_${toolName}_presets`;
+  constructor(options = {}) {
+    // Support both old string API and new options API
+    if (typeof options === 'string') {
+      this.toolName = options;
+      this.onSave = () => {};
+      this.onLoad = () => {};
+      this.onRandomize = () => {};
+    } else {
+      this.toolName = options.algorithmId || 'default';
+      this.onSave = options.onSave || (() => {});
+      this.onLoad = options.onLoad || (() => {});
+      this.onRandomize = options.onRandomize || (() => {});
+    }
+    
+    this.storageKey = `penplotter_${this.toolName}_presets`;
     this.currentPreset = null;
     this.presets = this.loadPresets();
+    
+    // Initialize UI if container provided
+    if (options.container) {
+      const container = document.querySelector(options.container);
+      if (container) {
+        setTimeout(() => {
+          this.createUI(container, this.onSave, (preset) => {
+            this.onLoad(preset);
+          });
+        }, 100);
+      }
+    }
   }
 
   // Load presets from localStorage
@@ -45,7 +69,8 @@ class PresetManager {
     const preset = this.presets[name];
     if (preset) {
       this.currentPreset = name;
-      return preset.parameters;
+      // Return preset with data property for compatibility
+      return { data: preset.parameters, ...preset };
     }
     return null;
   }
@@ -138,9 +163,9 @@ class PresetManager {
     document.getElementById('load-preset-btn').addEventListener('click', () => {
       const select = document.getElementById('preset-select');
       if (select.value) {
-        const params = this.loadPreset(select.value);
-        if (params) {
-          applyParameters(params);
+        const preset = this.loadPreset(select.value);
+        if (preset && applyParameters) {
+          applyParameters(preset);
         }
       }
     });
