@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>10PRINT Pattern Generator - Fixed</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: relative;
+    }
+    #controls {
+      width: 320px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #4CAF50;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #4CAF50;
+      font-size: 16px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 5px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    .value {
+      font-weight: bold;
+      color: #4CAF50;
+    }
+    .paper-size-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(76, 175, 80, 0.2);
+      color: #4CAF50;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid #4CAF50;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div class="paper-size-badge">800×600px</div>
+  </div>
+  <div id="controls">
+    <h2>10PRINT Pattern Controls</h2>
+
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">20</span>px</label>
+        <input type="range" id="cellSize" min="5" max="50" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Probability: <span class="value" id="probability-val">0.5</span></label>
+        <input type="range" id="probability" min="0" max="1" value="0.5" step="0.01">
+      </div>
+      <div class="control">
+        <label>Line Type:</label>
+        <select id="lineType">
+          <option value="diagonal">Diagonal (Classic)</option>
+          <option value="straight">Straight (+ pattern)</option>
+          <option value="curved">Curved</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">2</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="2" step="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button onclick="regenerate()">Regenerate Pattern</button>
+      <button onclick="exportCanvas()">Export as PNG</button>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      cellSize: 20,
+      probability: 0.5,
+      lineType: 'diagonal',
+      strokeWeight: 2
+    };
+    
+    let canvas;
+
+    function setup() {
+      console.log('Setting up canvas...');
+      canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      
+      // Set up controls
+      setupControls();
+      
+      // Initial draw
+      drawPattern();
+    }
+    
+    function setupControls() {
+      // Cell size
+      document.getElementById('cellSize').addEventListener('input', (e) => {
+        params.cellSize = parseInt(e.target.value);
+        document.getElementById('cellSize-val').textContent = params.cellSize;
+        drawPattern();
+      });
+      
+      // Probability
+      document.getElementById('probability').addEventListener('input', (e) => {
+        params.probability = parseFloat(e.target.value);
+        document.getElementById('probability-val').textContent = params.probability;
+        drawPattern();
+      });
+      
+      // Line type
+      document.getElementById('lineType').addEventListener('change', (e) => {
+        params.lineType = e.target.value;
+        drawPattern();
+      });
+      
+      // Stroke weight
+      document.getElementById('strokeWeight').addEventListener('input', (e) => {
+        params.strokeWeight = parseFloat(e.target.value);
+        document.getElementById('strokeWeight-val').textContent = params.strokeWeight;
+        drawPattern();
+      });
+    }
+    
+    function drawPattern() {
+      background(255);
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      
+      for (let x = 0; x < width; x += params.cellSize) {
+        for (let y = 0; y < height; y += params.cellSize) {
+          if (params.lineType === 'diagonal') {
+            if (random() < params.probability) {
+              line(x, y, x + params.cellSize, y + params.cellSize);
+            } else {
+              line(x + params.cellSize, y, x, y + params.cellSize);
+            }
+          } else if (params.lineType === 'straight') {
+            if (random() < params.probability) {
+              line(x + params.cellSize/2, y, x + params.cellSize/2, y + params.cellSize);
+            } else {
+              line(x, y + params.cellSize/2, x + params.cellSize, y + params.cellSize/2);
+            }
+          } else if (params.lineType === 'curved') {
+            noFill();
+            if (random() < params.probability) {
+              arc(x, y, params.cellSize*2, params.cellSize*2, 0, HALF_PI);
+            } else {
+              arc(x + params.cellSize, y, params.cellSize*2, params.cellSize*2, HALF_PI, PI);
+            }
+          }
+        }
+      }
+    }
+    
+    function regenerate() {
+      drawPattern();
+    }
+    
+    function exportCanvas() {
+      saveCanvas('10print-pattern', 'png');
+    }
+  </script>
+</body>
+</html>
