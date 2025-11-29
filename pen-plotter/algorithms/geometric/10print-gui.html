@@ -5,6 +5,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../../preset-manager.css">
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script>
+    // Wait for p5.js to load before defining setup
+    window.addEventListener('load', function() {
+      console.log('Page loaded, p5.js should be ready');
+    });
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
   <style>
     body {
       margin: 0;
@@ -291,6 +301,7 @@
     let canvasHeight = 600;
 
     function setup() {
+      console.log('Setup function called');
       updateCanvasSize();
 
       // Create regular canvas (SVG export is done manually)
@@ -324,6 +335,45 @@
           });
         } else {
           console.warn('PresetManager not loaded - presets disabled');
+      // Try SVG first, fallback to regular canvas if it fails
+      try {
+        if (typeof SVG !== 'undefined') {
+          svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
+          console.log('Created SVG canvas');
+        } else {
+          svgCanvas = createCanvas(canvasWidth, canvasHeight);
+          console.log('SVG not available, created regular canvas');
+        }
+      } catch (e) {
+        console.log('Error creating canvas:', e);
+        svgCanvas = createCanvas(canvasWidth, canvasHeight);
+      }
+      svgCanvas.parent('canvas-container');
+      
+      // Set up drawing mode
+      noLoop();  // We'll manually control when to draw
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: '10print',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 1000000);
+          params.gridSize = Math.floor(random(5, 100));
+          params.cellSize = Math.floor(random(5, 50));
+          params.probability = random(0, 1);
+          params.strokeWeight = random(0.5, 5);
+          params.rotation = Math.floor(random(0, 360));
+          const lineTypes = ['diagonal', 'straight', 'curved'];
+          params.lineType = random(lineTypes);
+          updateUIFromParams();
+          regenerate();
         }
       } catch (e) {
         console.warn('PresetManager initialization failed:', e.message);

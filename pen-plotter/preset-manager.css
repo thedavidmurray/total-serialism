@@ -1,0 +1,147 @@
+/* Preset Manager Styles */
+.preset-manager {
+  margin-top: 20px;
+}
+
+.preset-manager .control-group {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.preset-manager h3 {
+  color: #4CAF50;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preset-manager select {
+  width: 100%;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.preset-manager select:hover {
+  border-color: #4CAF50;
+}
+
+.preset-manager input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.preset-manager input[type="text"]:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.preset-manager button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.preset-manager button:hover {
+  background: #45a049;
+}
+
+.preset-manager #delete-preset-btn {
+  background: #f44336;
+}
+
+.preset-manager #delete-preset-btn:hover {
+  background: #da190b;
+}
+
+.preset-manager #export-presets-btn,
+.preset-manager #import-presets-btn {
+  background: #2196F3;
+}
+
+.preset-manager #export-presets-btn:hover,
+.preset-manager #import-presets-btn:hover {
+  background: #0b7dda;
+}
+
+.preset-manager hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 20px 0;
+}
+
+/* Animation for preset loading */
+.preset-loading {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Tooltip styles */
+.preset-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.preset-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.preset-tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .preset-manager .control-group {
+    padding: 10px;
+  }
+  
+  .preset-manager button {
+    padding: 8px;
+    font-size: 13px;
+  }
+}
