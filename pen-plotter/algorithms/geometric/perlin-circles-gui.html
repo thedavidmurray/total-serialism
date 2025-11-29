@@ -208,7 +208,7 @@
         <label>Seed: <span id="seed-display">12345</span></label>
       </div>
       <button onclick="regenerate()">Regenerate</button>
-      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="randomizeSeed()">Random Seed</button>
       <button onclick="resetAnimation()">Reset Animation</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
@@ -253,7 +253,7 @@
       const w = 800;
       const h = 600;
       
-      svgCanvas = createCanvas(w, h, SVG);
+      svgCanvas = createCanvas(w, h);
       svgCanvas.parent('canvas-container');
 
       setupControls();
@@ -344,7 +344,7 @@
     }
     
     function regenerate() {
-      randomSeed(params.seed);
+      window.randomSeed(params.seed);
       noiseSeed(params.seed);
       generateCircles();
       if (!params.animateNoise) {
@@ -554,7 +554,7 @@
       }
     }
     
-    function randomSeed() {
+    function randomizeSeed() {
       params.seed = Math.floor(Math.random() * 1000000);
       document.getElementById('seed-display').textContent = params.seed;
       regenerate();

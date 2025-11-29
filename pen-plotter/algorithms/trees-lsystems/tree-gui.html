@@ -269,7 +269,7 @@
       const [w, h] = paperSizes.A3;
       const scale = Math.min(windowWidth * 0.7 / w, windowHeight / h);
       
-      let canvas = createCanvas(w * scale, h * scale, SVG);
+      let canvas = createCanvas(w * scale, h * scale);
       canvas.parent('canvas-container');
       
       setupControls();

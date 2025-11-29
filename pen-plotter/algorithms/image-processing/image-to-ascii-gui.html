@@ -350,7 +350,7 @@
       let [w, h] = paperSizes.A4;
       const scale = Math.min(windowWidth * 0.6 / w, windowHeight * 0.9 / h);
 
-      svgCanvas = createCanvas(w * scale, h * scale, SVG);
+      svgCanvas = createCanvas(w * scale, h * scale);
       svgCanvas.parent('canvas-container');
       noLoop();
 
