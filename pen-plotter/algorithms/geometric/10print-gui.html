@@ -289,29 +289,37 @@
       svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
       svgCanvas.parent('canvas-container');
 
-      // Initialize preset manager
-      presetManager = new PresetManager({
-        algorithmId: '10print',
-        container: '#preset-container',
-        onSave: () => params,
-        onLoad: (preset) => {
-          Object.assign(params, preset.data);
-          updateUIFromParams();
-          regenerate();
-        },
-        onRandomize: () => {
-          params.seed = Math.floor(Math.random() * 1000000);
-          params.gridSize = Math.floor(random(5, 100));
-          params.cellSize = Math.floor(random(5, 50));
-          params.probability = random(0, 1);
-          params.strokeWeight = random(0.5, 5);
-          params.rotation = Math.floor(random(0, 360));
-          const lineTypes = ['diagonal', 'straight', 'curved'];
-          params.lineType = random(lineTypes);
-          updateUIFromParams();
-          regenerate();
+      // Initialize preset manager with error handling
+      try {
+        if (typeof PresetManager !== 'undefined') {
+          presetManager = new PresetManager({
+            algorithmId: '10print',
+            container: '#preset-container',
+            onSave: () => params,
+            onLoad: (preset) => {
+              Object.assign(params, preset.data);
+              updateUIFromParams();
+              regenerate();
+            },
+            onRandomize: () => {
+              params.seed = Math.floor(Math.random() * 1000000);
+              params.gridSize = Math.floor(random(5, 100));
+              params.cellSize = Math.floor(random(5, 50));
+              params.probability = random(0, 1);
+              params.strokeWeight = random(0.5, 5);
+              params.rotation = Math.floor(random(0, 360));
+              const lineTypes = ['diagonal', 'straight', 'curved'];
+              params.lineType = random(lineTypes);
+              updateUIFromParams();
+              regenerate();
+            }
+          });
+        } else {
+          console.warn('PresetManager not loaded - presets disabled');
         }
-      });
+      } catch (e) {
+        console.warn('PresetManager initialization failed:', e.message);
+      }
 
       setupControls();
       regenerate();
