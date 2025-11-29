@@ -231,7 +231,7 @@
         <label>Seed: <span id="seed-display">12345</span></label>
       </div>
       <button onclick="regenerate()">Regenerate</button>
-      <button onclick="randomSeed()">Random Seed</button>
+      <button onclick="generateNewSeed()">Random Seed</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
     
@@ -596,7 +596,7 @@
       }
     }
     
-    function randomSeed() {
+    function generateNewSeed() {
       params.seed = Math.floor(Math.random() * 1000000);
       document.getElementById('seed-display').textContent = params.seed;
       regenerate();
