@@ -347,7 +347,8 @@
     
     <div class="control-group">
       <h3>Export</h3>
-      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportSVG()">Export SVG (Screen)</button>
+      <button onclick="exportPlotterSVG()" style="background-color: #4CAF50;">Export SVG (Plotter)</button>
       <button onclick="exportPNG()">Export PNG</button>
       <button onclick="exportLayers()">Export as Layers</button>
       <button onclick="exportGIF()">Export Animated GIF</button>
@@ -872,6 +873,94 @@
         if (i % 3 === 0) canvas.stroke(p.lineColorA);
         else if (i % 5 === 0) canvas.stroke(p.lineColorB);
         else canvas.stroke(p.lineColorA + "AA");
+
+        const x2 = cx + rayLen * cos(angle);
+        const y2 = cy + rayLen * sin(angle);
+
+        canvas.line(cx, cy, x2, y2);
+      }
+    }
+
+    // NEW: Plotter-ready SVG export (stroke-only, no fills)
+    function exportPlotterSVG() {
+      // Create SVG version optimized for pen plotting
+      let svgCanvas = createGraphics(width, height, SVG);
+      
+      // Reproduce the current drawing with plotter-ready settings
+      if (currentMode === "spiral") {
+        drawSpiralPlotter(svgCanvas);
+      } else {
+        drawBurstPlotter(svgCanvas);
+      }
+      
+      save(svgCanvas, `spiral-burst-${currentMode}-plotter-${seed}.svg`);
+      svgCanvas.remove();
+    }
+
+    function drawSpiralPlotter(canvas) {
+      const p = params;
+      // NO background() call - transparent background for plotter
+      canvas.stroke(0); // Black ink
+      canvas.strokeWeight(1); // Standard pen weight
+      canvas.noFill(); // No fills, only strokes
+
+      const cx = p.centerX * canvas.width;
+      const cy = p.centerY * canvas.height;
+
+      for (let arm = 0; arm < p.numArms; arm++) {
+        const armPhase = map(arm, 0, p.numArms, 0, TWO_PI);
+        for (let i = 0; i < p.dotsPerArm; i++) {
+          const t = i / (p.dotsPerArm - 1);
+          const theta = t * p.maxTheta * TWO_PI + armPhase + p.armRotationOffset;
+
+          const baseR = lerp(p.minRadius, p.maxRadius, t);
+          const r = baseR * exp(p.spiralTightness * t * p.maxTheta * TWO_PI);
+
+          const x = cx + r * cos(theta);
+          const y = cy + r * sin(theta);
+
+          const dCenter = dist(x, y, cx, cy);
+          if (dCenter < p.holeRadius) continue;
+
+          const dotSize = p.baseDotSize * (1 + p.dotSizeGrowth * t);
+          // Convert filled dots to stroke circles
+          canvas.circle(x, y, dotSize);
+        }
+      }
+
+      // Convert hole to stroke circle instead of fill
+      canvas.circle(cx, cy, p.holeRadius * 2);
+    }
+
+    function drawBurstPlotter(canvas) {
+      const p = params;
+      // NO background() call - transparent background for plotter
+      canvas.strokeCap(SQUARE);
+      canvas.noFill(); // Ensure no fills
+      canvas.stroke(0); // Black ink only for plotter
+
+      const cx = p.centerX * canvas.width;
+      const cy = p.centerY * canvas.height;
+
+      canvas.noiseDetail(3, 0.5);
+
+      for (let i = 0; i < p.numRays; i++) {
+        const baseAngle = map(i, 0, p.numRays, 0, TWO_PI);
+        const angle = baseAngle + random(-p.angleJitter, p.angleJitter);
+
+        const nx = cos(baseAngle) * p.noiseScale;
+        const ny = sin(baseAngle) * p.noiseScale;
+        const n = noise(nx, ny);
+        const noiseOffset = map(n, 0, 1, -p.noiseStrength, p.noiseStrength);
+
+        const rayLen = constrain(
+          random(p.minRayLength, p.maxRayLength) + noiseOffset,
+          p.minRayLength * 0.5,
+          p.maxRayLength * 1.2
+        );
+
+        const sw = p.strokeBase + random(p.strokeVariation);
+        canvas.strokeWeight(sw);
 
         const x2 = cx + rayLen * cos(angle);
         const y2 = cy + rayLen * sin(angle);

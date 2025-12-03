@@ -290,7 +290,8 @@
       <h3>💾 Export</h3>
       <button onclick="generateHalftone()">Generate Halftone</button>
       <div class="button-group">
-        <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
+        <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG (Screen)</button>
+        <button onclick="exportPlotterSVG()" id="exportPlotterBtn" disabled style="background-color: #4CAF50;">Export SVG (Plotter)</button>
         <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
       </div>
       <div id="processing-status"></div>
@@ -548,6 +549,7 @@
             halftoneShapes = [];
             showStatus(`Image loaded: ${loadedImg.width}×${loadedImg.height}px`, 'success');
             document.getElementById('exportBtn').disabled = true;
+            document.getElementById('exportPlotterBtn').disabled = true;
             document.getElementById('exportPNGBtn').disabled = true;
             redraw();
             queueRegenerate();
@@ -638,6 +640,7 @@
       processing = false;
       showStatus('Halftone generated successfully!', 'success');
       document.getElementById('exportBtn').disabled = false;
+      document.getElementById('exportPlotterBtn').disabled = false;
       document.getElementById('exportPNGBtn').disabled = false;
       
       redraw();
@@ -793,6 +796,68 @@
       // Save SVG
       save(svgCanvas, 'halftone-output.svg');
       showStatus('SVG exported successfully!', 'success');
+    }
+
+    // NEW: Plotter-ready SVG export (stroke-only, no fills)
+    function exportPlotterSVG() {
+      if (halftoneShapes.length === 0) {
+        showStatus('No halftone to export', 'error');
+        return;
+      }
+      
+      // Create SVG content optimized for pen plotting
+      svgCanvas.clear();
+      svgCanvas.stroke(0); // Black ink only
+      svgCanvas.strokeWeight(0.5); // Standard pen weight
+      svgCanvas.noFill(); // NO fills, only strokes
+      
+      halftoneShapes.forEach(shape => {
+        svgCanvas.push();
+        svgCanvas.translate(shape.x, shape.y);
+        
+        switch (shape.type) {
+          case 'circle':
+            // Convert filled circle to stroke outline
+            svgCanvas.circle(0, 0, shape.size);
+            break;
+          case 'square':
+            svgCanvas.rectMode(CENTER);
+            svgCanvas.square(0, 0, shape.size);
+            break;
+          case 'diamond':
+            svgCanvas.push();
+            svgCanvas.rotate(45);
+            svgCanvas.rectMode(CENTER);
+            svgCanvas.square(0, 0, shape.size * 0.7071);
+            svgCanvas.pop();
+            break;
+          case 'star':
+            // Draw star outline manually for SVG
+            const radius1 = shape.size / 2;
+            const radius2 = shape.size / 4;
+            const npoints = 5;
+            const angle = TWO_PI / npoints;
+            const halfAngle = angle / 2.0;
+            
+            svgCanvas.beginShape();
+            for (let a = -PI / 2; a < TWO_PI - PI / 2; a += angle) {
+              let sx = cos(a) * radius1;
+              let sy = sin(a) * radius1;
+              svgCanvas.vertex(sx, sy);
+              sx = cos(a + halfAngle) * radius2;
+              sy = sin(a + halfAngle) * radius2;
+              svgCanvas.vertex(sx, sy);
+            }
+            svgCanvas.endShape(CLOSE);
+            break;
+        }
+        
+        svgCanvas.pop();
+      });
+      
+      // Save plotter-ready SVG (no background, no fills)
+      save(svgCanvas, 'halftone-plotter.svg');
+      showStatus('Plotter SVG exported successfully!', 'success');
     }
 
     function exportPNG() {

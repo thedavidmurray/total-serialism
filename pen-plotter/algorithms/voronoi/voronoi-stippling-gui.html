@@ -255,7 +255,8 @@
 
         <div class="control-group">
             <h3>Export</h3>
-            <button class="export-btn" onclick="exportSVG()">💾 Export SVG</button>
+            <button class="export-btn" onclick="exportSVG()">💾 Export SVG (Screen)</button>
+            <button class="export-btn" onclick="exportPlotterSVG()" style="background-color: #4CAF50;">💾 Export SVG (Plotter)</button>
             <button class="export-btn" onclick="exportPNG()">🖼️ Export PNG</button>
         </div>
     </div>
@@ -711,6 +712,46 @@
 
             // Save SVG
             save(svgCanvas, `voronoi-stippling-${Date.now()}.svg`);
+        }
+
+        // NEW: Plotter-ready SVG export (stroke-only, no fills)
+        function exportPlotterSVG() {
+            // Create temporary SVG canvas
+            const prevCanvas = canvas;
+            const svgCanvas = createGraphics(width, height, SVG);
+
+            // NO background() call - transparent background for plotter
+            // NO source image rendering for plotter
+
+            // Draw stipples as stroke outlines only
+            svgCanvas.stroke(0); // Black ink
+            svgCanvas.strokeWeight(0.5); // Standard pen weight
+            svgCanvas.noFill(); // No fills, only strokes
+
+            for (const p of points) {
+                // Convert filled circles to stroke outlines
+                svgCanvas.circle(p.x, p.y, params.pointSize);
+            }
+
+            // Draw voronoi diagram if enabled
+            if (params.showVoronoi && delaunay) {
+                svgCanvas.stroke(0);
+                svgCanvas.strokeWeight(0.25);
+                for (let i = 0; i < delaunay.triangles.length; i += 3) {
+                    const a = points[delaunay.triangles[i]];
+                    const b = points[delaunay.triangles[i + 1]];
+                    const c = points[delaunay.triangles[i + 2]];
+
+                    // Draw voronoi cell edges
+                    const circumcenter = getCircumcenter(a, b, c);
+                    if (circumcenter) {
+                        svgCanvas.point(circumcenter.x, circumcenter.y);
+                    }
+                }
+            }
+
+            // Save plotter-ready SVG (no background, no fills)
+            save(svgCanvas, `voronoi-stippling-plotter-${Date.now()}.svg`);
         }
 
         function exportPNG() {
