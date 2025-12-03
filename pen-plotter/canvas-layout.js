@@ -43,5 +43,68 @@
     p5Instance.pop();
   }
 
-  window.CanvasLayout = { paperPresets, getSize, fitToPaper, drawFrame };
+  /**
+   * Attach fit/zoom controls to a canvas inside a container.
+   * container: HTMLElement that scrolls; canvasEl: the <canvas> element.
+   * options: { fitToggle?: HTMLElement, zoomInput?: HTMLElement, padding?: number }
+   */
+  function attachFitZoom({ container, canvasEl, fitToggle, zoomInput, padding = 16 }) {
+    if (!container || !canvasEl) return;
+    let fitMode = true;
+    let zoom = 1;
+
+    container.style.overflow = container.style.overflow || 'auto';
+    container.style.display = container.style.display || 'flex';
+    container.style.alignItems = container.style.alignItems || 'center';
+    container.style.justifyContent = container.style.justifyContent || 'center';
+
+    const applyTransform = () => {
+      const scale = fitMode ? computeFitScale() : zoom;
+      canvasEl.style.transform = `scale(${scale})`;
+      canvasEl.style.transformOrigin = 'top left';
+      canvasEl.style.margin = `${padding}px`;
+    };
+
+    const computeFitScale = () => {
+      const cw = canvasEl.offsetWidth || canvasEl.width || 1;
+      const ch = canvasEl.offsetHeight || canvasEl.height || 1;
+      const availW = container.clientWidth - padding * 2;
+      const availH = container.clientHeight - padding * 2;
+      return Math.min(availW / cw, availH / ch, 1);
+    };
+
+    const onResize = () => applyTransform();
+    window.addEventListener('resize', onResize);
+
+    if (fitToggle) {
+      fitToggle.addEventListener('click', () => {
+        fitMode = !fitMode;
+        if (fitToggle.dataset && 'state' in fitToggle.dataset) {
+          fitToggle.dataset.state = fitMode ? 'fit' : 'manual';
+        }
+        applyTransform();
+      });
+    }
+
+    if (zoomInput) {
+      zoomInput.addEventListener('input', (e) => {
+        zoom = parseFloat(e.target.value) || 1;
+        fitMode = false;
+        applyTransform();
+      });
+    }
+
+    // Initial fit
+    applyTransform();
+
+    return {
+      setFit(value) { fitMode = value; applyTransform(); },
+      setZoom(value) { zoom = value; fitMode = false; applyTransform(); },
+      destroy() {
+        window.removeEventListener('resize', onResize);
+      }
+    };
+  }
+
+  window.CanvasLayout = { paperPresets, getSize, fitToPaper, drawFrame, attachFitZoom };
 })();

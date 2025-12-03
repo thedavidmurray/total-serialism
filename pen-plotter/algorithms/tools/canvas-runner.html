@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Canvas Runner</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../canvas-layout.js"></script>
+  <style>
+    body {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0f1115;
+      color: #e6e8ed;
+    }
+    #controls {
+      padding: 16px;
+      background: #12151c;
+      border-right: 1px solid #1e2230;
+      overflow-y: auto;
+    }
+    #canvas-container {
+      position: relative;
+      background: #161922;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+    }
+    textarea {
+      width: 100%;
+      height: 240px;
+      background: #0f1115;
+      color: #e6e8ed;
+      border: 1px solid #242a3a;
+      border-radius: 6px;
+      padding: 10px;
+      font-family: Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+    button, select, input[type="number"], input[type="checkbox"] {
+      margin-top: 8px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      background: #4CAF50;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.secondary {
+      background: #2b3245;
+      color: #e6e8ed;
+    }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row label { flex: 1; font-size: 12px; color: #aab2c5; }
+    input[type="number"], select {
+      background: #0f1115;
+      color: #e6e8ed;
+      border: 1px solid #242a3a;
+      border-radius: 4px;
+      padding: 6px;
+    }
+    .status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #8ad8a8;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <h2>Canvas Runner</h2>
+    <p style="color:#aab2c5;">Paste p5.js code (instance mode) and export PNG/SVG.</p>
+    <div class="row">
+      <label>Width</label>
+      <input type="number" id="widthInput" value="800" min="100" max="4000">
+    </div>
+    <div class="row">
+      <label>Height</label>
+      <input type="number" id="heightInput" value="600" min="100" max="4000">
+    </div>
+    <div class="row">
+      <label>Renderer</label>
+      <select id="rendererSelect">
+        <option value="P2D">Canvas (PNG)</option>
+        <option value="SVG">SVG (vector)</option>
+      </select>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="fitToggle" checked> Fit to viewport</label>
+    </div>
+    <div class="row">
+      <label>Zoom <span id="zoomLabel">1.00x</span></label>
+      <input type="range" id="zoomInput" min="0.25" max="2.5" step="0.05" value="1">
+    </div>
+    <textarea id="codeInput"></textarea>
+    <button id="runBtn">Run Code</button>
+    <button id="exportPngBtn" class="secondary">Export PNG</button>
+    <button id="exportSvgBtn" class="secondary">Export SVG</button>
+    <div class="status" id="status">Ready.</div>
+  </div>
+  <div id="canvas-container"></div>
+
+  <script>
+    let currentSketch = null;
+    let fitZoomCtl = null;
+
+    const defaultCode = `// p5 instance mode; use p as your sketch
+// createCanvas is already called for you with selected size/renderer
+
+p.setup = () => {
+  p.noLoop();
+};
+
+p.draw = () => {
+  p.background(255);
+  p.stroke(0);
+  p.noFill();
+  for (let i = 0; i < 200; i++) {
+    p.circle(p.random(p.width), p.random(p.height), p.random(5, 40));
+  }
+};`;
+
+    const codeInput = document.getElementById('codeInput');
+    codeInput.value = defaultCode;
+
+    function setStatus(msg, color = '#8ad8a8') {
+      const el = document.getElementById('status');
+      if (el) { el.textContent = msg; el.style.color = color; }
+    }
+
+    function buildSketch(userCode, w, h, renderer) {
+      return (p) => {
+        p.setup = () => {
+          const r = renderer === 'SVG' ? p.SVG : p.P2D;
+          p.createCanvas(w, h, r);
+          p.background(255);
+          try {
+            new Function('p', userCode)(p);
+          } catch (err) {
+            console.error(err);
+            setStatus('Error in user code: ' + err.message, '#ff7b7b');
+          }
+        };
+      };
+    }
+
+    function runSketch() {
+      const w = parseInt(document.getElementById('widthInput').value) || 800;
+      const h = parseInt(document.getElementById('heightInput').value) || 600;
+      const renderer = document.getElementById('rendererSelect').value;
+      const userCode = codeInput.value;
+
+      if (currentSketch && currentSketch.remove) currentSketch.remove();
+
+      const container = document.getElementById('canvas-container');
+      container.innerHTML = '';
+      const sketch = buildSketch(userCode, w, h, renderer);
+      currentSketch = new p5((p) => {
+        sketch(p);
+        p.setup = (function(origSetup) {
+          return function() {
+            if (origSetup) origSetup.call(p);
+          };
+        })(p.setup);
+        p.draw = p.draw || (() => {});
+      }, container);
+
+      // Wait a tick for canvas to mount
+      setTimeout(() => {
+        const canvasEl = container.querySelector('canvas');
+        const zoomInput = document.getElementById('zoomInput');
+        if (canvasEl && window.CanvasLayout) {
+          if (fitZoomCtl && fitZoomCtl.destroy) fitZoomCtl.destroy();
+          fitZoomCtl = CanvasLayout.attachFitZoom({
+            container,
+            canvasEl,
+            fitToggle: document.getElementById('fitToggle'),
+            zoomInput
+          });
+        }
+      }, 50);
+
+      setStatus(`Running (${renderer})`);
+    }
+
+    document.getElementById('runBtn').addEventListener('click', runSketch);
+
+    document.getElementById('zoomInput').addEventListener('input', (e) => {
+      document.getElementById('zoomLabel').textContent = `${parseFloat(e.target.value).toFixed(2)}x`;
+    });
+
+    document.getElementById('exportPngBtn').addEventListener('click', () => {
+      if (!currentSketch) return;
+      if (currentSketch.saveCanvas) currentSketch.saveCanvas('canvas-runner', 'png');
+    });
+
+    document.getElementById('exportSvgBtn').addEventListener('click', () => {
+      if (!currentSketch) return;
+      // For SVG renderer, p5 saves as .svg automatically
+      if (currentSketch.save) currentSketch.save('canvas-runner.svg');
+      else if (currentSketch.saveCanvas) currentSketch.saveCanvas('canvas-runner', 'svg');
+    });
+
+    runSketch();
+  </script>
+</body>
+</html>

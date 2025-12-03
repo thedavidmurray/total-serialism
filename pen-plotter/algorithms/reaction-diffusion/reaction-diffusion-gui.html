@@ -5,6 +5,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
   <script src="../../../../preset-manager.js"></script>
+  <script src="../../canvas-layout.js"></script>
   <link rel="stylesheet" href="../../../../preset-manager.css">
   <style>
     body {
@@ -23,7 +24,7 @@
       position: sticky;
       top: 0;
       height: 100vh;
-      overflow: hidden;
+      overflow: auto;
       position: relative;
     }
     #controls {
@@ -202,6 +203,19 @@
         <input type="range" id="dB" min="0.1" max="0.8" step="0.01" value="0.5">
       </div>
     </div>
+
+    <div class="control-group">
+      <h3>View & Updates</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate">
+        <label for="autoRegenerate">Auto regenerate on change (heavy)</label>
+      </div>
+      <button id="fitViewBtn" class="secondary" style="margin-top:8px;">Toggle Fit / Manual</button>
+      <div class="control">
+        <label>Zoom: <span id="zoom-val">1.0x</span></label>
+        <input type="range" id="zoom" min="0.25" max="2.5" value="1" step="0.05">
+      </div>
+    </div>
     
     <div class="control-group">
       <h3>Grid Settings</h3>
@@ -281,6 +295,10 @@
     let iteration = 0;
     let isPaused = false;
     let presetManager;
+    let autoRegenerate = false;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
+    let fitZoomCtl;
 
     // Parameters
     let params = {
@@ -292,6 +310,10 @@
       threshold: 0.5,
       renderMode: 'grayscale'
     };
+    let autoRegenerate = false;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
+    let fitZoomCtl;
     
     // Laplacian kernel for diffusion
     const laplacian = [
@@ -303,9 +325,19 @@
     function setup() {
       let canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
+      if (window.CanvasLayout) {
+        fitZoomCtl = CanvasLayout.attachFitZoom({
+          container: document.getElementById('canvas-container'),
+          canvasEl: canvas.canvas,
+          fitToggle: document.getElementById('fitViewBtn'),
+          zoomInput: document.getElementById('zoom')
+        });
+      }
 
       initializeGrid();
       setupControls();
+      const zoomLabel = document.getElementById('zoom-val');
+      if (zoomLabel) zoomLabel.textContent = '1.00x';
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -328,6 +360,17 @@
           initializeGrid();
         }
       });
+
+      const zoomInput = document.getElementById('zoom');
+      const fitBtn = document.getElementById('fitViewBtn');
+      if (window.CanvasLayout) {
+        fitZoomCtl = CanvasLayout.attachFitZoom({
+          container: document.getElementById('canvas-container'),
+          canvasEl: canvas.canvas,
+          fitToggle: fitBtn,
+          zoomInput
+        });
+      }
     }
 
     // Helper function to update UI from params
@@ -391,10 +434,12 @@
           element.addEventListener('input', (e) => {
             params[param] = parseFloat(e.target.value);
             document.getElementById(param + '-val').textContent = e.target.value;
+            queueRegenerate();
           });
         } else if (element && element.tagName === 'SELECT') {
           element.addEventListener('change', (e) => {
             params[param] = e.target.value;
+            queueRegenerate();
           });
         }
       });
@@ -403,13 +448,40 @@
       document.getElementById('gridSize').addEventListener('input', (e) => {
         gridSize = parseInt(e.target.value);
         document.getElementById('gridSize-val').textContent = gridSize;
-        initializeGrid();
+        queueRegenerate();
       });
       
       document.getElementById('cellSize').addEventListener('input', (e) => {
         cellSize = parseInt(e.target.value);
         document.getElementById('cellSize-val').textContent = cellSize;
+        queueRegenerate();
       });
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) queueRegenerate();
+        });
+      }
+
+      const zoomInput = document.getElementById('zoom');
+      if (zoomInput) {
+        zoomInput.addEventListener('input', (e) => {
+          const label = document.getElementById('zoom-val');
+          if (label) label.textContent = `${parseFloat(e.target.value).toFixed(2)}x`;
+        });
+      }
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(() => {
+        initializeGrid();
+        redraw();
+      }, REGEN_DEBOUNCE);
     }
     
     function draw() {

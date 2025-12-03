@@ -4,6 +4,8 @@
   <title>Halftone - Image to Circle Patterns</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../canvas-layout.js"></script>
+  <script src="../../upload-helper.js"></script>
   <script src="../../../../path-optimizer.js"></script>
   <style>
     body {
@@ -19,6 +21,7 @@
       align-items: center;
       min-height: 100vh;
       position: relative;
+      overflow: auto;
     }
     #controls {
       width: 350px;
@@ -252,6 +255,23 @@
         <label>Canvas Size: <span id="canvasSize-value">600</span>px</label>
         <input type="range" id="canvasSize" min="300" max="1200" step="50" value="600">
       </div>
+      <div class="control">
+        <button id="fitViewBtn" style="background: #666; margin-bottom: 10px;">Toggle Fit / Manual</button>
+      </div>
+      <div class="control">
+        <label>Zoom: <span id="zoom-val">1.0x</span></label>
+        <input type="range" id="zoom" min="0.25" max="2.5" value="1" step="0.05">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>⚡ Performance</h3>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="autoRegenerate"> Auto regenerate on change (heavy)
+        </label>
+        <small style="color: #888; display: block; margin-top: 5px;">Note: Auto-regen disabled by default for performance</small>
+      </div>
     </div>
 
     <div class="control-group">
@@ -290,6 +310,11 @@
     let halftoneShapes = [];
     let optimizer = new PathOptimizer();
     let processing = false;
+    let autoRegenerate = false; // Default OFF for performance
+    let regenTimer;
+    const REGEN_DEBOUNCE = 500; // Longer debounce for heavy operations
+    let canvasLayoutController;
+    let uploadHelper;
 
     // P5.js setup
     function setup() {
@@ -300,9 +325,116 @@
       // Initialize SVG canvas for export
       svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
 
+      // Setup canvas layout and fit/zoom
+      setupCanvasLayout();
+      
+      // Setup upload helper
+      setupUploadHelper();
+      
+      // Setup event listeners
+      setupEventListeners();
+
       background(255);
       strokeWeight(1);
       noFill();
+    }
+
+    function setupCanvasLayout() {
+      const container = document.getElementById('canvas-container');
+      const canvasElement = canvas.canvas;
+      const fitToggle = document.getElementById('fitViewBtn');
+      const zoomSlider = document.getElementById('zoom');
+      
+      canvasLayoutController = CanvasLayout.attachFitZoom({
+        container,
+        canvasEl: canvasElement,
+        fitToggle,
+        zoomInput: zoomSlider,
+        padding: 16
+      });
+      
+      // Update zoom display
+      zoomSlider.addEventListener('input', (e) => {
+        document.getElementById('zoom-val').textContent = parseFloat(e.target.value).toFixed(1) + 'x';
+      });
+    }
+
+    function setupUploadHelper() {
+      uploadHelper = new UploadHelper({
+        dropArea: '#image-upload-area',
+        input: '#imageUpload',
+        onFile: (file) => {
+          loadImageFile(file);
+        }
+      });
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(() => {
+        generateHalftone();
+      }, REGEN_DEBOUNCE);
+    }
+
+    function setupEventListeners() {
+      // Auto-regenerate toggle
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate && img) queueRegenerate();
+        });
+      }
+      
+      // Update value displays and trigger regen if needed
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const valueSpan = document.getElementById(e.target.id + '-value');
+          if (valueSpan) {
+            valueSpan.textContent = e.target.value;
+          }
+          
+          // Resize canvas if needed
+          if (e.target.id === 'canvasSize') {
+            const size = parseInt(e.target.value);
+            resizeCanvas(size, size);
+            svgCanvas = createGraphics(size, size, SVG);
+            if (img) {
+              redraw();
+            }
+          } else if (img && e.target.id !== 'zoom') {
+            queueRegenerate();
+          }
+        });
+      });
+      
+      // Dropdown changes
+      ['gridType', 'curve', 'shapeType'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', () => {
+            if (img) queueRegenerate();
+          });
+        }
+      });
+      
+      // Checkbox changes
+      ['invertBrightness', 'optimizePaths', 'sortBySize'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', () => {
+            if (img && id !== 'optimizePaths' && id !== 'sortBySize') {
+              queueRegenerate();
+            }
+          });
+        }
+      });
+      
+      // Display checkboxes (no regen needed)
+      document.getElementById('showOriginal').addEventListener('change', () => redraw());
+      document.getElementById('showHalftone').addEventListener('change', () => redraw());
     }
 
     function draw() {
@@ -406,16 +538,28 @@
         return;
       }
       
+      showStatus('Loading image...', 'processing');
+      
       const reader = new FileReader();
       reader.onload = (e) => {
-        loadImage(e.target.result, (loadedImg) => {
-          img = loadedImg;
-          halftoneShapes = [];
-          showStatus('Image loaded successfully', 'success');
-          document.getElementById('exportBtn').disabled = true;
-          document.getElementById('exportPNGBtn').disabled = true;
-          redraw();
-        });
+        loadImage(e.target.result, 
+          (loadedImg) => {
+            img = loadedImg;
+            halftoneShapes = [];
+            showStatus(`Image loaded: ${loadedImg.width}×${loadedImg.height}px`, 'success');
+            document.getElementById('exportBtn').disabled = true;
+            document.getElementById('exportPNGBtn').disabled = true;
+            redraw();
+            queueRegenerate();
+          },
+          (error) => {
+            showStatus('Failed to load image', 'error');
+            console.error('Image load error:', error);
+          }
+        );
+      };
+      reader.onerror = () => {
+        showStatus('Failed to read file', 'error');
       };
       reader.readAsDataURL(file);
     }
@@ -657,6 +801,13 @@
         return;
       }
       
+      // Performance safeguard for very large exports
+      const maxSize = 2000;
+      if (width > maxSize || height > maxSize) {
+        const proceed = confirm(`Canvas is ${width}×${height}px. Large PNG exports may be slow. Continue?`);
+        if (!proceed) return;
+      }
+      
       // Save current canvas as PNG
       save(canvas, 'halftone-output.png');
       showStatus('PNG exported successfully!', 'success');
@@ -713,32 +864,7 @@
       }
     }
 
-    // Update value displays
-    document.querySelectorAll('input[type="range"]').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const valueSpan = document.getElementById(e.target.id + '-value');
-        if (valueSpan) {
-          valueSpan.textContent = e.target.value;
-        }
-        
-        // Resize canvas if needed
-        if (e.target.id === 'canvasSize') {
-          const size = parseInt(e.target.value);
-          resizeCanvas(size, size);
-          svgCanvas = createGraphics(size, size, SVG);
-          if (img) {
-            redraw();
-          }
-        }
-      });
-    });
-
-    // Checkbox handlers
-    document.getElementById('showOriginal').addEventListener('change', () => redraw());
-    document.getElementById('showHalftone').addEventListener('change', () => redraw());
-
-    // Setup image upload - moved outside p5.js setup() for reliability
-    setupImageUpload();
+    // Image upload setup is now handled in setup() via UploadHelper
   </script>
 </body>
 </html>

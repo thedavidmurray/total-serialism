@@ -6,6 +6,7 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../canvas-layout.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   <style>
     body {
@@ -24,7 +25,7 @@
       position: sticky;
       top: 0;
       height: 100vh;
-      overflow: hidden;
+      overflow: auto;
     }
     #controls {
       width: 320px;
@@ -276,6 +277,33 @@
     </div>
     
     <div class="control-group">
+      <h3>Canvas & Paper</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="custom">Custom (800×800px)</option>
+          <option value="a5">A5 (148×210mm)</option>
+          <option value="a4">A4 (210×297mm)</option>
+          <option value="a3">A3 (297×420mm)</option>
+          <option value="letter">US Letter</option>
+          <option value="square">Square (300×300mm)</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showFrame">
+        <label for="showFrame">Show Paper Frame</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="fitToView" checked>
+        <label for="fitToView">Fit to View</label>
+      </div>
+      <div class="control">
+        <label>Zoom: <span class="value" id="zoom-val">1.0</span>x</label>
+        <input type="range" id="zoomSlider" min="0.1" max="3.0" value="1.0" step="0.1">
+      </div>
+    </div>
+    
+    <div class="control-group">
       <h3>Colors</h3>
       <div class="control">
         <label>Background:</label>
@@ -305,8 +333,11 @@
         <label>Seed: <span id="seed-display">12345</span></label>
       </div>
       <div class="control checkbox-container">
-        <input type="checkbox" id="autoRegenerate" checked>
+        <input type="checkbox" id="autoRegenerate">
         <label for="autoRegenerate">Auto regenerate on change</label>
+      </div>
+      <div class="control">
+        <small style="color: #888;">Note: Auto-regen disabled by default for performance</small>
       </div>
       <button onclick="regenerate()">Regenerate</button>
       <button onclick="randomizeSeed()">Random Seed</button>
@@ -369,10 +400,13 @@
 
     let params = { ...spiralParams };
     let seed = Math.floor(Math.random() * 1000000);
-    let autoRegenerate = true;
+    let autoRegenerate = false; // Default OFF for performance
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
     let svgCanvas;
+    let canvasLayoutController;
+    let showFrame = false;
+    let currentPaperSize = 'custom';
 
     function setup() {
       const size = params.canvasSize || 800;
@@ -381,9 +415,36 @@
       pixelDensity(2);
       
       setupControls();
+      setupCanvasLayout();
       updateSeedDisplay();
       regenerate();
       noLoop();
+    }
+
+    function setupCanvasLayout() {
+      const container = document.getElementById('canvas-container');
+      const canvas = svgCanvas.canvas;
+      const fitToggle = document.getElementById('fitToView');
+      const zoomSlider = document.getElementById('zoomSlider');
+      
+      canvasLayoutController = CanvasLayout.attachFitZoom({
+        container,
+        canvasEl: canvas,
+        fitToggle,
+        zoomInput: zoomSlider,
+        padding: 16
+      });
+      
+      // Update zoom display
+      zoomSlider.addEventListener('input', (e) => {
+        document.getElementById('zoom-val').textContent = parseFloat(e.target.value).toFixed(1);
+      });
+    }
+
+    function updateCanvasSize() {
+      const paperSize = CanvasLayout.getSize(currentPaperSize);
+      params.canvasSize = Math.max(paperSize.width, paperSize.height);
+      resizeCanvas(params.canvasSize, params.canvasSize);
     }
 
     function draw() {
@@ -391,6 +452,18 @@
         drawSpiralDots();
       } else {
         drawBurst();
+      }
+      
+      // Draw paper frame if enabled
+      if (showFrame) {
+        const paperSize = CanvasLayout.getSize(currentPaperSize);
+        CanvasLayout.drawFrame(window, {
+          width: paperSize.width,
+          height: paperSize.height,
+          margin: 20,
+          color: [0, 200, 0],
+          weight: 2
+        });
       }
     }
 
@@ -468,9 +541,29 @@
         }
       });
 
+      // Paper size and frame controls
+      const paperSelect = document.getElementById('paperSize');
+      const frameToggle = document.getElementById('showFrame');
+      
+      if (paperSelect) {
+        paperSelect.addEventListener('change', (e) => {
+          currentPaperSize = e.target.value;
+          updateCanvasSize();
+          queueRegenerate();
+        });
+      }
+      
+      if (frameToggle) {
+        frameToggle.addEventListener('change', (e) => {
+          showFrame = e.target.checked;
+          queueRegenerate();
+        });
+      }
+      
       // Auto regenerate toggle
       const autoToggle = document.getElementById('autoRegenerate');
       if (autoToggle) {
+        autoToggle.checked = autoRegenerate; // Set initial state
         autoToggle.addEventListener('change', (e) => {
           autoRegenerate = e.target.checked;
           if (autoRegenerate) queueRegenerate();
@@ -788,6 +881,12 @@
     }
 
     function exportPNG() {
+      // Performance safeguard for very large exports
+      const maxSize = 4000;
+      if (width > maxSize || height > maxSize) {
+        const proceed = confirm(`Canvas is ${width}×${height}px. Large PNG exports may be slow. Continue?`);
+        if (!proceed) return;
+      }
       save(`spiral-burst-${currentMode}-${seed}.png`);
     }
 
@@ -840,6 +939,13 @@
     }
 
     function exportGIF() {
+      // Performance safeguard - warn for large canvases
+      const maxSafeSize = 1000;
+      if (width > maxSafeSize || height > maxSafeSize) {
+        const proceed = confirm(`Canvas is ${width}×${height}px. Large GIFs may take a long time to generate and use significant memory. Continue?`);
+        if (!proceed) return;
+      }
+      
       updateExportStatus('Preparing GIF...');
       
       const gif = new GIF({
