@@ -1,551 +1,636 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Hatching & Texture Library Demo</title>
+  <title>Hatching & Texture Library Demo - Updated</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
-  <!-- TODO: Missing hatching-library.js - needs to be created -->
-  <!-- <script src="../../src/textures/hatching-library.js"></script> -->
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-    }
-    .checkbox-container input {
-      margin-right: 10px;
-    }
-    .preset-btn {
-      background: #2196F3;
-      margin: 2px 0;
-      padding: 8px;
-      font-size: 13px;
-    }
-    .preset-btn:hover {
-      background: #1976D2;
-    }
-  </style>
+  <script src="../../canvas-layout.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="hatching-library.js"></script>
+  <script src="../textures/ascii-art.js"></script>
+  <script src="../../path-optimizer.js"></script>
+  <script src="../../ui-utils.js"></script>
+  <script src="../../export-utils.js"></script>
+  <script src="../../plotter-optimizer.js"></script>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="controls">
-    <h2>Hatching Library Demo</h2>
+    <h2>🎨 Advanced Hatching Demo</h2>
+    <p>Showcasing all new utility libraries working together</p>
     
     <div class="control-group">
-      <h3>Shape</h3>
-      <div class="control">
-        <label>Shape Type:</label>
-        <select id="shapeType">
-          <option value="circle">Circle</option>
-          <option value="square">Square</option>
-          <option value="triangle">Triangle</option>
-          <option value="hexagon">Hexagon</option>
-          <option value="star">Star</option>
-          <option value="heart">Heart</option>
-          <option value="custom">Custom Polygon</option>
-        </select>
-      </div>
-      <div class="control">
-        <label>Size: <span class="value" id="shapeSize-val">200</span></label>
-        <input type="range" id="shapeSize" min="50" max="400" value="200">
-      </div>
+      <h3>🔲 Shape Configuration</h3>
     </div>
     
     <div class="control-group">
-      <h3>Pattern</h3>
-      <div class="control">
-        <label>Pattern Type:</label>
-        <select id="patternType">
-          <option value="parallel">Parallel Lines</option>
-          <option value="crosshatch">Cross Hatch</option>
-          <option value="stipple">Stipple</option>
-          <option value="scribble">Scribble</option>
-          <option value="waves">Waves</option>
-          <option value="circular">Circular</option>
-          <option value="organic">Organic</option>
-          <option value="dots">Dots</option>
-          <option value="dashes">Dashes</option>
-          <option value="zigzag">Zigzag</option>
-          <option value="gradient">Gradient</option>
-          <option value="noise">Noise</option>
-        </select>
-      </div>
+      <h3>🎭 Pattern Configuration</h3>
     </div>
     
     <div class="control-group">
-      <h3>Pattern Settings</h3>
-      <div class="control">
-        <label>Spacing: <span class="value" id="spacing-val">5</span></label>
-        <input type="range" id="spacing" min="2" max="20" value="5">
-      </div>
-      <div class="control">
-        <label>Angle: <span class="value" id="angle-val">45</span>°</label>
-        <input type="range" id="angle" min="0" max="180" value="45">
-      </div>
-      <div class="control">
-        <label>Density: <span class="value" id="density-val">1</span></label>
-        <input type="range" id="density" min="0.1" max="3" value="1" step="0.1">
-      </div>
-      <div class="control" id="amplitude-control" style="display: none;">
-        <label>Amplitude: <span class="value" id="amplitude-val">5</span></label>
-        <input type="range" id="amplitude" min="1" max="20" value="5">
-      </div>
-      <div class="control" id="frequency-control" style="display: none;">
-        <label>Frequency: <span class="value" id="frequency-val">0.1</span></label>
-        <input type="range" id="frequency" min="0.01" max="0.5" value="0.1" step="0.01">
-      </div>
+      <h3>⚙️ Advanced Options</h3>
     </div>
     
     <div class="control-group">
-      <h3>Display Options</h3>
-      <div class="control">
-        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
-        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
-      </div>
-      <div class="control checkbox-container">
-        <input type="checkbox" id="showShape" checked>
-        <label for="showShape">Show Shape Outline</label>
-      </div>
-      <div class="control checkbox-container">
-        <input type="checkbox" id="showBounds">
-        <label for="showBounds">Show Bounds</label>
-      </div>
-      <div class="control checkbox-container">
-        <input type="checkbox" id="animatePattern">
-        <label for="animatePattern">Animate Pattern</label>
-      </div>
+      <h3>🎮 Presets</h3>
     </div>
     
     <div class="control-group">
-      <h3>Examples</h3>
-      <button class="preset-btn" onclick="loadExample('wood')">Wood Grain</button>
-      <button class="preset-btn" onclick="loadExample('fabric')">Fabric Texture</button>
-      <button class="preset-btn" onclick="loadExample('shadow')">Shadow</button>
-      <button class="preset-btn" onclick="loadExample('water')">Water</button>
-      <button class="preset-btn" onclick="loadExample('stone')">Stone</button>
-      <button class="preset-btn" onclick="loadExample('gradient-sphere')">Gradient Sphere</button>
-    </div>
-    
-    <div class="control-group">
-      <h3>Export</h3>
-      <button onclick="exportSVG()">Export SVG</button>
-      <button onclick="exportPNG()">Export PNG</button>
-      <button onclick="regenerate()">Regenerate</button>
+      <h3>💾 Export</h3>
     </div>
   </div>
 
   <script>
+    // Enhanced parameters using all utilities
     let params = {
+      // Shape parameters
       shapeType: 'circle',
       shapeSize: 200,
+      shapeX: 400,
+      shapeY: 300,
+      
+      // Pattern parameters
       patternType: 'parallel',
       spacing: 5,
       angle: 45,
-      density: 1,
-      amplitude: 5,
-      frequency: 0.1,
-      strokeWeight: 1,
-      showShape: true,
-      showBounds: false,
-      animatePattern: false
+      density: 1.0,
+      strokeWeight: 1.0,
+      
+      // Advanced options
+      enableOptimization: true,
+      showProgress: true,
+      enableASCII: false,
+      asciiCols: 60,
+      
+      // Animation
+      animate: false,
+      speed: 0.02
     };
     
+    let canvas;
+    let canvasLayout;
+    let presetManager;
     let hatchingLib;
-    let shape;
-    let pattern = [];
+    let pathOpt;
+    let optimizedPaths = [];
+    let originalPaths = [];
+    let currentShape = null;
     let animationTime = 0;
-    let svgCanvas;
+    let autoRegenerate = true;
+    let regenTimer = null;
     
     function setup() {
-      const w = 800;
-      const h = 600;
+      // Initialize canvas with layout manager
+      canvasLayout = new CanvasLayout();
+      canvas = canvasLayout.createMainCanvas(800, 600);
+      canvas.parent('canvas-container');
       
-      svgCanvas = createCanvas(w, h, SVG);
-      svgCanvas.parent('canvas-container');
-      
+      // Initialize all utility classes
       hatchingLib = new HatchingLibrary();
+      pathOpt = new PathOptimizer();
       
-      setupControls();
-      regenerate();
-    }
-    
-    function setupControls() {
-      Object.keys(params).forEach(key => {
-        const element = document.getElementById(key);
-        if (element) {
-          if (element.type === 'range') {
-            element.addEventListener('input', (e) => {
-              params[key] = parseFloat(e.target.value);
-              const display = document.getElementById(key + '-val');
-              if (display) display.textContent = params[key];
-              regenerate();
-            });
-          } else if (element.type === 'checkbox') {
-            element.addEventListener('change', (e) => {
-              params[key] = e.target.checked;
-              if (key === 'animatePattern') {
-                if (params[key]) {
-                  loop();
-                } else {
-                  noLoop();
-                }
-              } else {
-                regenerate();
-              }
-            });
-          } else if (element.tagName === 'SELECT') {
-            element.addEventListener('change', (e) => {
-              params[key] = e.target.value;
-              updateControlVisibility();
-              regenerate();
-            });
+      // Initialize preset manager
+      presetManager = new PresetManager('hatching-demo', {
+        defaultPresets: {
+          'Wood Grain': {
+            patternType: 'parallel',
+            spacing: 3,
+            angle: 15,
+            density: 1.2,
+            strokeWeight: 0.8
+          },
+          'Cross Hatch': {
+            patternType: 'crosshatch',
+            spacing: 4,
+            angle: 45,
+            density: 1.0,
+            strokeWeight: 1.0
+          },
+          'Stipple Dense': {
+            patternType: 'stipple',
+            spacing: 2,
+            density: 2.0,
+            strokeWeight: 0.5
+          },
+          'Radial Burst': {
+            patternType: 'radial',
+            spacing: 6,
+            angle: 0,
+            density: 1.0,
+            strokeWeight: 1.2
+          },
+          'Contour Lines': {
+            patternType: 'contour',
+            spacing: 8,
+            angle: 0,
+            density: 1.0,
+            strokeWeight: 0.7
           }
         }
       });
       
-      updateControlVisibility();
+      setupAdvancedUI();
+      
+      // Enable auto-regeneration with debouncing
+      setupAutoRegenerate();
+      
+      // Initial generation
+      generatePattern();
+      
+      uiUtils.showStatus('Hatching Demo Ready!', 'success', 2000);
     }
     
-    function updateControlVisibility() {
-      // Show/hide pattern-specific controls
-      const hasAmplitude = ['waves', 'zigzag'].includes(params.patternType);
-      const hasFrequency = ['waves', 'zigzag', 'organic'].includes(params.patternType);
+    function setupAdvancedUI() {
+      const controls = document.getElementById('controls');
       
-      document.getElementById('amplitude-control').style.display = 
-        hasAmplitude ? 'block' : 'none';
-      document.getElementById('frequency-control').style.display = 
-        hasFrequency ? 'block' : 'none';
+      // Shape controls using UI utils
+      const shapeGroup = controls.querySelector('.control-group:nth-child(2)');
       
-      // Hide angle for circular patterns
-      document.getElementById('angle').parentElement.style.display = 
-        params.patternType === 'circular' ? 'none' : 'block';
+      uiUtils.createSelect(shapeGroup, 'Shape Type', 'shapeType', [
+        { label: 'Circle', value: 'circle' },
+        { label: 'Square', value: 'square' },
+        { label: 'Triangle', value: 'triangle' },
+        { label: 'Hexagon', value: 'hexagon' },
+        { label: 'Star', value: 'star' },
+        { label: 'Heart', value: 'heart' }
+      ], params.shapeType);
+      
+      uiUtils.createSlider(shapeGroup, 'Shape Size', 'shapeSize', 50, 400, params.shapeSize);
+      uiUtils.createSlider(shapeGroup, 'X Position', 'shapeX', 100, 700, params.shapeX);
+      uiUtils.createSlider(shapeGroup, 'Y Position', 'shapeY', 100, 500, params.shapeY);
+      
+      // Pattern controls
+      const patternGroup = controls.querySelector('.control-group:nth-child(3)');
+      
+      uiUtils.createSelect(patternGroup, 'Pattern Type', 'patternType', 
+        hatchingLib.getAvailablePatterns().map(p => ({ label: p.charAt(0).toUpperCase() + p.slice(1), value: p })),
+        params.patternType
+      );
+      
+      uiUtils.createSlider(patternGroup, 'Spacing', 'spacing', 1, 20, params.spacing, 0.5);
+      uiUtils.createSlider(patternGroup, 'Angle', 'angle', 0, 180, params.angle);
+      uiUtils.createSlider(patternGroup, 'Density', 'density', 0.1, 3.0, params.density, 0.1);
+      uiUtils.createSlider(patternGroup, 'Stroke Weight', 'strokeWeight', 0.1, 3.0, params.strokeWeight, 0.1);
+      
+      // Advanced options
+      const advancedGroup = controls.querySelector('.control-group:nth-child(4)');
+      
+      uiUtils.createCheckbox(advancedGroup, 'Enable Path Optimization', 'enableOptimization', params.enableOptimization);
+      uiUtils.createCheckbox(advancedGroup, 'Show Progress', 'showProgress', params.showProgress);
+      uiUtils.createCheckbox(advancedGroup, 'ASCII Art Overlay', 'enableASCII', params.enableASCII);
+      uiUtils.createSlider(advancedGroup, 'ASCII Columns', 'asciiCols', 20, 100, params.asciiCols);
+      uiUtils.createCheckbox(advancedGroup, 'Animate', 'animate', params.animate);
+      
+      // Presets
+      const presetGroup = controls.querySelector('.control-group:nth-child(5)');
+      presetManager.createUI(presetGroup);
+      
+      // Export buttons using standardized export utils
+      const exportGroup = controls.querySelector('.control-group:nth-child(6)');
+      exportUtils.addExportButtons(exportGroup, drawForExport, 'hatching-demo', params);
+      
+      // Add optimization report button
+      uiUtils.createButtonGroup(exportGroup, null, [
+        {
+          label: '📊 Optimization Report',
+          callback: showOptimizationReport,
+          style: { backgroundColor: '#FF9800' }
+        },
+        {
+          label: '🔄 Regenerate',
+          callback: () => {
+            generatePattern();
+            uiUtils.showStatus('Pattern regenerated!', 'success', 1500);
+          }
+        }
+      ]);
+      
+      // Attach change listeners
+      attachChangeListeners();
+    }
+    
+    function attachChangeListeners() {
+      const paramKeys = Object.keys(params);
+      
+      paramKeys.forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          const debouncedUpdate = uiUtils.debounce(() => {
+            updateParams();
+            if (autoRegenerate) {
+              triggerRegenerate();
+            }
+          }, 150);
+          
+          element.addEventListener('input', debouncedUpdate);
+          element.addEventListener('change', debouncedUpdate);
+        }
+      });
+      
+      // Special handling for animation toggle
+      const animateElement = document.getElementById('animate');
+      if (animateElement) {
+        animateElement.addEventListener('change', (e) => {
+          params.animate = e.target.checked;
+          if (params.animate) {
+            loop();
+          } else {
+            noLoop();
+            redraw();
+          }
+        });
+      }
+    }
+    
+    function updateParams() {
+      const paramKeys = Object.keys(params);
+      const newValues = uiUtils.getParameterValues(paramKeys);
+      Object.assign(params, newValues);
+    }
+    
+    function setupAutoRegenerate() {
+      // Auto-regenerate with debouncing
+      function triggerRegenerate() {
+        if (regenTimer) clearTimeout(regenTimer);
+        regenTimer = setTimeout(() => {
+          generatePattern();
+        }, 200);
+      }
+      
+      window.triggerRegenerate = triggerRegenerate;
+    }
+    
+    function generatePattern() {
+      if (params.showProgress) {
+        uiUtils.showProgress(0, 4, 'Generating pattern...');
+      }
+      
+      // Step 1: Create shape
+      createShape();
+      if (params.showProgress) uiUtils.showProgress(1, 4, 'Creating shape...');
+      
+      // Step 2: Generate hatching pattern
+      generateHatchingPaths();
+      if (params.showProgress) uiUtils.showProgress(2, 4, 'Generating hatching...');
+      
+      // Step 3: Optimize paths if enabled
+      if (params.enableOptimization) {
+        optimizePaths();
+        if (params.showProgress) uiUtils.showProgress(3, 4, 'Optimizing paths...');
+      }
+      
+      // Step 4: Complete
+      if (params.showProgress) uiUtils.showProgress(4, 4, 'Complete!');
+      
+      if (!params.animate) {
+        redraw();
+      }
     }
     
     function createShape() {
-      const centerX = width / 2;
-      const centerY = height / 2;
+      const centerX = params.shapeX;
+      const centerY = params.shapeY;
       const size = params.shapeSize;
       
       switch (params.shapeType) {
         case 'circle':
-          shape = {
+          currentShape = {
             type: 'circle',
             x: centerX,
             y: centerY,
-            radius: size / 2
+            diameter: size
           };
           break;
           
         case 'square':
-          shape = {
+          currentShape = {
             type: 'rect',
-            x: centerX - size / 2,
-            y: centerY - size / 2,
+            x: centerX - size/2,
+            y: centerY - size/2,
             width: size,
             height: size
           };
           break;
           
         case 'triangle':
-          shape = {
-            type: 'polygon',
-            points: [
-              { x: centerX, y: centerY - size / 2 },
-              { x: centerX - size / 2, y: centerY + size / 2 },
-              { x: centerX + size / 2, y: centerY + size / 2 }
-            ]
-          };
+          currentShape = createPolygonShape(centerX, centerY, size/2, 3);
           break;
           
         case 'hexagon':
-          shape = {
-            type: 'polygon',
-            points: []
-          };
-          for (let i = 0; i < 6; i++) {
-            const angle = (i / 6) * TWO_PI - PI / 2;
-            shape.points.push({
-              x: centerX + cos(angle) * size / 2,
-              y: centerY + sin(angle) * size / 2
-            });
-          }
+          currentShape = createPolygonShape(centerX, centerY, size/2, 6);
           break;
           
         case 'star':
-          shape = {
-            type: 'polygon',
-            points: []
-          };
-          for (let i = 0; i < 10; i++) {
-            const angle = (i / 10) * TWO_PI - PI / 2;
-            const radius = i % 2 === 0 ? size / 2 : size / 4;
-            shape.points.push({
-              x: centerX + cos(angle) * radius,
-              y: centerY + sin(angle) * radius
-            });
-          }
+          currentShape = createStarShape(centerX, centerY, size/2, size/4, 5);
           break;
           
         case 'heart':
-          shape = {
-            type: 'polygon',
-            points: []
-          };
-          for (let t = 0; t <= TWO_PI; t += 0.1) {
-            const x = 16 * pow(sin(t), 3);
-            const y = -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t));
-            shape.points.push({
-              x: centerX + x * size / 40,
-              y: centerY + y * size / 40
-            });
-          }
-          break;
-          
-        case 'custom':
-          // Random polygon
-          shape = {
-            type: 'polygon',
-            points: []
-          };
-          const numPoints = 5 + floor(random(5));
-          for (let i = 0; i < numPoints; i++) {
-            const angle = (i / numPoints) * TWO_PI + random(-0.2, 0.2);
-            const radius = size / 2 * random(0.7, 1);
-            shape.points.push({
-              x: centerX + cos(angle) * radius,
-              y: centerY + sin(angle) * radius
-            });
-          }
+          currentShape = createHeartShape(centerX, centerY, size/40);
           break;
       }
     }
     
-    function generatePattern() {
+    function createPolygonShape(centerX, centerY, radius, sides) {
+      const points = [];
+      for (let i = 0; i < sides; i++) {
+        const angle = (i / sides) * TWO_PI - PI/2;
+        points.push({
+          x: centerX + cos(angle) * radius,
+          y: centerY + sin(angle) * radius
+        });
+      }
+      return { type: 'polygon', points };
+    }
+    
+    function createStarShape(centerX, centerY, outerRadius, innerRadius, points) {
+      const vertices = [];
+      for (let i = 0; i < points * 2; i++) {
+        const angle = (i / (points * 2)) * TWO_PI - PI/2;
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        vertices.push({
+          x: centerX + cos(angle) * radius,
+          y: centerY + sin(angle) * radius
+        });
+      }
+      return { type: 'polygon', points: vertices };
+    }
+    
+    function createHeartShape(centerX, centerY, scale) {
+      const points = [];
+      for (let t = 0; t <= TWO_PI; t += 0.1) {
+        const x = 16 * pow(sin(t), 3);
+        const y = -(13 * cos(t) - 5 * cos(2 * t) - 2 * cos(3 * t) - cos(4 * t));
+        points.push({
+          x: centerX + x * scale,
+          y: centerY + y * scale
+        });
+      }
+      return { type: 'polygon', points };
+    }
+    
+    function generateHatchingPaths() {
+      originalPaths = [];
+      
+      if (!currentShape) return;
+      
       const options = {
         spacing: params.spacing,
-        angle: params.angle,
+        angle: params.angle + (params.animate ? animationTime * 20 : 0),
         density: params.density,
-        amplitude: params.amplitude,
-        frequency: params.frequency
+        strokeWeight: params.strokeWeight
       };
       
-      // Add animation
-      if (params.animatePattern) {
-        options.offset = animationTime * 2;
-        options.seed = animationTime * 0.1;
+      // Generate paths based on shape type
+      if (currentShape.type === 'circle') {
+        // Use circular bounds for hatching
+        const bounds = {
+          x: currentShape.x - currentShape.diameter/2,
+          y: currentShape.y - currentShape.diameter/2,
+          width: currentShape.diameter,
+          height: currentShape.diameter
+        };
+        
+        const paths = hatchingLib.hatchRegion(
+          canvas, bounds.x, bounds.y, bounds.width, bounds.height,
+          params.patternType, options
+        );
+        
+        originalPaths = paths || [];
+        
+      } else if (currentShape.type === 'rect') {
+        const paths = hatchingLib.hatchRegion(
+          canvas, currentShape.x, currentShape.y, currentShape.width, currentShape.height,
+          params.patternType, options
+        );
+        
+        originalPaths = paths || [];
+        
+      } else if (currentShape.type === 'polygon') {
+        // For complex polygons, create a bounding box and clip
+        const bounds = getPolygonBounds(currentShape.points);
+        const paths = hatchingLib.hatchRegion(
+          canvas, bounds.x, bounds.y, bounds.width, bounds.height,
+          params.patternType, options
+        );
+        
+        originalPaths = paths || [];
       }
-      
-      pattern = hatchingLib.fillShape(shape, params.patternType, options);
     }
     
-    function regenerate() {
-      createShape();
-      generatePattern();
-      if (!params.animatePattern) {
-        redraw();
+    function getPolygonBounds(points) {
+      let minX = Infinity, minY = Infinity;
+      let maxX = -Infinity, maxY = -Infinity;
+      
+      points.forEach(p => {
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      });
+      
+      return {
+        x: minX,
+        y: minY,
+        width: maxX - minX,
+        height: maxY - minY
+      };
+    }
+    
+    function optimizePaths() {
+      if (originalPaths.length === 0) return;
+      
+      // Convert to path format for optimizer
+      const pathsForOptimization = originalPaths.map(path => {
+        if (path.start && path.end) {
+          return [
+            { x: path.start.x, y: path.start.y },
+            { x: path.end.x, y: path.end.y }
+          ];
+        }
+        return [];
+      }).filter(path => path.length > 0);
+      
+      optimizedPaths = pathOpt.optimizeAllPaths(pathsForOptimization, {
+        removeShortPaths: true,
+        simplifyPaths: true,
+        mergeEndpoints: true,
+        optimizeOrder: true,
+        minLength: 2.0
+      });
+    }
+    
+    function drawForExport(exportCanvas, mode = 'screen') {
+      if (mode === 'plotter') {
+        // Plotter-optimized drawing (stroke only, no backgrounds)
+        exportCanvas.stroke(0);
+        exportCanvas.strokeWeight(params.strokeWeight);
+        exportCanvas.noFill();
+        
+        drawOptimizedPaths(exportCanvas);
+      } else {
+        // Screen drawing (with backgrounds, fills, etc.)
+        exportCanvas.background(255);
+        drawPattern(exportCanvas);
+        
+        if (params.enableASCII) {
+          drawASCIIOverlay(exportCanvas);
+        }
       }
     }
     
     function draw() {
       background(255);
       
-      if (params.animatePattern) {
-        animationTime += 0.02;
-        generatePattern();
-      }
-      
-      // Draw shape bounds
-      if (params.showBounds) {
-        const bounds = hatchingLib.getShapeBounds(shape);
-        noFill();
-        stroke(200);
-        strokeWeight(1);
-        rect(bounds.minX, bounds.minY, bounds.width, bounds.height);
-      }
-      
-      // Draw shape outline
-      if (params.showShape) {
-        noFill();
-        stroke(150);
-        strokeWeight(2);
-        
-        if (shape.type === 'circle') {
-          ellipse(shape.x, shape.y, shape.radius * 2);
-        } else if (shape.type === 'rect') {
-          rect(shape.x, shape.y, shape.width, shape.height);
-        } else if (shape.type === 'polygon') {
-          beginShape();
-          shape.points.forEach(p => vertex(p.x, p.y));
-          endShape(CLOSE);
+      if (params.animate) {
+        animationTime += params.speed;
+        generateHatchingPaths();
+        if (params.enableOptimization) {
+          optimizePaths();
         }
       }
       
-      // Draw pattern
-      stroke(0);
-      strokeWeight(params.strokeWeight);
+      drawPattern(canvas);
       
-      pattern.forEach(element => {
-        if (element.type === 'circle') {
-          // Draw dot
-          fill(0);
-          noStroke();
-          ellipse(element.x, element.y, element.radius * 2);
-        } else if (element.start && element.end) {
-          // Draw line
-          noFill();
-          stroke(0);
-          line(element.start.x, element.start.y, element.end.x, element.end.y);
-        }
-      });
+      if (params.enableASCII) {
+        drawASCIIOverlay(canvas);
+      }
       
-      if (!params.animatePattern) {
+      if (!params.animate) {
         noLoop();
       }
     }
     
-    function loadExample(example) {
-      switch (example) {
-        case 'wood':
-          params.patternType = 'organic';
-          params.spacing = 3;
-          params.density = 1.5;
-          params.angle = 0;
-          break;
-          
-        case 'fabric':
-          params.patternType = 'crosshatch';
-          params.spacing = 4;
-          params.angle = 45;
-          params.density = 1;
-          break;
-          
-        case 'shadow':
-          params.patternType = 'gradient';
-          params.spacing = 2;
-          params.angle = 135;
-          break;
-          
-        case 'water':
-          params.patternType = 'waves';
-          params.spacing = 6;
-          params.amplitude = 4;
-          params.frequency = 0.15;
-          break;
-          
-        case 'stone':
-          params.patternType = 'noise';
-          params.spacing = 4;
-          params.density = 0.8;
-          break;
-          
-        case 'gradient-sphere':
-          params.shapeType = 'circle';
-          params.patternType = 'circular';
-          params.spacing = 3;
-          break;
+    function drawPattern(drawCanvas) {
+      drawCanvas.push();
+      
+      // Draw shape outline
+      drawCanvas.stroke(100);
+      drawCanvas.strokeWeight(1);
+      drawCanvas.noFill();
+      
+      if (currentShape) {
+        if (currentShape.type === 'circle') {
+          drawCanvas.circle(currentShape.x, currentShape.y, currentShape.diameter);
+        } else if (currentShape.type === 'rect') {
+          drawCanvas.rect(currentShape.x, currentShape.y, currentShape.width, currentShape.height);
+        } else if (currentShape.type === 'polygon') {
+          drawCanvas.beginShape();
+          currentShape.points.forEach(p => drawCanvas.vertex(p.x, p.y));
+          drawCanvas.endShape(CLOSE);
+        }
       }
       
-      // Update UI
-      Object.keys(params).forEach(key => {
-        const element = document.getElementById(key);
-        if (element) {
-          if (element.type === 'checkbox') {
-            element.checked = params[key];
-          } else {
-            element.value = params[key];
-          }
-          const display = document.getElementById(key + '-val');
-          if (display) display.textContent = params[key];
+      // Draw pattern
+      drawCanvas.stroke(0);
+      drawCanvas.strokeWeight(params.strokeWeight);
+      
+      if (params.enableOptimization && optimizedPaths.length > 0) {
+        drawOptimizedPaths(drawCanvas);
+      } else {
+        drawOriginalPaths(drawCanvas);
+      }
+      
+      drawCanvas.pop();
+    }
+    
+    function drawOptimizedPaths(drawCanvas) {
+      optimizedPaths.forEach(path => {
+        if (path.length >= 2) {
+          drawCanvas.beginShape();
+          drawCanvas.noFill();
+          path.forEach(point => drawCanvas.vertex(point.x, point.y));
+          drawCanvas.endShape();
         }
       });
+    }
+    
+    function drawOriginalPaths(drawCanvas) {
+      originalPaths.forEach(element => {
+        if (element.type === 'line' && element.start && element.end) {
+          drawCanvas.line(element.start.x, element.start.y, element.end.x, element.end.y);
+        } else if (element.type === 'circle') {
+          drawCanvas.circle(element.x, element.y, element.radius * 2);
+        }
+      });
+    }
+    
+    function drawASCIIOverlay(drawCanvas) {
+      // Create ASCII art overlay
+      const tempGraphics = createGraphics(width, height);
+      tempGraphics.background(255);
+      drawPattern(tempGraphics);
       
-      updateControlVisibility();
-      regenerate();
+      const asciiText = asciiArt.imageToASCII(tempGraphics, params.asciiCols, {
+        characterSet: 'simple',
+        invert: true,
+        contrast: 1.2
+      });
+      
+      drawCanvas.push();
+      drawCanvas.fill(0, 100);
+      drawCanvas.textFont('monospace');
+      drawCanvas.textSize(8);
+      drawCanvas.text(asciiText, 10, 20);
+      drawCanvas.pop();
+      
+      tempGraphics.remove();
     }
     
-    function exportSVG() {
-      save(svgCanvas, `hatching-${params.patternType}-${Date.now()}.svg`);
+    function showOptimizationReport() {
+      if (originalPaths.length === 0 && optimizedPaths.length === 0) {
+        uiUtils.showStatus('Generate a pattern first!', 'warning', 2000);
+        return;
+      }
+      
+      const report = pathOpt.generateReport(
+        originalPaths.map(p => p.start && p.end ? [p.start, p.end] : []).filter(p => p.length > 0),
+        optimizedPaths
+      );
+      
+      const reportText = `
+Path Optimization Report:
+━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 Path Count:
+   Original: ${report.originalPathCount}
+   Optimized: ${report.optimizedPathCount}
+   Reduction: ${report.pathReduction}%
+
+📏 Drawing Length:
+   Original: ${report.originalDrawingLength.toFixed(1)}mm
+   Optimized: ${report.optimizedDrawingLength.toFixed(1)}mm
+   Savings: ${report.lengthReduction}%
+
+✈️ Pen Travel:
+   Pen-up distance: ${report.penUpDistance.toFixed(1)}mm
+   Total plotting: ${report.totalPlottingDistance.toFixed(1)}mm
+
+💡 Efficiency gained through TSP optimization,
+   path merging, and Douglas-Peucker simplification.
+      `.trim();
+      
+      alert(reportText);
+      
+      console.log('Detailed Optimization Report:', report);
     }
     
-    function exportPNG() {
-      save(`hatching-${params.patternType}-${Date.now()}.png`);
+    // Preset system integration
+    function onPresetLoad(presetData) {
+      Object.assign(params, presetData);
+      uiUtils.updateParameterDisplays(params);
+      generatePattern();
+      uiUtils.showStatus(`Preset "${presetData.name}" loaded!`, 'success', 2000);
     }
+    
+    function onPresetSave(presetName) {
+      uiUtils.showStatus(`Preset "${presetName}" saved!`, 'success', 2000);
+    }
+    
+    // Wire up preset events
+    window.addEventListener('DOMContentLoaded', () => {
+      presetManager.onLoad = onPresetLoad;
+      presetManager.onSave = onPresetSave;
+    });
   </script>
 </body>
 </html>
