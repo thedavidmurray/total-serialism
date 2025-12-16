@@ -1,0 +1,1610 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Belousov-Zhabotinsky Reaction - 3D</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../../preset-manager.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    #canvas-container {
+      flex: 1;
+      height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 360px;
+      padding: 20px;
+      background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%);
+      height: 100vh;
+      overflow-y: auto;
+      border-left: 1px solid #333;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #ff6b35;
+      text-shadow: 0 0 10px rgba(255,107,53,0.3);
+      font-size: 20px;
+    }
+    .control-group {
+      margin-bottom: 18px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: #ff6b35;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .control {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 5px;
+      -webkit-appearance: none;
+      background: #333;
+      border-radius: 3px;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: #ff6b35;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(255,107,53,0.5);
+    }
+    select, input[type="color"] {
+      width: 100%;
+      padding: 6px;
+      background: #252530;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 8px;
+      margin: 3px 0;
+      background: linear-gradient(135deg, #ff6b35 0%, #d45a2a 100%);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(255,107,53,0.4);
+    }
+    button.secondary {
+      background: linear-gradient(135deg, #4a4a5a 0%, #3a3a4a 100%);
+    }
+    .value {
+      font-weight: bold;
+      color: #ff6b35;
+      font-family: monospace;
+      font-size: 11px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      padding: 6px 0;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      accent-color: #ff6b35;
+    }
+    .checkbox-container label {
+      margin: 0;
+      cursor: pointer;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #252530;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 13px;
+      color: #ff6b35;
+    }
+    #status {
+      margin-top: 8px;
+      font-size: 11px;
+      color: #888;
+      min-height: 18px;
+    }
+    .button-row {
+      display: flex;
+      gap: 6px;
+    }
+    .button-row button {
+      flex: 1;
+    }
+    .color-row {
+      display: flex;
+      gap: 6px;
+    }
+    .color-row input[type="color"] {
+      flex: 1;
+      height: 32px;
+      padding: 2px;
+    }
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px 15px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: #aaa;
+    }
+    #info span {
+      color: #ff6b35;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 12px;
+      border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #888;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      font-size: 12px;
+    }
+    .tab:hover { color: #fff; }
+    .tab.active {
+      color: #ff6b35;
+      border-bottom-color: #ff6b35;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="info">
+      FPS: <span id="fps">60</span> |
+      Vertices: <span id="vertices">0</span> |
+      Drag to rotate, scroll to zoom
+    </div>
+  </div>
+  <div id="controls">
+    <h2>🧬 BZ Reaction 3D</h2>
+
+    <div id="preset-container"></div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('reaction')">Reaction</div>
+      <div class="tab" onclick="switchTab('visual')">Visual</div>
+      <div class="tab" onclick="switchTab('camera')">Camera</div>
+      <div class="tab" onclick="switchTab('export')">Export</div>
+    </div>
+
+    <!-- REACTION TAB -->
+    <div id="tab-reaction" class="tab-content active">
+      <div class="control-group">
+        <h3>Reaction Parameters</h3>
+        <div class="control">
+          <label>Feed Rate: <span class="value" id="feedRate-val">0.055</span></label>
+          <input type="range" id="feedRate" min="0.001" max="0.15" value="0.055" step="0.001">
+        </div>
+        <div class="control">
+          <label>Kill Rate: <span class="value" id="killRate-val">0.062</span></label>
+          <input type="range" id="killRate" min="0.01" max="0.1" value="0.062" step="0.001">
+        </div>
+        <div class="control">
+          <label>Diffusion A: <span class="value" id="diffusionA-val">1.0</span></label>
+          <input type="range" id="diffusionA" min="0.1" max="2.0" value="1.0" step="0.05">
+        </div>
+        <div class="control">
+          <label>Diffusion B: <span class="value" id="diffusionB-val">0.5</span></label>
+          <input type="range" id="diffusionB" min="0.05" max="1.5" value="0.5" step="0.05">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Simulation</h3>
+        <div class="control">
+          <label>Grid Size: <span class="value" id="gridSize-val">128</span></label>
+          <input type="range" id="gridSize" min="32" max="256" value="128" step="16">
+        </div>
+        <div class="control">
+          <label>Steps/Frame: <span class="value" id="timeSteps-val">5</span></label>
+          <input type="range" id="timeSteps" min="1" max="20" value="5" step="1">
+        </div>
+        <div class="control">
+          <label>Pattern Preset:</label>
+          <select id="patternType">
+            <option value="spirals">Spirals</option>
+            <option value="waves">Traveling Waves</option>
+            <option value="spots">Mitosis Spots</option>
+            <option value="stripes">Stripes</option>
+            <option value="chaos">Chaotic</option>
+            <option value="coral">Coral</option>
+            <option value="fingerprint">Fingerprint</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Seed Pattern:</label>
+          <select id="seedPattern">
+            <option value="random">Random Noise</option>
+            <option value="center">Center Spot</option>
+            <option value="multiple">Multiple Seeds</option>
+            <option value="rings">Concentric Rings</option>
+            <option value="perlin">Perlin Noise</option>
+          </select>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="running" checked>
+          <label for="running">Run Simulation</label>
+        </div>
+        <div class="button-row">
+          <button onclick="addPerturbation()">+ Perturb</button>
+          <button onclick="reset()" class="secondary">Reset</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Seed</h3>
+        <span id="seed-display">12345</span>
+        <button onclick="regenerate()">New Seed</button>
+      </div>
+    </div>
+
+    <!-- VISUAL TAB -->
+    <div id="tab-visual" class="tab-content">
+      <div class="control-group">
+        <h3>3D Geometry</h3>
+        <div class="control">
+          <label>Mesh Type:</label>
+          <select id="meshType">
+            <option value="plane">Flat Plane</option>
+            <option value="heightmap">Height Map</option>
+            <option value="sphere">Sphere</option>
+            <option value="torus">Torus</option>
+            <option value="cylinder">Cylinder</option>
+            <option value="mobius">Möbius Strip</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Height Scale: <span class="value" id="heightScale-val">2.0</span></label>
+          <input type="range" id="heightScale" min="0" max="10" value="2.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Mesh Scale: <span class="value" id="meshScale-val">1.0</span></label>
+          <input type="range" id="meshScale" min="0.5" max="3" value="1.0" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Material</h3>
+        <div class="control">
+          <label>Render Style:</label>
+          <select id="materialType">
+            <option value="standard">Standard PBR</option>
+            <option value="phong">Phong Shiny</option>
+            <option value="toon">Toon/Cel Shaded</option>
+            <option value="wireframe">Wireframe</option>
+            <option value="points">Point Cloud</option>
+            <option value="normal">Normal Map</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Metalness: <span class="value" id="metalness-val">0.3</span></label>
+          <input type="range" id="metalness" min="0" max="1" value="0.3" step="0.05">
+        </div>
+        <div class="control">
+          <label>Roughness: <span class="value" id="roughness-val">0.5</span></label>
+          <input type="range" id="roughness" min="0" max="1" value="0.5" step="0.05">
+        </div>
+        <div class="control">
+          <label>Point Size: <span class="value" id="pointSize-val">2</span></label>
+          <input type="range" id="pointSize" min="1" max="10" value="2" step="0.5">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Color Scheme</h3>
+        <div class="control">
+          <label>Palette:</label>
+          <select id="colorScheme">
+            <optgroup label="Classic">
+              <option value="classic">Classic BZ</option>
+              <option value="thermal">Thermal</option>
+              <option value="monochrome">Monochrome</option>
+            </optgroup>
+            <optgroup label="Nature">
+              <option value="ocean">Ocean Depths</option>
+              <option value="lava">Lava Flow</option>
+              <option value="forest">Forest</option>
+              <option value="aurora">Aurora</option>
+            </optgroup>
+            <optgroup label="Vibrant">
+              <option value="rainbow">Rainbow</option>
+              <option value="neon">Neon</option>
+              <option value="cyberpunk">Cyberpunk</option>
+              <option value="vaporwave">Vaporwave</option>
+            </optgroup>
+            <optgroup label="Custom">
+              <option value="gradient2">2-Color Gradient</option>
+              <option value="gradient3">3-Color Gradient</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="control">
+          <label>Custom Colors:</label>
+          <div class="color-row">
+            <input type="color" id="customColor1" value="#000066">
+            <input type="color" id="customColor2" value="#ff6b35">
+            <input type="color" id="customColor3" value="#ffffff">
+          </div>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="useEmissive">
+          <label for="useEmissive">Emissive Glow</label>
+        </div>
+        <div class="control">
+          <label>Emissive Intensity: <span class="value" id="emissiveIntensity-val">0.5</span></label>
+          <input type="range" id="emissiveIntensity" min="0" max="2" value="0.5" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Lighting</h3>
+        <div class="control">
+          <label>Ambient: <span class="value" id="ambientIntensity-val">0.3</span></label>
+          <input type="range" id="ambientIntensity" min="0" max="1" value="0.3" step="0.05">
+        </div>
+        <div class="control">
+          <label>Directional: <span class="value" id="directionalIntensity-val">1.0</span></label>
+          <input type="range" id="directionalIntensity" min="0" max="2" value="1.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Light Color:</label>
+          <input type="color" id="lightColor" value="#ffffff">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="animateLight">
+          <label for="animateLight">Animate Light Position</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Post-Processing</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="enableBloom">
+          <label for="enableBloom">Bloom Effect</label>
+        </div>
+        <div class="control">
+          <label>Bloom Strength: <span class="value" id="bloomStrength-val">0.5</span></label>
+          <input type="range" id="bloomStrength" min="0" max="3" value="0.5" step="0.1">
+        </div>
+        <div class="control">
+          <label>Bloom Radius: <span class="value" id="bloomRadius-val">0.5</span></label>
+          <input type="range" id="bloomRadius" min="0" max="1" value="0.5" step="0.05">
+        </div>
+        <div class="control">
+          <label>Background:</label>
+          <input type="color" id="bgColor" value="#0a0a1a">
+        </div>
+      </div>
+    </div>
+
+    <!-- CAMERA TAB -->
+    <div id="tab-camera" class="tab-content">
+      <div class="control-group">
+        <h3>Camera Position</h3>
+        <div class="control">
+          <label>Distance: <span class="value" id="cameraDistance-val">5</span></label>
+          <input type="range" id="cameraDistance" min="2" max="20" value="5" step="0.5">
+        </div>
+        <div class="control">
+          <label>Elevation: <span class="value" id="cameraElevation-val">45</span></label>
+          <input type="range" id="cameraElevation" min="0" max="90" value="45" step="5">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="autoRotate">
+          <label for="autoRotate">Auto Rotate</label>
+        </div>
+        <div class="control">
+          <label>Rotation Speed: <span class="value" id="rotationSpeed-val">1.0</span></label>
+          <input type="range" id="rotationSpeed" min="0.1" max="5" value="1.0" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Camera Presets</h3>
+        <button onclick="setCameraPreset('top')">Top View</button>
+        <button onclick="setCameraPreset('front')">Front View</button>
+        <button onclick="setCameraPreset('side')">Side View</button>
+        <button onclick="setCameraPreset('perspective')">Perspective</button>
+        <button onclick="setCameraPreset('closeup')">Close-up</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Field of View</h3>
+        <div class="control">
+          <label>FOV: <span class="value" id="fov-val">60</span></label>
+          <input type="range" id="fov" min="30" max="120" value="60" step="5">
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT TAB -->
+    <div id="tab-export" class="tab-content">
+      <div class="control-group">
+        <h3>Image Export</h3>
+        <button onclick="exportPNG()">Export PNG</button>
+        <button onclick="exportPNG(2)">Export PNG 2x</button>
+        <button onclick="exportPNG(4)">Export PNG 4x</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Animation</h3>
+        <div class="control">
+          <label>GIF Frames: <span class="value" id="gifFrames-val">60</span></label>
+          <input type="range" id="gifFrames" min="20" max="200" value="60" step="10">
+        </div>
+        <div class="control">
+          <label>Frame Delay (ms): <span class="value" id="gifDelay-val">50</span></label>
+          <input type="range" id="gifDelay" min="20" max="200" value="50" step="10">
+        </div>
+        <button onclick="exportGIF()">Export GIF</button>
+        <button onclick="exportWebM()" class="secondary">Export WebM</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Turntable</h3>
+        <div class="control">
+          <label>Rotation Frames: <span class="value" id="turntableFrames-val">120</span></label>
+          <input type="range" id="turntableFrames" min="30" max="360" value="120" step="30">
+        </div>
+        <button onclick="exportTurntable()">Export Turntable GIF</button>
+      </div>
+
+      <div class="control-group">
+        <h3>3D Export</h3>
+        <button onclick="exportOBJ()">Export OBJ Mesh</button>
+        <button onclick="exportSTL()" class="secondary">Export STL (3D Print)</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Data</h3>
+        <button onclick="saveState()">Save State (JSON)</button>
+        <button onclick="loadState()" class="secondary">Load State</button>
+        <input type="file" id="loadStateInput" style="display:none" accept=".json">
+      </div>
+
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // PARAMETERS
+    // ============================================
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      // Reaction
+      feedRate: 0.055,
+      killRate: 0.062,
+      diffusionA: 1.0,
+      diffusionB: 0.5,
+      gridSize: 128,
+      timeSteps: 5,
+      patternType: 'spirals',
+      seedPattern: 'random',
+      running: true,
+      // Visual
+      meshType: 'heightmap',
+      heightScale: 2.0,
+      meshScale: 1.0,
+      materialType: 'standard',
+      metalness: 0.3,
+      roughness: 0.5,
+      pointSize: 2,
+      colorScheme: 'classic',
+      customColor1: '#000066',
+      customColor2: '#ff6b35',
+      customColor3: '#ffffff',
+      useEmissive: false,
+      emissiveIntensity: 0.5,
+      ambientIntensity: 0.3,
+      directionalIntensity: 1.0,
+      lightColor: '#ffffff',
+      animateLight: false,
+      enableBloom: false,
+      bloomStrength: 0.5,
+      bloomRadius: 0.5,
+      bgColor: '#0a0a1a',
+      // Camera
+      cameraDistance: 5,
+      cameraElevation: 45,
+      autoRotate: false,
+      rotationSpeed: 1.0,
+      fov: 60,
+      // Export
+      gifFrames: 60,
+      gifDelay: 50,
+      turntableFrames: 120
+    };
+
+    const presets = {
+      spirals: { f: 0.055, k: 0.062 },
+      waves: { f: 0.014, k: 0.045 },
+      spots: { f: 0.035, k: 0.065 },
+      stripes: { f: 0.035, k: 0.06 },
+      chaos: { f: 0.026, k: 0.051 },
+      coral: { f: 0.0545, k: 0.062 },
+      fingerprint: { f: 0.055, k: 0.063 }
+    };
+
+    // Three.js globals
+    let scene, camera, renderer, controls;
+    let mesh, geometry, material;
+    let composer, bloomPass;
+    let ambientLight, directionalLight;
+    let grid, next;
+    let clock, frameCount = 0;
+    let lastFPSUpdate = 0, fpsCount = 0;
+
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    function init() {
+      // Scene
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(params.bgColor);
+
+      // Camera
+      camera = new THREE.PerspectiveCamera(params.fov, getAspect(), 0.1, 1000);
+      updateCameraPosition();
+
+      // Renderer
+      const container = document.getElementById('canvas-container');
+      renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1;
+      container.appendChild(renderer.domElement);
+
+      // Controls
+      controls = new THREE.OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+
+      // Lighting
+      ambientLight = new THREE.AmbientLight(0xffffff, params.ambientIntensity);
+      scene.add(ambientLight);
+
+      directionalLight = new THREE.DirectionalLight(params.lightColor, params.directionalIntensity);
+      directionalLight.position.set(5, 10, 5);
+      scene.add(directionalLight);
+
+      // Post-processing
+      setupPostProcessing();
+
+      // Initialize simulation
+      initializeGrid();
+      createMesh();
+
+      // Setup controls
+      setupControls();
+
+      // Clock
+      clock = new THREE.Clock();
+
+      // Events
+      window.addEventListener('resize', onResize);
+
+      // Start animation
+      animate();
+    }
+
+    function getAspect() {
+      const container = document.getElementById('canvas-container');
+      return container.clientWidth / container.clientHeight;
+    }
+
+    function setupPostProcessing() {
+      composer = new THREE.EffectComposer(renderer);
+      const renderPass = new THREE.RenderPass(scene, camera);
+      composer.addPass(renderPass);
+
+      bloomPass = new THREE.UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        params.bloomStrength,
+        params.bloomRadius,
+        0.85
+      );
+      bloomPass.enabled = params.enableBloom;
+      composer.addPass(bloomPass);
+    }
+
+    // ============================================
+    // SIMULATION
+    // ============================================
+    function initializeGrid() {
+      const n = params.gridSize;
+      grid = [];
+      next = [];
+
+      // Simple seeded random
+      let seed = params.seed;
+      const random = () => {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed / 0x7fffffff;
+      };
+
+      for (let x = 0; x < n; x++) {
+        grid[x] = [];
+        next[x] = [];
+        for (let y = 0; y < n; y++) {
+          grid[x][y] = { a: 1, b: 0 };
+          next[x][y] = { a: 1, b: 0 };
+        }
+      }
+
+      // Seed patterns
+      switch (params.seedPattern) {
+        case 'random':
+          for (let i = 0; i < 15; i++) {
+            addSeed(Math.floor(random() * n), Math.floor(random() * n), Math.floor(random() * 8 + 5), random);
+          }
+          break;
+        case 'center':
+          addSeed(n/2, n/2, 12, random);
+          break;
+        case 'multiple':
+          for (let i = 0; i < 5; i++) {
+            const angle = (i / 5) * Math.PI * 2;
+            const r = n / 4;
+            addSeed(n/2 + Math.cos(angle) * r, n/2 + Math.sin(angle) * r, 8, random);
+          }
+          addSeed(n/2, n/2, 8, random);
+          break;
+        case 'rings':
+          for (let r = 15; r < n/2; r += 25) {
+            for (let angle = 0; angle < Math.PI * 2; angle += 0.15) {
+              const x = n/2 + Math.cos(angle) * r;
+              const y = n/2 + Math.sin(angle) * r;
+              if (x >= 0 && x < n && y >= 0 && y < n) {
+                addSeed(Math.floor(x), Math.floor(y), 2, random);
+              }
+            }
+          }
+          break;
+        case 'perlin':
+          // Simple noise approximation
+          for (let x = 0; x < n; x++) {
+            for (let y = 0; y < n; y++) {
+              const noiseVal = (Math.sin(x * 0.1) * Math.cos(y * 0.1) +
+                               Math.sin(x * 0.05 + y * 0.05) + random() * 0.5) / 2.5 + 0.5;
+              if (noiseVal > 0.6) {
+                grid[x][y].b = (noiseVal - 0.6) * 2.5;
+              }
+            }
+          }
+          break;
+      }
+
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function addSeed(cx, cy, size, random) {
+      const n = params.gridSize;
+      for (let i = -size; i <= size; i++) {
+        for (let j = -size; j <= size; j++) {
+          const x = Math.floor(cx + i);
+          const y = Math.floor(cy + j);
+          if (x >= 0 && x < n && y >= 0 && y < n) {
+            const d = Math.sqrt(i*i + j*j);
+            if (d < size) {
+              grid[x][y].b = 1;
+            }
+          }
+        }
+      }
+    }
+
+    function updateSimulation() {
+      const n = params.gridSize;
+      const f = params.feedRate;
+      const k = params.killRate;
+      const dA = params.diffusionA;
+      const dB = params.diffusionB;
+
+      for (let x = 0; x < n; x++) {
+        for (let y = 0; y < n; y++) {
+          const xm = (x - 1 + n) % n;
+          const xp = (x + 1) % n;
+          const ym = (y - 1 + n) % n;
+          const yp = (y + 1) % n;
+
+          const a = grid[x][y].a;
+          const b = grid[x][y].b;
+
+          const laplaceA = grid[xp][y].a + grid[xm][y].a + grid[x][yp].a + grid[x][ym].a - 4 * a;
+          const laplaceB = grid[xp][y].b + grid[xm][y].b + grid[x][yp].b + grid[x][ym].b - 4 * b;
+
+          const reaction = a * b * b;
+
+          next[x][y].a = Math.max(0, Math.min(1, a + dA * laplaceA - reaction + f * (1 - a)));
+          next[x][y].b = Math.max(0, Math.min(1, b + dB * laplaceB + reaction - (k + f) * b));
+        }
+      }
+
+      [grid, next] = [next, grid];
+    }
+
+    // ============================================
+    // MESH
+    // ============================================
+    function createMesh() {
+      if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        material.dispose();
+      }
+
+      const n = params.gridSize;
+      const scale = params.meshScale;
+
+      switch (params.meshType) {
+        case 'plane':
+        case 'heightmap':
+          geometry = new THREE.PlaneGeometry(4 * scale, 4 * scale, n - 1, n - 1);
+          break;
+        case 'sphere':
+          geometry = new THREE.SphereGeometry(2 * scale, n, n);
+          break;
+        case 'torus':
+          geometry = new THREE.TorusGeometry(1.5 * scale, 0.6 * scale, n, n);
+          break;
+        case 'cylinder':
+          geometry = new THREE.CylinderGeometry(1.5 * scale, 1.5 * scale, 3 * scale, n, n, true);
+          break;
+        case 'mobius':
+          geometry = createMobiusGeometry(n, scale);
+          break;
+      }
+
+      material = createMaterial();
+
+      if (params.materialType === 'points') {
+        mesh = new THREE.Points(geometry, material);
+      } else {
+        mesh = new THREE.Mesh(geometry, material);
+      }
+
+      if (params.meshType === 'plane' || params.meshType === 'heightmap') {
+        mesh.rotation.x = -Math.PI / 2;
+      }
+
+      scene.add(mesh);
+      updateMeshColors();
+
+      document.getElementById('vertices').textContent = geometry.attributes.position.count;
+    }
+
+    function createMobiusGeometry(segments, scale) {
+      const geometry = new THREE.BufferGeometry();
+      const positions = [];
+      const normals = [];
+      const uvs = [];
+      const indices = [];
+
+      const radius = 1.5 * scale;
+      const width = 0.5 * scale;
+
+      for (let i = 0; i <= segments; i++) {
+        const u = i / segments;
+        const theta = u * Math.PI * 2;
+
+        for (let j = 0; j <= segments / 4; j++) {
+          const v = j / (segments / 4) - 0.5;
+          const phi = theta / 2;
+
+          const x = (radius + width * v * Math.cos(phi)) * Math.cos(theta);
+          const y = (radius + width * v * Math.cos(phi)) * Math.sin(theta);
+          const z = width * v * Math.sin(phi);
+
+          positions.push(x, y, z);
+          normals.push(0, 0, 1);
+          uvs.push(u, v + 0.5);
+        }
+      }
+
+      const verticesPerRow = segments / 4 + 1;
+      for (let i = 0; i < segments; i++) {
+        for (let j = 0; j < segments / 4; j++) {
+          const a = i * verticesPerRow + j;
+          const b = a + 1;
+          const c = a + verticesPerRow;
+          const d = c + 1;
+          indices.push(a, b, c, b, d, c);
+        }
+      }
+
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3));
+      geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uvs, 2));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+
+      return geometry;
+    }
+
+    function createMaterial() {
+      const baseColor = new THREE.Color(params.customColor2);
+
+      switch (params.materialType) {
+        case 'standard':
+          return new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            metalness: params.metalness,
+            roughness: params.roughness,
+            side: THREE.DoubleSide
+          });
+        case 'phong':
+          return new THREE.MeshPhongMaterial({
+            vertexColors: true,
+            shininess: 100,
+            side: THREE.DoubleSide
+          });
+        case 'toon':
+          return new THREE.MeshToonMaterial({
+            vertexColors: true,
+            side: THREE.DoubleSide
+          });
+        case 'wireframe':
+          return new THREE.MeshBasicMaterial({
+            vertexColors: true,
+            wireframe: true
+          });
+        case 'points':
+          return new THREE.PointsMaterial({
+            vertexColors: true,
+            size: params.pointSize * 0.01,
+            sizeAttenuation: true
+          });
+        case 'normal':
+          return new THREE.MeshNormalMaterial({
+            side: THREE.DoubleSide
+          });
+        default:
+          return new THREE.MeshStandardMaterial({
+            vertexColors: true,
+            metalness: params.metalness,
+            roughness: params.roughness,
+            side: THREE.DoubleSide
+          });
+      }
+    }
+
+    function updateMeshColors() {
+      const positions = geometry.attributes.position;
+      const n = params.gridSize;
+      const colors = new Float32Array(positions.count * 3);
+      const heightScale = params.heightScale;
+
+      for (let i = 0; i < positions.count; i++) {
+        let gx, gy;
+
+        switch (params.meshType) {
+          case 'plane':
+          case 'heightmap':
+            gx = Math.floor((i % n));
+            gy = Math.floor(i / n);
+            break;
+          case 'sphere':
+          case 'torus':
+          case 'cylinder':
+          case 'mobius':
+            // Map UV to grid
+            const u = (i % (n + 1)) / n;
+            const v = Math.floor(i / (n + 1)) / n;
+            gx = Math.floor(u * (n - 1));
+            gy = Math.floor(v * (n - 1));
+            break;
+        }
+
+        gx = Math.max(0, Math.min(n - 1, gx));
+        gy = Math.max(0, Math.min(n - 1, gy));
+
+        const b = grid[gx] && grid[gx][gy] ? grid[gx][gy].b : 0;
+        const a = grid[gx] && grid[gx][gy] ? grid[gx][gy].a : 1;
+
+        // Height displacement
+        if ((params.meshType === 'heightmap') && positions.count === n * n) {
+          const posArray = positions.array;
+          posArray[i * 3 + 2] = b * heightScale;
+        }
+
+        // Color
+        const color = getColor(a, b);
+        colors[i * 3] = color.r;
+        colors[i * 3 + 1] = color.g;
+        colors[i * 3 + 2] = color.b;
+      }
+
+      geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+      if (params.meshType === 'heightmap') {
+        positions.needsUpdate = true;
+        geometry.computeVertexNormals();
+      }
+
+      // Emissive
+      if (params.useEmissive && material.emissive) {
+        material.emissive = new THREE.Color(params.customColor2);
+        material.emissiveIntensity = params.emissiveIntensity;
+      }
+    }
+
+    function getColor(a, b) {
+      const val = b;
+      let color;
+
+      switch (params.colorScheme) {
+        case 'classic':
+          color = lerpColor(new THREE.Color(0xffcc00), new THREE.Color(0x0000b4), val);
+          break;
+        case 'thermal':
+          color = lerpColor(new THREE.Color(0x00003c), new THREE.Color(0xff6400), val);
+          break;
+        case 'monochrome':
+          const gray = 1 - val;
+          color = new THREE.Color(gray, gray, gray);
+          break;
+        case 'ocean':
+          color = lerpMultiColor([
+            new THREE.Color(0x000a1e), new THREE.Color(0x003c78),
+            new THREE.Color(0x0096c8), new THREE.Color(0x96dcff)
+          ], val);
+          break;
+        case 'lava':
+          color = lerpMultiColor([
+            new THREE.Color(0x1a0000), new THREE.Color(0x8b0000),
+            new THREE.Color(0xff4500), new THREE.Color(0xffff00)
+          ], val);
+          break;
+        case 'forest':
+          color = lerpMultiColor([
+            new THREE.Color(0x141e0a), new THREE.Color(0x1e5014),
+            new THREE.Color(0x3c8c28), new THREE.Color(0x96c864)
+          ], val);
+          break;
+        case 'aurora':
+          color = lerpMultiColor([
+            new THREE.Color(0x0a0a1e), new THREE.Color(0x006450),
+            new THREE.Color(0x32c896), new THREE.Color(0xc864c8), new THREE.Color(0x64c8ff)
+          ], val);
+          break;
+        case 'rainbow':
+          color = new THREE.Color().setHSL(val, 0.8, 0.5);
+          break;
+        case 'neon':
+          color = lerpMultiColor([
+            new THREE.Color(0x000000), new THREE.Color(0xff0064),
+            new THREE.Color(0x00ffc8), new THREE.Color(0xffff00)
+          ], val);
+          break;
+        case 'cyberpunk':
+          color = lerpMultiColor([
+            new THREE.Color(0x05000f), new THREE.Color(0xff0064),
+            new THREE.Color(0x00ffff), new THREE.Color(0xffff00)
+          ], val);
+          break;
+        case 'vaporwave':
+          color = lerpMultiColor([
+            new THREE.Color(0x140028), new THREE.Color(0xff64c8),
+            new THREE.Color(0x64c8ff), new THREE.Color(0xffff96)
+          ], val);
+          break;
+        case 'gradient2':
+          color = lerpColor(new THREE.Color(params.customColor1), new THREE.Color(params.customColor2), val);
+          break;
+        case 'gradient3':
+          color = lerpMultiColor([
+            new THREE.Color(params.customColor1),
+            new THREE.Color(params.customColor2),
+            new THREE.Color(params.customColor3)
+          ], val);
+          break;
+        default:
+          color = new THREE.Color(val, val, val);
+      }
+
+      return color;
+    }
+
+    function lerpColor(c1, c2, t) {
+      return new THREE.Color(
+        c1.r + (c2.r - c1.r) * t,
+        c1.g + (c2.g - c1.g) * t,
+        c1.b + (c2.b - c1.b) * t
+      );
+    }
+
+    function lerpMultiColor(colors, t) {
+      t = Math.max(0, Math.min(1, t));
+      const segments = colors.length - 1;
+      const segment = Math.floor(t * segments);
+      const localT = (t * segments) - segment;
+      const i1 = Math.min(segment, segments);
+      const i2 = Math.min(segment + 1, segments);
+      return lerpColor(colors[i1], colors[i2], localT);
+    }
+
+    // ============================================
+    // CAMERA
+    // ============================================
+    function updateCameraPosition() {
+      const dist = params.cameraDistance;
+      const elev = params.cameraElevation * Math.PI / 180;
+
+      camera.position.x = dist * Math.cos(elev) * Math.sin(controls ? controls.getAzimuthalAngle() : 0);
+      camera.position.y = dist * Math.sin(elev);
+      camera.position.z = dist * Math.cos(elev) * Math.cos(controls ? controls.getAzimuthalAngle() : 1);
+
+      camera.lookAt(0, 0, 0);
+      camera.fov = params.fov;
+      camera.updateProjectionMatrix();
+    }
+
+    function setCameraPreset(preset) {
+      switch (preset) {
+        case 'top':
+          params.cameraElevation = 89;
+          params.cameraDistance = 6;
+          break;
+        case 'front':
+          params.cameraElevation = 0;
+          params.cameraDistance = 5;
+          break;
+        case 'side':
+          params.cameraElevation = 0;
+          params.cameraDistance = 5;
+          controls.setAzimuthalAngle(Math.PI / 2);
+          break;
+        case 'perspective':
+          params.cameraElevation = 45;
+          params.cameraDistance = 5;
+          break;
+        case 'closeup':
+          params.cameraElevation = 30;
+          params.cameraDistance = 3;
+          break;
+      }
+      updateUIFromParams();
+      updateCameraPosition();
+    }
+
+    // ============================================
+    // ANIMATION
+    // ============================================
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = clock.getDelta();
+      frameCount++;
+
+      // FPS counter
+      fpsCount++;
+      if (clock.elapsedTime - lastFPSUpdate > 1) {
+        document.getElementById('fps').textContent = fpsCount;
+        fpsCount = 0;
+        lastFPSUpdate = clock.elapsedTime;
+      }
+
+      // Simulation
+      if (params.running) {
+        for (let i = 0; i < params.timeSteps; i++) {
+          updateSimulation();
+        }
+        updateMeshColors();
+      }
+
+      // Auto rotation
+      if (params.autoRotate) {
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = params.rotationSpeed * 2;
+      } else {
+        controls.autoRotate = false;
+      }
+
+      // Light animation
+      if (params.animateLight) {
+        const t = clock.elapsedTime;
+        directionalLight.position.x = Math.sin(t) * 5;
+        directionalLight.position.z = Math.cos(t) * 5;
+      }
+
+      controls.update();
+
+      // Render
+      if (params.enableBloom) {
+        composer.render();
+      } else {
+        renderer.render(scene, camera);
+      }
+    }
+
+    // ============================================
+    // CONTROLS
+    // ============================================
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (!element) return;
+
+        if (element.type === 'range') {
+          element.value = params[key];
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = params[key];
+
+          element.addEventListener('input', (e) => {
+            params[key] = parseFloat(e.target.value);
+            if (display) display.textContent = Number.isInteger(params[key]) ? params[key] : params[key].toFixed(1);
+            handleParamChange(key);
+          });
+        } else if (element.type === 'checkbox') {
+          element.checked = params[key];
+          element.addEventListener('change', (e) => {
+            params[key] = e.target.checked;
+            handleParamChange(key);
+          });
+        } else if (element.type === 'color') {
+          element.value = params[key];
+          element.addEventListener('input', (e) => {
+            params[key] = e.target.value;
+            handleParamChange(key);
+          });
+        } else if (element.tagName === 'SELECT') {
+          element.value = params[key];
+          element.addEventListener('change', (e) => {
+            params[key] = e.target.value;
+            handleParamChange(key);
+          });
+        }
+      });
+    }
+
+    function handleParamChange(key) {
+      switch (key) {
+        case 'patternType':
+          if (presets[params[key]]) {
+            params.feedRate = presets[params[key]].f;
+            params.killRate = presets[params[key]].k;
+            updateUIFromParams();
+          }
+          break;
+        case 'gridSize':
+        case 'meshType':
+        case 'meshScale':
+          initializeGrid();
+          createMesh();
+          break;
+        case 'materialType':
+        case 'metalness':
+        case 'roughness':
+        case 'pointSize':
+          createMesh();
+          break;
+        case 'ambientIntensity':
+          ambientLight.intensity = params.ambientIntensity;
+          break;
+        case 'directionalIntensity':
+          directionalLight.intensity = params.directionalIntensity;
+          break;
+        case 'lightColor':
+          directionalLight.color.set(params.lightColor);
+          break;
+        case 'enableBloom':
+          bloomPass.enabled = params.enableBloom;
+          break;
+        case 'bloomStrength':
+          bloomPass.strength = params.bloomStrength;
+          break;
+        case 'bloomRadius':
+          bloomPass.radius = params.bloomRadius;
+          break;
+        case 'bgColor':
+          scene.background = new THREE.Color(params.bgColor);
+          break;
+        case 'fov':
+        case 'cameraDistance':
+        case 'cameraElevation':
+          updateCameraPosition();
+          break;
+      }
+    }
+
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (!element) return;
+
+        if (element.type === 'range') {
+          element.value = params[key];
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = Number.isInteger(params[key]) ? params[key] : params[key].toFixed(1);
+        } else if (element.type === 'checkbox') {
+          element.checked = params[key];
+        } else if (element.type === 'color') {
+          element.value = params[key];
+        } else if (element.tagName === 'SELECT') {
+          element.value = params[key];
+        }
+      });
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    // ============================================
+    // ACTIONS
+    // ============================================
+    function regenerate() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      initializeGrid();
+      createMesh();
+    }
+
+    function reset() {
+      initializeGrid();
+      createMesh();
+    }
+
+    function addPerturbation() {
+      const n = params.gridSize;
+      const seed = params.seed;
+      const random = () => {
+        params.seed = (params.seed * 1103515245 + 12345) & 0x7fffffff;
+        return params.seed / 0x7fffffff;
+      };
+      addSeed(Math.floor(random() * n), Math.floor(random() * n), Math.floor(random() * 10 + 5), random);
+      params.seed = seed;
+    }
+
+    function onResize() {
+      const container = document.getElementById('canvas-container');
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      composer.setSize(container.clientWidth, container.clientHeight);
+    }
+
+    // ============================================
+    // EXPORT
+    // ============================================
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    function exportPNG(scale = 1) {
+      setStatus(`Exporting PNG at ${scale}x...`);
+
+      const originalWidth = renderer.domElement.width;
+      const originalHeight = renderer.domElement.height;
+
+      renderer.setSize(originalWidth * scale, originalHeight * scale);
+      renderer.render(scene, camera);
+
+      const link = document.createElement('a');
+      link.download = `bz-3d-${params.seed}.png`;
+      link.href = renderer.domElement.toDataURL('image/png');
+      link.click();
+
+      renderer.setSize(originalWidth, originalHeight);
+      setStatus('PNG exported!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function exportGIF() {
+      setStatus('Preparing GIF...');
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: renderer.domElement.width,
+        height: renderer.domElement.height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+
+      const wasRunning = params.running;
+      params.running = true;
+
+      for (let frame = 0; frame < params.gifFrames; frame++) {
+        for (let i = 0; i < params.timeSteps; i++) {
+          updateSimulation();
+        }
+        updateMeshColors();
+        renderer.render(scene, camera);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = renderer.domElement.width;
+        canvas.height = renderer.domElement.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(renderer.domElement, 0, 0);
+        gif.addFrame(ctx, { copy: true, delay: params.gifDelay });
+
+        setStatus(`Frame ${frame + 1}/${params.gifFrames}`);
+      }
+
+      params.running = wasRunning;
+
+      gif.on('finished', (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bz-3d-${params.seed}.gif`;
+        a.click();
+        setStatus('GIF exported!');
+        setTimeout(() => setStatus(''), 2000);
+      });
+
+      setStatus('Rendering GIF...');
+      gif.render();
+    }
+
+    function exportWebM() {
+      setStatus('Recording WebM (5 seconds)...');
+
+      const stream = renderer.domElement.captureStream(30);
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bz-3d-${params.seed}.webm`;
+        a.click();
+        setStatus('WebM exported!');
+        setTimeout(() => setStatus(''), 2000);
+      };
+
+      recorder.start();
+      setTimeout(() => {
+        recorder.stop();
+        setStatus('Finalizing...');
+      }, 5000);
+    }
+
+    function exportTurntable() {
+      setStatus('Creating turntable...');
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: renderer.domElement.width,
+        height: renderer.domElement.height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+
+      const frames = params.turntableFrames;
+      const originalAzimuth = controls.getAzimuthalAngle();
+
+      for (let frame = 0; frame < frames; frame++) {
+        const angle = (frame / frames) * Math.PI * 2;
+        controls.setAzimuthalAngle(angle);
+        controls.update();
+        renderer.render(scene, camera);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = renderer.domElement.width;
+        canvas.height = renderer.domElement.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(renderer.domElement, 0, 0);
+        gif.addFrame(ctx, { copy: true, delay: 33 });
+
+        setStatus(`Turntable frame ${frame + 1}/${frames}`);
+      }
+
+      controls.setAzimuthalAngle(originalAzimuth);
+
+      gif.on('finished', (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bz-3d-turntable-${params.seed}.gif`;
+        a.click();
+        setStatus('Turntable exported!');
+        setTimeout(() => setStatus(''), 2000);
+      });
+
+      setStatus('Rendering turntable...');
+      gif.render();
+    }
+
+    function exportOBJ() {
+      setStatus('Generating OBJ...');
+
+      const positions = geometry.attributes.position.array;
+      const normals = geometry.attributes.normal ? geometry.attributes.normal.array : null;
+      const indices = geometry.index ? geometry.index.array : null;
+
+      let obj = '# BZ Reaction 3D Mesh\n';
+      obj += `# Vertices: ${positions.length / 3}\n\n`;
+
+      // Vertices
+      for (let i = 0; i < positions.length; i += 3) {
+        obj += `v ${positions[i].toFixed(6)} ${positions[i+1].toFixed(6)} ${positions[i+2].toFixed(6)}\n`;
+      }
+
+      // Normals
+      if (normals) {
+        obj += '\n';
+        for (let i = 0; i < normals.length; i += 3) {
+          obj += `vn ${normals[i].toFixed(6)} ${normals[i+1].toFixed(6)} ${normals[i+2].toFixed(6)}\n`;
+        }
+      }
+
+      // Faces
+      obj += '\n';
+      if (indices) {
+        for (let i = 0; i < indices.length; i += 3) {
+          const a = indices[i] + 1;
+          const b = indices[i+1] + 1;
+          const c = indices[i+2] + 1;
+          obj += normals ? `f ${a}//${a} ${b}//${b} ${c}//${c}\n` : `f ${a} ${b} ${c}\n`;
+        }
+      } else {
+        for (let i = 0; i < positions.length / 3; i += 3) {
+          const a = i + 1;
+          const b = i + 2;
+          const c = i + 3;
+          obj += `f ${a} ${b} ${c}\n`;
+        }
+      }
+
+      const blob = new Blob([obj], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bz-3d-${params.seed}.obj`;
+      a.click();
+
+      setStatus('OBJ exported!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function exportSTL() {
+      setStatus('Generating STL...');
+
+      const positions = geometry.attributes.position.array;
+      const indices = geometry.index ? geometry.index.array : null;
+
+      let stl = 'solid bz_reaction\n';
+
+      const addTriangle = (v1, v2, v3) => {
+        // Calculate normal
+        const ax = v2[0] - v1[0], ay = v2[1] - v1[1], az = v2[2] - v1[2];
+        const bx = v3[0] - v1[0], by = v3[1] - v1[1], bz = v3[2] - v1[2];
+        const nx = ay * bz - az * by;
+        const ny = az * bx - ax * bz;
+        const nz = ax * by - ay * bx;
+        const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+
+        stl += `  facet normal ${(nx/len).toFixed(6)} ${(ny/len).toFixed(6)} ${(nz/len).toFixed(6)}\n`;
+        stl += '    outer loop\n';
+        stl += `      vertex ${v1[0].toFixed(6)} ${v1[1].toFixed(6)} ${v1[2].toFixed(6)}\n`;
+        stl += `      vertex ${v2[0].toFixed(6)} ${v2[1].toFixed(6)} ${v2[2].toFixed(6)}\n`;
+        stl += `      vertex ${v3[0].toFixed(6)} ${v3[1].toFixed(6)} ${v3[2].toFixed(6)}\n`;
+        stl += '    endloop\n';
+        stl += '  endfacet\n';
+      };
+
+      if (indices) {
+        for (let i = 0; i < indices.length; i += 3) {
+          const i1 = indices[i] * 3;
+          const i2 = indices[i+1] * 3;
+          const i3 = indices[i+2] * 3;
+          addTriangle(
+            [positions[i1], positions[i1+1], positions[i1+2]],
+            [positions[i2], positions[i2+1], positions[i2+2]],
+            [positions[i3], positions[i3+1], positions[i3+2]]
+          );
+        }
+      }
+
+      stl += 'endsolid bz_reaction\n';
+
+      const blob = new Blob([stl], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bz-3d-${params.seed}.stl`;
+      a.click();
+
+      setStatus('STL exported!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function saveState() {
+      const state = { params, grid, version: '1.0' };
+      const json = JSON.stringify(state);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bz-3d-state-${params.seed}.json`;
+      a.click();
+      setStatus('State saved!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function loadState() {
+      document.getElementById('loadStateInput').click();
+    }
+
+    document.getElementById('loadStateInput')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const state = JSON.parse(event.target.result);
+            Object.assign(params, state.params);
+            if (state.grid) grid = state.grid;
+            updateUIFromParams();
+            createMesh();
+            setStatus('State loaded!');
+            setTimeout(() => setStatus(''), 2000);
+          } catch (err) {
+            setStatus('Error loading state');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Initialize
+    init();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1912 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Belousov-Zhabotinsky Reaction - Enhanced</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../../../preset-manager.css">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      display: flex;
+      background: #0a0a0f;
+      color: #e0e0e0;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1a 100%);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: linear-gradient(180deg, #1a1a2e 0%, #12121a 100%);
+      height: 100vh;
+      overflow-y: auto;
+      border-left: 1px solid #333;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #00ff88;
+      text-shadow: 0 0 10px rgba(0,255,136,0.3);
+      font-size: 22px;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00ff88;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #aaa;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      background: #333;
+      border-radius: 3px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #00ff88;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 0 10px rgba(0,255,136,0.5);
+    }
+    select, input[type="color"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      background: #252530;
+      color: #fff;
+      border: 1px solid #444;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+    select:focus, input:focus {
+      border-color: #00ff88;
+      outline: none;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 4px 0;
+      background: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(0,255,136,0.4);
+    }
+    button.secondary {
+      background: linear-gradient(135deg, #4a4a5a 0%, #3a3a4a 100%);
+      color: #fff;
+    }
+    button.danger {
+      background: linear-gradient(135deg, #ff4444 0%, #cc3333 100%);
+      color: #fff;
+    }
+    .value {
+      font-weight: bold;
+      color: #00ff88;
+      font-family: monospace;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      padding: 8px 0;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+      accent-color: #00ff88;
+    }
+    .checkbox-container label {
+      margin: 0;
+      cursor: pointer;
+    }
+    #seed-display {
+      font-family: monospace;
+      background: #252530;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      color: #00ff88;
+    }
+    #status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #888;
+      min-height: 20px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+    }
+    .button-row button {
+      flex: 1;
+    }
+    .color-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .color-row input[type="color"] {
+      flex: 1;
+      height: 36px;
+      padding: 2px;
+    }
+    .tabs {
+      display: flex;
+      margin-bottom: 15px;
+      border-bottom: 2px solid #333;
+    }
+    .tab {
+      padding: 10px 15px;
+      cursor: pointer;
+      color: #888;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+    }
+    .tab:hover {
+      color: #fff;
+    }
+    .tab.active {
+      color: #00ff88;
+      border-bottom-color: #00ff88;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .mini-btn {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>🧪 BZ Reaction Enhanced</h2>
+
+    <div id="preset-container"></div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('reaction')">Reaction</div>
+      <div class="tab" onclick="switchTab('visual')">Visual</div>
+      <div class="tab" onclick="switchTab('filters')">Filters</div>
+      <div class="tab" onclick="switchTab('export')">Export</div>
+    </div>
+
+    <!-- REACTION TAB -->
+    <div id="tab-reaction" class="tab-content active">
+      <div class="control-group">
+        <h3>Reaction Model</h3>
+        <div class="control">
+          <label>Model Type:</label>
+          <select id="reactionModel">
+            <option value="gray-scott">Gray-Scott</option>
+            <option value="oregonator">Oregonator</option>
+            <option value="brusselator">Brusselator</option>
+            <option value="fitzhugh-nagumo">FitzHugh-Nagumo</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Feed Rate (f): <span class="value" id="feedRate-val">0.055</span></label>
+          <input type="range" id="feedRate" min="0.001" max="0.15" value="0.055" step="0.001">
+        </div>
+        <div class="control">
+          <label>Kill Rate (k): <span class="value" id="killRate-val">0.062</span></label>
+          <input type="range" id="killRate" min="0.01" max="0.1" value="0.062" step="0.001">
+        </div>
+        <div class="control">
+          <label>Diffusion A: <span class="value" id="diffusionA-val">1.0</span></label>
+          <input type="range" id="diffusionA" min="0.1" max="2.0" value="1.0" step="0.05">
+        </div>
+        <div class="control">
+          <label>Diffusion B: <span class="value" id="diffusionB-val">0.5</span></label>
+          <input type="range" id="diffusionB" min="0.05" max="1.5" value="0.5" step="0.05">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Advanced Dynamics</h3>
+        <div class="control">
+          <label>Anisotropy X: <span class="value" id="anisotropyX-val">1.0</span></label>
+          <input type="range" id="anisotropyX" min="0.1" max="3.0" value="1.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Anisotropy Y: <span class="value" id="anisotropyY-val">1.0</span></label>
+          <input type="range" id="anisotropyY" min="0.1" max="3.0" value="1.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Turbulence: <span class="value" id="turbulence-val">0.0</span></label>
+          <input type="range" id="turbulence" min="0" max="0.1" value="0" step="0.002">
+        </div>
+        <div class="control">
+          <label>Reaction Speed: <span class="value" id="reactionSpeed-val">1.0</span></label>
+          <input type="range" id="reactionSpeed" min="0.1" max="3.0" value="1.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Boundary:</label>
+          <select id="boundaryType">
+            <option value="wrap">Wrap Around</option>
+            <option value="reflect">Reflect</option>
+            <option value="absorb">Absorb</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Simulation</h3>
+        <div class="control">
+          <label>Grid Size: <span class="value" id="gridSize-val">200</span></label>
+          <input type="range" id="gridSize" min="50" max="500" value="200" step="25">
+        </div>
+        <div class="control">
+          <label>Steps/Frame: <span class="value" id="timeSteps-val">10</span></label>
+          <input type="range" id="timeSteps" min="1" max="100" value="10" step="1">
+        </div>
+        <div class="control">
+          <label>Pattern Preset:</label>
+          <select id="patternType">
+            <option value="spirals">Spirals</option>
+            <option value="waves">Traveling Waves</option>
+            <option value="spots">Mitosis Spots</option>
+            <option value="stripes">Zebra Stripes</option>
+            <option value="chaos">Chaotic</option>
+            <option value="coral">Coral Growth</option>
+            <option value="fingerprint">Fingerprint</option>
+            <option value="maze">Maze</option>
+            <option value="custom">Custom</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Seed Pattern:</label>
+          <select id="seedPattern">
+            <option value="random">Random Noise</option>
+            <option value="center">Center Spot</option>
+            <option value="multiple">Multiple Seeds</option>
+            <option value="gradient">Gradient</option>
+            <option value="spiral">Spiral</option>
+            <option value="rings">Concentric Rings</option>
+            <option value="grid">Grid Pattern</option>
+            <option value="perlin">Perlin Noise</option>
+          </select>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="running" checked>
+          <label for="running">Run Simulation</label>
+        </div>
+        <div class="button-row">
+          <button onclick="addPerturbation()">+ Perturb</button>
+          <button onclick="reset()" class="secondary">Reset</button>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Seed</h3>
+        <div class="control">
+          <span id="seed-display">12345</span>
+        </div>
+        <button onclick="regenerate()">New Seed</button>
+      </div>
+    </div>
+
+    <!-- VISUAL TAB -->
+    <div id="tab-visual" class="tab-content">
+      <div class="control-group">
+        <h3>Color Scheme</h3>
+        <div class="control">
+          <label>Palette:</label>
+          <select id="colorScheme">
+            <optgroup label="Classic">
+              <option value="classic">Classic BZ</option>
+              <option value="thermal">Thermal</option>
+              <option value="chemical">Chemical RGB</option>
+              <option value="monochrome">Monochrome</option>
+            </optgroup>
+            <optgroup label="Nature">
+              <option value="ocean">Ocean Depths</option>
+              <option value="forest">Forest</option>
+              <option value="sunset">Sunset</option>
+              <option value="fire">Fire</option>
+              <option value="ice">Arctic Ice</option>
+              <option value="earth">Earth Tones</option>
+              <option value="aurora">Aurora</option>
+            </optgroup>
+            <optgroup label="Vibrant">
+              <option value="rainbow">Rainbow</option>
+              <option value="neon">Neon Glow</option>
+              <option value="psychedelic">Psychedelic</option>
+              <option value="vaporwave">Vaporwave</option>
+              <option value="cyberpunk">Cyberpunk</option>
+              <option value="synthwave">Synthwave</option>
+            </optgroup>
+            <optgroup label="Special">
+              <option value="contour">Contour Lines</option>
+              <option value="gradient3">3-Color Gradient</option>
+              <option value="gradient5">5-Color Gradient</option>
+              <option value="custom">Custom Colors</option>
+              <option value="cycling">Color Cycling</option>
+            </optgroup>
+          </select>
+        </div>
+        <div class="control">
+          <label>Custom Colors:</label>
+          <div class="color-row">
+            <input type="color" id="customColor1" value="#000066">
+            <input type="color" id="customColor2" value="#00ff88">
+            <input type="color" id="customColor3" value="#ff0066">
+          </div>
+          <div class="color-row">
+            <input type="color" id="customColor4" value="#ffff00">
+            <input type="color" id="customColor5" value="#ffffff">
+          </div>
+        </div>
+        <div class="control">
+          <label>Color Cycle Speed: <span class="value" id="cycleSpeed-val">0.5</span></label>
+          <input type="range" id="cycleSpeed" min="0" max="5" value="0.5" step="0.1">
+        </div>
+        <div class="control">
+          <label>Brightness: <span class="value" id="brightness-val">1.0</span></label>
+          <input type="range" id="brightness" min="0.2" max="2.0" value="1.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Contrast: <span class="value" id="contrast-val">1.0</span></label>
+          <input type="range" id="contrast" min="0.2" max="3.0" value="1.0" step="0.1">
+        </div>
+        <div class="control">
+          <label>Saturation: <span class="value" id="saturation-val">1.0</span></label>
+          <input type="range" id="saturation" min="0" max="2.0" value="1.0" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Contours & Overlays</h3>
+        <div class="control">
+          <label>Contour Levels: <span class="value" id="contourLevels-val">10</span></label>
+          <input type="range" id="contourLevels" min="3" max="50" value="10" step="1">
+        </div>
+        <div class="control">
+          <label>Contour Width: <span class="value" id="contourWidth-val">1</span></label>
+          <input type="range" id="contourWidth" min="0.5" max="5" value="1" step="0.5">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="showConcentrationA">
+          <label for="showConcentrationA">Show Concentration A</label>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="showVectorField">
+          <label for="showVectorField">Show Gradient Field</label>
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="showGrid">
+          <label for="showGrid">Show Grid Overlay</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Display</h3>
+        <div class="control">
+          <label>Render Mode:</label>
+          <select id="renderMode">
+            <option value="pixels">Pixel Perfect</option>
+            <option value="smooth">Smooth Interpolation</option>
+            <option value="circles">Circle Packing</option>
+            <option value="hexagons">Hexagonal</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Background:</label>
+          <input type="color" id="bgColor" value="#000000">
+        </div>
+      </div>
+    </div>
+
+    <!-- FILTERS TAB -->
+    <div id="tab-filters" class="tab-content">
+      <div class="control-group">
+        <h3>Post-Processing</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterBloom">
+          <label for="filterBloom">Bloom / Glow</label>
+        </div>
+        <div class="control">
+          <label>Bloom Intensity: <span class="value" id="bloomIntensity-val">0.5</span></label>
+          <input type="range" id="bloomIntensity" min="0" max="2" value="0.5" step="0.1">
+        </div>
+        <div class="control">
+          <label>Bloom Radius: <span class="value" id="bloomRadius-val">10</span></label>
+          <input type="range" id="bloomRadius" min="2" max="30" value="10" step="1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Edge Effects</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterEdge">
+          <label for="filterEdge">Edge Detection</label>
+        </div>
+        <div class="control">
+          <label>Edge Style:</label>
+          <select id="edgeStyle">
+            <option value="sobel">Sobel</option>
+            <option value="laplacian">Laplacian</option>
+            <option value="prewitt">Prewitt</option>
+            <option value="outline">Outline Only</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Edge Threshold: <span class="value" id="edgeThreshold-val">0.1</span></label>
+          <input type="range" id="edgeThreshold" min="0" max="1" value="0.1" step="0.01">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Distortion</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterWarp">
+          <label for="filterWarp">Warp / Distort</label>
+        </div>
+        <div class="control">
+          <label>Warp Type:</label>
+          <select id="warpType">
+            <option value="swirl">Swirl</option>
+            <option value="bulge">Bulge</option>
+            <option value="pinch">Pinch</option>
+            <option value="wave">Wave</option>
+            <option value="ripple">Ripple</option>
+            <option value="noise">Noise Displacement</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Warp Amount: <span class="value" id="warpAmount-val">0.5</span></label>
+          <input type="range" id="warpAmount" min="0" max="2" value="0.5" step="0.05">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Stylize</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterPixelate">
+          <label for="filterPixelate">Pixelate</label>
+        </div>
+        <div class="control">
+          <label>Pixel Size: <span class="value" id="pixelSize-val">4</span></label>
+          <input type="range" id="pixelSize" min="2" max="20" value="4" step="1">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterPosterize">
+          <label for="filterPosterize">Posterize</label>
+        </div>
+        <div class="control">
+          <label>Posterize Levels: <span class="value" id="posterizeLevels-val">8</span></label>
+          <input type="range" id="posterizeLevels" min="2" max="32" value="8" step="1">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterInvert">
+          <label for="filterInvert">Invert Colors</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Special Effects</h3>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterKaleidoscope">
+          <label for="filterKaleidoscope">Kaleidoscope</label>
+        </div>
+        <div class="control">
+          <label>Kaleidoscope Segments: <span class="value" id="kaleidoSegments-val">6</span></label>
+          <input type="range" id="kaleidoSegments" min="2" max="16" value="6" step="1">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterFeedback">
+          <label for="filterFeedback">Feedback / Trails</label>
+        </div>
+        <div class="control">
+          <label>Trail Decay: <span class="value" id="feedbackDecay-val">0.95</span></label>
+          <input type="range" id="feedbackDecay" min="0.8" max="0.99" value="0.95" step="0.01">
+        </div>
+        <div class="control checkbox-container">
+          <input type="checkbox" id="filterMirror">
+          <label for="filterMirror">Mirror</label>
+        </div>
+        <div class="control">
+          <label>Mirror Axis:</label>
+          <select id="mirrorAxis">
+            <option value="horizontal">Horizontal</option>
+            <option value="vertical">Vertical</option>
+            <option value="both">Both</option>
+            <option value="diagonal">Diagonal</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- EXPORT TAB -->
+    <div id="tab-export" class="tab-content">
+      <div class="control-group">
+        <h3>Image Export</h3>
+        <button onclick="exportPNG()">Export PNG</button>
+        <button onclick="exportPNG(2)">Export PNG 2x</button>
+        <button onclick="exportPNG(4)">Export PNG 4x</button>
+        <button onclick="exportSVG()" class="secondary">Export SVG</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Animation Export</h3>
+        <div class="control">
+          <label>GIF Frames: <span class="value" id="gifFrames-val">60</span></label>
+          <input type="range" id="gifFrames" min="10" max="200" value="60" step="10">
+        </div>
+        <div class="control">
+          <label>Frame Delay (ms): <span class="value" id="gifDelay-val">50</span></label>
+          <input type="range" id="gifDelay" min="20" max="200" value="50" step="10">
+        </div>
+        <button onclick="exportGIF()">Export GIF</button>
+        <button onclick="exportWebM()" class="secondary">Export WebM Video</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Batch Export</h3>
+        <div class="control">
+          <label>Batch Count: <span class="value" id="batchCount-val">10</span></label>
+          <input type="range" id="batchCount" min="5" max="50" value="10" step="5">
+        </div>
+        <div class="control">
+          <label>Frames Between: <span class="value" id="batchInterval-val">100</span></label>
+          <input type="range" id="batchInterval" min="10" max="500" value="100" step="10">
+        </div>
+        <button onclick="batchExport()">Batch Export PNGs</button>
+      </div>
+
+      <div class="control-group">
+        <h3>Data Export</h3>
+        <button onclick="saveState()">Save Full State (JSON)</button>
+        <button onclick="loadState()" class="secondary">Load State</button>
+        <button onclick="exportParams()">Export Parameters Only</button>
+        <input type="file" id="loadStateInput" style="display:none" accept=".json">
+      </div>
+
+      <div id="status"></div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // PARAMETERS
+    // ============================================
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      // Reaction
+      reactionModel: 'gray-scott',
+      feedRate: 0.055,
+      killRate: 0.062,
+      diffusionA: 1.0,
+      diffusionB: 0.5,
+      anisotropyX: 1.0,
+      anisotropyY: 1.0,
+      turbulence: 0.0,
+      reactionSpeed: 1.0,
+      boundaryType: 'wrap',
+      gridSize: 200,
+      timeSteps: 10,
+      patternType: 'spirals',
+      seedPattern: 'random',
+      running: true,
+      // Visual
+      colorScheme: 'classic',
+      customColor1: '#000066',
+      customColor2: '#00ff88',
+      customColor3: '#ff0066',
+      customColor4: '#ffff00',
+      customColor5: '#ffffff',
+      cycleSpeed: 0.5,
+      brightness: 1.0,
+      contrast: 1.0,
+      saturation: 1.0,
+      contourLevels: 10,
+      contourWidth: 1,
+      showConcentrationA: false,
+      showVectorField: false,
+      showGrid: false,
+      renderMode: 'pixels',
+      bgColor: '#000000',
+      // Filters
+      filterBloom: false,
+      bloomIntensity: 0.5,
+      bloomRadius: 10,
+      filterEdge: false,
+      edgeStyle: 'sobel',
+      edgeThreshold: 0.1,
+      filterWarp: false,
+      warpType: 'swirl',
+      warpAmount: 0.5,
+      filterPixelate: false,
+      pixelSize: 4,
+      filterPosterize: false,
+      posterizeLevels: 8,
+      filterInvert: false,
+      filterKaleidoscope: false,
+      kaleidoSegments: 6,
+      filterFeedback: false,
+      feedbackDecay: 0.95,
+      filterMirror: false,
+      mirrorAxis: 'horizontal',
+      // Export
+      gifFrames: 60,
+      gifDelay: 50,
+      batchCount: 10,
+      batchInterval: 100
+    };
+
+    // Presets for different patterns
+    const presets = {
+      spirals: { f: 0.055, k: 0.062 },
+      waves: { f: 0.014, k: 0.045 },
+      spots: { f: 0.035, k: 0.065 },
+      stripes: { f: 0.035, k: 0.06 },
+      chaos: { f: 0.026, k: 0.051 },
+      coral: { f: 0.0545, k: 0.062 },
+      fingerprint: { f: 0.055, k: 0.063 },
+      maze: { f: 0.029, k: 0.057 }
+    };
+
+    let grid, next;
+    let mainCanvas;
+    let feedbackBuffer;
+    let presetManager;
+    let colorCycleOffset = 0;
+    let frameCount = 0;
+
+    // ============================================
+    // P5.JS SETUP & DRAW
+    // ============================================
+    function setup() {
+      const w = 700;
+      const h = 700;
+      mainCanvas = createCanvas(w, h);
+      mainCanvas.parent('canvas-container');
+      pixelDensity(1);
+
+      feedbackBuffer = createGraphics(w, h);
+      feedbackBuffer.pixelDensity(1);
+
+      setupControls();
+      setupPresetManager();
+      regenerate();
+    }
+
+    function draw() {
+      frameCount++;
+
+      // Update simulation
+      if (params.running) {
+        for (let i = 0; i < params.timeSteps; i++) {
+          update();
+        }
+      }
+
+      // Color cycling
+      if (params.colorScheme === 'cycling') {
+        colorCycleOffset += params.cycleSpeed * 0.01;
+      }
+
+      // Render
+      renderSimulation();
+
+      // Apply filters
+      applyFilters();
+    }
+
+    // ============================================
+    // SIMULATION
+    // ============================================
+    function initializeGrid() {
+      const n = params.gridSize;
+      grid = [];
+      next = [];
+
+      for (let x = 0; x < n; x++) {
+        grid[x] = [];
+        next[x] = [];
+        for (let y = 0; y < n; y++) {
+          grid[x][y] = { a: 1, b: 0 };
+          next[x][y] = { a: 1, b: 0 };
+        }
+      }
+
+      // Apply seed pattern
+      switch (params.seedPattern) {
+        case 'random':
+          for (let i = 0; i < 20; i++) {
+            addSeed(floor(random(n)), floor(random(n)), floor(random(5, 15)));
+          }
+          break;
+        case 'center':
+          addSeed(n/2, n/2, 15);
+          break;
+        case 'multiple':
+          for (let i = 0; i < 7; i++) {
+            const angle = (i / 7) * TWO_PI;
+            const r = n / 4;
+            addSeed(n/2 + cos(angle) * r, n/2 + sin(angle) * r, 8);
+          }
+          addSeed(n/2, n/2, 10);
+          break;
+        case 'gradient':
+          for (let x = 0; x < n; x++) {
+            for (let y = 0; y < n; y++) {
+              grid[x][y].b = x / n * 0.5;
+            }
+          }
+          break;
+        case 'spiral':
+          for (let t = 0; t < 15; t += 0.1) {
+            const r = t * 4;
+            const x = n/2 + cos(t * 2) * r;
+            const y = n/2 + sin(t * 2) * r;
+            if (x >= 0 && x < n && y >= 0 && y < n) {
+              addSeed(floor(x), floor(y), 2);
+            }
+          }
+          break;
+        case 'rings':
+          for (let r = 20; r < n/2; r += 30) {
+            for (let angle = 0; angle < TWO_PI; angle += 0.1) {
+              const x = n/2 + cos(angle) * r;
+              const y = n/2 + sin(angle) * r;
+              if (x >= 0 && x < n && y >= 0 && y < n) {
+                addSeed(floor(x), floor(y), 2);
+              }
+            }
+          }
+          break;
+        case 'grid':
+          const spacing = n / 6;
+          for (let x = spacing; x < n - spacing; x += spacing) {
+            for (let y = spacing; y < n - spacing; y += spacing) {
+              addSeed(x, y, 8);
+            }
+          }
+          break;
+        case 'perlin':
+          for (let x = 0; x < n; x++) {
+            for (let y = 0; y < n; y++) {
+              const noiseVal = noise(x * 0.05, y * 0.05);
+              if (noiseVal > 0.55) {
+                grid[x][y].b = (noiseVal - 0.55) * 4;
+              }
+            }
+          }
+          break;
+      }
+    }
+
+    function addSeed(cx, cy, size) {
+      const n = params.gridSize;
+      for (let i = -size; i <= size; i++) {
+        for (let j = -size; j <= size; j++) {
+          let x = floor(cx + i);
+          let y = floor(cy + j);
+          if (x >= 0 && x < n && y >= 0 && y < n) {
+            const d = dist(x, y, cx, cy);
+            if (d < size) {
+              grid[x][y].b = 1;
+            }
+          }
+        }
+      }
+    }
+
+    function update() {
+      const n = params.gridSize;
+      const f = params.feedRate;
+      const k = params.killRate;
+      const dA = params.diffusionA;
+      const dB = params.diffusionB;
+      const aX = params.anisotropyX;
+      const aY = params.anisotropyY;
+      const turb = params.turbulence;
+      const speed = params.reactionSpeed;
+
+      for (let x = 0; x < n; x++) {
+        for (let y = 0; y < n; y++) {
+          // Get neighbors based on boundary type
+          const xm = getBoundaryIndex(x - 1, n);
+          const xp = getBoundaryIndex(x + 1, n);
+          const ym = getBoundaryIndex(y - 1, n);
+          const yp = getBoundaryIndex(y + 1, n);
+
+          if (xm === -1 || xp === -1 || ym === -1 || yp === -1) {
+            next[x][y].a = grid[x][y].a;
+            next[x][y].b = grid[x][y].b;
+            continue;
+          }
+
+          const a = grid[x][y].a;
+          const b = grid[x][y].b;
+
+          // Anisotropic Laplacian
+          const laplaceA = (
+            (grid[xp][y].a + grid[xm][y].a - 2 * a) * aX +
+            (grid[x][yp].a + grid[x][ym].a - 2 * a) * aY
+          );
+          const laplaceB = (
+            (grid[xp][y].b + grid[xm][y].b - 2 * b) * aX +
+            (grid[x][yp].b + grid[x][ym].b - 2 * b) * aY
+          );
+
+          // Turbulence
+          const turbNoise = turb > 0 ? (random() - 0.5) * turb : 0;
+
+          // Reaction based on model
+          let newA, newB;
+          switch (params.reactionModel) {
+            case 'gray-scott':
+              const reaction = a * b * b;
+              newA = a + (dA * laplaceA - reaction + f * (1 - a)) * speed + turbNoise;
+              newB = b + (dB * laplaceB + reaction - (k + f) * b) * speed + turbNoise;
+              break;
+            case 'oregonator':
+              const q = 0.002;
+              const eps = 0.01;
+              newA = a + (a * (1 - a) - f * b * (a - q) / (a + q)) / eps * speed * 0.01 + turbNoise;
+              newB = b + (a - b) * speed * 0.01 + turbNoise;
+              break;
+            case 'brusselator':
+              const A = 1.0, B = 3.0;
+              newA = a + (A - (B + 1) * a + a * a * b + dA * laplaceA) * speed * 0.1 + turbNoise;
+              newB = b + (B * a - a * a * b + dB * laplaceB) * speed * 0.1 + turbNoise;
+              break;
+            case 'fitzhugh-nagumo':
+              const epsilon = 0.01;
+              const gamma = 0.5;
+              const beta = 0.7;
+              newA = a + (a - a*a*a/3 - b + dA * laplaceA) / epsilon * speed * 0.01 + turbNoise;
+              newB = b + (a + beta - gamma * b) * speed * 0.01 + turbNoise;
+              break;
+            default:
+              newA = a;
+              newB = b;
+          }
+
+          next[x][y].a = constrain(newA, 0, 1);
+          next[x][y].b = constrain(newB, 0, 1);
+        }
+      }
+
+      // Swap
+      let temp = grid;
+      grid = next;
+      next = temp;
+    }
+
+    function getBoundaryIndex(i, n) {
+      switch (params.boundaryType) {
+        case 'wrap':
+          return (i + n) % n;
+        case 'reflect':
+          if (i < 0) return -i;
+          if (i >= n) return 2 * n - i - 2;
+          return i;
+        case 'absorb':
+          if (i < 0 || i >= n) return -1;
+          return i;
+        default:
+          return (i + n) % n;
+      }
+    }
+
+    // ============================================
+    // RENDERING
+    // ============================================
+    function renderSimulation() {
+      const bgCol = color(params.bgColor);
+      background(bgCol);
+
+      // Feedback effect
+      if (params.filterFeedback) {
+        tint(255, params.feedbackDecay * 255);
+        image(feedbackBuffer, 0, 0);
+        noTint();
+      }
+
+      const n = params.gridSize;
+      const cellSize = width / n;
+
+      loadPixels();
+
+      for (let x = 0; x < n; x++) {
+        for (let y = 0; y < n; y++) {
+          let a = grid[x][y].a;
+          let b = grid[x][y].b;
+
+          // Apply contrast and brightness
+          b = pow(b, 1 / params.contrast) * params.brightness;
+          b = constrain(b, 0, 1);
+
+          const col = getColor(a, b);
+
+          // Get RGB values
+          let r = red(col);
+          let g = green(col);
+          let bl = blue(col);
+
+          // Apply saturation
+          if (params.saturation !== 1.0) {
+            const gray = 0.299 * r + 0.587 * g + 0.114 * bl;
+            r = lerp(gray, r, params.saturation);
+            g = lerp(gray, g, params.saturation);
+            bl = lerp(gray, bl, params.saturation);
+          }
+
+          // Set pixels based on render mode
+          if (params.renderMode === 'pixels' || params.renderMode === 'smooth') {
+            const px = floor(x * cellSize);
+            const py = floor(y * cellSize);
+            const px2 = floor((x + 1) * cellSize);
+            const py2 = floor((y + 1) * cellSize);
+
+            for (let i = px; i < px2; i++) {
+              for (let j = py; j < py2; j++) {
+                const idx = (i + j * width) * 4;
+                pixels[idx] = r;
+                pixels[idx + 1] = g;
+                pixels[idx + 2] = bl;
+                pixels[idx + 3] = 255;
+              }
+            }
+          }
+        }
+      }
+
+      updatePixels();
+
+      // Special render modes
+      if (params.renderMode === 'circles') {
+        renderCircles();
+      } else if (params.renderMode === 'hexagons') {
+        renderHexagons();
+      }
+
+      // Contour overlay
+      if (params.colorScheme === 'contour') {
+        drawContours();
+      }
+
+      // Vector field overlay
+      if (params.showVectorField) {
+        drawVectorField();
+      }
+
+      // Grid overlay
+      if (params.showGrid) {
+        drawGridOverlay();
+      }
+
+      // Store for feedback
+      if (params.filterFeedback) {
+        feedbackBuffer.image(get(), 0, 0);
+      }
+    }
+
+    function getColor(a, b) {
+      const val = params.showConcentrationA ? a : b;
+
+      switch (params.colorScheme) {
+        case 'classic':
+          return lerpColor(color(255, 204, 0), color(0, 0, 180), val);
+        case 'thermal':
+          return lerpColor(color(0, 0, 60), color(255, 100, 0), val);
+        case 'chemical':
+          return color(a * 255, (1 - abs(a - b)) * 255, b * 255);
+        case 'monochrome':
+          return color(255 * (1 - val));
+        case 'ocean':
+          return lerpMultiColor([color(0, 10, 30), color(0, 60, 120), color(0, 150, 200), color(150, 220, 255)], val);
+        case 'forest':
+          return lerpMultiColor([color(20, 30, 10), color(30, 80, 20), color(60, 140, 40), color(150, 200, 100)], val);
+        case 'sunset':
+          return lerpMultiColor([color(20, 10, 40), color(150, 50, 80), color(255, 120, 50), color(255, 220, 100)], val);
+        case 'fire':
+          return lerpMultiColor([color(10, 0, 0), color(150, 20, 0), color(255, 100, 0), color(255, 255, 100)], val);
+        case 'ice':
+          return lerpMultiColor([color(10, 20, 40), color(50, 100, 150), color(150, 200, 230), color(240, 250, 255)], val);
+        case 'earth':
+          return lerpMultiColor([color(40, 30, 20), color(100, 70, 40), color(150, 120, 80), color(200, 180, 150)], val);
+        case 'aurora':
+          return lerpMultiColor([color(10, 10, 30), color(0, 100, 80), color(50, 200, 150), color(200, 100, 200), color(100, 200, 255)], val);
+        case 'rainbow':
+          colorMode(HSB, 360, 100, 100);
+          const rainbowCol = color(val * 360, 80, 90);
+          colorMode(RGB, 255);
+          return rainbowCol;
+        case 'neon':
+          return lerpMultiColor([color(0, 0, 0), color(255, 0, 100), color(0, 255, 200), color(255, 255, 0)], val);
+        case 'psychedelic':
+          const hue = (val * 720 + frameCount * 2) % 360;
+          colorMode(HSB, 360, 100, 100);
+          const psychCol = color(hue, 100, 100);
+          colorMode(RGB, 255);
+          return psychCol;
+        case 'vaporwave':
+          return lerpMultiColor([color(20, 0, 40), color(255, 100, 200), color(100, 200, 255), color(255, 255, 150)], val);
+        case 'cyberpunk':
+          return lerpMultiColor([color(5, 0, 15), color(255, 0, 100), color(0, 255, 255), color(255, 255, 0)], val);
+        case 'synthwave':
+          return lerpMultiColor([color(10, 0, 30), color(100, 0, 150), color(255, 50, 150), color(255, 200, 100)], val);
+        case 'contour':
+          return color(255 * (1 - val));
+        case 'gradient3':
+          return lerpMultiColor([color(params.customColor1), color(params.customColor2), color(params.customColor3)], val);
+        case 'gradient5':
+          return lerpMultiColor([
+            color(params.customColor1), color(params.customColor2), color(params.customColor3),
+            color(params.customColor4), color(params.customColor5)
+          ], val);
+        case 'custom':
+          return lerpColor(color(params.customColor1), color(params.customColor2), val);
+        case 'cycling':
+          const cycleHue = (val * 360 + colorCycleOffset * 360) % 360;
+          colorMode(HSB, 360, 100, 100);
+          const cycleCol = color(cycleHue, 85, 90);
+          colorMode(RGB, 255);
+          return cycleCol;
+        default:
+          return color(255 * val);
+      }
+    }
+
+    function lerpMultiColor(colors, t) {
+      t = constrain(t, 0, 1);
+      const segments = colors.length - 1;
+      const segment = floor(t * segments);
+      const localT = (t * segments) - segment;
+      const i1 = min(segment, segments);
+      const i2 = min(segment + 1, segments);
+      return lerpColor(colors[i1], colors[i2], localT);
+    }
+
+    function renderCircles() {
+      const n = params.gridSize;
+      const step = max(4, floor(n / 50));
+      const maxR = width / n * step * 0.8;
+
+      noStroke();
+      for (let x = step/2; x < n; x += step) {
+        for (let y = step/2; y < n; y += step) {
+          const b = grid[floor(x)][floor(y)].b;
+          const col = getColor(grid[floor(x)][floor(y)].a, b);
+          fill(col);
+          const px = x / n * width;
+          const py = y / n * height;
+          ellipse(px, py, b * maxR, b * maxR);
+        }
+      }
+    }
+
+    function renderHexagons() {
+      const n = params.gridSize;
+      const step = max(4, floor(n / 40));
+      const hexR = width / n * step * 0.6;
+
+      noStroke();
+      for (let x = step/2; x < n; x += step) {
+        for (let y = step/2; y < n; y += step) {
+          const offsetX = (floor(y / step) % 2) * step * 0.5;
+          const gx = floor(constrain(x + offsetX, 0, n-1));
+          const gy = floor(y);
+          const b = grid[gx][gy].b;
+          const col = getColor(grid[gx][gy].a, b);
+          fill(col);
+          const px = (x + offsetX) / n * width;
+          const py = y / n * height;
+          drawHexagon(px, py, hexR * (0.5 + b * 0.5));
+        }
+      }
+    }
+
+    function drawHexagon(x, y, r) {
+      beginShape();
+      for (let i = 0; i < 6; i++) {
+        const angle = i * PI / 3 - PI / 6;
+        vertex(x + cos(angle) * r, y + sin(angle) * r);
+      }
+      endShape(CLOSE);
+    }
+
+    function drawContours() {
+      const n = params.gridSize;
+      const levels = params.contourLevels;
+
+      stroke(params.filterInvert ? 0 : 255);
+      strokeWeight(params.contourWidth);
+      noFill();
+
+      for (let level = 1; level < levels; level++) {
+        const threshold = level / levels;
+        const cellSize = width / n;
+
+        for (let x = 0; x < n - 1; x++) {
+          for (let y = 0; y < n - 1; y++) {
+            const px = x * cellSize;
+            const py = y * cellSize;
+
+            const val = params.showConcentrationA ? 'a' : 'b';
+            const corners = [
+              grid[x][y][val] > threshold ? 1 : 0,
+              grid[x+1][y][val] > threshold ? 1 : 0,
+              grid[x+1][y+1][val] > threshold ? 1 : 0,
+              grid[x][y+1][val] > threshold ? 1 : 0
+            ];
+            const config = corners[0] * 8 + corners[1] * 4 + corners[2] * 2 + corners[3];
+
+            drawMarchingSquaresCase(config, px, py, cellSize);
+          }
+        }
+      }
+    }
+
+    function drawMarchingSquaresCase(config, px, py, s) {
+      const cases = {
+        1: [[0, s/2, s/2, s]], 2: [[s/2, s, s, s/2]], 3: [[0, s/2, s, s/2]],
+        4: [[s, s/2, s/2, 0]], 5: [[0, s/2, s/2, 0], [s/2, s, s, s/2]],
+        6: [[s/2, 0, s/2, s]], 7: [[0, s/2, s/2, 0]], 8: [[s/2, 0, 0, s/2]],
+        9: [[s/2, 0, s/2, s]], 10: [[s/2, 0, s, s/2], [0, s/2, s/2, s]],
+        11: [[s/2, 0, s, s/2]], 12: [[0, s/2, s, s/2]], 13: [[s/2, s, s, s/2]],
+        14: [[0, s/2, s/2, s]]
+      };
+
+      if (cases[config]) {
+        cases[config].forEach(l => line(px + l[0], py + l[1], px + l[2], py + l[3]));
+      }
+    }
+
+    function drawVectorField() {
+      const n = params.gridSize;
+      const step = max(8, floor(n / 25));
+      const scale = 15;
+
+      stroke(255, 0, 100, 150);
+      strokeWeight(1);
+
+      const val = params.showConcentrationA ? 'a' : 'b';
+
+      for (let x = step; x < n - step; x += step) {
+        for (let y = step; y < n - step; y += step) {
+          const dx = grid[x+1][y][val] - grid[x-1][y][val];
+          const dy = grid[x][y+1][val] - grid[x][y-1][val];
+
+          const cellSize = width / n;
+          const px = x * cellSize;
+          const py = y * cellSize;
+
+          const mag = sqrt(dx * dx + dy * dy);
+          const len = mag * scale * cellSize;
+
+          if (len > 1) {
+            push();
+            translate(px, py);
+            rotate(atan2(dy, dx));
+            line(0, 0, len, 0);
+            line(len, 0, len - 4, -2);
+            line(len, 0, len - 4, 2);
+            pop();
+          }
+        }
+      }
+    }
+
+    function drawGridOverlay() {
+      const n = params.gridSize;
+      const cellSize = width / n;
+
+      stroke(255, 30);
+      strokeWeight(0.5);
+
+      for (let x = 0; x <= n; x += 10) {
+        line(x * cellSize, 0, x * cellSize, height);
+      }
+      for (let y = 0; y <= n; y += 10) {
+        line(0, y * cellSize, width, y * cellSize);
+      }
+    }
+
+    // ============================================
+    // FILTERS
+    // ============================================
+    function applyFilters() {
+      // Kaleidoscope (needs to happen before other filters)
+      if (params.filterKaleidoscope) {
+        applyKaleidoscope();
+      }
+
+      // Mirror
+      if (params.filterMirror) {
+        applyMirror();
+      }
+
+      loadPixels();
+
+      // Edge detection
+      if (params.filterEdge) {
+        applyEdgeDetection();
+      }
+
+      // Pixelate
+      if (params.filterPixelate) {
+        applyPixelate();
+      }
+
+      // Posterize
+      if (params.filterPosterize) {
+        applyPosterize();
+      }
+
+      // Invert
+      if (params.filterInvert) {
+        for (let i = 0; i < pixels.length; i += 4) {
+          pixels[i] = 255 - pixels[i];
+          pixels[i+1] = 255 - pixels[i+1];
+          pixels[i+2] = 255 - pixels[i+2];
+        }
+      }
+
+      updatePixels();
+
+      // Bloom (drawn on top)
+      if (params.filterBloom) {
+        applyBloom();
+      }
+
+      // Warp
+      if (params.filterWarp) {
+        applyWarp();
+      }
+    }
+
+    function applyEdgeDetection() {
+      const w = width;
+      const h = height;
+      const threshold = params.edgeThreshold * 255;
+      const original = pixels.slice();
+
+      for (let x = 1; x < w - 1; x++) {
+        for (let y = 1; y < h - 1; y++) {
+          let gx = 0, gy = 0;
+
+          // Sobel kernels
+          const kernelX = [[-1,0,1], [-2,0,2], [-1,0,1]];
+          const kernelY = [[-1,-2,-1], [0,0,0], [1,2,1]];
+
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              const idx = ((x + i) + (y + j) * w) * 4;
+              const gray = (original[idx] + original[idx+1] + original[idx+2]) / 3;
+              gx += gray * kernelX[j+1][i+1];
+              gy += gray * kernelY[j+1][i+1];
+            }
+          }
+
+          const mag = sqrt(gx * gx + gy * gy);
+          const idx = (x + y * w) * 4;
+
+          if (params.edgeStyle === 'outline') {
+            const edge = mag > threshold ? 255 : 0;
+            pixels[idx] = edge;
+            pixels[idx+1] = edge;
+            pixels[idx+2] = edge;
+          } else {
+            const edge = constrain(mag, 0, 255);
+            pixels[idx] = lerp(pixels[idx], edge, 0.7);
+            pixels[idx+1] = lerp(pixels[idx+1], edge, 0.7);
+            pixels[idx+2] = lerp(pixels[idx+2], edge, 0.7);
+          }
+        }
+      }
+    }
+
+    function applyPixelate() {
+      const size = params.pixelSize;
+      const w = width;
+      const h = height;
+
+      for (let x = 0; x < w; x += size) {
+        for (let y = 0; y < h; y += size) {
+          let r = 0, g = 0, b = 0, count = 0;
+
+          for (let i = 0; i < size && x + i < w; i++) {
+            for (let j = 0; j < size && y + j < h; j++) {
+              const idx = ((x + i) + (y + j) * w) * 4;
+              r += pixels[idx];
+              g += pixels[idx + 1];
+              b += pixels[idx + 2];
+              count++;
+            }
+          }
+
+          r = floor(r / count);
+          g = floor(g / count);
+          b = floor(b / count);
+
+          for (let i = 0; i < size && x + i < w; i++) {
+            for (let j = 0; j < size && y + j < h; j++) {
+              const idx = ((x + i) + (y + j) * w) * 4;
+              pixels[idx] = r;
+              pixels[idx + 1] = g;
+              pixels[idx + 2] = b;
+            }
+          }
+        }
+      }
+    }
+
+    function applyPosterize() {
+      const levels = params.posterizeLevels;
+      const factor = 255 / (levels - 1);
+
+      for (let i = 0; i < pixels.length; i += 4) {
+        pixels[i] = floor(pixels[i] / factor) * factor;
+        pixels[i+1] = floor(pixels[i+1] / factor) * factor;
+        pixels[i+2] = floor(pixels[i+2] / factor) * factor;
+      }
+    }
+
+    function applyBloom() {
+      // Simple bloom using multiple blurred layers
+      const intensity = params.bloomIntensity;
+      const radius = params.bloomRadius;
+
+      // Create bloom layer
+      const bloomLayer = createGraphics(width, height);
+      bloomLayer.image(get(), 0, 0);
+      bloomLayer.filter(BLUR, radius);
+
+      // Additive blend
+      push();
+      blendMode(ADD);
+      tint(255, intensity * 255);
+      image(bloomLayer, 0, 0);
+      pop();
+
+      bloomLayer.remove();
+    }
+
+    function applyWarp() {
+      const amount = params.warpAmount;
+      const img = get();
+      const cx = width / 2;
+      const cy = height / 2;
+
+      loadPixels();
+
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          let srcX = x, srcY = y;
+
+          switch (params.warpType) {
+            case 'swirl':
+              const dx = x - cx;
+              const dy = y - cy;
+              const dist = sqrt(dx * dx + dy * dy);
+              const angle = atan2(dy, dx) + amount * (1 - dist / (width * 0.7));
+              srcX = cx + cos(angle) * dist;
+              srcY = cy + sin(angle) * dist;
+              break;
+            case 'bulge':
+              const bx = (x - cx) / cx;
+              const by = (y - cy) / cy;
+              const bd = sqrt(bx * bx + by * by);
+              const bf = pow(bd, amount) / bd;
+              srcX = cx + bx * bf * cx;
+              srcY = cy + by * bf * cy;
+              break;
+            case 'pinch':
+              const px = (x - cx) / cx;
+              const py = (y - cy) / cy;
+              const pd = sqrt(px * px + py * py);
+              const pf = pow(pd, 1/amount) / pd;
+              srcX = cx + px * pf * cx;
+              srcY = cy + py * pf * cy;
+              break;
+            case 'wave':
+              srcX = x + sin(y * 0.05) * amount * 20;
+              srcY = y + sin(x * 0.05) * amount * 20;
+              break;
+            case 'ripple':
+              const rx = x - cx;
+              const ry = y - cy;
+              const rd = sqrt(rx * rx + ry * ry);
+              const rippleOffset = sin(rd * 0.1 - frameCount * 0.1) * amount * 10;
+              srcX = x + rx / rd * rippleOffset;
+              srcY = y + ry / rd * rippleOffset;
+              break;
+            case 'noise':
+              srcX = x + (noise(x * 0.01, y * 0.01, frameCount * 0.01) - 0.5) * amount * 50;
+              srcY = y + (noise(x * 0.01 + 100, y * 0.01, frameCount * 0.01) - 0.5) * amount * 50;
+              break;
+          }
+
+          srcX = constrain(floor(srcX), 0, width - 1);
+          srcY = constrain(floor(srcY), 0, height - 1);
+
+          const srcIdx = (srcX + srcY * width) * 4;
+          const dstIdx = (x + y * width) * 4;
+
+          const srcCol = img.get(srcX, srcY);
+          pixels[dstIdx] = red(srcCol);
+          pixels[dstIdx + 1] = green(srcCol);
+          pixels[dstIdx + 2] = blue(srcCol);
+        }
+      }
+
+      updatePixels();
+    }
+
+    function applyKaleidoscope() {
+      const segments = params.kaleidoSegments;
+      const img = get();
+      const cx = width / 2;
+      const cy = height / 2;
+
+      loadPixels();
+
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          const dx = x - cx;
+          const dy = y - cy;
+          let angle = atan2(dy, dx);
+          const dist = sqrt(dx * dx + dy * dy);
+
+          // Map to segment
+          const segmentAngle = TWO_PI / segments;
+          angle = abs(((angle % segmentAngle) + segmentAngle) % segmentAngle);
+          if (floor(atan2(dy, dx) / segmentAngle) % 2 === 1) {
+            angle = segmentAngle - angle;
+          }
+
+          const srcX = constrain(floor(cx + cos(angle) * dist), 0, width - 1);
+          const srcY = constrain(floor(cy + sin(angle) * dist), 0, height - 1);
+
+          const col = img.get(srcX, srcY);
+          const idx = (x + y * width) * 4;
+          pixels[idx] = red(col);
+          pixels[idx + 1] = green(col);
+          pixels[idx + 2] = blue(col);
+        }
+      }
+
+      updatePixels();
+    }
+
+    function applyMirror() {
+      const img = get();
+
+      loadPixels();
+
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          let srcX = x, srcY = y;
+
+          switch (params.mirrorAxis) {
+            case 'horizontal':
+              if (y > height / 2) srcY = height - y;
+              break;
+            case 'vertical':
+              if (x > width / 2) srcX = width - x;
+              break;
+            case 'both':
+              if (x > width / 2) srcX = width - x;
+              if (y > height / 2) srcY = height - y;
+              break;
+            case 'diagonal':
+              if (x + y > width) {
+                srcX = width - y;
+                srcY = height - x;
+              }
+              break;
+          }
+
+          const col = img.get(srcX, srcY);
+          const idx = (x + y * width) * 4;
+          pixels[idx] = red(col);
+          pixels[idx + 1] = green(col);
+          pixels[idx + 2] = blue(col);
+        }
+      }
+
+      updatePixels();
+    }
+
+    // ============================================
+    // CONTROLS
+    // ============================================
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const display = document.getElementById(key + '-val');
+            if (display) display.textContent = params[key];
+
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              if (display) {
+                display.textContent = Number.isInteger(params[key]) ? params[key] : params[key].toFixed(2);
+              }
+            });
+          } else if (element.type === 'checkbox') {
+            element.checked = params[key];
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+            });
+          } else if (element.type === 'color') {
+            element.value = params[key];
+            element.addEventListener('input', (e) => {
+              params[key] = e.target.value;
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.value = params[key];
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              if (key === 'patternType' && presets[e.target.value]) {
+                updatePreset(e.target.value);
+              }
+            });
+          }
+        }
+      });
+    }
+
+    function setupPresetManager() {
+      presetManager = new PresetManager({
+        algorithmId: 'belousov-zhabotinsky-enhanced',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: randomizeAll
+      });
+    }
+
+    function updatePreset(preset) {
+      if (presets[preset]) {
+        params.feedRate = presets[preset].f;
+        params.killRate = presets[preset].k;
+        document.getElementById('feedRate').value = params.feedRate;
+        document.getElementById('killRate').value = params.killRate;
+        document.getElementById('feedRate-val').textContent = params.feedRate;
+        document.getElementById('killRate-val').textContent = params.killRate;
+      }
+    }
+
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const display = document.getElementById(key + '-val');
+            if (display) {
+              display.textContent = Number.isInteger(params[key]) ? params[key] : params[key].toFixed(2);
+            }
+          } else if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else if (element.type === 'color') {
+            element.value = params[key];
+          } else if (element.tagName === 'SELECT') {
+            element.value = params[key];
+          }
+        }
+      });
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.tab[onclick="switchTab('${tabName}')"]`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+
+    // ============================================
+    // ACTIONS
+    // ============================================
+    function regenerate() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      document.getElementById('seed-display').textContent = params.seed;
+      initializeGrid();
+      if (feedbackBuffer) feedbackBuffer.clear();
+    }
+
+    function reset() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      initializeGrid();
+      if (feedbackBuffer) feedbackBuffer.clear();
+    }
+
+    function addPerturbation() {
+      const n = params.gridSize;
+      addSeed(floor(random(n)), floor(random(n)), floor(random(8, 20)));
+    }
+
+    function randomizeAll() {
+      const patterns = Object.keys(presets);
+      const colorSchemes = ['classic', 'thermal', 'ocean', 'forest', 'fire', 'rainbow', 'neon', 'psychedelic', 'vaporwave', 'cyberpunk'];
+      const seedPatterns = ['random', 'center', 'multiple', 'spiral', 'rings', 'grid', 'perlin'];
+
+      params.feedRate = random(0.01, 0.1);
+      params.killRate = random(0.03, 0.07);
+      params.diffusionA = random(0.5, 1.5);
+      params.diffusionB = random(0.1, 1.0);
+      params.anisotropyX = random(0.5, 2.0);
+      params.anisotropyY = random(0.5, 2.0);
+      params.turbulence = random() > 0.7 ? random(0, 0.05) : 0;
+      params.reactionSpeed = random(0.5, 2.0);
+      params.gridSize = random([100, 150, 200, 250, 300]);
+      params.timeSteps = floor(random(5, 30));
+      params.patternType = random(patterns);
+      params.colorScheme = random(colorSchemes);
+      params.seedPattern = random(seedPatterns);
+      params.brightness = random(0.8, 1.2);
+      params.contrast = random(0.8, 1.5);
+
+      updateUIFromParams();
+      regenerate();
+    }
+
+    // ============================================
+    // EXPORTS
+    // ============================================
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+
+    function exportPNG(scale = 1) {
+      setStatus(`Exporting PNG at ${scale}x...`);
+
+      if (scale === 1) {
+        save(`bz-enhanced-${params.seed}.png`);
+      } else {
+        const pg = createGraphics(width * scale, height * scale);
+        pg.pixelDensity(1);
+        pg.scale(scale);
+        // Redraw at higher resolution
+        pg.image(get(), 0, 0);
+        pg.save(`bz-enhanced-${params.seed}-${scale}x.png`);
+        pg.remove();
+      }
+
+      setStatus('PNG exported!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function exportSVG() {
+      setStatus('SVG export - saving current frame...');
+      save(`bz-enhanced-${params.seed}.svg`);
+      setStatus('SVG exported!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function exportGIF() {
+      setStatus('Preparing GIF...');
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+
+      const totalFrames = params.gifFrames;
+      const wasRunning = params.running;
+      params.running = true;
+
+      for (let frame = 0; frame < totalFrames; frame++) {
+        for (let i = 0; i < params.timeSteps; i++) {
+          update();
+        }
+        renderSimulation();
+        applyFilters();
+
+        gif.addFrame(drawingContext.canvas, {copy: true, delay: params.gifDelay});
+        setStatus(`Generating frame ${frame + 1}/${totalFrames}`);
+      }
+
+      params.running = wasRunning;
+      setStatus('Rendering GIF...');
+
+      gif.on('finished', (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bz-enhanced-${params.seed}.gif`;
+        a.click();
+        setStatus('GIF exported!');
+        setTimeout(() => setStatus(''), 2000);
+      });
+
+      gif.render();
+    }
+
+    function exportWebM() {
+      setStatus('WebM export requires MediaRecorder - starting recording...');
+
+      const stream = document.querySelector('canvas').captureStream(30);
+      const recorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+      const chunks = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bz-enhanced-${params.seed}.webm`;
+        a.click();
+        setStatus('WebM exported!');
+        setTimeout(() => setStatus(''), 2000);
+      };
+
+      recorder.start();
+      setTimeout(() => {
+        recorder.stop();
+        setStatus('Finalizing WebM...');
+      }, 5000);
+
+      setStatus('Recording 5 seconds of video...');
+    }
+
+    function batchExport() {
+      setStatus('Starting batch export...');
+      const count = params.batchCount;
+      const interval = params.batchInterval;
+
+      let exported = 0;
+      const batchLoop = setInterval(() => {
+        for (let i = 0; i < interval; i++) {
+          update();
+        }
+        renderSimulation();
+        applyFilters();
+
+        save(`bz-batch-${params.seed}-${String(exported).padStart(4, '0')}.png`);
+        exported++;
+        setStatus(`Exported ${exported}/${count}`);
+
+        if (exported >= count) {
+          clearInterval(batchLoop);
+          setStatus('Batch export complete!');
+          setTimeout(() => setStatus(''), 2000);
+        }
+      }, 100);
+    }
+
+    function saveState() {
+      const state = {
+        params: params,
+        grid: grid,
+        version: '2.0'
+      };
+      const json = JSON.stringify(state);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bz-state-${params.seed}.json`;
+      a.click();
+      setStatus('State saved!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    function loadState() {
+      document.getElementById('loadStateInput').click();
+    }
+
+    document.getElementById('loadStateInput')?.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const state = JSON.parse(event.target.result);
+            Object.assign(params, state.params);
+            if (state.grid) {
+              grid = state.grid;
+              next = JSON.parse(JSON.stringify(grid));
+            }
+            updateUIFromParams();
+            setStatus('State loaded!');
+            setTimeout(() => setStatus(''), 2000);
+          } catch (err) {
+            setStatus('Error loading state file');
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    function exportParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `bz-params-${params.seed}.json`;
+      a.click();
+      setStatus('Parameters exported!');
+      setTimeout(() => setStatus(''), 2000);
+    }
+
+    // Mouse interaction
+    function mousePressed() {
+      if (mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height) {
+        const n = params.gridSize;
+        const x = floor(mouseX / width * n);
+        const y = floor(mouseY / height * n);
+        addSeed(x, y, 12);
+      }
+    }
+
+    function mouseDragged() {
+      if (mouseX >= 0 && mouseX < width && mouseY >= 0 && mouseY < height) {
+        const n = params.gridSize;
+        const x = floor(mouseX / width * n);
+        const y = floor(mouseY / height * n);
+        addSeed(x, y, 5);
+      }
+    }
+  </script>
+</body>
+</html>

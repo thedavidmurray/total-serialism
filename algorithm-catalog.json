@@ -259,6 +259,20 @@
           "complexity": "advanced"
         },
         {
+          "id": "belousov-zhabotinsky-enhanced",
+          "name": "Belousov-Zhabotinsky Enhanced",
+          "description": "Advanced BZ reaction with 20+ color schemes, multiple reaction models, post-processing filters, and extensive export options",
+          "path": "pen-plotter/algorithms/chemical/belousov-zhabotinsky-enhanced-gui.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "belousov-zhabotinsky-3d",
+          "name": "Belousov-Zhabotinsky 3D",
+          "description": "Three.js 3D visualization of BZ reaction with height maps, various geometries, and 3D mesh export",
+          "path": "pen-plotter/algorithms/chemical/belousov-zhabotinsky-3d-gui.html",
+          "complexity": "advanced"
+        },
+        {
           "id": "crystallization",
           "name": "Crystallization",
           "description": "Chemical crystallization patterns",
