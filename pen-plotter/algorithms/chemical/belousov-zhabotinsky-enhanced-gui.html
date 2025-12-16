@@ -805,7 +805,7 @@
             }
           }
           break;
-        case 'grid':
+        case 'grid': {
           const spacing = n / 6;
           for (let x = spacing; x < n - spacing; x += spacing) {
             for (let y = spacing; y < n - spacing; y += spacing) {
@@ -813,6 +813,7 @@
             }
           }
           break;
+        }
         case 'perlin':
           for (let x = 0; x < n; x++) {
             for (let y = 0; y < n; y++) {
@@ -886,29 +887,33 @@
           // Reaction based on model
           let newA, newB;
           switch (params.reactionModel) {
-            case 'gray-scott':
+            case 'gray-scott': {
               const reaction = a * b * b;
               newA = a + (dA * laplaceA - reaction + f * (1 - a)) * speed + turbNoise;
               newB = b + (dB * laplaceB + reaction - (k + f) * b) * speed + turbNoise;
               break;
-            case 'oregonator':
+            }
+            case 'oregonator': {
               const q = 0.002;
               const eps = 0.01;
               newA = a + (a * (1 - a) - f * b * (a - q) / (a + q)) / eps * speed * 0.01 + turbNoise;
               newB = b + (a - b) * speed * 0.01 + turbNoise;
               break;
-            case 'brusselator':
+            }
+            case 'brusselator': {
               const A = 1.0, B = 3.0;
               newA = a + (A - (B + 1) * a + a * a * b + dA * laplaceA) * speed * 0.1 + turbNoise;
               newB = b + (B * a - a * a * b + dB * laplaceB) * speed * 0.1 + turbNoise;
               break;
-            case 'fitzhugh-nagumo':
+            }
+            case 'fitzhugh-nagumo': {
               const epsilon = 0.01;
               const gamma = 0.5;
               const beta = 0.7;
               newA = a + (a - a*a*a/3 - b + dA * laplaceA) / epsilon * speed * 0.01 + turbNoise;
               newB = b + (a + beta - gamma * b) * speed * 0.01 + turbNoise;
               break;
+            }
             default:
               newA = a;
               newB = b;
@@ -1060,19 +1065,21 @@
           return lerpMultiColor([color(40, 30, 20), color(100, 70, 40), color(150, 120, 80), color(200, 180, 150)], val);
         case 'aurora':
           return lerpMultiColor([color(10, 10, 30), color(0, 100, 80), color(50, 200, 150), color(200, 100, 200), color(100, 200, 255)], val);
-        case 'rainbow':
+        case 'rainbow': {
           colorMode(HSB, 360, 100, 100);
           const rainbowCol = color(val * 360, 80, 90);
           colorMode(RGB, 255);
           return rainbowCol;
+        }
         case 'neon':
           return lerpMultiColor([color(0, 0, 0), color(255, 0, 100), color(0, 255, 200), color(255, 255, 0)], val);
-        case 'psychedelic':
+        case 'psychedelic': {
           const hue = (val * 720 + frameCount * 2) % 360;
           colorMode(HSB, 360, 100, 100);
           const psychCol = color(hue, 100, 100);
           colorMode(RGB, 255);
           return psychCol;
+        }
         case 'vaporwave':
           return lerpMultiColor([color(20, 0, 40), color(255, 100, 200), color(100, 200, 255), color(255, 255, 150)], val);
         case 'cyberpunk':
@@ -1090,12 +1097,13 @@
           ], val);
         case 'custom':
           return lerpColor(color(params.customColor1), color(params.customColor2), val);
-        case 'cycling':
+        case 'cycling': {
           const cycleHue = (val * 360 + colorCycleOffset * 360) % 360;
           colorMode(HSB, 360, 100, 100);
           const cycleCol = color(cycleHue, 85, 90);
           colorMode(RGB, 255);
           return cycleCol;
+        }
         default:
           return color(255 * val);
       }
@@ -1429,7 +1437,7 @@
           let srcX = x, srcY = y;
 
           switch (params.warpType) {
-            case 'swirl':
+            case 'swirl': {
               const dx = x - cx;
               const dy = y - cy;
               const dist = sqrt(dx * dx + dy * dy);
@@ -1437,7 +1445,8 @@
               srcX = cx + cos(angle) * dist;
               srcY = cy + sin(angle) * dist;
               break;
-            case 'bulge':
+            }
+            case 'bulge': {
               const bx = (x - cx) / cx;
               const by = (y - cy) / cy;
               const bd = sqrt(bx * bx + by * by);
@@ -1445,7 +1454,8 @@
               srcX = cx + bx * bf * cx;
               srcY = cy + by * bf * cy;
               break;
-            case 'pinch':
+            }
+            case 'pinch': {
               const px = (x - cx) / cx;
               const py = (y - cy) / cy;
               const pd = sqrt(px * px + py * py);
@@ -1453,11 +1463,12 @@
               srcX = cx + px * pf * cx;
               srcY = cy + py * pf * cy;
               break;
+            }
             case 'wave':
               srcX = x + sin(y * 0.05) * amount * 20;
               srcY = y + sin(x * 0.05) * amount * 20;
               break;
-            case 'ripple':
+            case 'ripple': {
               const rx = x - cx;
               const ry = y - cy;
               const rd = sqrt(rx * rx + ry * ry);
@@ -1465,6 +1476,7 @@
               srcX = x + rx / rd * rippleOffset;
               srcY = y + ry / rd * rippleOffset;
               break;
+            }
             case 'noise':
               srcX = x + (noise(x * 0.01, y * 0.01, frameCount * 0.01) - 0.5) * amount * 50;
               srcY = y + (noise(x * 0.01 + 100, y * 0.01, frameCount * 0.01) - 0.5) * amount * 50;
