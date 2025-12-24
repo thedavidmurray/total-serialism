@@ -1,0 +1,1205 @@
+/*
+ * Total Serialism - Algorithm Design System
+ * Aesthetic: Precision Instrument (Teenage Engineering meets oscilloscope)
+ *
+ * Usage: Link this CSS in all algorithm pages
+ * <link rel="stylesheet" href="../../shared/algorithm.css">
+ */
+
+/* ============================================
+   FONTS
+   ============================================ */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+/* ============================================
+   DESIGN TOKENS
+   ============================================ */
+:root {
+  /* Color Palette - Oscilloscope/Synth inspired */
+  --ts-bg-deep: #06060a;
+  --ts-bg-base: #0c0c12;
+  --ts-bg-panel: #13131b;
+  --ts-bg-control: #1a1a24;
+  --ts-bg-hover: #22222e;
+  --ts-bg-active: #2a2a38;
+
+  /* Accent Colors */
+  --ts-accent-primary: #00d4aa;      /* Cyan - primary actions, active states */
+  --ts-accent-secondary: #ff9500;    /* Amber - warnings, secondary highlights */
+  --ts-accent-tertiary: #7b68ee;     /* Violet - special states */
+  --ts-accent-danger: #ff4757;       /* Red - destructive actions */
+
+  /* Glow variants */
+  --ts-glow-primary: rgba(0, 212, 170, 0.4);
+  --ts-glow-secondary: rgba(255, 149, 0, 0.4);
+  --ts-glow-tertiary: rgba(123, 104, 238, 0.3);
+
+  /* Text Colors */
+  --ts-text-primary: #e8e8ec;
+  --ts-text-secondary: #9898a8;
+  --ts-text-muted: #5a5a6e;
+  --ts-text-inverse: #06060a;
+
+  /* Borders */
+  --ts-border-subtle: rgba(255, 255, 255, 0.06);
+  --ts-border-default: rgba(255, 255, 255, 0.1);
+  --ts-border-strong: rgba(255, 255, 255, 0.15);
+
+  /* Typography */
+  --ts-font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+  --ts-font-display: 'Space Mono', monospace;
+
+  /* Spacing Scale */
+  --ts-space-xs: 4px;
+  --ts-space-sm: 8px;
+  --ts-space-md: 12px;
+  --ts-space-lg: 16px;
+  --ts-space-xl: 24px;
+  --ts-space-2xl: 32px;
+  --ts-space-3xl: 48px;
+
+  /* Layout */
+  --ts-panel-width: 320px;
+  --ts-panel-max-width: 380px;
+  --ts-canvas-min-width: 400px;
+  --ts-header-height: 56px;
+  --ts-control-height: 44px;
+
+  /* Border Radius */
+  --ts-radius-sm: 4px;
+  --ts-radius-md: 6px;
+  --ts-radius-lg: 8px;
+  --ts-radius-full: 9999px;
+
+  /* Transitions */
+  --ts-transition-fast: 120ms ease-out;
+  --ts-transition-base: 200ms ease-out;
+  --ts-transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Shadows */
+  --ts-shadow-glow: 0 0 20px var(--ts-glow-primary);
+  --ts-shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --ts-shadow-control: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* ============================================
+   RESET & BASE
+   ============================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--ts-font-mono);
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--ts-text-primary);
+  background: var(--ts-bg-deep);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Subtle noise texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.015;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================
+   LAYOUT
+   ============================================ */
+.ts-layout {
+  display: flex;
+  min-height: 100vh;
+  gap: 0;
+}
+
+.ts-canvas-area {
+  flex: 1;
+  min-width: var(--ts-canvas-min-width);
+  display: flex;
+  flex-direction: column;
+  background: var(--ts-bg-base);
+  position: relative;
+}
+
+.ts-control-panel {
+  width: var(--ts-panel-width);
+  max-width: var(--ts-panel-max-width);
+  min-width: 280px;
+  background: var(--ts-bg-panel);
+  border-left: 1px solid var(--ts-border-subtle);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.ts-header {
+  height: var(--ts-header-height);
+  padding: 0 var(--ts-space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ts-bg-panel);
+  border-bottom: 1px solid var(--ts-border-subtle);
+  flex-shrink: 0;
+}
+
+.ts-logo {
+  font-family: var(--ts-font-display);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ts-text-muted);
+}
+
+.ts-algo-title {
+  font-family: var(--ts-font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--ts-text-primary);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* ============================================
+   CANVAS CONTAINER
+   ============================================ */
+#canvas-container,
+.ts-canvas-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ts-space-xl);
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 212, 170, 0.03) 0%, transparent 60%),
+    var(--ts-bg-deep);
+}
+
+#canvas-container canvas,
+.ts-canvas-container canvas {
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow:
+    0 0 0 1px var(--ts-border-subtle),
+    0 20px 60px rgba(0, 0, 0, 0.5);
+  background: white;
+}
+
+/* Canvas loading state */
+.ts-canvas-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ts-bg-deep);
+}
+
+.ts-canvas-loading::after {
+  content: 'RENDERING';
+  font-family: var(--ts-font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  color: var(--ts-accent-primary);
+  animation: ts-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes ts-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ============================================
+   CONTROL PANEL CONTENT
+   ============================================ */
+.ts-controls {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--ts-space-lg);
+}
+
+/* Custom scrollbar */
+.ts-controls::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ts-controls::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ts-controls::-webkit-scrollbar-thumb {
+  background: var(--ts-bg-active);
+  border-radius: var(--ts-radius-full);
+}
+
+.ts-controls::-webkit-scrollbar-thumb:hover {
+  background: var(--ts-text-muted);
+}
+
+/* ============================================
+   CONTROL GROUPS (Collapsible Sections)
+   ============================================ */
+.ts-control-group {
+  margin-bottom: var(--ts-space-lg);
+  background: var(--ts-bg-control);
+  border-radius: var(--ts-radius-lg);
+  border: 1px solid var(--ts-border-subtle);
+  overflow: hidden;
+}
+
+.ts-control-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ts-space-md) var(--ts-space-lg);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--ts-transition-fast);
+}
+
+.ts-control-group-header:hover {
+  background: var(--ts-bg-hover);
+}
+
+.ts-control-group-title {
+  font-family: var(--ts-font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ts-text-secondary);
+  margin: 0;
+}
+
+.ts-control-group-chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--ts-text-muted);
+  transition: transform var(--ts-transition-base);
+}
+
+.ts-control-group.collapsed .ts-control-group-chevron {
+  transform: rotate(-90deg);
+}
+
+.ts-control-group-content {
+  padding: var(--ts-space-md) var(--ts-space-lg) var(--ts-space-lg);
+  display: grid;
+  gap: var(--ts-space-lg);
+  max-height: 1000px;
+  transition: max-height var(--ts-transition-slow),
+              padding var(--ts-transition-slow),
+              opacity var(--ts-transition-base);
+}
+
+.ts-control-group.collapsed .ts-control-group-content {
+  max-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+/* ============================================
+   CONTROL ROW (Label + Input)
+   ============================================ */
+.ts-control-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-space-sm);
+}
+
+.ts-control-row.inline {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ts-label {
+  font-size: 0.8rem;
+  color: var(--ts-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--ts-space-sm);
+}
+
+.ts-label-value {
+  font-family: var(--ts-font-display);
+  font-size: 0.75rem;
+  color: var(--ts-accent-primary);
+  background: var(--ts-bg-deep);
+  padding: 2px 8px;
+  border-radius: var(--ts-radius-sm);
+  min-width: 48px;
+  text-align: center;
+}
+
+/* ============================================
+   RANGE SLIDER
+   ============================================ */
+.ts-slider-container {
+  position: relative;
+  width: 100%;
+}
+
+.ts-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--ts-control-height);
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.ts-slider:focus {
+  outline: none;
+}
+
+/* Track */
+.ts-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  background: var(--ts-bg-deep);
+  border-radius: var(--ts-radius-sm);
+  border: 1px solid var(--ts-border-default);
+}
+
+.ts-slider::-moz-range-track {
+  height: 8px;
+  background: var(--ts-bg-deep);
+  border-radius: var(--ts-radius-sm);
+  border: 1px solid var(--ts-border-default);
+}
+
+/* Progress fill - requires JS to update --progress variable */
+.ts-slider-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  height: 8px;
+  width: calc(var(--progress, 50) * 1%);
+  background: linear-gradient(90deg, var(--ts-accent-primary), var(--ts-accent-tertiary));
+  border-radius: var(--ts-radius-sm) 0 0 var(--ts-radius-sm);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Thumb */
+.ts-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--ts-text-primary);
+  border: 3px solid var(--ts-bg-panel);
+  border-radius: var(--ts-radius-full);
+  margin-top: -6px;
+  box-shadow:
+    0 0 0 2px var(--ts-accent-primary),
+    var(--ts-shadow-control);
+  transition: transform var(--ts-transition-fast),
+              box-shadow var(--ts-transition-fast);
+  position: relative;
+  z-index: 2;
+}
+
+.ts-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--ts-text-primary);
+  border: 3px solid var(--ts-bg-panel);
+  border-radius: var(--ts-radius-full);
+  box-shadow:
+    0 0 0 2px var(--ts-accent-primary),
+    var(--ts-shadow-control);
+  transition: transform var(--ts-transition-fast),
+              box-shadow var(--ts-transition-fast);
+  position: relative;
+  z-index: 2;
+}
+
+.ts-slider:hover::-webkit-slider-thumb {
+  transform: scale(1.1);
+  box-shadow:
+    0 0 0 2px var(--ts-accent-primary),
+    var(--ts-shadow-glow);
+}
+
+.ts-slider:active::-webkit-slider-thumb {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   TOGGLE SWITCH
+   ============================================ */
+.ts-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  min-height: var(--ts-control-height);
+}
+
+.ts-toggle-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.ts-toggle-track {
+  width: 52px;
+  height: 28px;
+  background: var(--ts-bg-deep);
+  border: 2px solid var(--ts-border-strong);
+  border-radius: var(--ts-radius-full);
+  position: relative;
+  transition: all var(--ts-transition-base);
+}
+
+.ts-toggle-thumb {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  background: var(--ts-text-muted);
+  border-radius: var(--ts-radius-full);
+  transition: all var(--ts-transition-base);
+  box-shadow: var(--ts-shadow-control);
+}
+
+/* Checked state */
+.ts-toggle-input:checked + .ts-toggle-track {
+  background: var(--ts-accent-primary);
+  border-color: var(--ts-accent-primary);
+}
+
+.ts-toggle-input:checked + .ts-toggle-track .ts-toggle-thumb {
+  left: 27px;
+  background: var(--ts-text-primary);
+  box-shadow: var(--ts-shadow-glow);
+}
+
+/* Focus state */
+.ts-toggle-input:focus-visible + .ts-toggle-track {
+  outline: 2px solid var(--ts-accent-primary);
+  outline-offset: 2px;
+}
+
+/* Toggle with label */
+.ts-toggle-label {
+  margin-left: var(--ts-space-md);
+  font-size: 0.85rem;
+  color: var(--ts-text-secondary);
+}
+
+.ts-toggle-input:checked ~ .ts-toggle-label {
+  color: var(--ts-text-primary);
+}
+
+/* ============================================
+   AUTO-REGENERATE TOGGLE (Special styling)
+   ============================================ */
+.ts-auto-regen {
+  background: var(--ts-bg-control);
+  padding: var(--ts-space-md) var(--ts-space-lg);
+  border-radius: var(--ts-radius-lg);
+  border: 1px solid var(--ts-border-subtle);
+  margin-bottom: var(--ts-space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ts-auto-regen .ts-toggle-label {
+  margin-left: 0;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Status indicator */
+.ts-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--ts-radius-full);
+  background: var(--ts-text-muted);
+  margin-right: var(--ts-space-sm);
+  transition: all var(--ts-transition-base);
+}
+
+.ts-auto-regen.active .ts-status-dot {
+  background: var(--ts-accent-primary);
+  box-shadow: 0 0 8px var(--ts-glow-primary);
+  animation: ts-status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ts-status-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--ts-glow-primary); }
+  50% { opacity: 0.6; box-shadow: 0 0 4px var(--ts-glow-primary); }
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+.ts-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ts-space-sm);
+  min-height: var(--ts-control-height);
+  padding: 0 var(--ts-space-lg);
+  font-family: var(--ts-font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border: none;
+  border-radius: var(--ts-radius-md);
+  cursor: pointer;
+  transition: all var(--ts-transition-fast);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.ts-btn:focus-visible {
+  outline: 2px solid var(--ts-accent-primary);
+  outline-offset: 2px;
+}
+
+/* Primary button */
+.ts-btn-primary {
+  background: var(--ts-accent-primary);
+  color: var(--ts-text-inverse);
+}
+
+.ts-btn-primary:hover {
+  background: #00e8bb;
+  box-shadow: var(--ts-shadow-glow);
+}
+
+.ts-btn-primary:active {
+  transform: scale(0.98);
+}
+
+/* Secondary button */
+.ts-btn-secondary {
+  background: var(--ts-bg-control);
+  color: var(--ts-text-primary);
+  border: 1px solid var(--ts-border-default);
+}
+
+.ts-btn-secondary:hover {
+  background: var(--ts-bg-hover);
+  border-color: var(--ts-border-strong);
+}
+
+/* Ghost button */
+.ts-btn-ghost {
+  background: transparent;
+  color: var(--ts-text-secondary);
+}
+
+.ts-btn-ghost:hover {
+  background: var(--ts-bg-hover);
+  color: var(--ts-text-primary);
+}
+
+/* Icon button */
+.ts-btn-icon {
+  width: var(--ts-control-height);
+  padding: 0;
+}
+
+.ts-btn-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Button sizes */
+.ts-btn-sm {
+  min-height: 36px;
+  padding: 0 var(--ts-space-md);
+  font-size: 0.75rem;
+}
+
+.ts-btn-lg {
+  min-height: 52px;
+  padding: 0 var(--ts-space-xl);
+  font-size: 0.9rem;
+}
+
+/* Full width */
+.ts-btn-block {
+  width: 100%;
+}
+
+/* ============================================
+   BUTTON GROUP
+   ============================================ */
+.ts-btn-group {
+  display: flex;
+  gap: 1px;
+  background: var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  overflow: hidden;
+}
+
+.ts-btn-group .ts-btn {
+  border-radius: 0;
+  flex: 1;
+}
+
+.ts-btn-group .ts-btn:first-child {
+  border-radius: var(--ts-radius-md) 0 0 var(--ts-radius-md);
+}
+
+.ts-btn-group .ts-btn:last-child {
+  border-radius: 0 var(--ts-radius-md) var(--ts-radius-md) 0;
+}
+
+/* ============================================
+   EXPORT BUTTONS
+   ============================================ */
+.ts-export-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ts-space-sm);
+}
+
+.ts-export-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ts-space-xs);
+  padding: var(--ts-space-md);
+  background: var(--ts-bg-deep);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  color: var(--ts-text-secondary);
+  font-family: var(--ts-font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--ts-transition-fast);
+  min-height: 64px;
+}
+
+.ts-export-btn svg {
+  width: 20px;
+  height: 20px;
+  opacity: 0.7;
+  transition: opacity var(--ts-transition-fast);
+}
+
+.ts-export-btn:hover {
+  background: var(--ts-bg-hover);
+  border-color: var(--ts-accent-primary);
+  color: var(--ts-text-primary);
+}
+
+.ts-export-btn:hover svg {
+  opacity: 1;
+}
+
+.ts-export-btn:active {
+  transform: scale(0.97);
+}
+
+/* Export in progress */
+.ts-export-btn.exporting {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.ts-export-btn.exporting::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top-color: var(--ts-accent-primary);
+  border-radius: var(--ts-radius-full);
+  animation: ts-spin 0.8s linear infinite;
+}
+
+@keyframes ts-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   SELECT / DROPDOWN
+   ============================================ */
+.ts-select {
+  width: 100%;
+  min-height: var(--ts-control-height);
+  padding: 0 var(--ts-space-lg);
+  padding-right: 40px;
+  font-family: var(--ts-font-mono);
+  font-size: 0.85rem;
+  color: var(--ts-text-primary);
+  background: var(--ts-bg-deep);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239898a8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: all var(--ts-transition-fast);
+}
+
+.ts-select:hover {
+  border-color: var(--ts-border-strong);
+}
+
+.ts-select:focus {
+  outline: none;
+  border-color: var(--ts-accent-primary);
+  box-shadow: 0 0 0 3px var(--ts-glow-primary);
+}
+
+.ts-select option {
+  background: var(--ts-bg-panel);
+  color: var(--ts-text-primary);
+}
+
+/* ============================================
+   TEXT INPUT
+   ============================================ */
+.ts-input {
+  width: 100%;
+  min-height: var(--ts-control-height);
+  padding: 0 var(--ts-space-lg);
+  font-family: var(--ts-font-mono);
+  font-size: 0.85rem;
+  color: var(--ts-text-primary);
+  background: var(--ts-bg-deep);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  transition: all var(--ts-transition-fast);
+}
+
+.ts-input::placeholder {
+  color: var(--ts-text-muted);
+}
+
+.ts-input:hover {
+  border-color: var(--ts-border-strong);
+}
+
+.ts-input:focus {
+  outline: none;
+  border-color: var(--ts-accent-primary);
+  box-shadow: 0 0 0 3px var(--ts-glow-primary);
+}
+
+/* ============================================
+   COLOR PICKER
+   ============================================ */
+.ts-color-picker {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-space-sm);
+}
+
+.ts-color-swatch {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--ts-radius-md);
+  border: 2px solid var(--ts-border-default);
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color var(--ts-transition-fast);
+}
+
+.ts-color-swatch:hover {
+  border-color: var(--ts-accent-primary);
+}
+
+.ts-color-swatch input[type="color"] {
+  width: 150%;
+  height: 150%;
+  margin: -25%;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+}
+
+.ts-color-value {
+  font-family: var(--ts-font-mono);
+  font-size: 0.8rem;
+  color: var(--ts-text-secondary);
+  text-transform: uppercase;
+}
+
+/* ============================================
+   ACTION BAR (Bottom of panel)
+   ============================================ */
+.ts-action-bar {
+  padding: var(--ts-space-lg);
+  background: var(--ts-bg-control);
+  border-top: 1px solid var(--ts-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-space-md);
+}
+
+.ts-regenerate-btn {
+  width: 100%;
+  min-height: 52px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ============================================
+   PRESET SELECTOR
+   ============================================ */
+.ts-preset-row {
+  display: flex;
+  gap: var(--ts-space-sm);
+}
+
+.ts-preset-row .ts-select {
+  flex: 1;
+}
+
+.ts-preset-row .ts-btn {
+  flex-shrink: 0;
+}
+
+/* ============================================
+   MOBILE STYLES
+   ============================================ */
+@media (max-width: 900px) {
+  .ts-layout {
+    flex-direction: column;
+  }
+
+  .ts-canvas-area {
+    min-width: 100%;
+    min-height: 50vh;
+  }
+
+  .ts-control-panel {
+    width: 100%;
+    max-width: none;
+    min-width: auto;
+    max-height: 50vh;
+    border-left: none;
+    border-top: 1px solid var(--ts-border-subtle);
+  }
+}
+
+/* Mobile drawer mode */
+@media (max-width: 640px) {
+  .ts-layout {
+    position: relative;
+  }
+
+  .ts-canvas-area {
+    min-height: calc(100vh - var(--ts-header-height));
+  }
+
+  .ts-control-panel {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-height: 70vh;
+    transform: translateY(calc(100% - 60px));
+    transition: transform var(--ts-transition-slow);
+    z-index: 100;
+    border-radius: var(--ts-radius-lg) var(--ts-radius-lg) 0 0;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .ts-control-panel.open {
+    transform: translateY(0);
+  }
+
+  /* Drawer handle */
+  .ts-drawer-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--ts-space-md);
+    cursor: pointer;
+  }
+
+  .ts-drawer-handle::before {
+    content: '';
+    width: 40px;
+    height: 4px;
+    background: var(--ts-text-muted);
+    border-radius: var(--ts-radius-full);
+  }
+
+  .ts-drawer-handle:hover::before {
+    background: var(--ts-text-secondary);
+  }
+}
+
+/* Hide drawer handle on desktop */
+@media (min-width: 641px) {
+  .ts-drawer-handle {
+    display: none;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+.ts-hidden { display: none !important; }
+.ts-invisible { visibility: hidden; }
+.ts-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.ts-text-muted { color: var(--ts-text-muted); }
+.ts-text-accent { color: var(--ts-accent-primary); }
+.ts-text-warning { color: var(--ts-accent-secondary); }
+.ts-text-error { color: var(--ts-accent-danger); }
+
+.ts-mt-sm { margin-top: var(--ts-space-sm); }
+.ts-mt-md { margin-top: var(--ts-space-md); }
+.ts-mt-lg { margin-top: var(--ts-space-lg); }
+.ts-mb-sm { margin-bottom: var(--ts-space-sm); }
+.ts-mb-md { margin-bottom: var(--ts-space-md); }
+.ts-mb-lg { margin-bottom: var(--ts-space-lg); }
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+.ts-fade-in {
+  animation: ts-fade-in 0.3s ease-out forwards;
+}
+
+@keyframes ts-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.ts-scale-in {
+  animation: ts-scale-in 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes ts-scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* ============================================
+   ERROR & LOADING STATES
+   ============================================ */
+.ts-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ts-space-2xl);
+  text-align: center;
+  color: var(--ts-accent-danger);
+}
+
+.ts-error-state svg {
+  width: 48px;
+  height: 48px;
+  margin-bottom: var(--ts-space-lg);
+  opacity: 0.7;
+}
+
+.ts-error-message {
+  font-size: 0.85rem;
+  color: var(--ts-text-secondary);
+  max-width: 280px;
+}
+
+.ts-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ts-space-lg);
+}
+
+.ts-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--ts-bg-active);
+  border-top-color: var(--ts-accent-primary);
+  border-radius: var(--ts-radius-full);
+  animation: ts-spin 0.8s linear infinite;
+}
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   ============================================ */
+.ts-toast {
+  position: fixed;
+  bottom: var(--ts-space-xl);
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: var(--ts-space-md) var(--ts-space-xl);
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-lg);
+  box-shadow: var(--ts-shadow-panel);
+  font-size: 0.85rem;
+  color: var(--ts-text-primary);
+  z-index: 1000;
+  opacity: 0;
+  transition: all var(--ts-transition-slow);
+}
+
+.ts-toast.show {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+}
+
+.ts-toast.success {
+  border-color: var(--ts-accent-primary);
+}
+
+.ts-toast.error {
+  border-color: var(--ts-accent-danger);
+}
+
+/* ============================================
+   LEGACY SUPPORT
+   ============================================ */
+/* Support for existing p5.js canvas pages that use #controls */
+#controls {
+  font-family: var(--ts-font-mono);
+  color: var(--ts-text-primary);
+}
+
+#controls h3 {
+  font-family: var(--ts-font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ts-text-secondary);
+  margin: var(--ts-space-lg) 0 var(--ts-space-md);
+  padding-bottom: var(--ts-space-sm);
+  border-bottom: 1px solid var(--ts-border-subtle);
+}
+
+#controls h3:first-child {
+  margin-top: 0;
+}
+
+#controls label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--ts-space-md);
+  font-size: 0.8rem;
+  color: var(--ts-text-secondary);
+}
+
+#controls input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: var(--ts-bg-deep);
+  border-radius: var(--ts-radius-sm);
+  border: 1px solid var(--ts-border-default);
+  margin-top: var(--ts-space-sm);
+}
+
+#controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--ts-text-primary);
+  border-radius: var(--ts-radius-full);
+  border: 2px solid var(--ts-accent-primary);
+  cursor: pointer;
+  box-shadow: var(--ts-shadow-control);
+}
+
+#controls input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ts-accent-primary);
+}
+
+#controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ts-control-height);
+  padding: 0 var(--ts-space-lg);
+  margin: var(--ts-space-xs);
+  font-family: var(--ts-font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--ts-text-inverse);
+  background: var(--ts-accent-primary);
+  border: none;
+  border-radius: var(--ts-radius-md);
+  cursor: pointer;
+  transition: all var(--ts-transition-fast);
+}
+
+#controls button:hover {
+  background: #00e8bb;
+  box-shadow: var(--ts-shadow-glow);
+}
+
+#controls button:active {
+  transform: scale(0.98);
+}
+
+/* Style select elements in legacy controls */
+#controls select {
+  width: 100%;
+  min-height: var(--ts-control-height);
+  padding: 0 var(--ts-space-md);
+  font-family: var(--ts-font-mono);
+  font-size: 0.85rem;
+  color: var(--ts-text-primary);
+  background: var(--ts-bg-deep);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+}

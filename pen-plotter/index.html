@@ -1,53 +1,751 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pen Plotter Art Hub</title>
-    <link rel="stylesheet" href="src/hub.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Total Serialism - Pen Plotter Algorithms</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       DESIGN TOKENS (matching algorithm.css)
+       ============================================ */
+    :root {
+      --ts-bg-deep: #06060a;
+      --ts-bg-base: #0c0c12;
+      --ts-bg-panel: #13131b;
+      --ts-bg-control: #1a1a24;
+      --ts-bg-hover: #22222e;
+      --ts-bg-active: #2a2a38;
+
+      --ts-accent-primary: #00d4aa;
+      --ts-accent-secondary: #ff9500;
+      --ts-accent-tertiary: #7b68ee;
+      --ts-accent-danger: #ff4757;
+
+      --ts-glow-primary: rgba(0, 212, 170, 0.4);
+      --ts-glow-secondary: rgba(255, 149, 0, 0.4);
+
+      --ts-text-primary: #e8e8ec;
+      --ts-text-secondary: #9898a8;
+      --ts-text-muted: #5a5a6e;
+
+      --ts-border-subtle: rgba(255, 255, 255, 0.06);
+      --ts-border-default: rgba(255, 255, 255, 0.1);
+
+      --ts-font-mono: 'JetBrains Mono', monospace;
+    }
+
+    /* ============================================
+       RESET & BASE
+       ============================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* Subtle grid texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0, 212, 170, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 170, 0.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ============================================
+       HEADER
+       ============================================ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--ts-bg-base);
+      border-bottom: 1px solid var(--ts-border-default);
+      backdrop-filter: blur(12px);
+    }
+
+    .header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-mark {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--ts-accent-primary);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .logo-mark::before {
+      content: '';
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--ts-accent-primary);
+      border-radius: 50%;
+    }
+
+    .logo-mark::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ts-text-primary);
+    }
+
+    .logo-subtitle {
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--ts-text-muted);
+    }
+
+    .stats {
+      display: flex;
+      gap: 2rem;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ts-text-muted);
+    }
+
+    /* ============================================
+       SEARCH & FILTERS
+       ============================================ */
+    .controls {
+      background: var(--ts-bg-panel);
+      border-bottom: 1px solid var(--ts-border-subtle);
+      padding: 1.5rem 2rem;
+      position: sticky;
+      top: 76px;
+      z-index: 99;
+    }
+
+    .controls-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      font-family: var(--ts-font-mono);
+      font-size: 0.9rem;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: 6px;
+      color: var(--ts-text-primary);
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+      box-shadow: 0 0 0 3px var(--ts-glow-primary);
+    }
+
+    .search-input::placeholder {
+      color: var(--ts-text-muted);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--ts-text-muted);
+      pointer-events: none;
+    }
+
+    .result-count {
+      display: flex;
+      align-items: center;
+      padding: 0 1rem;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+      white-space: nowrap;
+    }
+
+    .result-count strong {
+      color: var(--ts-accent-primary);
+      margin-right: 0.25rem;
+    }
+
+    .filter-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.5rem 1rem;
+      font-family: var(--ts-font-mono);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      background: var(--ts-bg-control);
+      border: 1px solid var(--ts-border-subtle);
+      border-radius: 4px;
+      color: var(--ts-text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .filter-btn:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-default);
+      color: var(--ts-text-primary);
+    }
+
+    .filter-btn.active {
+      background: var(--ts-accent-primary);
+      border-color: var(--ts-accent-primary);
+      color: var(--ts-bg-deep);
+    }
+
+    /* ============================================
+       GRID
+       ============================================ */
+    .main {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    @media (max-width: 1200px) {
+      .grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 600px) {
+      .grid { grid-template-columns: 1fr; }
+      .header-inner { padding: 1rem; }
+      .stats { display: none; }
+      .controls { padding: 1rem; top: 60px; }
+    }
+
+    /* ============================================
+       ALGORITHM CARDS
+       ============================================ */
+    .card {
+      background: var(--ts-bg-panel);
+      border: 1px solid var(--ts-border-subtle);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.2s ease;
+      animation: cardFadeIn 0.4s ease-out backwards;
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--ts-accent-primary), var(--ts-accent-tertiary));
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: var(--ts-accent-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-link {
+      display: block;
+      padding: 1.25rem;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--ts-text-primary);
+      line-height: 1.3;
+    }
+
+    .card-badge {
+      flex-shrink: 0;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.6rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+
+    /* Category badge colors */
+    .badge-geometric { background: #1e3a5f; color: #5dade2; }
+    .badge-cellular-automata { background: #1e4d2b; color: #58d68d; }
+    .badge-voronoi { background: #4a235a; color: #bb8fce; }
+    .badge-flow-fields { background: #1b4f72; color: #85c1e9; }
+    .badge-natural { background: #145a32; color: #82e0aa; }
+    .badge-chemical { background: #5b2c6f; color: #d7bde2; }
+    .badge-reaction-diffusion { background: #641e16; color: #f1948a; }
+    .badge-symmetry { background: #1a5276; color: #aed6f1; }
+    .badge-physics { background: #7b241c; color: #f5b7b1; }
+    .badge-hybrid { background: #4a235a; color: #d2b4de; }
+    .badge-ai { background: #154360; color: #76d7c4; }
+    .badge-curves { background: #186a3b; color: #7dcea0; }
+    .badge-textures { background: #6e2c00; color: #f5cba7; }
+    .badge-packing { background: #1b2631; color: #aab7b8; }
+    .badge-advanced { background: #4a1942; color: #f8c471; }
+    .badge-trees-lsystems { background: #0b5345; color: #a3e4d7; }
+    .badge-image-processing { background: #512e5f; color: #e8daef; }
+    .badge-tools { background: #1c2833; color: #99a3a4; }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+    }
+
+    .card-path {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .card-arrow {
+      margin-left: auto;
+      opacity: 0;
+      transform: translateX(-4px);
+      transition: all 0.2s ease;
+      color: var(--ts-accent-primary);
+    }
+
+    .card:hover .card-arrow {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* Hidden state for filtered cards */
+    .card.hidden {
+      display: none;
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Stagger animation */
+    .card:nth-child(1) { animation-delay: 0.02s; }
+    .card:nth-child(2) { animation-delay: 0.04s; }
+    .card:nth-child(3) { animation-delay: 0.06s; }
+    .card:nth-child(4) { animation-delay: 0.08s; }
+    .card:nth-child(5) { animation-delay: 0.10s; }
+    .card:nth-child(6) { animation-delay: 0.12s; }
+    .card:nth-child(7) { animation-delay: 0.14s; }
+    .card:nth-child(8) { animation-delay: 0.16s; }
+
+    /* ============================================
+       EMPTY STATE
+       ============================================ */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--ts-text-muted);
+    }
+
+    .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-text {
+      font-size: 1rem;
+    }
+
+    /* ============================================
+       FOOTER
+       ============================================ */
+    .footer {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 2rem;
+      border-top: 1px solid var(--ts-border-subtle);
+      text-align: center;
+      color: var(--ts-text-muted);
+      font-size: 0.75rem;
+    }
+
+    .footer a {
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Pen Plotter Art Hub</h1>
-        <p class="subtitle">Generative algorithms for pen plotting</p>
-    </header>
-
-    <div class="controls">
-        <div class="search-container">
-            <input type="text" id="search" placeholder="Search algorithms..." autocomplete="off">
-            <span class="search-icon">🔍</span>
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-section">
+        <div class="logo-mark"></div>
+        <div class="logo-text">
+          <span class="logo-title">Total Serialism</span>
+          <span class="logo-subtitle">Pen Plotter Algorithms</span>
         </div>
-        
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="hybrid">Hybrid</button>
-            <button class="filter-btn" data-filter="cellular-automata">Cellular Automata</button>
-            <button class="filter-btn" data-filter="flow-fields">Flow Fields</button>
-            <button class="filter-btn" data-filter="physics">Physics</button>
-            <button class="filter-btn" data-filter="reaction-diffusion">Reaction-Diffusion</button>
-            <button class="filter-btn" data-filter="trees">Trees & L-Systems</button>
-            <button class="filter-btn" data-filter="geometric">Geometric</button>
-            <button class="filter-btn" data-filter="textures">Textures</button>
-            <button class="filter-btn" data-filter="image-processing">Image Processing</button>
-            <button class="filter-btn" data-filter="fluid">Fluid Dynamics</button>
-            <button class="filter-btn" data-filter="natural">Natural</button>
-            <button class="filter-btn" data-filter="tools">Tools</button>
+      </div>
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-value" id="total-count">65</div>
+          <div class="stat-label">Algorithms</div>
         </div>
-
-        <div class="view-options">
-            <button id="theme-toggle" class="icon-btn" title="Toggle theme">🌓</button>
-            <button id="grid-toggle" class="icon-btn" title="Toggle grid view">⚏</button>
+        <div class="stat">
+          <div class="stat-value">18</div>
+          <div class="stat-label">Categories</div>
         </div>
+      </div>
     </div>
+  </header>
 
-    <main id="algorithms-grid" class="grid-view">
-        <!-- Algorithm cards will be dynamically inserted here -->
-    </main>
+  <div class="controls">
+    <div class="controls-inner">
+      <div class="search-row">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="M21 21l-4.35-4.35"/>
+          </svg>
+          <input type="text" class="search-input" id="search" placeholder="Search algorithms..." autocomplete="off">
+        </div>
+        <div class="result-count">
+          <strong id="visible-count">65</strong> shown
+        </div>
+      </div>
+      <div class="filter-row" id="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="geometric">Geometric</button>
+        <button class="filter-btn" data-filter="cellular-automata">Cellular Automata</button>
+        <button class="filter-btn" data-filter="voronoi">Voronoi</button>
+        <button class="filter-btn" data-filter="flow-fields">Flow Fields</button>
+        <button class="filter-btn" data-filter="natural">Natural</button>
+        <button class="filter-btn" data-filter="chemical">Chemical</button>
+        <button class="filter-btn" data-filter="reaction-diffusion">Reaction-Diffusion</button>
+        <button class="filter-btn" data-filter="symmetry">Symmetry</button>
+        <button class="filter-btn" data-filter="physics">Physics</button>
+        <button class="filter-btn" data-filter="advanced">Advanced</button>
+        <button class="filter-btn" data-filter="trees-lsystems">L-Systems</button>
+        <button class="filter-btn" data-filter="image-processing">Image</button>
+        <button class="filter-btn" data-filter="tools">Tools</button>
+      </div>
+    </div>
+  </div>
 
-    <footer>
-        <p>Pen Plotter Art System • <a href="README.md">Documentation</a> • <a href="QUICKSTART.md">Quick Start</a></p>
-    </footer>
+  <main class="main">
+    <div class="grid" id="grid">
+      <!-- Cards generated by JavaScript -->
+    </div>
+  </main>
 
-    <script src="src/hub.js"></script>
+  <footer class="footer">
+    <p>Total Serialism &bull; <a href="https://github.com/thedavidmurray/total-serialism" target="_blank">GitHub</a></p>
+  </footer>
+
+  <script>
+    // Algorithm catalog - all 65 algorithms
+    const algorithms = [
+      // Geometric (15)
+      { name: "Spiral Burst", category: "geometric", path: "algorithms/geometric/spiral-burst-gui.html" },
+      { name: "Circle Rays", category: "geometric", path: "algorithms/geometric/circle-rays-gui.html" },
+      { name: "Perlin Circles", category: "geometric", path: "algorithms/geometric/perlin-circles-gui.html" },
+      { name: "Snowflakes", category: "geometric", path: "algorithms/geometric/snowflakes-gui.html" },
+      { name: "Hash Tiles", category: "geometric", path: "algorithms/geometric/hash-tiles-gui.html" },
+      { name: "10PRINT", category: "geometric", path: "algorithms/geometric/10print-gui.html" },
+      { name: "10PRINT Simple", category: "geometric", path: "algorithms/geometric/10print-simple.html" },
+      { name: "Circle Twist", category: "geometric", path: "algorithms/geometric/circle-twist-gui.html" },
+      { name: "Grid Landscape", category: "geometric", path: "algorithms/geometric/grid-landscape-gui.html" },
+      { name: "Islamic Patterns", category: "geometric", path: "algorithms/geometric/islamic-patterns-gui.html" },
+      { name: "Penrose Tiling", category: "geometric", path: "algorithms/geometric/penrose-tiling-gui.html" },
+      { name: "Perlin Landscape", category: "geometric", path: "algorithms/geometric/perlin-landscape-gui.html" },
+      { name: "Perlin Spiral", category: "geometric", path: "algorithms/geometric/perlin-spiral-gui.html" },
+      { name: "Spiral Fill", category: "geometric", path: "algorithms/geometric/spiral-fill.html" },
+      { name: "Spirotron", category: "geometric", path: "algorithms/geometric/spirotron-gui.html" },
+
+      // Cellular Automata (4)
+      { name: "Game of Life", category: "cellular-automata", path: "algorithms/cellular-automata/game-of-life-gui.html" },
+      { name: "Game of Life Layers", category: "cellular-automata", path: "algorithms/cellular-automata/game-of-life-layers.html" },
+      { name: "Elementary CA", category: "cellular-automata", path: "algorithms/cellular-automata/elementary-ca.html" },
+      { name: "Elementary CA Layers", category: "cellular-automata", path: "algorithms/cellular-automata/elementary-ca-layers.html" },
+
+      // Voronoi (2)
+      { name: "Voronoi Stippling", category: "voronoi", path: "algorithms/voronoi/voronoi-stippling-gui.html" },
+      { name: "TSP Art", category: "voronoi", path: "algorithms/voronoi/tsp-art-gui.html" },
+
+      // Flow Fields (2)
+      { name: "Flow Field P5", category: "flow-fields", path: "algorithms/flow-fields/flow-field-p5-gui.html" },
+      { name: "Flow Field Collision", category: "flow-fields", path: "algorithms/flow-fields/flow-field-collision.html" },
+
+      // Natural (4)
+      { name: "Lightning", category: "natural", path: "algorithms/natural/lightning-gui.html" },
+      { name: "Coral Growth", category: "natural", path: "algorithms/natural/coral-growth-gui.html" },
+      { name: "Crystal Growth", category: "natural", path: "algorithms/natural/crystal-growth-gui.html" },
+      { name: "Astronomy", category: "natural", path: "algorithms/natural/astronomy-gui.html" },
+
+      // Chemical (6)
+      { name: "Belousov-Zhabotinsky", category: "chemical", path: "algorithms/chemical/belousov-zhabotinsky-gui.html" },
+      { name: "Chromatography", category: "chemical", path: "algorithms/chemical/chromatography-gui.html" },
+      { name: "Convection Cells", category: "chemical", path: "algorithms/chemical/convection-cells-gui.html" },
+      { name: "Crystallization", category: "chemical", path: "algorithms/chemical/crystallization-gui.html" },
+      { name: "Liesegang Rings", category: "chemical", path: "algorithms/chemical/liesegang-rings-gui.html" },
+      { name: "Mixing Patterns", category: "chemical", path: "algorithms/chemical/mixing-patterns-gui.html" },
+
+      // Reaction-Diffusion (3)
+      { name: "Reaction-Diffusion", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-gui.html" },
+      { name: "Reaction-Diffusion Enhanced", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-enhanced.html" },
+      { name: "Reaction-Diffusion Layers", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-layers.html" },
+
+      // Symmetry (3)
+      { name: "Truchet Tiles", category: "symmetry", path: "algorithms/symmetry/truchet-tiles-gui.html" },
+      { name: "Kumiko Pattern", category: "symmetry", path: "algorithms/symmetry/kumiko-pattern.html" },
+      { name: "Zellige Pattern", category: "symmetry", path: "algorithms/symmetry/zellige-pattern.html" },
+
+      // Physics (2)
+      { name: "Particle System", category: "physics", path: "algorithms/physics/particle-system-gui.html" },
+      { name: "Test Color Controls", category: "physics", path: "algorithms/physics/test-color-controls.html" },
+
+      // Advanced (4)
+      { name: "Chladni Patterns", category: "advanced", path: "algorithms/advanced/chladni-patterns-gui.html" },
+      { name: "Parametric Surfaces", category: "advanced", path: "algorithms/advanced/parametric-surfaces-gui.html" },
+      { name: "Sound Waveform", category: "advanced", path: "algorithms/advanced/sound-waveform-gui.html" },
+      { name: "Vortex Street", category: "advanced", path: "algorithms/advanced/vortex-street-gui.html" },
+
+      // Trees & L-Systems (3)
+      { name: "Tree", category: "trees-lsystems", path: "algorithms/trees-lsystems/tree-gui.html" },
+      { name: "Tree Working", category: "trees-lsystems", path: "algorithms/trees-lsystems/tree-working.html" },
+      { name: "L-System Simple", category: "trees-lsystems", path: "algorithms/trees-lsystems/lsystem-simple.html" },
+
+      // Image Processing (6)
+      { name: "ASCII Art", category: "image-processing", path: "algorithms/image-processing/ascii-art-gui.html" },
+      { name: "Dithering", category: "image-processing", path: "algorithms/image-processing/dithering-gui.html" },
+      { name: "Halftone", category: "image-processing", path: "algorithms/image-processing/halftone.html" },
+      { name: "Hatching", category: "image-processing", path: "algorithms/image-processing/hatching.html" },
+      { name: "Image to ASCII", category: "image-processing", path: "algorithms/image-processing/image-to-ascii-gui.html" },
+      { name: "SquiggleCam", category: "image-processing", path: "algorithms/image-processing/squigglecam.html" },
+
+      // Tools (6)
+      { name: "Canvas Runner", category: "tools", path: "algorithms/tools/canvas-runner.html" },
+      { name: "Debug Preview", category: "tools", path: "algorithms/tools/debug-preview-gui.html" },
+      { name: "Path Optimizer", category: "tools", path: "algorithms/tools/path-optimizer-gui.html" },
+      { name: "Plot Simulator", category: "tools", path: "algorithms/tools/plot-simulator.html" },
+      { name: "Plotter Export", category: "tools", path: "algorithms/tools/plotter-export-gui.html" },
+      { name: "Plotter Prep", category: "tools", path: "algorithms/tools/plotter-prep.html" },
+
+      // Other categories
+      { name: "Hilbert Curve", category: "curves", path: "algorithms/curves/hilbert-curve-gui.html" },
+      { name: "Hatching Demo", category: "textures", path: "algorithms/textures/hatching-demo.html" },
+      { name: "Circle Packing", category: "packing", path: "algorithms/packing/circle-packing-gui.html" },
+      { name: "Hybrid Composer", category: "hybrid", path: "algorithms/hybrid/hybrid-composer-gui.html" },
+      { name: "ML5 Patterns", category: "ai", path: "algorithms/ai/ml5-patterns-gui.html" }
+    ];
+
+    // DOM elements
+    const grid = document.getElementById('grid');
+    const searchInput = document.getElementById('search');
+    const filtersContainer = document.getElementById('filters');
+    const visibleCountEl = document.getElementById('visible-count');
+    const totalCountEl = document.getElementById('total-count');
+
+    // State
+    let currentFilter = 'all';
+
+    // Render cards
+    function renderCards() {
+      grid.innerHTML = algorithms.map(algo => `
+        <div class="card" data-category="${algo.category}" data-name="${algo.name.toLowerCase()}">
+          <a href="${algo.path}" class="card-link">
+            <div class="card-header">
+              <span class="card-title">${algo.name}</span>
+              <span class="card-badge badge-${algo.category}">${formatCategory(algo.category)}</span>
+            </div>
+            <div class="card-meta">
+              <span class="card-path">${algo.path.replace('algorithms/', '')}</span>
+              <span class="card-arrow">&rarr;</span>
+            </div>
+          </a>
+        </div>
+      `).join('');
+
+      totalCountEl.textContent = algorithms.length;
+      updateVisibleCount();
+    }
+
+    function formatCategory(cat) {
+      return cat
+        .split('-')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+    }
+
+    // Filter and search
+    function applyFilters() {
+      const searchTerm = searchInput.value.toLowerCase().trim();
+      const cards = document.querySelectorAll('.card');
+
+      cards.forEach(card => {
+        const category = card.dataset.category;
+        const name = card.dataset.name;
+
+        const matchesFilter = currentFilter === 'all' || category === currentFilter;
+        const matchesSearch = !searchTerm || name.includes(searchTerm);
+
+        card.classList.toggle('hidden', !(matchesFilter && matchesSearch));
+      });
+
+      updateVisibleCount();
+    }
+
+    function updateVisibleCount() {
+      const visible = document.querySelectorAll('.card:not(.hidden)').length;
+      visibleCountEl.textContent = visible;
+
+      // Show empty state if no results
+      const emptyState = document.querySelector('.empty-state');
+      if (visible === 0 && !emptyState) {
+        grid.insertAdjacentHTML('beforeend', `
+          <div class="empty-state">
+            <div class="empty-icon">&#x1F50D;</div>
+            <div class="empty-text">No algorithms match your search</div>
+          </div>
+        `);
+      } else if (visible > 0 && emptyState) {
+        emptyState.remove();
+      }
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', applyFilters);
+
+    filtersContainer.addEventListener('click', (e) => {
+      if (e.target.classList.contains('filter-btn')) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        currentFilter = e.target.dataset.filter;
+        applyFilters();
+      }
+    });
+
+    // Initialize
+    renderCards();
+  </script>
 </body>
 </html>

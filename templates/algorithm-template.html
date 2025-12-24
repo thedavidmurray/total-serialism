@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ALGORITHM_NAME}} - Total Serialism</title>
+
+  <!-- Dependencies -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <!-- Uncomment if GIF export needed -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script> -->
+
+  <!-- Shared Modules (adjust path based on file location) -->
+  <!-- From pen-plotter/algorithms/category/: use ../../shared/ -->
+  <!-- From pen-plotter/: use shared/ -->
+  <link rel="stylesheet" href="{{PATH_TO_SHARED}}/algorithm.css">
+  <script src="{{PATH_TO_SHARED}}/canvas-bootstrap.js"></script>
+  <script src="{{PATH_TO_SHARED}}/export-utils.js"></script>
+</head>
+<body>
+  <div class="ts-layout">
+    <!-- Canvas Area -->
+    <div class="ts-canvas-area">
+      <div class="ts-header">
+        <span class="ts-logo">Total Serialism</span>
+        <h1 class="ts-algo-title">{{ALGORITHM_NAME}}</h1>
+      </div>
+      <div id="canvas-container" class="ts-canvas-container"></div>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="ts-control-panel">
+      <div class="ts-drawer-handle"></div>
+
+      <div class="ts-controls">
+        <!-- Auto-Regenerate Toggle -->
+        <div class="ts-auto-regen active">
+          <label class="ts-toggle">
+            <input type="checkbox" class="ts-toggle-input" id="autoRegen" checked>
+            <span class="ts-toggle-track">
+              <span class="ts-toggle-thumb"></span>
+            </span>
+          </label>
+          <div style="display: flex; align-items: center;">
+            <span class="ts-status-dot"></span>
+            <span class="ts-toggle-label">Auto-regenerate</span>
+          </div>
+        </div>
+
+        <!-- Parameters Section -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Parameters</h3>
+            <svg class="ts-control-group-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+          <div class="ts-control-group-content">
+
+            <!-- Example Slider -->
+            <div class="ts-control-row">
+              <label class="ts-label">
+                <span>Count</span>
+                <span class="ts-label-value">50</span>
+              </label>
+              <div class="ts-slider-container" style="--progress: 50;">
+                <input type="range" class="ts-slider" id="count" name="count"
+                       min="10" max="100" value="50" step="1">
+              </div>
+            </div>
+
+            <!-- Example Slider 2 -->
+            <div class="ts-control-row">
+              <label class="ts-label">
+                <span>Size</span>
+                <span class="ts-label-value">20</span>
+              </label>
+              <div class="ts-slider-container" style="--progress: 40;">
+                <input type="range" class="ts-slider" id="size" name="size"
+                       min="5" max="50" value="20" step="1">
+              </div>
+            </div>
+
+            <!-- Example Toggle -->
+            <div class="ts-control-row inline">
+              <span class="ts-label">Show Grid</span>
+              <label class="ts-toggle">
+                <input type="checkbox" class="ts-toggle-input" id="showGrid" name="showGrid">
+                <span class="ts-toggle-track">
+                  <span class="ts-toggle-thumb"></span>
+                </span>
+              </label>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Style Section -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Style</h3>
+            <svg class="ts-control-group-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+          <div class="ts-control-group-content">
+
+            <!-- Color Picker -->
+            <div class="ts-control-row inline">
+              <span class="ts-label">Stroke Color</span>
+              <div class="ts-color-picker">
+                <div class="ts-color-swatch">
+                  <input type="color" id="strokeColor" name="strokeColor" value="#000000">
+                </div>
+                <span class="ts-color-value">#000000</span>
+              </div>
+            </div>
+
+            <!-- Stroke Weight -->
+            <div class="ts-control-row">
+              <label class="ts-label">
+                <span>Stroke Weight</span>
+                <span class="ts-label-value">1</span>
+              </label>
+              <div class="ts-slider-container" style="--progress: 20;">
+                <input type="range" class="ts-slider" id="strokeWeight" name="strokeWeight"
+                       min="0.5" max="5" value="1" step="0.5">
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Export Section -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Export</h3>
+            <svg class="ts-control-group-chevron" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 9l6 6 6-6"/>
+            </svg>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="ts-export-group">
+              <button class="ts-export-btn" id="exportSVG" data-export="svg">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                  <polyline points="14 2 14 8 20 8"/>
+                </svg>
+                SVG
+              </button>
+              <button class="ts-export-btn" id="exportPNG" data-export="png">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                PNG
+              </button>
+              <button class="ts-export-btn" id="exportGIF" data-export="gif">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                GIF
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Bar -->
+      <div class="ts-action-bar">
+        <button class="ts-btn ts-btn-primary ts-regenerate-btn" id="regenerateBtn">
+          Regenerate
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Algorithm Script -->
+  <script>
+    // ==========================================
+    // ALGORITHM: {{ALGORITHM_NAME}}
+    // ==========================================
+
+    // Algorithm name for exports
+    const ALGORITHM_NAME = '{{ALGORITHM_SLUG}}';
+
+    // Store paths/shapes for vector SVG export
+    let paths = [];
+
+    // Parameters (will be updated from controls)
+    let params = {
+      count: 50,
+      size: 20,
+      showGrid: false,
+      strokeColor: '#000000',
+      strokeWeight: 1
+    };
+
+    // ==========================================
+    // P5.JS SETUP
+    // ==========================================
+    function setup() {
+      // Initialize canvas bootstrap
+      TSCanvas.init({
+        container: '#canvas-container',
+        aspectRatio: 1,
+        onResize: (w, h) => {
+          resizeCanvas(w, h);
+          generate();
+        }
+      });
+
+      // Create canvas
+      const { width, height } = TSCanvas.getSize();
+      const canvas = createCanvas(width, height);
+      canvas.parent('canvas-container');
+
+      // Set up controls
+      TSControls.attachListeners('#controls, .ts-controls');
+      TSControls.setupCollapsible();
+
+      // Set up auto-regeneration
+      TSAutoRegen.init(() => generate(), 150);
+
+      // Set up export buttons
+      TSExport.quickSetup(ALGORITHM_NAME, {
+        getSVG: () => TSExport.createSVG(paths, width, height, {
+          backgroundColor: 'white',
+          strokeColor: params.strokeColor,
+          strokeWidth: params.strokeWeight
+        }),
+        pngScale: 2
+      });
+
+      // Set up mobile drawer
+      TSDrawer.init();
+
+      // Set up color picker display update
+      const colorInput = document.getElementById('strokeColor');
+      const colorValue = document.querySelector('.ts-color-value');
+      if (colorInput && colorValue) {
+        colorInput.addEventListener('input', (e) => {
+          colorValue.textContent = e.target.value.toUpperCase();
+        });
+      }
+
+      // Initial generation
+      generate();
+    }
+
+    // ==========================================
+    // PARAMETER UPDATE
+    // ==========================================
+    function updateParams() {
+      params.count = parseInt(document.getElementById('count')?.value || 50);
+      params.size = parseInt(document.getElementById('size')?.value || 20);
+      params.showGrid = document.getElementById('showGrid')?.checked || false;
+      params.strokeColor = document.getElementById('strokeColor')?.value || '#000000';
+      params.strokeWeight = parseFloat(document.getElementById('strokeWeight')?.value || 1);
+    }
+
+    // ==========================================
+    // GENERATION FUNCTION
+    // ==========================================
+    function generate() {
+      // Update parameters from controls
+      updateParams();
+
+      // Clear paths for SVG export
+      paths = [];
+
+      // Clear canvas
+      background(255);
+
+      // Draw grid if enabled
+      if (params.showGrid) {
+        drawGrid();
+      }
+
+      // Set style
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      // ==========================================
+      // YOUR ALGORITHM HERE
+      // ==========================================
+      // Example: Draw random circles
+      for (let i = 0; i < params.count; i++) {
+        const x = random(params.size, width - params.size);
+        const y = random(params.size, height - params.size);
+        const r = random(params.size / 2, params.size);
+
+        // Draw on canvas
+        ellipse(x, y, r * 2);
+
+        // Store path for SVG export
+        paths.push({
+          d: circlePath(x, y, r),
+          stroke: params.strokeColor,
+          strokeWidth: params.strokeWeight,
+          fill: 'none'
+        });
+      }
+      // ==========================================
+    }
+
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    function drawGrid() {
+      push();
+      stroke(230);
+      strokeWeight(0.5);
+      const gridSize = 20;
+      for (let x = 0; x <= width; x += gridSize) {
+        line(x, 0, x, height);
+      }
+      for (let y = 0; y <= height; y += gridSize) {
+        line(0, y, width, y);
+      }
+      pop();
+    }
+
+    // Convert circle to SVG path
+    function circlePath(cx, cy, r) {
+      return `M ${cx - r} ${cy} A ${r} ${r} 0 1 0 ${cx + r} ${cy} A ${r} ${r} 0 1 0 ${cx - r} ${cy}`;
+    }
+
+    // Convert line to SVG path
+    function linePath(x1, y1, x2, y2) {
+      return `M ${x1} ${y1} L ${x2} ${y2}`;
+    }
+
+    // Convert points to SVG polyline path
+    function polylinePath(points) {
+      if (points.length < 2) return '';
+      let d = `M ${points[0].x} ${points[0].y}`;
+      for (let i = 1; i < points.length; i++) {
+        d += ` L ${points[i].x} ${points[i].y}`;
+      }
+      return d;
+    }
+
+    // ==========================================
+    // P5.JS DRAW (for animations, optional)
+    // ==========================================
+    function draw() {
+      // For static algorithms, use noLoop() in setup()
+      // For animations, put animation logic here
+    }
+  </script>
+</body>
+</html>
