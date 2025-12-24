@@ -93,6 +93,7 @@ html {
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  height: 100%;
 }
 
 body {
@@ -103,8 +104,9 @@ body {
   line-height: 1.5;
   color: var(--ts-text-primary);
   background: var(--ts-bg-deep);
-  min-height: 100vh;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden; /* KEY: Prevent body scroll for sticky canvas */
+  display: flex;
 }
 
 /* Subtle noise texture overlay */
@@ -119,32 +121,37 @@ body::before {
 }
 
 /* ============================================
-   LAYOUT
+   LAYOUT (Sticky Canvas + Scrollable Controls)
    ============================================ */
 .ts-layout {
   display: flex;
-  min-height: 100vh;
+  width: 100%;
+  height: 100vh;
   gap: 0;
 }
 
 .ts-canvas-area {
   flex: 1;
   min-width: var(--ts-canvas-min-width);
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--ts-bg-base);
   position: relative;
+  overflow: hidden; /* Prevent canvas area scroll */
 }
 
 .ts-control-panel {
   width: var(--ts-panel-width);
   max-width: var(--ts-panel-max-width);
   min-width: 280px;
+  height: 100vh;
   background: var(--ts-bg-panel);
   border-left: 1px solid var(--ts-border-subtle);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto; /* KEY: Make control panel scrollable */
+  flex-shrink: 0;
 }
 
 /* ============================================
@@ -227,6 +234,237 @@ body::before {
 @keyframes ts-pulse {
   0%, 100% { opacity: 0.4; }
   50% { opacity: 1; }
+}
+
+/* ============================================
+   ZOOM TOOLBAR
+   ============================================ */
+.ts-zoom-toolbar {
+  position: absolute;
+  bottom: var(--ts-space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--ts-space-xs);
+  padding: var(--ts-space-sm) var(--ts-space-md);
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-lg);
+  box-shadow: var(--ts-shadow-panel);
+  z-index: 100;
+  transition: all var(--ts-transition-base);
+}
+
+.ts-zoom-toolbar.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(20px);
+}
+
+.ts-zoom-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--ts-space-sm);
+  font-family: var(--ts-font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ts-text-secondary);
+  background: var(--ts-bg-control);
+  border: 1px solid var(--ts-border-subtle);
+  border-radius: var(--ts-radius-md);
+  cursor: pointer;
+  transition: all var(--ts-transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ts-zoom-btn:hover {
+  background: var(--ts-bg-hover);
+  color: var(--ts-text-primary);
+  border-color: var(--ts-accent-primary);
+}
+
+.ts-zoom-btn:active {
+  transform: scale(0.95);
+}
+
+.ts-zoom-btn.fit-btn {
+  font-size: 0.65rem;
+  letter-spacing: 0.02em;
+}
+
+.ts-zoom-slider {
+  width: 80px;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--ts-bg-deep);
+  border-radius: var(--ts-radius-full);
+  cursor: pointer;
+}
+
+.ts-zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--ts-accent-primary);
+  border-radius: var(--ts-radius-full);
+  cursor: pointer;
+  box-shadow: 0 0 6px var(--ts-glow-primary);
+}
+
+.ts-zoom-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--ts-accent-primary);
+  border-radius: var(--ts-radius-full);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 0 6px var(--ts-glow-primary);
+}
+
+.ts-zoom-value {
+  font-family: var(--ts-font-mono);
+  font-size: 0.7rem;
+  color: var(--ts-accent-primary);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Mini toolbar (collapsed state) */
+.ts-zoom-toolbar-mini {
+  position: absolute;
+  bottom: var(--ts-space-lg);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--ts-space-sm);
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  box-shadow: var(--ts-shadow-panel);
+  z-index: 100;
+  cursor: pointer;
+  transition: all var(--ts-transition-base);
+}
+
+.ts-zoom-toolbar-mini:hover {
+  background: var(--ts-bg-hover);
+  border-color: var(--ts-accent-primary);
+}
+
+.ts-zoom-toolbar-mini.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ============================================
+   FULLSCREEN MODE
+   ============================================ */
+body.ts-fullscreen-mode .ts-control-panel {
+  display: none;
+}
+
+body.ts-fullscreen-mode .ts-header {
+  display: none;
+}
+
+body.ts-fullscreen-mode .ts-canvas-area {
+  width: 100vw;
+}
+
+body.ts-fullscreen-mode .ts-zoom-toolbar {
+  background: rgba(19, 19, 27, 0.9);
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================
+   GLOBAL ACTIONS
+   ============================================ */
+.ts-global-actions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--ts-space-sm);
+  padding: var(--ts-space-lg);
+  background: var(--ts-bg-control);
+  border-bottom: 1px solid var(--ts-border-subtle);
+}
+
+.ts-global-actions .ts-btn {
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+}
+
+/* Regenerate button spans full width */
+.ts-global-actions .ts-btn-primary {
+  grid-column: 1 / -1;
+}
+
+/* ============================================
+   SEED DISPLAY
+   ============================================ */
+.ts-seed-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ts-space-sm);
+  padding: var(--ts-space-sm) var(--ts-space-lg);
+  background: var(--ts-bg-deep);
+  border-bottom: 1px solid var(--ts-border-subtle);
+  font-size: 0.7rem;
+  color: var(--ts-text-muted);
+}
+
+.ts-seed-display .ts-seed-label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.ts-seed-display .ts-seed-value {
+  font-family: var(--ts-font-display);
+  color: var(--ts-accent-primary);
+}
+
+/* ============================================
+   COLOR PICKER ROW
+   ============================================ */
+.ts-color-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ts-space-md);
+}
+
+.ts-color-row .ts-label {
+  flex: 1;
+}
+
+.ts-color-swatch-large {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--ts-radius-md);
+  border: 2px solid var(--ts-border-default);
+  cursor: pointer;
+  overflow: hidden;
+  transition: all var(--ts-transition-fast);
+  position: relative;
+}
+
+.ts-color-swatch-large:hover {
+  border-color: var(--ts-accent-primary);
+  box-shadow: 0 0 8px var(--ts-glow-primary);
+}
+
+.ts-color-swatch-large input[type="color"] {
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  top: -50%;
+  left: -50%;
+  border: none;
+  cursor: pointer;
 }
 
 /* ============================================
@@ -1104,10 +1342,60 @@ body::before {
 /* ============================================
    LEGACY SUPPORT
    ============================================ */
-/* Support for existing p5.js canvas pages that use #controls */
+/* Support for existing p5.js canvas pages that use #controls and #canvas-container
+   These styles enable sticky canvas + scrollable controls on legacy pages */
+
+/* Legacy layout container (when body is the flex parent) */
+#canvas-container {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ts-bg-base);
+  position: relative;
+  overflow: hidden;
+  padding: var(--ts-space-xl);
+}
+
+#canvas-container canvas {
+  max-width: 100%;
+  max-height: 100%;
+  box-shadow:
+    0 0 0 1px var(--ts-border-subtle),
+    0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
 #controls {
+  width: var(--ts-panel-width);
+  max-width: var(--ts-panel-max-width);
+  min-width: 280px;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+  background: var(--ts-bg-panel);
+  border-left: 1px solid var(--ts-border-subtle);
+  padding: var(--ts-space-lg);
   font-family: var(--ts-font-mono);
   color: var(--ts-text-primary);
+}
+
+/* Custom scrollbar for controls */
+#controls::-webkit-scrollbar {
+  width: 6px;
+}
+
+#controls::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#controls::-webkit-scrollbar-thumb {
+  background: var(--ts-bg-active);
+  border-radius: var(--ts-radius-full);
+}
+
+#controls::-webkit-scrollbar-thumb:hover {
+  background: var(--ts-text-muted);
 }
 
 #controls h3 {

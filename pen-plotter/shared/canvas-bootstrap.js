@@ -637,11 +637,469 @@
     }
   };
 
+  // Zoom controller
+  const TSZoom = {
+    zoom: 1,
+    minZoom: 0.25,
+    maxZoom: 3,
+    step: 0.25,
+    toolbar: null,
+    miniToolbar: null,
+    slider: null,
+    valueDisplay: null,
+    canvasContainer: null,
+    toolbarVisible: true,
+    onZoomChange: null,
+
+    /**
+     * Initialize zoom controls
+     * @param {Object} options Configuration options
+     */
+    init: function(options = {}) {
+      this.minZoom = options.minZoom || 0.25;
+      this.maxZoom = options.maxZoom || 3;
+      this.step = options.step || 0.25;
+      this.onZoomChange = options.onZoomChange || null;
+      this.canvasContainer = options.canvasContainer || document.querySelector('.ts-canvas-container') || document.getElementById('canvas-container');
+
+      // Load saved zoom
+      const savedZoom = localStorage.getItem('ts-zoom-level');
+      if (savedZoom) {
+        this.zoom = parseFloat(savedZoom);
+      }
+
+      // Find or create toolbar
+      this.toolbar = document.querySelector('.ts-zoom-toolbar');
+      this.miniToolbar = document.querySelector('.ts-zoom-toolbar-mini');
+      this.slider = document.getElementById('zoomSlider');
+      this.valueDisplay = document.querySelector('.ts-zoom-value');
+
+      if (this.slider) {
+        this.slider.min = this.minZoom;
+        this.slider.max = this.maxZoom;
+        this.slider.step = 0.05;
+        this.slider.value = this.zoom;
+
+        this.slider.addEventListener('input', (e) => {
+          this.setZoom(parseFloat(e.target.value));
+        });
+      }
+
+      // Set up keyboard shortcuts
+      this.setupKeyboard();
+
+      // Update display
+      this.updateDisplay();
+
+      console.log('[TSZoom] Initialized at', Math.round(this.zoom * 100) + '%');
+      return this;
+    },
+
+    /**
+     * Set up keyboard shortcuts
+     */
+    setupKeyboard: function() {
+      document.addEventListener('keydown', (e) => {
+        // Ignore if typing in input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch(e.key) {
+          case '=':
+          case '+':
+            e.preventDefault();
+            this.zoomIn();
+            break;
+          case '-':
+            e.preventDefault();
+            this.zoomOut();
+            break;
+          case '0':
+            e.preventDefault();
+            this.resetZoom();
+            break;
+          case 'w':
+          case 'W':
+            if (!e.ctrlKey && !e.metaKey) {
+              e.preventDefault();
+              this.fitToWidth();
+            }
+            break;
+          case 'h':
+          case 'H':
+            if (!e.ctrlKey && !e.metaKey) {
+              e.preventDefault();
+              this.fitToHeight();
+            }
+            break;
+          case 't':
+          case 'T':
+            e.preventDefault();
+            this.toggleToolbar();
+            break;
+        }
+      });
+    },
+
+    /**
+     * Set zoom level
+     * @param {number} level Zoom level (0.25 to 3)
+     */
+    setZoom: function(level) {
+      this.zoom = Math.max(this.minZoom, Math.min(this.maxZoom, level));
+      localStorage.setItem('ts-zoom-level', this.zoom.toString());
+      this.updateDisplay();
+      this.applyZoom();
+
+      if (this.onZoomChange) {
+        this.onZoomChange(this.zoom);
+      }
+    },
+
+    /**
+     * Zoom in by step amount
+     */
+    zoomIn: function() {
+      this.setZoom(this.zoom + this.step);
+    },
+
+    /**
+     * Zoom out by step amount
+     */
+    zoomOut: function() {
+      this.setZoom(this.zoom - this.step);
+    },
+
+    /**
+     * Reset to 100% zoom
+     */
+    resetZoom: function() {
+      this.setZoom(1);
+    },
+
+    /**
+     * Fit canvas to container width
+     */
+    fitToWidth: function() {
+      if (!this.canvasContainer) return;
+      const canvas = this.canvasContainer.querySelector('canvas');
+      if (!canvas) return;
+
+      const containerRect = this.canvasContainer.getBoundingClientRect();
+      const padding = 48;
+      const targetWidth = containerRect.width - padding;
+      const canvasWidth = canvas.width;
+
+      if (canvasWidth > 0) {
+        this.setZoom(targetWidth / canvasWidth);
+      }
+    },
+
+    /**
+     * Fit canvas to container height
+     */
+    fitToHeight: function() {
+      if (!this.canvasContainer) return;
+      const canvas = this.canvasContainer.querySelector('canvas');
+      if (!canvas) return;
+
+      const containerRect = this.canvasContainer.getBoundingClientRect();
+      const padding = 48;
+      const targetHeight = containerRect.height - padding;
+      const canvasHeight = canvas.height;
+
+      if (canvasHeight > 0) {
+        this.setZoom(targetHeight / canvasHeight);
+      }
+    },
+
+    /**
+     * Update display elements
+     */
+    updateDisplay: function() {
+      if (this.slider) {
+        this.slider.value = this.zoom;
+      }
+      if (this.valueDisplay) {
+        this.valueDisplay.textContent = Math.round(this.zoom * 100) + '%';
+      }
+    },
+
+    /**
+     * Apply zoom to canvas (using CSS transform)
+     * Note: For p5.js, you may want to use resizeCanvas() instead
+     */
+    applyZoom: function() {
+      if (!this.canvasContainer) return;
+      const canvas = this.canvasContainer.querySelector('canvas');
+      if (canvas) {
+        canvas.style.transform = `scale(${this.zoom})`;
+        canvas.style.transformOrigin = 'center center';
+      }
+    },
+
+    /**
+     * Toggle toolbar visibility
+     */
+    toggleToolbar: function() {
+      this.toolbarVisible = !this.toolbarVisible;
+
+      if (this.toolbar) {
+        this.toolbar.classList.toggle('hidden', !this.toolbarVisible);
+      }
+      if (this.miniToolbar) {
+        this.miniToolbar.classList.toggle('hidden', this.toolbarVisible);
+      }
+    },
+
+    /**
+     * Get current zoom level
+     * @returns {number}
+     */
+    getZoom: function() {
+      return this.zoom;
+    }
+  };
+
+  // Fullscreen mode controller
+  const TSFullscreen = {
+    isFullscreen: false,
+
+    /**
+     * Initialize fullscreen mode
+     */
+    init: function() {
+      // Set up keyboard shortcut (F key)
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          this.toggle();
+        }
+        if (e.key === 'Escape' && this.isFullscreen) {
+          this.exit();
+        }
+      });
+
+      console.log('[TSFullscreen] Initialized (Press F to toggle)');
+      return this;
+    },
+
+    /**
+     * Toggle fullscreen mode
+     */
+    toggle: function() {
+      this.isFullscreen = !this.isFullscreen;
+      document.body.classList.toggle('ts-fullscreen-mode', this.isFullscreen);
+
+      if (this.isFullscreen) {
+        TSToast.show('Fullscreen mode (Press F or Esc to exit)', 'info', 2000);
+      }
+    },
+
+    /**
+     * Enter fullscreen mode
+     */
+    enter: function() {
+      this.isFullscreen = true;
+      document.body.classList.add('ts-fullscreen-mode');
+    },
+
+    /**
+     * Exit fullscreen mode
+     */
+    exit: function() {
+      this.isFullscreen = false;
+      document.body.classList.remove('ts-fullscreen-mode');
+    }
+  };
+
+  // Seed manager
+  const TSSeed = {
+    seed: null,
+    displayElement: null,
+    onSeedChange: null,
+
+    /**
+     * Initialize seed management
+     * @param {Object} options Configuration options
+     */
+    init: function(options = {}) {
+      this.onSeedChange = options.onSeedChange || null;
+      this.displayElement = document.querySelector('.ts-seed-value');
+
+      // Generate initial seed
+      this.seed = options.initialSeed || this.generateSeed();
+
+      // Set up keyboard shortcut (N for new seed)
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.key === 'n' || e.key === 'N') {
+          e.preventDefault();
+          this.newSeed();
+        }
+      });
+
+      this.updateDisplay();
+      console.log('[TSSeed] Initialized with seed:', this.seed);
+      return this;
+    },
+
+    /**
+     * Generate a new random seed
+     * @returns {number}
+     */
+    generateSeed: function() {
+      return Math.floor(Math.random() * 999999);
+    },
+
+    /**
+     * Set a new random seed
+     */
+    newSeed: function() {
+      this.seed = this.generateSeed();
+      this.updateDisplay();
+
+      if (this.onSeedChange) {
+        this.onSeedChange(this.seed);
+      }
+
+      TSToast.show('New seed: ' + this.seed, 'info', 1500);
+    },
+
+    /**
+     * Set a specific seed
+     * @param {number} seed
+     */
+    setSeed: function(seed) {
+      this.seed = seed;
+      this.updateDisplay();
+
+      if (this.onSeedChange) {
+        this.onSeedChange(this.seed);
+      }
+    },
+
+    /**
+     * Get current seed
+     * @returns {number}
+     */
+    getSeed: function() {
+      return this.seed;
+    },
+
+    /**
+     * Update seed display
+     */
+    updateDisplay: function() {
+      if (this.displayElement) {
+        this.displayElement.textContent = this.seed;
+      }
+    }
+  };
+
+  // Global actions helper
+  const TSGlobalActions = {
+    params: {},
+    defaults: {},
+    onRandomize: null,
+    onReset: null,
+
+    /**
+     * Initialize global actions
+     * @param {Object} options Configuration options
+     */
+    init: function(options = {}) {
+      this.params = options.params || {};
+      this.defaults = options.defaults || JSON.parse(JSON.stringify(this.params));
+      this.onRandomize = options.onRandomize || null;
+      this.onReset = options.onReset || null;
+
+      // Set up keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        if (e.key === 'x' || e.key === 'X') {
+          e.preventDefault();
+          this.randomize();
+        }
+        if (e.key === 'r' || e.key === 'R') {
+          if (!e.ctrlKey && !e.metaKey) {
+            e.preventDefault();
+            this.reset();
+          }
+        }
+      });
+
+      console.log('[TSGlobalActions] Initialized');
+      return this;
+    },
+
+    /**
+     * Randomize all parameters
+     */
+    randomize: function() {
+      if (this.onRandomize) {
+        this.onRandomize();
+        TSToast.show('Parameters randomized', 'info', 1500);
+      }
+    },
+
+    /**
+     * Reset parameters to defaults
+     */
+    reset: function() {
+      if (this.onReset) {
+        this.onReset(this.defaults);
+        TSToast.show('Parameters reset', 'info', 1500);
+      }
+    },
+
+    /**
+     * Helper to round a value to specified precision
+     * @param {number} value
+     * @param {number} precision Number of decimal places
+     * @returns {number}
+     */
+    roundTo: function(value, precision = 1) {
+      const mult = Math.pow(10, precision);
+      return Math.round(value * mult) / mult;
+    },
+
+    /**
+     * Generate random integer in range
+     * @param {number} min
+     * @param {number} max
+     * @returns {number}
+     */
+    randomInt: function(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    },
+
+    /**
+     * Generate random float with controlled precision
+     * @param {number} min
+     * @param {number} max
+     * @param {number} step Step size (e.g., 0.5 for half-steps)
+     * @returns {number}
+     */
+    randomFloat: function(min, max, step = 0.1) {
+      const range = max - min;
+      const steps = Math.floor(range / step);
+      return min + (Math.floor(Math.random() * (steps + 1)) * step);
+    }
+  };
+
   // Export to global scope
   global.TSCanvas = TSCanvas;
   global.TSAutoRegen = TSAutoRegen;
   global.TSControls = TSControls;
   global.TSToast = TSToast;
   global.TSDrawer = TSDrawer;
+  global.TSZoom = TSZoom;
+  global.TSFullscreen = TSFullscreen;
+  global.TSSeed = TSSeed;
+  global.TSGlobalActions = TSGlobalActions;
 
 })(typeof window !== 'undefined' ? window : this);

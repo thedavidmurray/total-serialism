@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prototype: Sticky Canvas + Zoom Controls</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+  <style>
+    :root {
+      --ts-bg-deep: #06060a;
+      --ts-bg-base: #0c0c12;
+      --ts-bg-elevated: #1a1a2e;
+      --ts-bg-surface: #24243a;
+      --ts-accent-primary: #00d4aa;
+      --ts-accent-secondary: #ff9500;
+      --ts-text-primary: #e8e8f0;
+      --ts-text-secondary: #8b8b9e;
+      --ts-border: #2a2a38;
+      --ts-font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden; /* KEY: Prevent body scroll */
+    }
+
+    body {
+      display: flex;
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+
+    /* ==========================================
+       CANVAS AREA - STICKY, ALWAYS VISIBLE
+       ========================================== */
+    .canvas-area {
+      flex: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--ts-bg-base);
+      position: relative; /* For zoom toolbar positioning */
+      overflow: hidden;
+    }
+
+    .canvas-header {
+      padding: 12px 20px;
+      background: var(--ts-bg-elevated);
+      border-bottom: 1px solid var(--ts-border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .logo {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--ts-accent-primary);
+      opacity: 0.7;
+    }
+
+    .algo-title {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ts-text-primary);
+    }
+
+    .canvas-viewport {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #canvas-container {
+      /* Canvas sits here, centered */
+    }
+
+    /* ==========================================
+       ZOOM TOOLBAR - FLOATING OVERLAY
+       ========================================== */
+    .zoom-toolbar {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(6, 6, 10, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--ts-border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      z-index: 100;
+    }
+
+    .zoom-btn {
+      width: 32px;
+      height: 32px;
+      border: 1px solid var(--ts-border);
+      background: var(--ts-bg-elevated);
+      color: var(--ts-text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-family: var(--ts-font-mono);
+      transition: all 0.15s ease;
+    }
+
+    .zoom-btn:hover {
+      background: var(--ts-bg-surface);
+      border-color: var(--ts-accent-primary);
+      color: var(--ts-accent-primary);
+    }
+
+    .zoom-btn.fit-btn {
+      width: auto;
+      padding: 0 10px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .zoom-slider-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .zoom-slider {
+      width: 100px;
+      height: 4px;
+      -webkit-appearance: none;
+      background: var(--ts-bg-surface);
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .zoom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .zoom-value {
+      font-size: 11px;
+      color: var(--ts-text-secondary);
+      min-width: 40px;
+      text-align: center;
+    }
+
+    .zoom-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--ts-border);
+    }
+
+    /* ==========================================
+       CONTROL PANEL - SCROLLABLE
+       ========================================== */
+    .control-panel {
+      width: 340px;
+      height: 100vh;
+      background: var(--ts-bg-deep);
+      border-left: 1px solid var(--ts-border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+
+    .controls-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--ts-border);
+      flex-shrink: 0;
+    }
+
+    .controls-header h2 {
+      font-size: 13px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--ts-accent-primary);
+    }
+
+    .controls-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    /* Scrollbar styling */
+    .controls-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .controls-scroll::-webkit-scrollbar-track {
+      background: var(--ts-bg-base);
+    }
+    .controls-scroll::-webkit-scrollbar-thumb {
+      background: var(--ts-border);
+      border-radius: 3px;
+    }
+    .controls-scroll::-webkit-scrollbar-thumb:hover {
+      background: var(--ts-accent-primary);
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--ts-border);
+    }
+
+    .control-group h3 {
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--ts-accent-secondary);
+      margin-bottom: 16px;
+    }
+
+    .control-row {
+      margin-bottom: 16px;
+    }
+
+    .control-row label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--ts-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .control-row .value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+
+    .control-row input[type="range"] {
+      width: 100%;
+      height: 4px;
+      -webkit-appearance: none;
+      background: var(--ts-bg-surface);
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .control-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: transform 0.1s ease;
+    }
+
+    .control-row input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px;
+      background: var(--ts-accent-primary);
+      color: var(--ts-bg-deep);
+      border: none;
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary:hover {
+      background: #00eebb;
+      transform: translateY(-1px);
+    }
+
+    /* Status indicator */
+    .status-bar {
+      padding: 12px 20px;
+      background: var(--ts-bg-elevated);
+      border-top: 1px solid var(--ts-border);
+      font-size: 10px;
+      color: var(--ts-text-secondary);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 6px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Keyboard hints */
+    kbd {
+      background: var(--ts-bg-surface);
+      border: 1px solid var(--ts-border);
+      border-radius: 3px;
+      padding: 2px 5px;
+      font-size: 10px;
+      font-family: var(--ts-font-mono);
+    }
+
+    /* Mini toolbar (when main is hidden) */
+    .zoom-toolbar-mini {
+      position: absolute;
+      bottom: 16px;
+      left: 16px;
+      z-index: 100;
+    }
+
+    /* Fullscreen mode */
+    .fullscreen-mode .control-panel {
+      display: none;
+    }
+    .fullscreen-mode .canvas-header {
+      display: none;
+    }
+    .fullscreen-mode .canvas-area {
+      background: var(--ts-bg-deep);
+    }
+
+    /* Color picker styling */
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .color-picker-row label {
+      margin-bottom: 0;
+    }
+    .color-picker-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      border: 2px solid var(--ts-border);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+    }
+    .color-swatch input[type="color"] {
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      width: 52px;
+      height: 52px;
+      border: none;
+      cursor: pointer;
+    }
+    .color-value {
+      font-size: 11px;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-mono);
+      text-transform: uppercase;
+    }
+
+    /* Global actions buttons */
+    .global-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .btn-secondary {
+      padding: 10px;
+      background: var(--ts-bg-elevated);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border);
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      font-size: 11px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .btn-secondary:hover {
+      background: var(--ts-bg-surface);
+      border-color: var(--ts-accent-primary);
+      color: var(--ts-accent-primary);
+    }
+    .btn-secondary.danger:hover {
+      border-color: #ff4444;
+      color: #ff4444;
+    }
+
+    /* Seed display */
+    .seed-display {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--ts-bg-elevated);
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .seed-label {
+      font-size: 11px;
+      color: var(--ts-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .seed-value {
+      font-size: 13px;
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+      font-family: var(--ts-font-mono);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- CANVAS AREA (STICKY) -->
+  <div class="canvas-area">
+    <div class="canvas-header">
+      <span class="logo">Total Serialism</span>
+      <span class="algo-title">Spiral Dots (Prototype)</span>
+    </div>
+
+    <div class="canvas-viewport">
+      <div id="canvas-container"></div>
+
+      <!-- ZOOM TOOLBAR (hideable) -->
+      <div class="zoom-toolbar" id="zoomToolbar">
+        <button class="zoom-btn fit-btn" onclick="fitToWidth()" title="Fit to Width (W)">Fit W</button>
+        <button class="zoom-btn fit-btn" onclick="fitToHeight()" title="Fit to Height (H)">Fit H</button>
+
+        <div class="zoom-divider"></div>
+
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out (-)">−</button>
+        <div class="zoom-slider-container">
+          <input type="range" class="zoom-slider" id="zoomSlider"
+                 min="0.25" max="3" value="1" step="0.05"
+                 oninput="setZoom(this.value)">
+          <span class="zoom-value" id="zoomValue">100%</span>
+        </div>
+        <button class="zoom-btn" onclick="zoomIn()" title="Zoom In (+)">+</button>
+
+        <div class="zoom-divider"></div>
+
+        <button class="zoom-btn" onclick="resetZoom()" title="Reset (0)">1:1</button>
+
+        <div class="zoom-divider"></div>
+
+        <button class="zoom-btn" onclick="toggleFullscreen()" title="Fullscreen (F)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+          </svg>
+        </button>
+        <button class="zoom-btn" onclick="toggleToolbar()" title="Hide Toolbar (T)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Minimal toolbar when hidden (just show button) -->
+      <div class="zoom-toolbar-mini" id="zoomToolbarMini" style="display: none;">
+        <button class="zoom-btn" onclick="toggleToolbar()" title="Show Toolbar (T)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="2" y1="2" x2="22" y2="22"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTROL PANEL (SCROLLABLE) -->
+  <div class="control-panel">
+    <div class="controls-header">
+      <h2>Parameters</h2>
+    </div>
+
+    <div class="controls-scroll">
+      <div class="control-group">
+        <h3>Spiral Structure</h3>
+
+        <div class="control-row">
+          <label>
+            <span>Arms</span>
+            <span class="value" id="numArms-val">24</span>
+          </label>
+          <input type="range" id="numArms" min="3" max="60" value="24" step="1">
+        </div>
+
+        <div class="control-row">
+          <label>
+            <span>Dots per Arm</span>
+            <span class="value" id="dotsPerArm-val">80</span>
+          </label>
+          <input type="range" id="dotsPerArm" min="20" max="200" value="80" step="5">
+        </div>
+
+        <div class="control-row">
+          <label>
+            <span>Turns</span>
+            <span class="value" id="turns-val">4</span>
+          </label>
+          <input type="range" id="turns" min="1" max="10" value="4" step="0.5">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Appearance</h3>
+
+        <div class="control-row">
+          <label>
+            <span>Dot Size</span>
+            <span class="value" id="dotSize-val">3</span>
+          </label>
+          <input type="range" id="dotSize" min="1" max="10" value="3" step="0.5">
+        </div>
+
+        <div class="control-row">
+          <label>
+            <span>Size Growth</span>
+            <span class="value" id="sizeGrowth-val">1.5</span>
+          </label>
+          <input type="range" id="sizeGrowth" min="0" max="3" value="1.5" step="0.1">
+        </div>
+
+        <div class="control-row">
+          <label>
+            <span>Spacing</span>
+            <span class="value" id="spacing-val">0.8</span>
+          </label>
+          <input type="range" id="spacing" min="0.3" max="2" value="0.8" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Rotation</h3>
+
+        <div class="control-row">
+          <label>
+            <span>Arm Offset</span>
+            <span class="value" id="armOffset-val">0</span>°
+          </label>
+          <input type="range" id="armOffset" min="0" max="360" value="0" step="5">
+        </div>
+
+        <div class="control-row">
+          <label>
+            <span>Spiral Twist</span>
+            <span class="value" id="twist-val">0</span>
+          </label>
+          <input type="range" id="twist" min="-2" max="2" value="0" step="0.1">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <h3>Center Hole</h3>
+
+        <div class="control-row">
+          <label>
+            <span>Hole Radius</span>
+            <span class="value" id="holeRadius-val">60</span>px
+          </label>
+          <input type="range" id="holeRadius" min="0" max="150" value="60" step="5">
+        </div>
+      </div>
+
+      <!-- Global Actions -->
+      <div class="control-group">
+        <h3>Actions</h3>
+
+        <div class="seed-display">
+          <span class="seed-label">Seed</span>
+          <span class="seed-value" id="seedValue">123456</span>
+        </div>
+
+        <div class="global-actions">
+          <button class="btn-secondary" onclick="generate()">Regenerate</button>
+          <button class="btn-secondary" onclick="randomizeSeed()">New Seed</button>
+          <button class="btn-secondary" onclick="randomizeParams()">Randomize</button>
+          <button class="btn-secondary danger" onclick="resetDefaults()">Reset</button>
+        </div>
+      </div>
+
+      <!-- Colors -->
+      <div class="control-group">
+        <h3>Colors</h3>
+
+        <div class="color-picker-row">
+          <label>Canvas</label>
+          <div class="color-picker-wrapper">
+            <div class="color-swatch" style="background: #FFFFF5;">
+              <input type="color" id="bgColor" value="#FFFFF5" onchange="updateColor('bg', this.value)">
+            </div>
+            <span class="color-value" id="bgColorValue">#FFFFF5</span>
+          </div>
+        </div>
+
+        <div class="color-picker-row">
+          <label>Elements</label>
+          <div class="color-picker-wrapper">
+            <div class="color-swatch" style="background: #1a1a2e;">
+              <input type="color" id="fgColor" value="#1a1a2e" onchange="updateColor('fg', this.value)">
+            </div>
+            <span class="color-value" id="fgColorValue">#1a1a2e</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="control-group">
+        <h3>Export</h3>
+        <div class="global-actions">
+          <button class="btn-secondary" onclick="exportSVG()">SVG</button>
+          <button class="btn-secondary" onclick="exportPNG()">PNG</button>
+        </div>
+      </div>
+
+      <div class="control-group" style="border-bottom: none;">
+        <h3>Keyboard Shortcuts</h3>
+        <div style="font-size: 11px; color: var(--ts-text-secondary); line-height: 2;">
+          <div><kbd>+</kbd> / <kbd>-</kbd> Zoom in/out</div>
+          <div><kbd>0</kbd> Reset zoom</div>
+          <div><kbd>W</kbd> Fit to width</div>
+          <div><kbd>H</kbd> Fit to height</div>
+          <div><kbd>F</kbd> Fullscreen</div>
+          <div><kbd>T</kbd> Toggle toolbar</div>
+          <div><kbd>R</kbd> Regenerate</div>
+          <div><kbd>N</kbd> New seed</div>
+          <div><kbd>X</kbd> Randomize all</div>
+          <div><kbd>Esc</kbd> Exit fullscreen</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-bar">
+      <span><span class="status-dot"></span>Auto-regenerate ON</span>
+      <span>Zoom: <span id="statusZoom">100%</span></span>
+    </div>
+  </div>
+
+  <script>
+    // ==========================================
+    // ZOOM STATE
+    // ==========================================
+    let currentZoom = 1;
+    const baseSize = 600; // Base canvas size
+    let canvasWidth = baseSize;
+    let canvasHeight = baseSize;
+    let isFullscreen = false;
+    let toolbarVisible = true;
+
+    // ==========================================
+    // COLORS
+    // ==========================================
+    let bgColor = '#FFFFF5';
+    let fgColor = '#1a1a2e';
+
+    // ==========================================
+    // SEED
+    // ==========================================
+    let seed = Math.floor(Math.random() * 1000000);
+
+    // ==========================================
+    // DEFAULT PARAMETERS (for reset)
+    // ==========================================
+    const defaultParams = {
+      numArms: 24,
+      dotsPerArm: 80,
+      turns: 4,
+      dotSize: 3,
+      sizeGrowth: 1.5,
+      spacing: 0.8,
+      armOffset: 0,
+      twist: 0,
+      holeRadius: 60
+    };
+
+    // ==========================================
+    // ALGORITHM PARAMETERS
+    // ==========================================
+    let params = { ...defaultParams };
+
+    // ==========================================
+    // P5.JS SETUP
+    // ==========================================
+    function setup() {
+      const canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-container');
+      pixelDensity(2);
+
+      setupControls();
+      updateSeedDisplay();
+      generate();
+      noLoop();
+    }
+
+    function updateSeedDisplay() {
+      document.getElementById('seedValue').textContent = seed;
+    }
+
+    function setupControls() {
+      const inputs = ['numArms', 'dotsPerArm', 'turns', 'dotSize', 'sizeGrowth',
+                      'spacing', 'armOffset', 'twist', 'holeRadius'];
+
+      inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', (e) => {
+            params[id] = parseFloat(e.target.value);
+            document.getElementById(id + '-val').textContent = e.target.value;
+            generate();
+          });
+        }
+      });
+    }
+
+    // ==========================================
+    // ZOOM FUNCTIONS
+    // ==========================================
+    function setZoom(level) {
+      currentZoom = parseFloat(level);
+      updateZoomDisplay();
+      applyZoom();
+    }
+
+    function zoomIn() {
+      setZoom(Math.min(3, currentZoom + 0.1));
+      document.getElementById('zoomSlider').value = currentZoom;
+    }
+
+    function zoomOut() {
+      setZoom(Math.max(0.25, currentZoom - 0.1));
+      document.getElementById('zoomSlider').value = currentZoom;
+    }
+
+    function resetZoom() {
+      setZoom(1);
+      document.getElementById('zoomSlider').value = 1;
+    }
+
+    function fitToWidth() {
+      const viewport = document.querySelector('.canvas-viewport');
+      const availableWidth = viewport.clientWidth - 40; // padding
+      const newZoom = availableWidth / baseSize;
+      setZoom(Math.min(3, Math.max(0.25, newZoom)));
+      document.getElementById('zoomSlider').value = currentZoom;
+    }
+
+    function fitToHeight() {
+      const viewport = document.querySelector('.canvas-viewport');
+      const availableHeight = viewport.clientHeight - 40; // padding
+      const newZoom = availableHeight / baseSize;
+      setZoom(Math.min(3, Math.max(0.25, newZoom)));
+      document.getElementById('zoomSlider').value = currentZoom;
+    }
+
+    function updateZoomDisplay() {
+      const percent = Math.round(currentZoom * 100) + '%';
+      document.getElementById('zoomValue').textContent = percent;
+      document.getElementById('statusZoom').textContent = percent;
+    }
+
+    function applyZoom() {
+      // Resize canvas based on zoom
+      canvasWidth = Math.round(baseSize * currentZoom);
+      canvasHeight = Math.round(baseSize * currentZoom);
+      resizeCanvas(canvasWidth, canvasHeight);
+      generate();
+    }
+
+    // ==========================================
+    // FULLSCREEN & TOOLBAR
+    // ==========================================
+    function toggleFullscreen() {
+      isFullscreen = !isFullscreen;
+      document.body.classList.toggle('fullscreen-mode', isFullscreen);
+
+      if (isFullscreen) {
+        // Request browser fullscreen
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+
+      // Refit after mode change
+      setTimeout(() => fitToHeight(), 100);
+    }
+
+    function toggleToolbar() {
+      toolbarVisible = !toolbarVisible;
+      document.getElementById('zoomToolbar').style.display = toolbarVisible ? 'flex' : 'none';
+      document.getElementById('zoomToolbarMini').style.display = toolbarVisible ? 'none' : 'block';
+    }
+
+    // Listen for Escape to exit fullscreen
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        isFullscreen = false;
+        document.body.classList.remove('fullscreen-mode');
+      }
+    });
+
+    // ==========================================
+    // GLOBAL ACTIONS
+    // ==========================================
+    function randomizeSeed() {
+      seed = Math.floor(Math.random() * 1000000);
+      updateSeedDisplay();
+      generate();
+    }
+
+    function randomizeParams() {
+      // Randomize each parameter within its range (with sensible precision)
+      params.numArms = Math.floor(random(3, 60));
+      params.dotsPerArm = Math.floor(random(20, 200));
+      params.turns = Math.round(random(1, 10) * 2) / 2;        // 0.5 steps
+      params.dotSize = Math.round(random(1, 10) * 2) / 2;      // 0.5 steps
+      params.sizeGrowth = Math.round(random(0, 3) * 10) / 10;  // 0.1 steps
+      params.spacing = Math.round(random(0.3, 2) * 10) / 10;   // 0.1 steps
+      params.armOffset = Math.floor(random(0, 360));           // integers
+      params.twist = Math.round(random(-2, 2) * 10) / 10;      // 0.1 steps
+      params.holeRadius = Math.floor(random(0, 150));          // integers
+
+      // Update UI
+      updateControlsFromParams();
+
+      // New seed too
+      randomizeSeed();
+    }
+
+    function resetDefaults() {
+      params = { ...defaultParams };
+      bgColor = '#FFFFF5';
+      fgColor = '#1a1a2e';
+      seed = Math.floor(Math.random() * 1000000);
+
+      // Update UI
+      updateControlsFromParams();
+      updateColorUI();
+      updateSeedDisplay();
+      generate();
+    }
+
+    function updateControlsFromParams() {
+      Object.keys(params).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) {
+          el.value = params[key];
+          const valEl = document.getElementById(key + '-val');
+          if (valEl) valEl.textContent = params[key];
+        }
+      });
+    }
+
+    // ==========================================
+    // COLOR FUNCTIONS
+    // ==========================================
+    function updateColor(type, value) {
+      if (type === 'bg') {
+        bgColor = value;
+        document.getElementById('bgColorValue').textContent = value.toUpperCase();
+        document.querySelector('#bgColor').parentElement.style.background = value;
+      } else {
+        fgColor = value;
+        document.getElementById('fgColorValue').textContent = value.toUpperCase();
+        document.querySelector('#fgColor').parentElement.style.background = value;
+      }
+      generate();
+    }
+
+    function updateColorUI() {
+      document.getElementById('bgColor').value = bgColor;
+      document.getElementById('bgColorValue').textContent = bgColor.toUpperCase();
+      document.querySelector('#bgColor').parentElement.style.background = bgColor;
+
+      document.getElementById('fgColor').value = fgColor;
+      document.getElementById('fgColorValue').textContent = fgColor.toUpperCase();
+      document.querySelector('#fgColor').parentElement.style.background = fgColor;
+    }
+
+    // ==========================================
+    // EXPORT FUNCTIONS
+    // ==========================================
+    function exportSVG() {
+      // For now, just show alert - full implementation would use p5.js-svg
+      alert('SVG export would save: spiral-' + seed + '.svg');
+    }
+
+    function exportPNG() {
+      saveCanvas('spiral-' + seed, 'png');
+    }
+
+    // ==========================================
+    // GENERATE SPIRAL
+    // ==========================================
+    function generate() {
+      // Set seed for reproducible randomness
+      randomSeed(seed);
+      noiseSeed(seed);
+
+      // Scale factor for zoom
+      const s = currentZoom;
+
+      // Clear with background color
+      background(bgColor);
+
+      // Drawing with foreground color
+      noStroke();
+      fill(fgColor);
+
+      const cx = (canvasWidth / 2);
+      const cy = (canvasHeight / 2);
+      const maxRadius = (baseSize * 0.4) * s;
+      const holeRadius = params.holeRadius * s;
+
+      for (let arm = 0; arm < params.numArms; arm++) {
+        const armAngle = (arm / params.numArms) * TWO_PI + radians(params.armOffset);
+
+        for (let i = 0; i < params.dotsPerArm; i++) {
+          const t = i / (params.dotsPerArm - 1);
+          const theta = armAngle + t * params.turns * TWO_PI + t * params.twist;
+          const r = lerp(holeRadius, maxRadius, pow(t, params.spacing));
+
+          const x = cx + r * cos(theta);
+          const y = cy + r * sin(theta);
+
+          // Skip dots inside hole
+          if (dist(x, y, cx, cy) < holeRadius) continue;
+
+          const dotSize = (params.dotSize + t * params.sizeGrowth * params.dotSize) * s;
+          ellipse(x, y, dotSize, dotSize);
+        }
+      }
+
+      // Center hole (use background color)
+      fill(bgColor);
+      ellipse(cx, cy, holeRadius * 2, holeRadius * 2);
+    }
+
+    // ==========================================
+    // KEYBOARD SHORTCUTS
+    // ==========================================
+    function keyPressed() {
+      // Zoom
+      if (key === '+' || key === '=') {
+        zoomIn();
+      } else if (key === '-' || key === '_') {
+        zoomOut();
+      } else if (key === '0') {
+        resetZoom();
+      } else if (key === 'w' || key === 'W') {
+        fitToWidth();
+      } else if (key === 'h' || key === 'H') {
+        fitToHeight();
+      }
+      // Fullscreen & Toolbar
+      else if (key === 'f' || key === 'F') {
+        toggleFullscreen();
+      } else if (key === 't' || key === 'T') {
+        toggleToolbar();
+      } else if (keyCode === ESCAPE) {
+        if (isFullscreen) toggleFullscreen();
+      }
+      // Generation
+      else if (key === 'r' || key === 'R') {
+        generate();
+      } else if (key === 'n' || key === 'N') {
+        randomizeSeed();
+      } else if (key === 'x' || key === 'X') {
+        randomizeParams();
+      }
+    }
+  </script>
+</body>
+</html>
