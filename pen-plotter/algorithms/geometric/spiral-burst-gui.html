@@ -1,105 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Spiral Dots & Radial Burst Generator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spiral Dots & Radial Burst Generator - Total Serialism</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../canvas-layout.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: auto;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-    }
-    .checkbox-container input {
-      margin-right: 10px;
-    }
+    /* Algorithm-specific overrides (design system handles base styling) */
     .mode-selector {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -108,27 +25,52 @@
     }
     .mode-button {
       padding: 10px;
-      background: #333;
-      border: 2px solid #555;
-      color: #ccc;
+      background: var(--ts-bg-elevated, #1a1a2e);
+      border: 2px solid var(--ts-border, #2a2a38);
+      color: var(--ts-text-secondary, #8b8b9e);
       cursor: pointer;
       text-align: center;
-      border-radius: 4px;
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.2s ease;
     }
     .mode-button.active {
-      background: #4CAF50;
-      border-color: #4CAF50;
-      color: white;
+      background: var(--ts-accent-primary, #00d4aa);
+      border-color: var(--ts-accent-primary, #00d4aa);
+      color: var(--ts-bg-deep, #06060a);
     }
     .mode-button:hover:not(.active) {
-      border-color: #777;
+      border-color: var(--ts-accent-primary, #00d4aa);
+      color: var(--ts-text-primary, #e8e8f0);
+    }
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-elevated, #1a1a2e);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--ts-accent-primary, #00d4aa);
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #export-status {
+      color: var(--ts-accent-secondary, #ff9500);
     }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="controls">
-    <h2>Spiral & Burst Generator</h2>
+    <div class="ts-header-inline">
+      <span class="ts-logo">Total Serialism</span>
+      <h2>Spiral & Burst</h2>
+    </div>
     
     <div class="control-group">
       <h3>Generator Mode</h3>
