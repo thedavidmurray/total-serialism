@@ -451,21 +451,9 @@
             }
         }
 
-        // Include the exporter modules inline
-        ${await (async () => {
-            const gcodeContent = await read({ file_path: '/Users/djm/claude-projects/pen-plotter-art/src/export/gcode-exporter.js' });
-            return gcodeContent.content;
-        })()}
-
-        ${await (async () => {
-            const hpglContent = await read({ file_path: '/Users/djm/claude-projects/pen-plotter-art/src/export/hpgl-exporter.js' });
-            return hpglContent.content;
-        })()}
-
-        ${await (async () => {
-            const previewContent = await read({ file_path: '/Users/djm/claude-projects/pen-plotter-art/src/preview/plot-preview.js' });
-            return previewContent.content;
-        })()}
+        // TODO: Include the exporter modules - these would need to be bundled or loaded separately
+        // GCodeExporter, HPGLExporter, and PlotPreview classes should be defined in separate files
+        // and imported via script tags or a module bundler
 
         // Initialize the GUI
         const canvas = document.getElementById('canvas');

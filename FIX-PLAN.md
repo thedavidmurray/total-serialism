@@ -17,10 +17,8 @@
 ---
 
 ## Source of Truth
-- **Local**: `/Users/djm/claude-projects/github-repos/total-serialism`
 - **GitHub**: `https://github.com/thedavidmurray/total-serialism`
 - **Live**: `https://thedavidmurray.github.io/total-serialism/`
-- **Status**: All in sync at commit `9ae4123`
 
 ---
 
