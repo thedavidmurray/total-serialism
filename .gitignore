@@ -44,6 +44,10 @@ output/
 backlog/
 archive/
 
+# Debug files
+*-debug.js
+*-debug.html
+
 # Temporary files
 *.tmp
 *.temp

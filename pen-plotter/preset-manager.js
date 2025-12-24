@@ -113,9 +113,9 @@ class PresetManager {
         this.presets = { ...this.presets, ...imported };
         this.savePresets();
         this.updatePresetList();
-        alert('Presets imported successfully!');
+        if (typeof TSNotify !== 'undefined') TSNotify.success('Presets imported successfully!');
       } catch (error) {
-        alert('Failed to import presets. Invalid file format.');
+        if (typeof TSNotify !== 'undefined') TSNotify.error('Failed to import presets. Invalid file format.');
         console.error('Import error:', error);
       }
     };
@@ -175,16 +175,19 @@ class PresetManager {
       if (name) {
         this.savePreset(name, getParameters());
         document.getElementById('preset-name').value = '';
-        alert(`Preset "${name}" saved!`);
+        if (typeof TSNotify !== 'undefined') TSNotify.success(`Preset "${name}" saved!`);
       } else {
-        alert('Please enter a preset name');
+        if (typeof TSNotify !== 'undefined') TSNotify.warning('Please enter a preset name');
       }
     });
 
-    document.getElementById('delete-preset-btn').addEventListener('click', () => {
+    document.getElementById('delete-preset-btn').addEventListener('click', async () => {
       const select = document.getElementById('preset-select');
       if (select.value) {
-        if (confirm(`Delete preset "${select.value}"?`)) {
+        const confirmed = typeof TSNotify !== 'undefined'
+          ? await TSNotify.confirm(`Delete preset "${select.value}"?`, { danger: true })
+          : confirm(`Delete preset "${select.value}"?`);
+        if (confirmed) {
           this.deletePreset(select.value);
         }
       }

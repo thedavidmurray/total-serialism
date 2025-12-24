@@ -1203,3 +1203,173 @@ body::before {
   border: 1px solid var(--ts-border-default);
   border-radius: var(--ts-radius-md);
 }
+
+/* ============================================
+   TOAST NOTIFICATIONS
+   Replaces browser alert() dialogs
+   ============================================ */
+.ts-toast-container {
+  position: fixed;
+  top: var(--ts-space-xl);
+  right: var(--ts-space-xl);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-space-sm);
+  pointer-events: none;
+}
+
+.ts-toast {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-space-md);
+  padding: var(--ts-space-md) var(--ts-space-lg);
+  min-width: 280px;
+  max-width: 400px;
+  font-family: var(--ts-font-mono);
+  font-size: 0.85rem;
+  color: var(--ts-text-primary);
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  box-shadow: var(--ts-shadow-panel);
+  pointer-events: auto;
+  animation: ts-toast-in 0.3s ease-out;
+}
+
+.ts-toast.ts-toast-out {
+  animation: ts-toast-out 0.2s ease-in forwards;
+}
+
+.ts-toast-success {
+  border-left: 3px solid var(--ts-accent-primary);
+}
+
+.ts-toast-error {
+  border-left: 3px solid var(--ts-accent-danger);
+}
+
+.ts-toast-warning {
+  border-left: 3px solid var(--ts-accent-secondary);
+}
+
+.ts-toast-info {
+  border-left: 3px solid var(--ts-accent-tertiary);
+}
+
+@keyframes ts-toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes ts-toast-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+/* ============================================
+   CONFIRM MODAL
+   Replaces browser confirm() dialogs
+   ============================================ */
+.ts-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 10001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: ts-modal-fade-in 0.2s ease-out;
+}
+
+.ts-modal {
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-lg);
+  padding: var(--ts-space-xl);
+  min-width: 320px;
+  max-width: 480px;
+  box-shadow: var(--ts-shadow-panel);
+  animation: ts-modal-scale-in 0.2s ease-out;
+}
+
+.ts-modal-message {
+  font-family: var(--ts-font-mono);
+  font-size: 0.9rem;
+  color: var(--ts-text-primary);
+  margin-bottom: var(--ts-space-xl);
+  line-height: 1.5;
+}
+
+.ts-modal-actions {
+  display: flex;
+  gap: var(--ts-space-sm);
+  justify-content: flex-end;
+}
+
+.ts-modal-btn {
+  padding: var(--ts-space-sm) var(--ts-space-lg);
+  font-family: var(--ts-font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--ts-radius-md);
+  cursor: pointer;
+  transition: all var(--ts-transition-fast);
+}
+
+.ts-modal-btn-cancel {
+  background: var(--ts-bg-control);
+  color: var(--ts-text-secondary);
+}
+
+.ts-modal-btn-cancel:hover {
+  background: var(--ts-bg-hover);
+}
+
+.ts-modal-btn-confirm {
+  background: var(--ts-accent-primary);
+  color: var(--ts-text-inverse);
+}
+
+.ts-modal-btn-confirm:hover {
+  background: #00e8bb;
+}
+
+.ts-modal-btn-danger {
+  background: var(--ts-accent-danger);
+  color: white;
+}
+
+.ts-modal-btn-danger:hover {
+  background: #ff6b7a;
+}
+
+@keyframes ts-modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes ts-modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

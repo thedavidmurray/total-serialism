@@ -928,11 +928,8 @@ class TotalSerialismArtwork {
         
         p.pop();
         
-        // Calculate and display spatial efficiency
-        if (this.collisionSystem) {
-            const efficiency = this.collisionSystem.calculateSpatialEfficiency();
-            console.log(`Ring system spatial efficiency: ${(efficiency * 100).toFixed(1)}%`);
-        }
+        // Calculate spatial efficiency (available via this.collisionSystem.calculateSpatialEfficiency())
+        // Removed console.log for production
     }
     
     executeParticleSwarm() {

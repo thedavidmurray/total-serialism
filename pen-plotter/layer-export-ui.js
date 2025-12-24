@@ -399,7 +399,7 @@ class LayerExportUI {
    */
   exportLayers() {
     if (!this.currentLayers || this.currentLayers.length === 0) {
-      alert('Please analyze layers first!');
+      if (typeof TSNotify !== 'undefined') TSNotify.warning('Please analyze layers first!');
       return;
     }
 

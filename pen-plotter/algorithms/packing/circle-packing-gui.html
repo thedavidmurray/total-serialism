@@ -13,6 +13,7 @@
   
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
+  <script src="../../shared/ui-utils.js"></script>
   <style>
     * {
       margin: 0;
@@ -824,7 +825,7 @@
     // Export SVG
     function exportSVG() {
       if (circles.length === 0) {
-        alert('Generate circles first!');
+        TSNotify.warning('Generate circles first!');
         return;
       }
 
