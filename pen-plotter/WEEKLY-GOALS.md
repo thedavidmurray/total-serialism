@@ -68,14 +68,14 @@
 
 ```bash
 # 1. Start with cellular automata
-cd /Users/djm/claude-projects/pen-plotter-art
+cd pen-plotter
 mkdir -p algorithms/cellular-automata
 
 # 2. Create Game of Life implementation
 # (We'll build this next!)
 
 # 3. Test and iterate
-open algorithms/cellular-automata/game-of-life.html
+# Open algorithms/cellular-automata/game-of-life.html in browser
 ```
 
 ## Resources Collected
