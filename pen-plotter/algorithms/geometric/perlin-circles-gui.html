@@ -122,6 +122,34 @@
     <div id="preset-container"></div>
 
     <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="square_medium">Square (800×800)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <select id="bgColor">
+          <option value="#ffffff">White</option>
+          <option value="#000000">Black</option>
+          <option value="#1a1a2e">Dark Blue</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <select id="strokeColor">
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="#0066cc">Blue</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
       <h3>Circle Settings</h3>
       <div class="control">
         <label>Circle Count: <span class="value" id="circleCount-val">5</span></label>
@@ -242,6 +270,9 @@
   <script>
     let params = {
       seed: Math.floor(Math.random() * 1000000),
+      paperSize: 'A4_landscape',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       circleCount: 5,
       baseRadius: 50,
       radiusSpacing: 30,
@@ -269,10 +300,10 @@
     const REGEN_DEBOUNCE = 150;
     
     function setup() {
-      const w = 800;
-      const h = 600;
-      
-      svgCanvas = createCanvas(w, h);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+
+      svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
 
       setupControls();
@@ -310,7 +341,14 @@
         redraw();
       }
     }
-    
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      resizeCanvas(size.width * scale, size.height * scale);
+      regenerate();
+    }
+
     function setupControls() {
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -334,7 +372,11 @@
           } else if (element.tagName === 'SELECT') {
             element.addEventListener('change', (e) => {
               params[key] = e.target.value;
-              queueRegenerate();
+              if (key === 'paperSize') {
+                resizeCanvasForPaperSize();
+              } else {
+                queueRegenerate();
+              }
             });
           }
         }
@@ -412,9 +454,10 @@
     }
     
     function draw() {
-      background(255);
+      background(params.bgColor);
+      stroke(params.strokeColor);
       translate(width/2, height/2);
-      
+
       if (params.animateNoise) {
         timeOffset += params.timeSpeed;
       }
