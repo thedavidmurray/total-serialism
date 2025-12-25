@@ -10,7 +10,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
-  
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -118,7 +120,38 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Hash Tiles Controls</h2>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="square_medium">Square (800×800)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <select id="bgColor">
+          <option value="#ffffff">White</option>
+          <option value="#000000">Black</option>
+          <option value="#f5f5dc">Cream</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <select id="strokeColor">
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="#0066cc">Blue</option>
+          <option value="#cc0000">Red</option>
+        </select>
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Grid Settings</h3>
       <div class="control">
@@ -235,6 +268,9 @@
   <script>
     let params = {
       seed: Math.floor(Math.random() * 1000000),
+      paperSize: 'A4_landscape',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       gridSize: 10,
       tileSize: 50,
       gapSize: 2,
@@ -257,16 +293,23 @@
     const REGEN_DEBOUNCE = 150;
     
     function setup() {
-      const w = 800;
-      const h = 600;
-      
-      svgCanvas = createCanvas(w, h);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+
+      svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
-      
+
       setupControls();
       regenerate();
     }
-    
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      resizeCanvas(size.width * scale, size.height * scale);
+      regenerate();
+    }
+
     function setupControls() {
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -286,7 +329,11 @@
           } else if (element.tagName === 'SELECT') {
             element.addEventListener('change', (e) => {
               params[key] = e.target.value;
-              queueRegenerate();
+              if (key === 'paperSize') {
+                resizeCanvasForPaperSize();
+              } else {
+                queueRegenerate();
+              }
             });
           }
         }
@@ -520,11 +567,11 @@
     }
     
     function draw() {
-      background(255);
-      
+      background(params.bgColor);
+
       // Draw grid lines if enabled
       if (params.showGrid) {
-        stroke(200);
+        stroke(150);
         strokeWeight(0.5);
         const effectiveTileSize = params.tileSize + params.gapSize;
         const startX = (width - params.gridSize * effectiveTileSize) / 2;
@@ -620,7 +667,7 @@
     function applyTileColor(tile) {
       switch (params.colorMode) {
         case 'mono':
-          stroke(0);
+          stroke(params.strokeColor);
           break;
           
         case 'gradient':

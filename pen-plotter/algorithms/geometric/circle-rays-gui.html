@@ -10,7 +10,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
-  
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -113,7 +115,43 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Circle Rays Controls</h2>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_medium">Square (800×800)</option>
+          <option value="square_large">Square (1200×1200)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <select id="bgColor">
+          <option value="#ffffff">White</option>
+          <option value="#000000">Black</option>
+          <option value="#f5f5dc">Cream</option>
+          <option value="#1a1a2e">Dark Blue</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <select id="strokeColor">
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="#0066cc">Blue</option>
+          <option value="#cc0000">Red</option>
+          <option value="#006600">Green</option>
+        </select>
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Ray Settings</h3>
       <div class="control">
@@ -241,6 +279,9 @@
   <script>
     let params = {
       seed: Math.floor(Math.random() * 1000000),
+      paperSize: 'A4_landscape',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       rayCount: 36,
       innerRadius: 50,
       outerRadius: 250,
@@ -266,14 +307,21 @@
     const REGEN_DEBOUNCE = 150;
     
     function setup() {
-      const w = 800;
-      const h = 600;
-      
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+
       // Create regular canvas (SVG export handled separately)
-      svgCanvas = createCanvas(w, h);
+      svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
-      
+
       setupControls();
+      regenerate();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      resizeCanvas(size.width * scale, size.height * scale);
       regenerate();
     }
     
@@ -296,7 +344,11 @@
           } else if (element.tagName === 'SELECT') {
             element.addEventListener('change', (e) => {
               params[key] = e.target.value;
-              queueRegenerate();
+              if (key === 'paperSize') {
+                resizeCanvasForPaperSize();
+              } else {
+                queueRegenerate();
+              }
             });
           }
         }
@@ -407,17 +459,18 @@
     }
     
     function draw() {
-      background(255);
+      background(params.bgColor);
+      stroke(params.strokeColor);
       translate(width/2, height/2);
-      
+
       // Draw circles first (behind rays)
       if (params.showCircles) {
         drawCircles();
       }
-      
+
       // Draw rays
       drawRays();
-      
+
       noLoop();
     }
     

@@ -111,6 +111,18 @@ For each algorithm, verify:
 
 ---
 
+## Algorithm-Specific Exceptions
+
+Some algorithms have valid deviations from the standard controls:
+
+| Algorithm | Exception | Reason |
+|-----------|-----------|--------|
+| image-to-ascii | Uses `textColor` instead of `strokeColor` | Draws filled text characters; includes "gradient" mode that samples image luminance |
+| reaction-diffusion | Dark default bgColor (`#1e1e1e`) | Visual output renders better on dark backgrounds |
+| voronoi-stippling | Uses `fill()` for stipples, not `stroke()` | Dots are filled circles, strokeColor controls fill |
+
+*Add new exceptions here as discovered during standardization.*
+
 ## File Structure
 
 ```
@@ -123,4 +135,5 @@ For each algorithm, verify:
 ---
 
 *Created: 2024-12-24*
+*Updated: 2024-12-24 - Added exceptions section*
 *Status: Draft - Layer controls in parking lot*
