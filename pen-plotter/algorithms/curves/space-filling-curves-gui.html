@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Space-Filling Curves - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -86,6 +88,31 @@
 
       <div id="controls">
         <div class="control-group">
+          <label>Paper Size:
+            <select id="paperSize">
+              <option value="square800" selected>Square (800×800)</option>
+              <option value="landscape800x600">Landscape (800×600)</option>
+              <option value="a4portrait">A4 Portrait</option>
+              <option value="a4landscape">A4 Landscape</option>
+              <option value="letterportrait">Letter Portrait</option>
+              <option value="letterlandscape">Letter Landscape</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Background Color:
+            <input type="color" id="bgColor" value="#ffffff">
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Color:
+            <input type="color" id="strokeColor" value="#000000">
+          </label>
+        </div>
+
+        <div class="control-group">
           <label>Curve Type:
             <select id="curveType">
               <option value="hilbert">Hilbert Curve</option>
@@ -147,10 +174,12 @@
     </main>
   </div>
 
-  <script src="../../shared/export-utils.js"></script>
   <script>
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       curveType: 'hilbert',
       iterations: 4,
       strokeWeight: 1.5,
@@ -171,12 +200,33 @@
 
     let canvas;
     let points = [];
-    const SIZE = 800;
 
     function setup() {
-      canvas = createCanvas(SIZE, SIZE);
+      const size = CanvasLayout.getSize(params.paperSize);
+      canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      // Canvas settings event handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        drawCurve();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        drawCurve();
+      });
+
       setupControls();
+      generateCurve();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
       generateCurve();
     }
 
@@ -405,11 +455,12 @@
       const rangeX = maxX - minX || 1;
       const rangeY = maxY - minY || 1;
       const margin = params.margin;
-      const availableSize = SIZE - margin * 2;
-      const scale = availableSize / Math.max(rangeX, rangeY);
+      const availableWidth = width - margin * 2;
+      const availableHeight = height - margin * 2;
+      const scale = Math.min(availableWidth / rangeX, availableHeight / rangeY);
 
-      const offsetX = margin + (availableSize - rangeX * scale) / 2;
-      const offsetY = margin + (availableSize - rangeY * scale) / 2;
+      const offsetX = margin + (availableWidth - rangeX * scale) / 2;
+      const offsetY = margin + (availableHeight - rangeY * scale) / 2;
 
       for (const p of points) {
         p.x = (p.x - minX) * scale + offsetX;
@@ -418,8 +469,8 @@
 
       // Apply rotation
       if (params.rotation !== 0) {
-        const cx = SIZE / 2;
-        const cy = SIZE / 2;
+        const cx = width / 2;
+        const cy = height / 2;
         const rad = params.rotation * Math.PI / 180;
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
@@ -434,8 +485,8 @@
     }
 
     function drawCurve() {
-      background(255);
-      stroke(0);
+      background(params.bgColor);
+      stroke(params.strokeColor);
       strokeWeight(params.strokeWeight);
       noFill();
 
@@ -506,8 +557,9 @@
         }
       }
 
-      return TSExport.createSVG(paths, SIZE, SIZE, {
-        backgroundColor: 'white',
+      return TSExport.createSVG(paths, width, height, {
+        backgroundColor: params.bgColor,
+        strokeColor: params.strokeColor,
         strokeWidth: params.strokeWeight
       });
     }

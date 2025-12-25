@@ -10,6 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -134,6 +136,29 @@
     <!-- Preset Manager Container -->
     <div id="preset-container"></div>
 
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square (800×800)</option>
+          <option value="landscape800x600" selected>Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#1e1e1e">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#4CAF50">
+      </div>
+    </div>
+
     <div id="generation">Generation: 0</div>
 
     <div class="control-group">
@@ -229,6 +254,9 @@
 
     // Parameters
     let params = {
+      paperSize: 'landscape800x600',
+      bgColor: '#1e1e1e',
+      strokeColor: '#4CAF50',
       gridSize: 50,
       cellSize: 10,
       speed: 10,
@@ -280,8 +308,21 @@
     };
     
     function setup() {
-      let canvas = createCanvas(800, 600);
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      // Canvas settings handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
 
       // Initialize grids
       initializeGrid();
@@ -316,8 +357,17 @@
       loadPattern('glider');
     }
 
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      initializeGrid();
+    }
+
     // Helper function to update UI from params
     function updateUIFromParams() {
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
       document.getElementById('gridSize').value = params.gridSize;
       document.getElementById('cellSize').value = params.cellSize;
       document.getElementById('speed').value = params.speed;
@@ -409,7 +459,7 @@
     }
     
     function draw() {
-      background(30);
+      background(params.bgColor);
       
       // Update simulation
       if (isPlaying && millis() - lastUpdate > 1000 / params.speed) {
@@ -448,7 +498,7 @@
           
           // Draw live cells
           if (grid[i][j] === 1) {
-            fill(76, 175, 80);
+            fill(params.strokeColor);
             
             switch (params.renderStyle) {
               case 'squares':
@@ -464,7 +514,7 @@
                 break;
               case 'lines':
                 strokeWeight(2);
-                stroke(76, 175, 80);
+                stroke(params.strokeColor);
                 line(x + params.cellSize * 0.2, y + params.cellSize * 0.2,
                      x + params.cellSize * 0.8, y + params.cellSize * 0.8);
                 line(x + params.cellSize * 0.8, y + params.cellSize * 0.2,
@@ -661,12 +711,12 @@
         const offsetY = (height - params.gridSize * params.cellSize) / 2;
 
         // Draw background
-        ctx.fillStyle = '#1e1e1e';
+        ctx.fillStyle = params.bgColor;
         ctx.fillRect(0, 0, width, height);
 
         // Draw grid if enabled
         if (params.showGrid) {
-          ctx.strokeStyle = '#323232';
+          ctx.strokeStyle = '#555555';
           ctx.lineWidth = 0.5;
           for (let i = 0; i <= params.gridSize; i++) {
             ctx.beginPath();
@@ -682,7 +732,7 @@
         }
 
         // Draw cells
-        ctx.fillStyle = '#4CAF50';
+        ctx.fillStyle = params.strokeColor;
         for (let i = 0; i < params.gridSize; i++) {
           for (let j = 0; j < params.gridSize; j++) {
             if (grid[i][j] === 1) {

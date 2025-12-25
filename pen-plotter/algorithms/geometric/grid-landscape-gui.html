@@ -11,7 +11,9 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
   <script src="../../shared/gif-exporter.js"></script>
-  
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -139,7 +141,30 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Grid Landscape</h2>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Canvas Size:</label>
+        <select id="paperSize">
+          <option value="landscape800x600" selected>Landscape 800×600</option>
+          <option value="square800">Square 800×800</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Grid Settings</h3>
       <div class="control">
@@ -278,6 +303,9 @@
 
   <script>
     let params = {
+      paperSize: 'landscape800x600',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       seed: Math.floor(Math.random() * 1000000),
       gridSize: 40,
       cellSize: 15,
@@ -307,29 +335,28 @@
     const REGEN_DEBOUNCE = 150;
     
     function setup() {
-      const w = 800;
-      const h = 600;
-      
-      svgCanvas = createCanvas(w, h);
+      const size = CanvasLayout.getSize(params.paperSize);
+
+      svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
-      
+
       // Initialize GIF exporter
       gifExporter = new GifExporter({
         fps: 30,
         duration: 3,
         quality: 10,
-        width: w,
-        height: h,
+        width: size.width,
+        height: size.height,
         workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
       });
-      
+
       gifExporter.init(svgCanvas.canvas, {
         onProgress: (data) => {
-          let statusText = data.phase === 'recording' 
-            ? `Recording: ${data.capturedFrames}/${data.totalFrames}` 
+          let statusText = data.phase === 'recording'
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}`
             : `Encoding: ${Math.round(data.progress * 100)}%`;
           document.getElementById('gif-status').textContent = statusText;
-          document.getElementById('gif-progress-bar').style.width = 
+          document.getElementById('gif-progress-bar').style.width =
             (data.progress * 100) + '%';
         },
         onComplete: (result) => {
@@ -337,20 +364,45 @@
           document.getElementById('gif-record-text').textContent = 'Record GIF';
           isAnimating = false;
           noLoop();
-          
+
           const link = document.createElement('a');
           link.href = result.url;
           link.download = `grid-landscape-${Date.now()}.gif`;
           link.click();
         }
       });
-      
+
       setupControls();
+      regenerate();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
       regenerate();
     }
     
     function setupControls() {
+      // Canvas settings - special handling
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        redraw();
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        redraw();
+      });
+
       Object.keys(params).forEach(key => {
+        // Skip canvas settings already handled
+        if (['paperSize', 'bgColor', 'strokeColor'].includes(key)) return;
+
         const element = document.getElementById(key);
         if (element) {
           if (element.type === 'range') {
@@ -678,7 +730,7 @@
     }
     
     function draw() {
-      background(255);
+      background(params.bgColor);
       
       push();
       translate(width/2, height/2);
@@ -897,7 +949,7 @@
     function applyColorForHeight(height) {
       switch (params.colorMode) {
         case 'mono':
-          stroke(0);
+          stroke(params.strokeColor);
           break;
         case 'height':
           const gray = map(height, 0, params.heightRange, 200, 50);

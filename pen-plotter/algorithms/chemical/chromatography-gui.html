@@ -7,7 +7,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Chromatography Patterns - Chemical Engineering Art</title>
-    
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -163,7 +165,24 @@
     <div class="container">
         <div class="controls">
             <h1>Chromatography Patterns</h1>
-            
+
+            <div class="control-group">
+                <h3>Canvas Settings</h3>
+                <label>Paper Size:</label>
+                <select id="paperSize">
+                    <option value="square800" selected>Square (800×800)</option>
+                    <option value="landscape800x600">Landscape (800×600)</option>
+                    <option value="a4portrait">A4 Portrait</option>
+                    <option value="a4landscape">A4 Landscape</option>
+                    <option value="letterportrait">Letter Portrait</option>
+                    <option value="letterlandscape">Letter Landscape</option>
+                </select>
+                <label>Background Color:</label>
+                <input type="color" id="bgColor" value="#ffffff">
+                <label>Stroke Color:</label>
+                <input type="color" id="strokeColor" value="#000000">
+            </div>
+
             <div class="control-group">
                 <h3>Chromatography Type</h3>
                 <select id="chromType">
@@ -251,10 +270,26 @@
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
+        // Canvas settings
+        const params = {
+            paperSize: 'square800',
+            bgColor: '#ffffff',
+            strokeColor: '#000000'
+        };
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
+        let width, height;
+
+        // Initialize canvas size
+        function initCanvasSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+            width = canvas.width;
+            height = canvas.height;
+        }
+        initCanvasSize();
         
         let components = [
             {name: 'Component A', Rf: 0.3, color: '#FF6B6B', k: 2.0},
@@ -297,6 +332,21 @@
         flowRate.oninput = () => document.getElementById('flowValue').textContent = flowRate.value;
         solventStrength.oninput = () => document.getElementById('solventValue').textContent = solventStrength.value;
         temperature.oninput = () => document.getElementById('tempValue').textContent = temperature.value;
+
+        // Canvas settings event handlers
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            params.paperSize = e.target.value;
+            initCanvasSize();
+            drawPattern();
+        });
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            drawPattern();
+        });
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+            drawPattern();
+        });
         
         function updateComponentsList() {
             componentsList.innerHTML = '';
@@ -351,7 +401,7 @@
         }
         
         function drawPattern() {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = params.bgColor;
             ctx.fillRect(0, 0, width, height);
             
             const N = parseInt(plateCount.value);
@@ -370,7 +420,7 @@
         
         function drawTLC() {
             // Draw TLC plate
-            ctx.strokeStyle = '#333333';
+            ctx.strokeStyle = params.strokeColor;
             ctx.lineWidth = 2;
             ctx.strokeRect(width * 0.1, height * 0.1, width * 0.8, height * 0.8);
             
@@ -462,7 +512,7 @@
             const t0 = L / v;
             
             // Draw axes
-            ctx.strokeStyle = '#000000';
+            ctx.strokeStyle = params.strokeColor;
             ctx.lineWidth = 2;
             ctx.beginPath();
             ctx.moveTo(width * 0.1, height * 0.9);
@@ -470,9 +520,9 @@
             ctx.moveTo(width * 0.1, height * 0.9);
             ctx.lineTo(width * 0.1, height * 0.1);
             ctx.stroke();
-            
+
             // Axis labels
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = params.strokeColor;
             ctx.font = '14px monospace';
             ctx.fillText('Time (min)', width * 0.45, height * 0.98);
             ctx.save();

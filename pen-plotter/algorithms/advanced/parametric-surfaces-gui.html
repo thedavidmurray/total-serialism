@@ -8,7 +8,11 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Parametric Surfaces - 3D to 2D Projection</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-    
+    <script src="../../preset-manager.js"></script>
+    <link rel="stylesheet" href="../../preset-manager.css">
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -66,7 +70,32 @@
 
     <div id="controls">
         <h3>Parametric Surface Controls</h3>
-        
+
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
+
+        <div class="control-group">
+            <label>Canvas Settings</label>
+            <select id="paperSize">
+                <option value="square800">Square (800×800)</option>
+                <option value="landscape800x600">Landscape (800×600)</option>
+                <option value="a4portrait">A4 Portrait</option>
+                <option value="a4landscape">A4 Landscape</option>
+                <option value="letterportrait">Letter Portrait</option>
+                <option value="letterlandscape">Letter Landscape</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#f0f0f0">
+        </div>
+
+        <div class="control-group">
+            <label>Stroke Color</label>
+            <input type="color" id="strokeColor" value="#000000">
+        </div>
+
         <div class="control-group">
             <label>Surface Type:</label>
             <select id="surfaceType">
@@ -133,6 +162,9 @@
         let projectedPoints = [];
         let edges = [];
         let params = {
+            paperSize: 'square800',
+            bgColor: '#f0f0f0',
+            strokeColor: '#000000',
             surfaceType: 'klein',
             projectionType: 'orthographic',
             resolution: 30,
@@ -144,12 +176,83 @@
             autoRotate: false
         };
         
+        let presetManager;
+
         function setup() {
-            createCanvas(windowWidth - 350, windowHeight - 40);
+            const size = CanvasLayout.getSize(params.paperSize);
+            createCanvas(size.width, size.height);
+
+            // Canvas settings handlers
+            document.getElementById('paperSize').addEventListener('change', (e) => {
+                params.paperSize = e.target.value;
+                resizeCanvasForPaperSize();
+            });
+            document.getElementById('bgColor').addEventListener('input', (e) => {
+                params.bgColor = e.target.value;
+            });
+            document.getElementById('strokeColor').addEventListener('input', (e) => {
+                params.strokeColor = e.target.value;
+            });
+
             setupControls();
+
+            // Initialize preset manager
+            presetManager = new PresetManager({
+                algorithmId: 'parametric-surfaces',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    generateSurface();
+                },
+                onRandomize: () => {
+                    const types = ['klein', 'mobius', 'torus', 'sphere', 'boy'];
+                    const projections = ['orthographic', 'perspective', 'stereographic'];
+                    params.surfaceType = random(types);
+                    params.projectionType = random(projections);
+                    params.resolution = Math.floor(random(10, 100));
+                    params.scale = Math.floor(random(50, 300));
+                    params.rotX = Math.floor(random(0, 360));
+                    params.rotY = Math.floor(random(0, 360));
+                    params.rotZ = Math.floor(random(0, 360));
+                    params.hiddenLines = random() > 0.5;
+                    params.autoRotate = random() > 0.5;
+                    updateUIFromParams();
+                    generateSurface();
+                }
+            });
+
             generateSurface();
         }
-        
+
+        function updateUIFromParams() {
+            document.getElementById('paperSize').value = params.paperSize;
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
+            document.getElementById('surfaceType').value = params.surfaceType;
+            document.getElementById('projectionType').value = params.projectionType;
+            document.getElementById('resolution').value = params.resolution;
+            document.getElementById('scale').value = params.scale;
+            document.getElementById('rotX').value = params.rotX;
+            document.getElementById('rotY').value = params.rotY;
+            document.getElementById('rotZ').value = params.rotZ;
+            document.getElementById('hiddenLines').checked = params.hiddenLines;
+            document.getElementById('autoRotate').checked = params.autoRotate;
+
+            document.getElementById('resolutionValue').textContent = params.resolution;
+            document.getElementById('scaleValue').textContent = params.scale;
+            document.getElementById('rotXValue').textContent = params.rotX;
+            document.getElementById('rotYValue').textContent = params.rotY;
+            document.getElementById('rotZValue').textContent = params.rotZ;
+        }
+
+        function resizeCanvasForPaperSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            resizeCanvas(size.width, size.height);
+            generateSurface();
+        }
+
         function setupControls() {
             // Surface type
             document.getElementById('surfaceType').addEventListener('change', (e) => {
@@ -413,17 +516,17 @@
         }
         
         function draw() {
-            background(240);
+            background(params.bgColor);
             translate(width / 2, height / 2);
-            
+
             if (params.autoRotate) {
                 params.rotY = (params.rotY + 1) % 360;
                 document.getElementById('rotY').value = params.rotY;
                 document.getElementById('rotYValue').textContent = params.rotY;
                 projectSurface();
             }
-            
-            stroke(0);
+
+            stroke(params.strokeColor);
             strokeWeight(1);
             noFill();
             
@@ -497,19 +600,19 @@
         
         function createSVG() {
             const padding = 50;
-            const svgWidth = 800;
-            const svgHeight = 800;
-            
+            const svgWidth = width;
+            const svgHeight = height;
+
             let svg = `<svg width="${svgWidth}" height="${svgHeight}" xmlns="http://www.w3.org/2000/svg">\n`;
-            svg += `<rect width="${svgWidth}" height="${svgHeight}" fill="white"/>\n`;
+            svg += `<rect width="${svgWidth}" height="${svgHeight}" fill="${params.bgColor}"/>\n`;
             svg += `<g transform="translate(${svgWidth/2}, ${svgHeight/2})">\n`;
-            
+
             for (let edge of edges) {
                 if (!params.hiddenLines || isEdgeVisible(edge)) {
                     const p1 = projectedPoints[edge[0]];
                     const p2 = projectedPoints[edge[1]];
                     if (p1 && p2) {
-                        svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="black" stroke-width="1"/>\n`;
+                        svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="${params.strokeColor}" stroke-width="1"/>\n`;
                     }
                 }
             }
@@ -523,7 +626,7 @@
         }
         
         function windowResized() {
-            resizeCanvas(windowWidth - 350, windowHeight - 40);
+            resizeCanvasForPaperSize();
         }
     </script>
 </body>

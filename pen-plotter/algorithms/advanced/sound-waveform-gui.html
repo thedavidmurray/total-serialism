@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
     <script src="../../preset-manager.js"></script>
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
     
   <!-- Total Serialism Design System -->
@@ -101,6 +103,24 @@
         <!-- Preset Manager Container -->
         <div id="preset-container"></div>
 
+        <!-- Canvas Settings -->
+        <div class="control-group">
+            <h3>Canvas Settings</h3>
+            <label>Paper Size:</label>
+            <select id="paperSize">
+                <option value="square800" selected>Square (800×800)</option>
+                <option value="landscape800x600">Landscape (800×600)</option>
+                <option value="a4portrait">A4 Portrait</option>
+                <option value="a4landscape">A4 Landscape</option>
+                <option value="letterportrait">Letter Portrait</option>
+                <option value="letterlandscape">Letter Landscape</option>
+            </select>
+            <label>Background Color:</label>
+            <input type="color" id="bgColor" value="#000000">
+            <label>Stroke Color:</label>
+            <input type="color" id="strokeColor" value="#00ff00">
+        </div>
+
         <div id="status" class="status inactive">Microphone Inactive</div>
         
         <div class="control-group">
@@ -188,6 +208,9 @@
         let presetManager;
 
         let params = {
+            paperSize: 'square800',
+            bgColor: '#000000',
+            strokeColor: '#00ff00',
             vizStyle: 'oscilloscope',
             fftBins: 256,
             freqMin: 20,
@@ -201,7 +224,20 @@
         };
         
         function setup() {
-            createCanvas(windowWidth - 350, windowHeight - 40);
+            const size = CanvasLayout.getSize(params.paperSize);
+            createCanvas(size.width, size.height);
+
+            // Canvas settings handlers
+            document.getElementById('paperSize').addEventListener('change', (e) => {
+                params.paperSize = e.target.value;
+                resizeCanvasForPaperSize();
+            });
+            document.getElementById('bgColor').addEventListener('input', (e) => {
+                params.bgColor = e.target.value;
+            });
+            document.getElementById('strokeColor').addEventListener('input', (e) => {
+                params.strokeColor = e.target.value;
+            });
 
             // Initialize audio analysis
             fft = new p5.FFT(params.smoothing, params.fftBins);
@@ -367,9 +403,11 @@
         
         function draw() {
             if (!params.trails) {
-                background(240);
+                background(params.bgColor);
             } else {
-                background(240, 240, 240, 30); // Fade effect for trails
+                const bgCol = color(params.bgColor);
+                bgCol.setAlpha(30);
+                background(bgCol); // Fade effect for trails
             }
             
             if (micActive) {
@@ -415,7 +453,7 @@
         }
         
         function drawOscilloscope() {
-            stroke(0);
+            stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
             
@@ -434,7 +472,9 @@
                 
                 // Draw older waveforms with transparency
                 for (let h = 0; h < history.length - 1; h++) {
-                    stroke(0, 0, 0, map(h, 0, history.length, 20, 100));
+                    const histCol = color(params.strokeColor);
+                    histCol.setAlpha(map(h, 0, history.length, 20, 100));
+                    stroke(histCol);
                     strokeWeight(params.lineWeight * 0.5);
                     beginShape();
                     for (let i = 0; i < history[h].length; i++) {
@@ -448,7 +488,7 @@
         }
         
         function drawRadial() {
-            stroke(0);
+            stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
             
@@ -465,7 +505,7 @@
         }
         
         function drawSpiral() {
-            stroke(0);
+            stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
             
@@ -532,7 +572,7 @@
         }
         
         function drawCircularFFT() {
-            stroke(0);
+            stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
             
@@ -549,7 +589,9 @@
             
             // Inner circle
             noFill();
-            stroke(100);
+            const innerCol = color(params.strokeColor);
+            innerCol.setAlpha(100);
+            stroke(innerCol);
             strokeWeight(1);
             ellipse(0, 0, 200 * params.scale, 200 * params.scale);
         }
@@ -645,8 +687,13 @@
             recordedPaths = [];
         }
         
+        function resizeCanvasForPaperSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            resizeCanvas(size.width, size.height);
+        }
+
         function windowResized() {
-            resizeCanvas(windowWidth - 350, windowHeight - 40);
+            resizeCanvasForPaperSize();
         }
     </script>
 </body>

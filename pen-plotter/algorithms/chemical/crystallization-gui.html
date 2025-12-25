@@ -10,7 +10,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
-  
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -118,7 +120,30 @@
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Crystallization Controls</h2>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Crystal Type</h3>
       <div class="control">
@@ -237,6 +262,9 @@
 
   <script>
     let params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       seed: Math.floor(Math.random() * 1000000),
       crystalType: 'dendritic',
       growthMode: 'center',
@@ -263,13 +291,29 @@
     let generation = 0;
     
     function setup() {
-      const w = 600;
-      const h = 600;
-      
-      svgCanvas = createCanvas(w, h);
+      const size = CanvasLayout.getSize(params.paperSize);
+      svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
-      
+
+      // Canvas settings event handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
+
       setupControls();
+      regenerate();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
       regenerate();
     }
     
@@ -589,7 +633,7 @@
     function draw() {
       update();
       
-      background(255);
+      background(params.bgColor);
       
       const cellSize = width / params.detailLevel;
       

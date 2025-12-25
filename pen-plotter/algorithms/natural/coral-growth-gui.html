@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Coral Growth - Pen Plotter Art</title>
     <script src="../../preset-manager.js"></script>
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
     
   <!-- Total Serialism Design System -->
@@ -160,7 +162,30 @@
                     <option value="fan">Sea Fan</option>
                 </select>
             </div>
-            
+
+            <h3>Canvas Settings</h3>
+            <div class="control-group">
+                <label for="paperSize">Paper Size</label>
+                <select id="paperSize">
+                    <option value="square800">Square (800×800)</option>
+                    <option value="landscape800x600">Landscape (800×600)</option>
+                    <option value="a4portrait">A4 Portrait</option>
+                    <option value="a4landscape">A4 Landscape</option>
+                    <option value="letterportrait">Letter Portrait</option>
+                    <option value="letterlandscape">Letter Landscape</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="bgColor">Background Color</label>
+                <input type="color" id="bgColor" value="#000033">
+            </div>
+
+            <div class="control-group">
+                <label for="strokeColor">Stroke Color</label>
+                <input type="color" id="strokeColor" value="#ff6b6b">
+            </div>
+
             <div class="control-group">
                 <label for="growthRate">Growth Rate</label>
                 <input type="range" id="growthRate" min="0.5" max="5" step="0.1" value="2">
@@ -268,6 +293,9 @@
 
         // Parameters object
         let params = {
+            paperSize: 'square800',
+            bgColor: '#000033',
+            strokeColor: '#ff6b6b',
             coralType: 'branching',
             growthRate: 2,
             branchProbability: 0.1,
@@ -315,6 +343,9 @@
 
         // Helper function to update UI from params
         function updateUIFromParams() {
+            document.getElementById('paperSize').value = params.paperSize;
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
             document.getElementById('coralType').value = params.coralType;
             document.getElementById('growthRate').value = params.growthRate;
             document.getElementById('branchProbability').value = params.branchProbability;
@@ -338,6 +369,16 @@
             document.getElementById('lightIntensityValue').textContent = params.lightIntensity;
             document.getElementById('currentStrengthValue').textContent = params.currentStrength;
             document.getElementById('currentDirectionValue').textContent = params.currentDirection + '°';
+
+            // Apply canvas size
+            resizeCanvasForPaperSize();
+        }
+
+        function resizeCanvasForPaperSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+            clearCanvas();
         }
 
         // Update value displays and params
@@ -374,7 +415,24 @@
         document.getElementById('speciesCount').addEventListener('input', (e) => {
             params.speciesCount = parseInt(e.target.value);
         });
-        
+
+        // Canvas settings handlers
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            params.paperSize = e.target.value;
+            resizeCanvasForPaperSize();
+        });
+
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            if (coralSystem) coralSystem.draw(ctx);
+            else clearCanvas();
+        });
+
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+            if (coralSystem) coralSystem.draw(ctx);
+        });
+
         class CoralBranch {
             constructor(x, y, angle, depth, species = 0) {
                 this.startX = x;
@@ -542,9 +600,9 @@
             }
             
             draw(ctx) {
-                ctx.fillStyle = '#000033';
+                ctx.fillStyle = params.bgColor;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+
                 // Add gradient for underwater effect
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 gradient.addColorStop(0, 'rgba(0, 50, 100, 0.3)');
@@ -612,7 +670,7 @@
         }
         
         function clearCanvas() {
-            ctx.fillStyle = '#000033';
+            ctx.fillStyle = params.bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             coralSystem = null;
             animationFrames = [];
@@ -620,9 +678,9 @@
         
         function exportSVG() {
             if (!coralSystem) return;
-            
+
             let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
-            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="#000033"/>`;
+            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="${params.bgColor}"/>`;
             
             const speciesColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffd93d', '#6bcf7f'];
             

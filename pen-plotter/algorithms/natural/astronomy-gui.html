@@ -142,8 +142,25 @@
 
     <div class="container">
         <div class="controls">
+            <h3>Canvas Settings</h3>
+
+            <div class="control-group">
+                <label>Paper Size:
+                    <select id="paperSize">
+                        <option value="square800">Square (800×800)</option>
+                        <option value="landscape800x600">Landscape (800×600)</option>
+                        <option value="a4portrait">A4 Portrait</option>
+                        <option value="a4landscape">A4 Landscape</option>
+                        <option value="letterportrait">Letter Portrait</option>
+                        <option value="letterlandscape">Letter Landscape</option>
+                    </select>
+                </label>
+                <label>Background: <input type="color" id="bgColor" value="#000000"></label>
+                <label>Stroke Color: <input type="color" id="strokeColor" value="#ffffff"></label>
+            </div>
+
             <h3>Visualization Type</h3>
-            
+
             <div class="control-group">
                 <label for="viewType">View Type</label>
                 <select id="viewType">
@@ -255,14 +272,43 @@
         </div>
     </div>
     
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
+        const params = {
+            paperSize: 'square800',
+            bgColor: '#000000',
+            strokeColor: '#ffffff'
+        };
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let currentView = null;
         let animationFrames = [];
         let animationId = null;
-        
+
+        function initCanvasSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+        }
+        initCanvasSize();
+
+        // Canvas settings event handlers
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            params.paperSize = e.target.value;
+            initCanvasSize();
+            clearCanvas();
+        });
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            clearCanvas();
+        });
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+        });
+
         // Set current date/time
         const now = new Date();
         document.getElementById('viewDate').value = now.toISOString().split('T')[0];
@@ -499,7 +545,7 @@
             }
             
             draw(ctx) {
-                ctx.fillStyle = '#000000';
+                ctx.fillStyle = params.bgColor;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
                 
                 const viewType = document.getElementById('viewType').value;
@@ -820,7 +866,7 @@
         }
         
         function clearCanvas() {
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = params.bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             currentView = null;
             animationFrames = [];

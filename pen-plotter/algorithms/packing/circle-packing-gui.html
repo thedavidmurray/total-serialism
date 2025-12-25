@@ -9,6 +9,8 @@
   <title>Circle Packing Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -231,6 +233,33 @@
       <!-- Preset Manager Container -->
       <div id="preset-container"></div>
 
+      <!-- Canvas Settings -->
+      <div class="control-group">
+        <h3>📐 Canvas Settings</h3>
+
+        <label>
+          Paper Size
+          <select id="paperSize">
+            <option value="square800" selected>Square (800×800)</option>
+            <option value="landscape800x600">Landscape (800×600)</option>
+            <option value="a4portrait">A4 Portrait</option>
+            <option value="a4landscape">A4 Landscape</option>
+            <option value="letterportrait">Letter Portrait</option>
+            <option value="letterlandscape">Letter Landscape</option>
+          </select>
+        </label>
+
+        <label>
+          Background Color
+          <input type="color" id="bgColor" value="#ffffff">
+        </label>
+
+        <label>
+          Stroke Color
+          <input type="color" id="strokeColor" value="#000000">
+        </label>
+      </div>
+
       <!-- Packing Mode -->
       <div class="control-group">
         <h3>📦 Packing Mode</h3>
@@ -391,6 +420,9 @@
 
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       packingMode: 'random',
       maxAttempts: 1000,
       seed: 42,
@@ -407,9 +439,22 @@
 
     // p5.js setup
     function setup() {
-      const canvas = createCanvas(800, 800);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas');
-      background(255);
+      background(params.bgColor);
+
+      // Canvas settings handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -436,7 +481,7 @@
 
     // p5.js draw
     function draw() {
-      background(255);
+      background(params.bgColor);
 
       // Show source image if requested
       if (params.showSourceImage && sourceImage) {
@@ -466,20 +511,20 @@
 
       switch (params.displayStyle) {
         case 'outline':
-          stroke(0);
+          stroke(params.strokeColor);
           strokeWeight(params.lineWeight);
           noFill();
           circle(c.x, c.y, r * 2);
           break;
 
         case 'filled':
-          fill(0);
+          fill(params.strokeColor);
           noStroke();
           circle(c.x, c.y, r * 2);
           break;
 
         case 'concentric':
-          stroke(0);
+          stroke(params.strokeColor);
           strokeWeight(params.lineWeight);
           noFill();
           const rings = params.detailLevel;
@@ -490,7 +535,7 @@
           break;
 
         case 'radial':
-          stroke(0);
+          stroke(params.strokeColor);
           strokeWeight(params.lineWeight);
           const lines = params.detailLevel * 2;
           for (let i = 0; i < lines; i++) {
@@ -507,13 +552,15 @@
 
         case 'tangent':
           // Draw circle
-          stroke(0);
+          stroke(params.strokeColor);
           strokeWeight(params.lineWeight);
           noFill();
           circle(c.x, c.y, r * 2);
 
           // Draw tangent lines to nearby circles
-          stroke(0, 100);
+          const col = color(params.strokeColor);
+          col.setAlpha(100);
+          stroke(col);
           strokeWeight(params.lineWeight * 0.5);
           for (let other of circles) {
             if (other !== c) {
@@ -704,6 +751,13 @@
       updateStats();
     }
 
+    // Resize canvas for paper size
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      clearCanvas();
+    }
+
     // Randomize seed
     function randomizeSeed() {
       params.seed = Math.floor(Math.random() * 99999);
@@ -800,6 +854,11 @@
 
     // Update UI from params
     function updateUIFromParams() {
+      // Canvas settings
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+
       document.getElementById('packingMode').value = params.packingMode;
       document.getElementById('maxAttempts').value = params.maxAttempts;
       document.getElementById('seed').value = params.seed;
@@ -832,14 +891,14 @@
 
       let svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <rect width="${width}" height="${height}" fill="white"/>
+  <rect width="${width}" height="${height}" fill="${params.bgColor}"/>
 `;
 
       for (let c of circles) {
         switch (params.displayStyle) {
           case 'outline':
           case 'filled':
-            svg += `  <circle cx="${c.x}" cy="${c.y}" r="${c.r}" stroke="black" stroke-width="${params.lineWeight}" fill="${params.displayStyle === 'filled' ? 'black' : 'none'}"/>\n`;
+            svg += `  <circle cx="${c.x}" cy="${c.y}" r="${c.r}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="${params.displayStyle === 'filled' ? params.strokeColor : 'none'}"/>\n`;
             break;
 
           case 'concentric':
@@ -847,7 +906,7 @@
             for (let i = 0; i < rings; i++) {
               const ratio = (i + 1) / rings;
               const r = c.r * ratio;
-              svg += `  <circle cx="${c.x}" cy="${c.y}" r="${r}" stroke="black" stroke-width="${params.lineWeight}" fill="none"/>\n`;
+              svg += `  <circle cx="${c.x}" cy="${c.y}" r="${r}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none"/>\n`;
             }
             break;
 
@@ -857,9 +916,9 @@
               const angle = (Math.PI * 2 / lines) * i;
               const x2 = c.x + Math.cos(angle) * c.r;
               const y2 = c.y + Math.sin(angle) * c.r;
-              svg += `  <line x1="${c.x}" y1="${c.y}" x2="${x2}" y2="${y2}" stroke="black" stroke-width="${params.lineWeight}"/>\n`;
+              svg += `  <line x1="${c.x}" y1="${c.y}" x2="${x2}" y2="${y2}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}"/>\n`;
             }
-            svg += `  <circle cx="${c.x}" cy="${c.y}" r="${c.r}" stroke="black" stroke-width="${params.lineWeight}" fill="none"/>\n`;
+            svg += `  <circle cx="${c.x}" cy="${c.y}" r="${c.r}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none"/>\n`;
             break;
         }
       }

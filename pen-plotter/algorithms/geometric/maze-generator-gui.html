@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Maze Generator - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -86,6 +87,32 @@
 
       <div id="controls">
         <div class="control-group">
+          <label>Canvas Size:
+            <select id="paperSize">
+              <option value="square800">Square 800×800</option>
+              <option value="a4portrait">A4 Portrait</option>
+              <option value="a4landscape">A4 Landscape</option>
+              <option value="letterportrait">Letter Portrait</option>
+              <option value="letterlandscape">Letter Landscape</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Background Color:
+            <input type="color" id="bgColor" value="#ffffff">
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Color:
+            <input type="color" id="strokeColor" value="#000000">
+          </label>
+        </div>
+
+        <hr style="border-color: var(--border-color, #333); margin: 12px 0;">
+
+        <div class="control-group">
           <label>Algorithm:
             <select id="algorithm">
               <option value="recursive">Recursive Backtracker</option>
@@ -156,6 +183,9 @@
   <script>
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       algorithm: 'recursive',
       cols: 20,
       rows: 20,
@@ -178,7 +208,6 @@
     let canvas;
     let grid = [];
     let solution = [];
-    const SIZE = 800;
 
     // Seeded random
     let rng;
@@ -188,13 +217,36 @@
     }
 
     function setup() {
-      canvas = createCanvas(SIZE, SIZE);
+      const size = CanvasLayout.getSize(params.paperSize);
+      canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
       setupControls();
       generateMaze();
     }
 
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generateMaze();
+    }
+
     function setupControls() {
+      // Canvas settings controls
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        drawMaze();
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        drawMaze();
+      });
+
       const rangeControls = ['cols', 'rows', 'wallThickness', 'margin', 'seed'];
       rangeControls.forEach(id => {
         const el = document.getElementById(id);
@@ -534,11 +586,11 @@
     }
 
     function drawMaze() {
-      background(255);
+      background(params.bgColor);
 
       const margin = params.margin;
-      const cellW = (SIZE - margin * 2) / params.cols;
-      const cellH = (SIZE - margin * 2) / params.rows;
+      const cellW = (width - margin * 2) / params.cols;
+      const cellH = (height - margin * 2) / params.rows;
 
       push();
       translate(margin, margin);
@@ -559,7 +611,7 @@
       }
 
       // Draw walls
-      stroke(0);
+      stroke(params.strokeColor);
       strokeWeight(params.wallThickness);
       if (params.roundCorners) {
         strokeCap(ROUND);
@@ -591,8 +643,8 @@
     function generateSVG() {
       const paths = [];
       const margin = params.margin;
-      const cellW = (SIZE - margin * 2) / params.cols;
-      const cellH = (SIZE - margin * 2) / params.rows;
+      const cellW = (width - margin * 2) / params.cols;
+      const cellH = (height - margin * 2) / params.rows;
 
       // Solution path
       if (params.showSolution && solution.length > 0) {
@@ -615,23 +667,24 @@
           const py = margin + y * cellH;
 
           if (cell.walls.top) {
-            paths.push({ d: `M ${px} ${py} L ${px + cellW} ${py}` });
+            paths.push({ d: `M ${px} ${py} L ${px + cellW} ${py}`, stroke: params.strokeColor });
           }
           if (cell.walls.right) {
-            paths.push({ d: `M ${px + cellW} ${py} L ${px + cellW} ${py + cellH}` });
+            paths.push({ d: `M ${px + cellW} ${py} L ${px + cellW} ${py + cellH}`, stroke: params.strokeColor });
           }
           if (cell.walls.bottom) {
-            paths.push({ d: `M ${px} ${py + cellH} L ${px + cellW} ${py + cellH}` });
+            paths.push({ d: `M ${px} ${py + cellH} L ${px + cellW} ${py + cellH}`, stroke: params.strokeColor });
           }
           if (cell.walls.left) {
-            paths.push({ d: `M ${px} ${py} L ${px} ${py + cellH}` });
+            paths.push({ d: `M ${px} ${py} L ${px} ${py + cellH}`, stroke: params.strokeColor });
           }
         }
       }
 
-      return TSExport.createSVG(paths, SIZE, SIZE, {
-        backgroundColor: 'white',
-        strokeWidth: params.wallThickness
+      return TSExport.createSVG(paths, width, height, {
+        backgroundColor: params.bgColor,
+        strokeWidth: params.wallThickness,
+        strokeColor: params.strokeColor
       });
     }
   </script>

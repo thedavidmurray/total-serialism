@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Crystal Growth - Pen Plotter Art</title>
     <script src="../../preset-manager.js"></script>
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
     
   <!-- Total Serialism Design System -->
@@ -178,7 +180,30 @@
                     <option value="grid">Grid</option>
                 </select>
             </div>
-            
+
+            <h3>Canvas Settings</h3>
+            <div class="control-group">
+                <label for="paperSize">Paper Size</label>
+                <select id="paperSize">
+                    <option value="square800">Square (800×800)</option>
+                    <option value="landscape800x600">Landscape (800×600)</option>
+                    <option value="a4portrait">A4 Portrait</option>
+                    <option value="a4landscape">A4 Landscape</option>
+                    <option value="letterportrait">Letter Portrait</option>
+                    <option value="letterlandscape">Letter Landscape</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="bgColor">Background Color</label>
+                <input type="color" id="bgColor" value="#000000">
+            </div>
+
+            <div class="control-group">
+                <label for="strokeColor">Stroke Color</label>
+                <input type="color" id="strokeColor" value="#ffffff">
+            </div>
+
             <div class="control-group">
                 <label for="particles">Number of Particles</label>
                 <input type="range" id="particles" min="1000" max="50000" step="1000" value="10000">
@@ -270,6 +295,9 @@
 
         // Parameters object for preset management
         const params = {
+            paperSize: 'square800',
+            bgColor: '#000000',
+            strokeColor: '#ffffff',
             crystalType: 'dendritic',
             seedPattern: 'point',
             particles: 10000,
@@ -314,6 +342,9 @@
 
         // Helper function to update UI from params
         function updateUIFromParams() {
+            document.getElementById('paperSize').value = params.paperSize;
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
             document.getElementById('crystalType').value = params.crystalType;
             document.getElementById('seedPattern').value = params.seedPattern;
             document.getElementById('particles').value = params.particles;
@@ -330,6 +361,16 @@
             document.getElementById('growthBiasValue').textContent = params.growthBias.toFixed(1);
             document.getElementById('particleSizeValue').textContent = params.particleSize;
             document.getElementById('frameIntervalValue').textContent = params.frameInterval;
+
+            // Apply canvas size
+            resizeCanvasForPaperSize();
+        }
+
+        function resizeCanvasForPaperSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+            clearCanvas();
         }
 
         // Update value displays and params on input
@@ -342,7 +383,24 @@
                 if (valueDisplay) {
                     valueDisplay.textContent = e.target.value;
                 }
+
+                // Handle paper size change
+                if (key === 'paperSize') {
+                    resizeCanvasForPaperSize();
+                }
             });
+        });
+
+        // Canvas settings handlers
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            if (crystalData) crystalData.draw(ctx);
+            else clearCanvas();
+        });
+
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+            if (crystalData) crystalData.draw(ctx);
         });
         
         class CrystalGrowth {
@@ -510,16 +568,16 @@
             draw(ctx) {
                 const colorMode = document.getElementById('colorMode').value;
                 const particleSize = parseInt(document.getElementById('particleSize').value);
-                
-                ctx.fillStyle = '#000000';
+
+                ctx.fillStyle = params.bgColor;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+
                 this.particles.forEach(particle => {
                     let color;
-                    
+
                     switch(colorMode) {
                         case 'monochrome':
-                            color = '#ffffff';
+                            color = params.strokeColor;
                             break;
                         case 'depth':
                             const depth = Math.sqrt((particle.x - this.width/2) ** 2 + 
@@ -629,7 +687,7 @@
         }
         
         function clearCanvas() {
-            ctx.fillStyle = '#000000';
+            ctx.fillStyle = params.bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             crystalData = null;
             animationFrames = [];
@@ -639,17 +697,17 @@
         
         function exportSVG() {
             if (!crystalData || crystalData.particles.length === 0) return;
-            
+
             const particleSize = parseInt(document.getElementById('particleSize').value);
-            
+
             let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
-            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="#000000"/>`;
-            
+            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="${params.bgColor}"/>`;
+
             crystalData.particles.forEach(particle => {
                 svg += `<rect x="${particle.x - particleSize/2}" y="${particle.y - particleSize/2}" `;
-                svg += `width="${particleSize}" height="${particleSize}" fill="white"/>`;
+                svg += `width="${particleSize}" height="${particleSize}" fill="${params.strokeColor}"/>`;
             });
-            
+
             svg += '</svg>';
             
             const blob = new Blob([svg], {type: 'image/svg+xml'});

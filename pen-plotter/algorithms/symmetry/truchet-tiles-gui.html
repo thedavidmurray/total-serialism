@@ -9,6 +9,8 @@
   <title>Truchet Tiles Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -236,6 +238,33 @@
       <!-- Preset Manager Container -->
       <div id="preset-container"></div>
 
+      <!-- Canvas Settings -->
+      <div class="control-group">
+        <h3>📐 Canvas Settings</h3>
+
+        <label>
+          Paper Size
+          <select id="paperSize">
+            <option value="square800" selected>Square (800×800)</option>
+            <option value="landscape800x600">Landscape (800×600)</option>
+            <option value="a4portrait">A4 Portrait</option>
+            <option value="a4landscape">A4 Landscape</option>
+            <option value="letterportrait">Letter Portrait</option>
+            <option value="letterlandscape">Letter Landscape</option>
+          </select>
+        </label>
+
+        <label>
+          Background Color
+          <input type="color" id="bgColor" value="#ffffff">
+        </label>
+
+        <label>
+          Stroke Color
+          <input type="color" id="strokeColor" value="#000000">
+        </label>
+      </div>
+
       <!-- Tile Type -->
       <div class="control-group">
         <h3>🎨 Tile Style</h3>
@@ -374,6 +403,9 @@
 
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       tileType: 'diagonal',
       rotationMode: 'random',
       gridSize: 20,
@@ -390,10 +422,24 @@
 
     // p5.js setup
     function setup() {
-      const canvasSize = Math.min(800, windowWidth - 400);
-      const canvas = createCanvas(canvasSize, canvasSize);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas');
-      background(255);
+      background(params.bgColor);
+
+      // Canvas settings handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        generateTiles();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        generateTiles();
+      });
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -419,6 +465,12 @@
       generateTiles();
     }
 
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generateTiles();
+    }
+
     // p5.js draw
     function draw() {
       // Static rendering, no animation needed
@@ -430,7 +482,9 @@
       randomSeed(params.seed);
       noiseSeed(params.seed);
 
-      background(params.invertColors ? 0 : 255);
+      // Use bgColor if not inverted, otherwise invert
+      const bgCol = params.invertColors ? params.strokeColor : params.bgColor;
+      background(bgCol);
 
       const tileSize = width / params.gridSize;
 
@@ -477,7 +531,8 @@
 
       // Draw grid if requested
       if (params.showGrid) {
-        stroke(params.invertColors ? 255 : 0, 50);
+        const gridCol = params.invertColors ? params.bgColor : params.strokeColor;
+        stroke(color(gridCol).levels[0], color(gridCol).levels[1], color(gridCol).levels[2], 50);
         strokeWeight(0.5);
         for (let i = 0; i <= params.gridSize; i++) {
           line(i * tileSize, 0, i * tileSize, height);
@@ -491,7 +546,8 @@
     // Draw a single tile
     function drawTile(size, type) {
       const half = size / 2;
-      stroke(params.invertColors ? 255 : 0);
+      const strokeCol = params.invertColors ? params.bgColor : params.strokeColor;
+      stroke(strokeCol);
       strokeWeight(params.lineWeight);
       noFill();
 
@@ -586,7 +642,8 @@
 
     // Clear canvas
     function clearCanvas() {
-      background(params.invertColors ? 0 : 255);
+      const bgCol = params.invertColors ? params.strokeColor : params.bgColor;
+      background(bgCol);
       updateStats();
     }
 
@@ -674,6 +731,9 @@
 
     // Update UI from params
     function updateUIFromParams() {
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
       document.getElementById('tileType').value = params.tileType;
       document.getElementById('rotationMode').value = params.rotationMode;
       document.getElementById('gridSize').value = params.gridSize;
@@ -700,10 +760,12 @@
 
     // Export SVG
     function exportSVG() {
+      const bgCol = params.invertColors ? params.strokeColor : params.bgColor;
+      const strokeCol = params.invertColors ? params.bgColor : params.strokeColor;
       let svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
-  <rect width="${width}" height="${height}" fill="${params.invertColors ? 'black' : 'white'}"/>
-  <g stroke="${params.invertColors ? 'white' : 'black'}" stroke-width="${params.lineWeight}" fill="none">
+  <rect width="${width}" height="${height}" fill="${bgCol}"/>
+  <g stroke="${strokeCol}" stroke-width="${params.lineWeight}" fill="none">
 `;
 
       randomSeed(params.seed);

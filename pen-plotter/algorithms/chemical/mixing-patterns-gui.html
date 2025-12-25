@@ -147,7 +147,23 @@
     <div class="container">
         <div class="controls">
             <h1>Mixing Patterns</h1>
-            
+
+            <div class="control-group">
+                <h3>Canvas Settings</h3>
+                <label>Paper Size:
+                    <select id="paperSize">
+                        <option value="square800">Square (800×800)</option>
+                        <option value="landscape800x600">Landscape (800×600)</option>
+                        <option value="a4portrait">A4 Portrait</option>
+                        <option value="a4landscape">A4 Landscape</option>
+                        <option value="letterportrait">Letter Portrait</option>
+                        <option value="letterlandscape">Letter Landscape</option>
+                    </select>
+                </label>
+                <label>Background: <input type="color" id="bgColor" value="#ffffff"></label>
+                <label>Stroke Color: <input type="color" id="strokeColor" value="#000000"></label>
+            </div>
+
             <div class="control-group">
                 <h3>Mixer Type</h3>
                 <select id="mixerType">
@@ -218,12 +234,28 @@
         </div>
     </div>
     
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
+        const params = {
+            paperSize: 'square800',
+            bgColor: '#ffffff',
+            strokeColor: '#000000'
+        };
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const width = canvas.width;
-        const height = canvas.height;
+        let width, height;
+
+        function initCanvasSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+            width = canvas.width;
+            height = canvas.height;
+        }
+        initCanvasSize();
         
         let particles = [];
         let isAnimating = false;
@@ -258,7 +290,23 @@
         rotationSpeed.oninput = () => document.getElementById('speedValue').textContent = rotationSpeed.value;
         timeSteps.oninput = () => document.getElementById('stepsValue').textContent = timeSteps.value;
         particleCount.oninput = () => document.getElementById('particlesValue').textContent = particleCount.value;
-        
+
+        // Canvas settings event handlers
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            params.paperSize = e.target.value;
+            initCanvasSize();
+            initializeParticles();
+            drawPattern();
+        });
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            drawPattern();
+        });
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+            drawPattern();
+        });
+
         class Particle {
             constructor(x, y) {
                 this.x = x;
@@ -412,11 +460,11 @@
         }
         
         function drawPattern() {
-            ctx.fillStyle = '#ffffff';
+            ctx.fillStyle = params.bgColor;
             ctx.fillRect(0, 0, width, height);
-            
+
             // Draw mixing vessel outline
-            ctx.strokeStyle = '#cccccc';
+            ctx.strokeStyle = params.strokeColor;
             ctx.lineWidth = 2;
             ctx.strokeRect(width * 0.1, height * 0.1, width * 0.8, height * 0.8);
             

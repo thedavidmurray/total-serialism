@@ -10,6 +10,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="../../preset-manager.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -85,6 +87,28 @@
 
         <!-- Preset Manager Container -->
         <div id="preset-container"></div>
+
+        <div class="control-group">
+            <label>Canvas Settings</label>
+            <select id="paperSize">
+                <option value="square800">Square (800×800)</option>
+                <option value="landscape800x600">Landscape (800×600)</option>
+                <option value="a4portrait">A4 Portrait</option>
+                <option value="a4landscape">A4 Landscape</option>
+                <option value="letterportrait">Letter Portrait</option>
+                <option value="letterlandscape">Letter Landscape</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#f0f0f0">
+        </div>
+
+        <div class="control-group">
+            <label>Stroke Color</label>
+            <input type="color" id="strokeColor" value="#000000">
+        </div>
 
         <div class="control-group">
             <label>Obstacle Shape:</label>
@@ -173,6 +197,9 @@
         let presetManager;
 
         let params = {
+            paperSize: 'square800',
+            bgColor: '#f0f0f0',
+            strokeColor: '#000000',
             obstacleShape: 'cylinder',
             reynolds: 150,
             flowSpeed: 2.0,
@@ -421,7 +448,21 @@
         }
         
         function setup() {
-            createCanvas(windowWidth - 350, windowHeight - 40);
+            const size = CanvasLayout.getSize(params.paperSize);
+            createCanvas(size.width, size.height);
+
+            // Canvas settings handlers
+            document.getElementById('paperSize').addEventListener('change', (e) => {
+                params.paperSize = e.target.value;
+                resizeCanvasForPaperSize();
+            });
+            document.getElementById('bgColor').addEventListener('input', (e) => {
+                params.bgColor = e.target.value;
+            });
+            document.getElementById('strokeColor').addEventListener('input', (e) => {
+                params.strokeColor = e.target.value;
+            });
+
             setupControls();
 
             // Initialize preset manager
@@ -455,8 +496,17 @@
             resetSimulation();
         }
 
+        function resizeCanvasForPaperSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            resizeCanvas(size.width, size.height);
+            resetSimulation();
+        }
+
         // Helper function to update UI from params
         function updateUIFromParams() {
+            document.getElementById('paperSize').value = params.paperSize;
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
             document.getElementById('obstacleShape').value = params.obstacleShape;
             document.getElementById('reynolds').value = params.reynolds;
             document.getElementById('flowSpeed').value = params.flowSpeed;
@@ -572,7 +622,7 @@
         }
         
         function draw() {
-            background(240);
+            background(params.bgColor);
             
             if (params.animate) {
                 // Update fluid simulation
@@ -849,13 +899,13 @@
         
         function createSVG() {
             const svgSize = 800;
-            
+
             let svg = `<svg width="${svgSize}" height="${svgSize}" xmlns="http://www.w3.org/2000/svg">\n`;
-            svg += `<rect width="${svgSize}" height="${svgSize}" fill="white"/>\n`;
-            
+            svg += `<rect width="${svgSize}" height="${svgSize}" fill="${params.bgColor}"/>\n`;
+
             // Export streamlines
             if (params.vizMode === 'streamlines' || params.vizMode === 'combined') {
-                svg += `<g stroke="black" stroke-width="1" fill="none">\n`;
+                svg += `<g stroke="${params.strokeColor}" stroke-width="1" fill="none">\n`;
                 
                 const spacing = 20;
                 const scale = svgSize / width;
@@ -893,7 +943,7 @@
             const cy = svgSize / 2;
             const r = params.obstacleSize * svgSize / width;
             
-            svg += `<g fill="black">\n`;
+            svg += `<g fill="${params.strokeColor}">\n`;
             
             switch(params.obstacleShape) {
                 case 'cylinder':
@@ -914,8 +964,7 @@
         }
         
         function windowResized() {
-            resizeCanvas(windowWidth - 350, windowHeight - 40);
-            resetSimulation();
+            resizeCanvasForPaperSize();
         }
     </script>
 </body>

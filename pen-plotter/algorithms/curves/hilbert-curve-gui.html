@@ -8,8 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Hilbert Curve - Space-Filling Curves</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
-  <script src="../../export-utils.js"></script>
   <script src="../../ui-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
@@ -215,6 +216,30 @@
       <!-- Preset Manager Container -->
       <div id="preset-container"></div>
 
+      <!-- Canvas Settings -->
+      <div class="control-group">
+        <h3>Canvas Settings</h3>
+        <label>
+          Paper Size
+          <select id="paperSize">
+            <option value="square800" selected>Square (800×800)</option>
+            <option value="landscape800x600">Landscape (800×600)</option>
+            <option value="a4portrait">A4 Portrait</option>
+            <option value="a4landscape">A4 Landscape</option>
+            <option value="letterportrait">Letter Portrait</option>
+            <option value="letterlandscape">Letter Landscape</option>
+          </select>
+        </label>
+        <label>
+          Background Color
+          <input type="color" id="bgColor" value="#ffffff">
+        </label>
+        <label>
+          Stroke Color
+          <input type="color" id="strokeColor" value="#000000">
+        </label>
+      </div>
+
       <!-- Curve Type -->
       <div class="control-group">
         <h3>🎯 Curve Type</h3>
@@ -414,6 +439,9 @@
 
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       curveType: 'hilbert',
       iteration: 4,
       orientation: 0,
@@ -437,9 +465,24 @@
 
     // p5.js setup
     function setup() {
-      const canvas = createCanvas(800, 800);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas');
-      background(255);
+      background(params.bgColor);
+
+      // Canvas settings event handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        redraw();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        redraw();
+      });
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -472,9 +515,16 @@
       generateCurve();
     }
 
+    // Resize canvas for paper size
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generateCurve();
+    }
+
     // p5.js draw
     function draw() {
-      background(255);
+      background(params.bgColor);
 
       // Draw the curve(s)
       if (params.showMultiple && params.curveCount > 1) {
@@ -633,7 +683,7 @@
       translate(-((minX + maxX) / 2) * scaleFactor, -((minY + maxY) / 2) * scaleFactor);
 
       // Draw path
-      stroke(0);
+      stroke(params.strokeColor);
       strokeWeight(params.lineWeight);
       noFill();
 
@@ -732,7 +782,9 @@
     function exportSVG() {
       const filename = ExportUtils.generateFilename('hilbert-curve');
       ExportUtils.exportSVG([curvePath], width, height, filename, {
-        strokeWidth: params.lineWeight
+        strokeWidth: params.lineWeight,
+        strokeColor: params.strokeColor,
+        backgroundColor: params.bgColor
       });
       UIUtils.showNotification('SVG exported successfully!', 'success');
     }

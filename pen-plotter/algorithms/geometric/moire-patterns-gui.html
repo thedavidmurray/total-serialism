@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Moiré Patterns - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -80,6 +81,32 @@
       <h2>Moiré Patterns</h2>
 
       <div id="controls">
+        <div class="control-group">
+          <label>Canvas Size:
+            <select id="paperSize">
+              <option value="square800">Square 800×800</option>
+              <option value="a4portrait">A4 Portrait</option>
+              <option value="a4landscape">A4 Landscape</option>
+              <option value="letterportrait">Letter Portrait</option>
+              <option value="letterlandscape">Letter Landscape</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Background Color:
+            <input type="color" id="bgColor" value="#ffffff">
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Color:
+            <input type="color" id="strokeColor" value="#000000">
+          </label>
+        </div>
+
+        <hr style="border-color: var(--border-color, #333); margin: 12px 0;">
+
         <div class="control-group">
           <label>Pattern Type:
             <select id="patternType">
@@ -165,6 +192,9 @@
   <script>
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       patternType: 'circles',
       spacing: 8,
       lineCount: 50,
@@ -180,10 +210,10 @@
 
     let canvas;
     let animationAngle = 0;
-    const SIZE = 800;
 
     function setup() {
-      canvas = createCanvas(SIZE, SIZE);
+      const size = CanvasLayout.getSize(params.paperSize);
+      canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
       // Setup controls
@@ -193,7 +223,29 @@
       generateMoire();
     }
 
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generateMoire();
+    }
+
     function setupControls() {
+      // Canvas settings controls
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        if (!params.animate) generateMoire();
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        if (!params.animate) generateMoire();
+      });
+
       const controls = ['spacing', 'lineCount', 'offsetX', 'offsetY', 'rotation', 'scale2', 'strokeWeight'];
 
       controls.forEach(id => {
@@ -254,13 +306,13 @@
     }
 
     function generateMoire(animOffset = 0) {
-      background(255);
-      stroke(0);
+      background(params.bgColor);
+      stroke(params.strokeColor);
       strokeWeight(params.strokeWeight);
       noFill();
 
-      const cx = SIZE / 2;
-      const cy = SIZE / 2;
+      const cx = width / 2;
+      const cy = height / 2;
 
       // Draw Layer 1
       if (params.showLayer1) {
@@ -284,7 +336,7 @@
     function drawPattern(x, y, angle, scale) {
       const count = params.lineCount;
       const spacing = params.spacing;
-      const maxRadius = SIZE * 0.8;
+      const maxRadius = Math.min(width, height) * 0.8;
 
       switch (params.patternType) {
         case 'circles':
@@ -314,33 +366,36 @@
 
     function drawParallelLines(count, spacing) {
       const half = (count * spacing) / 2;
+      const maxDim = Math.max(width, height);
       for (let i = 0; i <= count; i++) {
         const y = -half + i * spacing;
-        line(-SIZE, y, SIZE, y);
+        line(-maxDim, y, maxDim, y);
       }
     }
 
     function drawRadialLines(count) {
       const angleStep = TWO_PI / count;
+      const maxDim = Math.max(width, height);
       for (let i = 0; i < count; i++) {
         const angle = i * angleStep;
-        const x = cos(angle) * SIZE;
-        const y = sin(angle) * SIZE;
+        const x = cos(angle) * maxDim;
+        const y = sin(angle) * maxDim;
         line(0, 0, x, y);
       }
     }
 
     function drawGrid(count, spacing) {
       const half = (count * spacing) / 2;
+      const maxDim = Math.max(width, height);
       // Horizontal
       for (let i = 0; i <= count; i++) {
         const y = -half + i * spacing;
-        line(-SIZE, y, SIZE, y);
+        line(-maxDim, y, maxDim, y);
       }
       // Vertical
       for (let i = 0; i <= count; i++) {
         const x = -half + i * spacing;
-        line(x, -SIZE, x, SIZE);
+        line(x, -maxDim, x, maxDim);
       }
     }
 
@@ -358,8 +413,8 @@
 
     function generateSVG() {
       const paths = [];
-      const cx = SIZE / 2;
-      const cy = SIZE / 2;
+      const cx = width / 2;
+      const cy = height / 2;
       const count = params.lineCount;
       const spacing = params.spacing;
 
@@ -379,7 +434,7 @@
         ));
       }
 
-      return TSExport.createSVG(paths, SIZE, SIZE, { backgroundColor: 'white', strokeWidth: params.strokeWeight });
+      return TSExport.createSVG(paths, width, height, { backgroundColor: params.bgColor, strokeWidth: params.strokeWeight, strokeColor: params.strokeColor });
     }
 
     function generatePatternPaths(cx, cy, rotation, scale) {
@@ -387,6 +442,7 @@
       const count = params.lineCount;
       const spacing = params.spacing;
       const radRot = rotation * Math.PI / 180;
+      const maxDim = Math.max(width, height);
 
       switch (params.patternType) {
         case 'circles':
@@ -399,7 +455,7 @@
                 y: cy + Math.sin(a + radRot) * r
               });
             }
-            paths.push({ d: TSExport.pointsToPath(points, true), stroke: '#000000' });
+            paths.push({ d: TSExport.pointsToPath(points, true), stroke: params.strokeColor });
           }
           break;
 
@@ -407,11 +463,11 @@
           const half = (count * spacing * scale) / 2;
           for (let i = 0; i <= count; i++) {
             const y = -half + i * spacing * scale;
-            const x1 = -SIZE * Math.cos(radRot) - y * Math.sin(radRot) + cx;
-            const y1 = -SIZE * Math.sin(radRot) + y * Math.cos(radRot) + cy;
-            const x2 = SIZE * Math.cos(radRot) - y * Math.sin(radRot) + cx;
-            const y2 = SIZE * Math.sin(radRot) + y * Math.cos(radRot) + cy;
-            paths.push({ d: `M ${x1} ${y1} L ${x2} ${y2}`, stroke: '#000000' });
+            const x1 = -maxDim * Math.cos(radRot) - y * Math.sin(radRot) + cx;
+            const y1 = -maxDim * Math.sin(radRot) + y * Math.cos(radRot) + cy;
+            const x2 = maxDim * Math.cos(radRot) - y * Math.sin(radRot) + cx;
+            const y2 = maxDim * Math.sin(radRot) + y * Math.cos(radRot) + cy;
+            paths.push({ d: `M ${x1} ${y1} L ${x2} ${y2}`, stroke: params.strokeColor });
           }
           break;
 
@@ -419,9 +475,9 @@
           const angleStep = TWO_PI / count;
           for (let i = 0; i < count; i++) {
             const angle = i * angleStep + radRot;
-            const x = Math.cos(angle) * SIZE * scale + cx;
-            const y = Math.sin(angle) * SIZE * scale + cy;
-            paths.push({ d: `M ${cx} ${cy} L ${x} ${y}`, stroke: '#000000' });
+            const x = Math.cos(angle) * maxDim * scale + cx;
+            const y = Math.sin(angle) * maxDim * scale + cy;
+            paths.push({ d: `M ${cx} ${cy} L ${x} ${y}`, stroke: params.strokeColor });
           }
           break;
 
@@ -430,17 +486,17 @@
           for (let i = 0; i <= count; i++) {
             const offset = -halfG + i * spacing * scale;
             // Horizontal
-            const hx1 = -SIZE * Math.cos(radRot) - offset * Math.sin(radRot) + cx;
-            const hy1 = -SIZE * Math.sin(radRot) + offset * Math.cos(radRot) + cy;
-            const hx2 = SIZE * Math.cos(radRot) - offset * Math.sin(radRot) + cx;
-            const hy2 = SIZE * Math.sin(radRot) + offset * Math.cos(radRot) + cy;
-            paths.push({ d: `M ${hx1} ${hy1} L ${hx2} ${hy2}`, stroke: '#000000' });
+            const hx1 = -maxDim * Math.cos(radRot) - offset * Math.sin(radRot) + cx;
+            const hy1 = -maxDim * Math.sin(radRot) + offset * Math.cos(radRot) + cy;
+            const hx2 = maxDim * Math.cos(radRot) - offset * Math.sin(radRot) + cx;
+            const hy2 = maxDim * Math.sin(radRot) + offset * Math.cos(radRot) + cy;
+            paths.push({ d: `M ${hx1} ${hy1} L ${hx2} ${hy2}`, stroke: params.strokeColor });
             // Vertical
-            const vx1 = offset * Math.cos(radRot) - SIZE * Math.sin(radRot) + cx;
-            const vy1 = offset * Math.sin(radRot) + (-SIZE) * Math.cos(radRot) + cy;
-            const vx2 = offset * Math.cos(radRot) - (-SIZE) * Math.sin(radRot) + cx;
-            const vy2 = offset * Math.sin(radRot) + SIZE * Math.cos(radRot) + cy;
-            paths.push({ d: `M ${vx1} ${vy1} L ${vx2} ${vy2}`, stroke: '#000000' });
+            const vx1 = offset * Math.cos(radRot) - maxDim * Math.sin(radRot) + cx;
+            const vy1 = offset * Math.sin(radRot) + (-maxDim) * Math.cos(radRot) + cy;
+            const vx2 = offset * Math.cos(radRot) - (-maxDim) * Math.sin(radRot) + cx;
+            const vy2 = offset * Math.sin(radRot) + maxDim * Math.cos(radRot) + cy;
+            paths.push({ d: `M ${vx1} ${vy1} L ${vx2} ${vy2}`, stroke: params.strokeColor });
           }
           break;
 
@@ -454,7 +510,7 @@
               y: Math.sin(a + radRot) * r + cy
             });
           }
-          paths.push({ d: TSExport.pointsToPath(points, false), stroke: '#000000' });
+          paths.push({ d: TSExport.pointsToPath(points, false), stroke: params.strokeColor });
           break;
       }
 

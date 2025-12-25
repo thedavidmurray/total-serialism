@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Islamic Geometric Patterns</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../export-utils.js"></script>
   <script src="../../ui-utils.js"></script>
@@ -179,6 +180,30 @@
   <div class="container">
     <div class="panel">
       <div id="preset-container"></div>
+
+      <div class="control-group">
+        <h3>Canvas Settings</h3>
+        <label>
+          Canvas Size:
+          <select id="paperSize">
+            <option value="square800">Square 800×800</option>
+            <option value="a4portrait">A4 Portrait</option>
+            <option value="a4landscape">A4 Landscape</option>
+            <option value="letterportrait">Letter Portrait</option>
+            <option value="letterlandscape">Letter Landscape</option>
+          </select>
+        </label>
+
+        <label>
+          Background Color:
+          <input type="color" id="bgColor" value="#ffffff">
+        </label>
+
+        <label>
+          Stroke Color:
+          <input type="color" id="strokeColor" value="#000000">
+        </label>
+      </div>
 
       <div class="control-group">
         <h3>Pattern Style</h3>
@@ -429,6 +454,9 @@
 
     // Parameters
     const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       patternType: 'girih',
       basePolygon: 8,
       starPoints: 8,
@@ -738,9 +766,26 @@
 
     // p5.js setup
     function setup() {
-      const canvas = createCanvas(800, 800);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas');
       colorMode(HSB);
+
+      // Setup canvas settings controls
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        redraw();
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        redraw();
+      });
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -783,6 +828,13 @@
 
       updateConditionalControls();
       generatePattern();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generatePattern();
+      redraw();
     }
 
     function regenerate() {

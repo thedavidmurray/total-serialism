@@ -99,6 +99,29 @@
     <div id="preset-container"></div>
 
     <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape" selected>A4 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+    </div>
+
+    <div class="control-group">
       <h3>Flow Field</h3>
       <div class="control">
         <label>Noise Scale: <span id="noiseScale-value">0.002</span></label>
@@ -165,32 +188,6 @@
     </div>
     
     <div class="control-group">
-      <h3>Appearance</h3>
-      <div class="control">
-        <label>Background Color:</label>
-        <select id="bgColor">
-          <option value="#ffffff">White</option>
-          <option value="#000000">Black</option>
-          <option value="#f5f5dc">Cream</option>
-          <option value="#1a1a2e">Dark Blue</option>
-          <option value="#2d2d2d">Charcoal</option>
-        </select>
-      </div>
-      <div class="control">
-        <label>Stroke Color:</label>
-        <select id="strokeColor">
-          <option value="#000000">Black</option>
-          <option value="#ffffff">White</option>
-          <option value="#ff0000">Red</option>
-          <option value="#0066cc">Blue</option>
-          <option value="#00aa00">Green</option>
-          <option value="#ff6600">Orange</option>
-          <option value="#9933cc">Purple</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="control-group">
       <h3>Actions</h3>
       <button onclick="regenerate()">Regenerate</button>
       <button onclick="exportSVG()">Export SVG</button>
@@ -210,6 +207,7 @@
   <script>
     // Parameters object
     let params = {
+      paperSize: 'a4landscape',
       seed: Math.floor(Math.random() * 1000000),
       noiseScale: 0.002,
       noiseStrength: 1,
@@ -237,11 +235,8 @@
     };
     
     function setup() {
-      // Create canvas with A3 proportions
-      const [w, h] = paperSizes.A3;
-      const scale = Math.min(windowWidth * 0.7 / w, windowHeight / h);
-
-      let canvas = createCanvas(w * scale, h * scale);
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
       // Set up controls
@@ -276,10 +271,31 @@
       // Initial generation
       regenerate();
     }
-    
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      regenerate();
+    }
+
     function setupControls() {
+      // Canvas settings controls
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        regenerate();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        regenerate();
+      });
+
       // Add event listeners to all controls
       Object.keys(params).forEach(key => {
+        if (['paperSize', 'bgColor', 'strokeColor'].includes(key)) return;
         const element = document.getElementById(key);
         if (element) {
           if (element.type === 'range') {
@@ -563,10 +579,10 @@
         });
         
         // Draw frame
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = params.bgColor;
         ctx.fillRect(0, 0, width, height);
-        
-        ctx.strokeStyle = 'black';
+
+        ctx.strokeStyle = params.strokeColor;
         ctx.lineWidth = params.lineWidth;
         
         particles.forEach(particle => {
