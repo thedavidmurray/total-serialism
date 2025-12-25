@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Mandelbrot & Julia Sets - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../canvas-layout.js"></script>
+
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-secondary, #1a1a2e);
+      border-radius: 8px;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary, #888);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #333);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: var(--accent-primary, #4a9eff);
+      color: white;
+    }
+    button.secondary {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #444);
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+    .info-text {
+      font-size: 11px;
+      color: var(--text-secondary, #666);
+      margin-top: 4px;
+    }
+    .julia-params {
+      display: none;
+      padding: 8px;
+      background: var(--bg-tertiary, #252540);
+      border-radius: 4px;
+      margin-top: 8px;
+    }
+    .julia-params.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="ts-layout">
+    <aside class="ts-control-panel">
+      <h2>Mandelbrot & Julia</h2>
+
+      <div id="controls">
+        <div class="control-group">
+          <label>Fractal Type:
+            <select id="fractalType">
+              <option value="mandelbrot">Mandelbrot Set</option>
+              <option value="julia">Julia Set</option>
+            </select>
+          </label>
+          <p class="info-text" id="fractal-info">Classic escape-time fractal</p>
+        </div>
+
+        <div class="julia-params" id="juliaParams">
+          <div class="control-group">
+            <label>Julia C Real: <span id="juliaReal-val">-0.7</span></label>
+            <input type="range" id="juliaReal" min="-1.5" max="1.5" value="-0.7" step="0.01">
+          </div>
+          <div class="control-group">
+            <label>Julia C Imag: <span id="juliaImag-val">0.27</span></label>
+            <input type="range" id="juliaImag" min="-1.5" max="1.5" value="0.27" step="0.01">
+          </div>
+          <p class="info-text">Preset: Douady rabbit</p>
+        </div>
+
+        <div class="control-group">
+          <label>Max Iterations: <span id="maxIter-val">50</span></label>
+          <input type="range" id="maxIter" min="10" max="200" value="50">
+        </div>
+
+        <div class="control-group">
+          <label>Contour Levels: <span id="contourLevels-val">12</span></label>
+          <input type="range" id="contourLevels" min="3" max="30" value="12">
+        </div>
+
+        <div class="control-group">
+          <label>Zoom: <span id="zoom-val">1.0</span></label>
+          <input type="range" id="zoom" min="0.5" max="100" value="1" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>Center X: <span id="centerX-val">0</span></label>
+          <input type="range" id="centerX" min="-2" max="2" value="0" step="0.01">
+        </div>
+
+        <div class="control-group">
+          <label>Center Y: <span id="centerY-val">0</span></label>
+          <input type="range" id="centerY" min="-2" max="2" value="0" step="0.01">
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Weight: <span id="strokeWeight-val">0.5</span></label>
+          <input type="range" id="strokeWeight" min="0.2" max="2" value="0.5" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showBoundary" checked> Emphasize Boundary
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="regenerateBtn">Regenerate</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="randomMandelbrotBtn">Random Mandelbrot</button>
+          <button class="secondary" id="presetBtn">Random Julia</button>
+        </div>
+
+        <div class="control-group" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color, #333);">
+          <label>Paper Size:
+            <select id="paperSize">
+              <option value="custom">Custom (800×800px)</option>
+              <option value="a5">A5 (148×210mm)</option>
+              <option value="a4">A4 (210×297mm)</option>
+              <option value="square">Square (300×300mm)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Background:
+            <select id="bgColor">
+              <option value="#ffffff">White</option>
+              <option value="#f7f2e8">Cream</option>
+              <option value="#000000">Black</option>
+              <option value="#1a1a2e">Dark Blue</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Color:
+            <select id="strokeColor">
+              <option value="#000000">Black</option>
+              <option value="#222222">Dark Gray</option>
+              <option value="#ffffff">White</option>
+              <option value="#324c9e">Blue</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="exportSVG">Export SVG</button>
+          <button class="secondary" id="exportPNG">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="ts-canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    const params = {
+      fractalType: 'mandelbrot',
+      juliaReal: -0.7,
+      juliaImag: 0.27,
+      maxIter: 50,
+      contourLevels: 12,
+      zoom: 1,
+      centerX: 0,
+      centerY: 0,
+      strokeWeight: 0.5,
+      showBoundary: true,
+      paperSize: 'custom',
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    // Famous Julia set constants
+    const juliaPresets = [
+      { real: -0.7, imag: 0.27, name: 'Douady rabbit' },
+      { real: -0.8, imag: 0.156, name: 'San Marco dragon' },
+      { real: 0.285, imag: 0.01, name: 'Siegel disk' },
+      { real: -0.4, imag: 0.6, name: 'Spiral' },
+      { real: 0.37, imag: 0.1, name: 'Dendrite' },
+      { real: -0.12, imag: 0.74, name: 'Feather' },
+      { real: -1.476, imag: 0, name: 'Basilica' },
+      { real: 0, imag: 1, name: 'Dendrite i' }
+    ];
+
+    // Interesting Mandelbrot locations (boundary regions with structure)
+    const mandelbrotPresets = [
+      { x: -0.75, y: 0, zoom: 1.5, name: 'Main cardioid' },
+      { x: -1.25, y: 0, zoom: 4, name: 'Western bulb' },
+      { x: -0.16, y: 1.035, zoom: 6, name: 'Northern antenna' },
+      { x: -0.745, y: 0.113, zoom: 8, name: 'Seahorse valley' },
+      { x: -0.748, y: 0.1, zoom: 15, name: 'Deep seahorse' },
+      { x: 0.285, y: 0.01, zoom: 5, name: 'Eastern spiral' },
+      { x: -1.768, y: 0.001, zoom: 30, name: 'Mini Mandelbrot' },
+      { x: -0.1011, y: 0.9563, zoom: 20, name: 'Elephant valley' },
+      { x: -0.7435669, y: 0.1314023, zoom: 50, name: 'Spiral arm' },
+      { x: -1.94098, y: 0.00017, zoom: 100, name: 'Minibrot' }
+    ];
+
+    let canvas;
+    let contours = [];
+    let SIZE = 800;
+    let RESOLUTION = 400; // Grid resolution for marching squares
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+      setupControls();
+      generateFractal();
+    }
+
+    function setupControls() {
+      const rangeControls = ['maxIter', 'contourLevels', 'zoom', 'centerX', 'centerY', 'strokeWeight', 'juliaReal', 'juliaImag'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          generateFractal();
+        });
+      });
+
+      document.getElementById('fractalType').addEventListener('change', (e) => {
+        params.fractalType = e.target.value;
+        document.getElementById('juliaParams').classList.toggle('visible', params.fractalType === 'julia');
+        document.getElementById('fractal-info').textContent =
+          params.fractalType === 'mandelbrot' ? 'Classic escape-time fractal' : 'Connected/disconnected set visualization';
+
+        // Reset center for Mandelbrot
+        if (params.fractalType === 'mandelbrot') {
+          params.centerX = -0.5;
+          document.getElementById('centerX').value = -0.5;
+          document.getElementById('centerX-val').textContent = '-0.5';
+        } else {
+          params.centerX = 0;
+          document.getElementById('centerX').value = 0;
+          document.getElementById('centerX-val').textContent = '0';
+        }
+        generateFractal();
+      });
+
+      document.getElementById('showBoundary').addEventListener('change', (e) => {
+        params.showBoundary = e.target.checked;
+        drawFractal();
+      });
+
+      document.getElementById('regenerateBtn').addEventListener('click', () => {
+        // Randomize slightly
+        params.zoom = 1 + Math.random() * 2;
+        document.getElementById('zoom').value = params.zoom;
+        document.getElementById('zoom-val').textContent = params.zoom.toFixed(1);
+        generateFractal();
+      });
+
+      document.getElementById('randomMandelbrotBtn').addEventListener('click', () => {
+        const preset = mandelbrotPresets[Math.floor(Math.random() * mandelbrotPresets.length)];
+        params.fractalType = 'mandelbrot';
+        params.centerX = preset.x;
+        params.centerY = preset.y;
+        params.zoom = preset.zoom * (0.8 + Math.random() * 0.4); // Add slight variation
+
+        document.getElementById('fractalType').value = 'mandelbrot';
+        document.getElementById('juliaParams').classList.remove('visible');
+        document.getElementById('centerX').value = params.centerX;
+        document.getElementById('centerY').value = params.centerY;
+        document.getElementById('zoom').value = params.zoom;
+        document.getElementById('centerX-val').textContent = params.centerX.toFixed(2);
+        document.getElementById('centerY-val').textContent = params.centerY.toFixed(2);
+        document.getElementById('zoom-val').textContent = params.zoom.toFixed(1);
+        document.getElementById('fractal-info').textContent = preset.name;
+
+        generateFractal();
+      });
+
+      document.getElementById('presetBtn').addEventListener('click', () => {
+        const preset = juliaPresets[Math.floor(Math.random() * juliaPresets.length)];
+        params.juliaReal = preset.real;
+        params.juliaImag = preset.imag;
+        params.fractalType = 'julia';
+
+        document.getElementById('fractalType').value = 'julia';
+        document.getElementById('juliaParams').classList.add('visible');
+        document.getElementById('juliaReal').value = preset.real;
+        document.getElementById('juliaImag').value = preset.imag;
+        document.getElementById('juliaReal-val').textContent = preset.real;
+        document.getElementById('juliaImag-val').textContent = preset.imag;
+        document.getElementById('fractal-info').textContent = preset.name;
+
+        generateFractal();
+      });
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, `${params.fractalType}-fractal`);
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, `${params.fractalType}-fractal`);
+      });
+
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const paperDims = CanvasLayout.getSize(params.paperSize);
+        SIZE = Math.max(paperDims.width, paperDims.height);
+        if (SIZE > 800) SIZE = Math.min(SIZE, 1000); // Cap for performance
+        RESOLUTION = Math.min(400, Math.floor(SIZE / 2));
+        resizeCanvas(SIZE, SIZE);
+        generateFractal();
+      });
+
+      document.getElementById('bgColor').addEventListener('change', (e) => {
+        params.bgColor = e.target.value;
+        drawFractal();
+      });
+
+      document.getElementById('strokeColor').addEventListener('change', (e) => {
+        params.strokeColor = e.target.value;
+        drawFractal();
+      });
+    }
+
+    function mandelbrot(x0, y0) {
+      let x = 0, y = 0;
+      let iter = 0;
+      while (x*x + y*y <= 4 && iter < params.maxIter) {
+        const xTemp = x*x - y*y + x0;
+        y = 2*x*y + y0;
+        x = xTemp;
+        iter++;
+      }
+      // Smooth iteration count
+      if (iter < params.maxIter) {
+        const log_zn = Math.log(x*x + y*y) / 2;
+        const nu = Math.log(log_zn / Math.log(2)) / Math.log(2);
+        return iter + 1 - nu;
+      }
+      return iter;
+    }
+
+    function julia(x0, y0) {
+      let x = x0, y = y0;
+      const cx = params.juliaReal;
+      const cy = params.juliaImag;
+      let iter = 0;
+      while (x*x + y*y <= 4 && iter < params.maxIter) {
+        const xTemp = x*x - y*y + cx;
+        y = 2*x*y + cy;
+        x = xTemp;
+        iter++;
+      }
+      if (iter < params.maxIter) {
+        const log_zn = Math.log(x*x + y*y) / 2;
+        const nu = Math.log(log_zn / Math.log(2)) / Math.log(2);
+        return iter + 1 - nu;
+      }
+      return iter;
+    }
+
+    function generateFractal() {
+      // Compute iteration grid
+      const grid = [];
+      const scale = 3 / params.zoom;
+      const offsetX = params.fractalType === 'mandelbrot' ? -0.5 : 0;
+
+      for (let j = 0; j <= RESOLUTION; j++) {
+        const row = [];
+        for (let i = 0; i <= RESOLUTION; i++) {
+          const x = (i / RESOLUTION - 0.5) * scale + params.centerX + offsetX;
+          const y = (j / RESOLUTION - 0.5) * scale + params.centerY;
+
+          const iter = params.fractalType === 'mandelbrot' ? mandelbrot(x, y) : julia(x, y);
+          row.push(iter);
+        }
+        grid.push(row);
+      }
+
+      // Extract contours using marching squares
+      contours = [];
+      const levels = params.contourLevels;
+
+      for (let level = 1; level <= levels; level++) {
+        const threshold = (level / (levels + 1)) * params.maxIter;
+        const levelContours = marchingSquares(grid, threshold);
+        contours.push(...levelContours);
+      }
+
+      drawFractal();
+    }
+
+    function marchingSquares(grid, threshold) {
+      const lines = [];
+      const cellW = SIZE / RESOLUTION;
+      const cellH = SIZE / RESOLUTION;
+
+      for (let j = 0; j < RESOLUTION; j++) {
+        for (let i = 0; i < RESOLUTION; i++) {
+          const a = grid[j][i] >= threshold ? 1 : 0;
+          const b = grid[j][i + 1] >= threshold ? 1 : 0;
+          const c = grid[j + 1][i + 1] >= threshold ? 1 : 0;
+          const d = grid[j + 1][i] >= threshold ? 1 : 0;
+
+          const caseIndex = a * 8 + b * 4 + c * 2 + d;
+
+          const x = i * cellW;
+          const y = j * cellH;
+
+          // Interpolation helpers
+          const lerp_ab = (grid[j][i] - threshold) / (grid[j][i] - grid[j][i + 1]) || 0.5;
+          const lerp_bc = (grid[j][i + 1] - threshold) / (grid[j][i + 1] - grid[j + 1][i + 1]) || 0.5;
+          const lerp_cd = (grid[j + 1][i] - threshold) / (grid[j + 1][i] - grid[j + 1][i + 1]) || 0.5;
+          const lerp_da = (grid[j][i] - threshold) / (grid[j][i] - grid[j + 1][i]) || 0.5;
+
+          const points = {
+            top: { x: x + lerp_ab * cellW, y: y },
+            right: { x: x + cellW, y: y + lerp_bc * cellH },
+            bottom: { x: x + lerp_cd * cellW, y: y + cellH },
+            left: { x: x, y: y + lerp_da * cellH }
+          };
+
+          // Marching squares cases
+          switch (caseIndex) {
+            case 1: case 14: lines.push([points.left, points.bottom]); break;
+            case 2: case 13: lines.push([points.bottom, points.right]); break;
+            case 3: case 12: lines.push([points.left, points.right]); break;
+            case 4: case 11: lines.push([points.top, points.right]); break;
+            case 5:
+              lines.push([points.left, points.top]);
+              lines.push([points.bottom, points.right]);
+              break;
+            case 6: case 9: lines.push([points.top, points.bottom]); break;
+            case 7: case 8: lines.push([points.left, points.top]); break;
+            case 10:
+              lines.push([points.top, points.right]);
+              lines.push([points.left, points.bottom]);
+              break;
+          }
+        }
+      }
+
+      return lines;
+    }
+
+    function drawFractal() {
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      // Draw contours
+      for (const segment of contours) {
+        line(segment[0].x, segment[0].y, segment[1].x, segment[1].y);
+      }
+
+      // Add boundary emphasis
+      if (params.showBoundary) {
+        strokeWeight(params.strokeWeight * 1.5);
+        const boundaryLevel = params.maxIter * 0.9;
+        // This would be a thicker line at the escape boundary
+      }
+    }
+
+    function generateSVG() {
+      const paths = [];
+
+      // Convert line segments to SVG paths
+      for (const segment of contours) {
+        paths.push({
+          d: `M ${segment[0].x} ${segment[0].y} L ${segment[1].x} ${segment[1].y}`,
+          stroke: params.strokeColor
+        });
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, {
+        backgroundColor: params.bgColor,
+        strokeWidth: params.strokeWeight
+      });
+    }
+  </script>
+</body>
+</html>

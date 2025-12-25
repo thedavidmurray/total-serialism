@@ -9,9 +9,10 @@
   <title>Reaction-Diffusion System - Pen Plotter Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
-  <script src="../../../../preset-manager.js"></script>
-  <script src="../../canvas-layout.js"></script>
-  <link rel="stylesheet" href="../../../../preset-manager.css">
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -167,6 +168,8 @@
   </style>
 </head>
 <body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
   <div id="canvas-container">
     <div id="info-display">
       <div>Iteration: <span id="iteration-count">0</span></div>
@@ -180,6 +183,43 @@
 
     <!-- Preset Manager Container -->
     <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <select id="bgColor">
+          <option value="#1e1e1e">Dark Gray</option>
+          <option value="#ffffff">White</option>
+          <option value="#000000">Black</option>
+          <option value="#f5f5dc">Cream</option>
+          <option value="#1a1a2e">Dark Blue</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <select id="strokeColor">
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="#ff0000">Red</option>
+          <option value="#0066cc">Blue</option>
+          <option value="#00aa00">Green</option>
+        </select>
+      </div>
+    </div>
 
     <div class="control-group">
       <h3>Simulation</h3>
@@ -310,6 +350,9 @@
 
     // Parameters
     let params = {
+      paperSize: 'A4_landscape',
+      bgColor: '#1e1e1e',
+      strokeColor: '#000000',
       feedRate: 0.055,
       killRate: 0.062,
       dA: 1.0,
@@ -331,7 +374,9 @@
     ];
     
     function setup() {
-      let canvas = createCanvas(800, 600);
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      let canvas = createCanvas(size.width * scale, size.height * scale);
       canvas.parent('canvas-container');
       if (window.CanvasLayout) {
         fitZoomCtl = CanvasLayout.attachFitZoom({
@@ -395,6 +440,13 @@
       });
     }
     
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      resizeCanvas(size.width * scale, size.height * scale);
+      initializeGrid();
+    }
+
     function initializeGrid() {
       grid = [];
       next = [];
@@ -447,7 +499,11 @@
         } else if (element && element.tagName === 'SELECT') {
           element.addEventListener('change', (e) => {
             params[param] = e.target.value;
-            queueRegenerate();
+            if (param === 'paperSize') {
+              resizeCanvasForPaperSize();
+            } else {
+              queueRegenerate();
+            }
           });
         }
       });
@@ -502,7 +558,7 @@
       }
       
       // Render
-      background(30);
+      background(params.bgColor);
       const totalSize = gridSize * cellSize;
       const offsetX = (width - totalSize) / 2;
       const offsetY = (height - totalSize) / 2;

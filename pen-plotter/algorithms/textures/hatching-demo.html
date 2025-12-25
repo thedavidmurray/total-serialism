@@ -22,6 +22,8 @@
   <link rel="stylesheet" href="../../shared/algorithm.css">
 </head>
 <body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>🎨 Advanced Hatching Demo</h2>
@@ -88,9 +90,8 @@
     let regenTimer = null;
     
     function setup() {
-      // Initialize canvas with layout manager
-      canvasLayout = new CanvasLayout();
-      canvas = canvasLayout.createMainCanvas(800, 600);
+      // Initialize canvas
+      canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
       
       // Initialize all utility classes
@@ -136,7 +137,11 @@
           }
         }
       });
-      
+
+      // Wire up preset events
+      presetManager.onLoad = onPresetLoad;
+      presetManager.onSave = onPresetSave;
+
       setupAdvancedUI();
       
       // Enable auto-regeneration with debouncing
@@ -634,11 +639,7 @@ Path Optimization Report:
       uiUtils.showStatus(`Preset "${presetName}" saved!`, 'success', 2000);
     }
     
-    // Wire up preset events
-    window.addEventListener('DOMContentLoaded', () => {
-      presetManager.onLoad = onPresetLoad;
-      presetManager.onSave = onPresetSave;
-    });
+    // Wire up preset events - done in setup() after presetManager is created
   </script>
 </body>
 </html>

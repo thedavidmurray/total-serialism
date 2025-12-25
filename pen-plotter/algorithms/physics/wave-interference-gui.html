@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Wave Interference - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../canvas-layout.js"></script>
+
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-secondary, #1a1a2e);
+      border-radius: 8px;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary, #888);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #333);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: var(--accent-primary, #4a9eff);
+      color: white;
+    }
+    button.secondary {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #444);
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+    .info-text {
+      font-size: 11px;
+      color: var(--text-secondary, #666);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="ts-layout">
+    <aside class="ts-control-panel">
+      <h2>Wave Interference</h2>
+
+      <div id="controls">
+        <div class="control-group">
+          <label>Pattern Type:
+            <select id="patternType">
+              <option value="circular">Circular Ripples</option>
+              <option value="linear">Linear Waves</option>
+              <option value="radial">Radial Source</option>
+              <option value="grid">Grid Sources</option>
+            </select>
+          </label>
+          <p class="info-text" id="pattern-info">Multiple circular wave sources</p>
+        </div>
+
+        <div class="control-group">
+          <label>Wave Sources: <span id="sources-val">3</span></label>
+          <input type="range" id="sources" min="1" max="8" value="3">
+        </div>
+
+        <div class="control-group">
+          <label>Wavelength: <span id="wavelength-val">30</span></label>
+          <input type="range" id="wavelength" min="10" max="80" value="30">
+        </div>
+
+        <div class="control-group">
+          <label>Contour Levels: <span id="contourLevels-val">10</span></label>
+          <input type="range" id="contourLevels" min="3" max="25" value="10">
+        </div>
+
+        <div class="control-group">
+          <label>Decay: <span id="decay-val">0.002</span></label>
+          <input type="range" id="decay" min="0" max="0.01" value="0.002" step="0.0005">
+        </div>
+
+        <div class="control-group">
+          <label>Phase Offset: <span id="phase-val">0</span></label>
+          <input type="range" id="phase" min="0" max="360" value="0">
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Weight: <span id="strokeWeight-val">0.5</span></label>
+          <input type="range" id="strokeWeight" min="0.2" max="2" value="0.5" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showSources" checked> Show Sources
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="regenerateBtn">Regenerate</button>
+        </div>
+
+        <div class="control-group" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color, #333);">
+          <label>Paper Size:
+            <select id="paperSize">
+              <option value="custom">Custom (800×800px)</option>
+              <option value="a5">A5 (148×210mm)</option>
+              <option value="a4">A4 (210×297mm)</option>
+              <option value="square">Square (300×300mm)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Background:
+            <select id="bgColor">
+              <option value="#ffffff">White</option>
+              <option value="#f7f2e8">Cream</option>
+              <option value="#000000">Black</option>
+              <option value="#1a1a2e">Dark Blue</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Color:
+            <select id="strokeColor">
+              <option value="#000000">Black</option>
+              <option value="#222222">Dark Gray</option>
+              <option value="#ffffff">White</option>
+              <option value="#324c9e">Blue</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="exportSVG">Export SVG</button>
+          <button class="secondary" id="exportPNG">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="ts-canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    const params = {
+      patternType: 'circular',
+      sources: 3,
+      wavelength: 30,
+      contourLevels: 10,
+      decay: 0.002,
+      phase: 0,
+      strokeWeight: 0.5,
+      showSources: true,
+      paperSize: 'custom',
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    const patternInfo = {
+      circular: 'Multiple circular wave sources',
+      linear: 'Parallel linear wave fronts',
+      radial: 'Single center with radial pattern',
+      grid: 'Regular grid of wave sources'
+    };
+
+    let canvas;
+    let contours = [];
+    let sourcePositions = [];
+    let SIZE = 800;
+    let RESOLUTION = 300;
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+      setupControls();
+      generateWaves();
+    }
+
+    function setupControls() {
+      const rangeControls = ['sources', 'wavelength', 'contourLevels', 'decay', 'phase', 'strokeWeight'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          generateWaves();
+        });
+      });
+
+      document.getElementById('patternType').addEventListener('change', (e) => {
+        params.patternType = e.target.value;
+        document.getElementById('pattern-info').textContent = patternInfo[params.patternType];
+        generateWaves();
+      });
+
+      document.getElementById('showSources').addEventListener('change', (e) => {
+        params.showSources = e.target.checked;
+        drawWaves();
+      });
+
+      document.getElementById('regenerateBtn').addEventListener('click', () => {
+        // Randomize phase for visible change
+        params.phase = Math.floor(Math.random() * 360);
+        document.getElementById('phase').value = params.phase;
+        document.getElementById('phase-val').textContent = params.phase;
+        generateWaves();
+      });
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, `wave-interference-${params.patternType}`);
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, `wave-interference-${params.patternType}`);
+      });
+
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const paperDims = CanvasLayout.getSize(params.paperSize);
+        SIZE = Math.max(paperDims.width, paperDims.height);
+        if (SIZE > 800) SIZE = Math.min(SIZE, 1000);
+        RESOLUTION = Math.min(300, Math.floor(SIZE / 2.5));
+        resizeCanvas(SIZE, SIZE);
+        generateWaves();
+      });
+
+      document.getElementById('bgColor').addEventListener('change', (e) => {
+        params.bgColor = e.target.value;
+        drawWaves();
+      });
+
+      document.getElementById('strokeColor').addEventListener('change', (e) => {
+        params.strokeColor = e.target.value;
+        drawWaves();
+      });
+    }
+
+    function generateSourcePositions() {
+      sourcePositions = [];
+      const n = params.sources;
+      const margin = 100;
+
+      switch (params.patternType) {
+        case 'circular':
+          // Random positions
+          for (let i = 0; i < n; i++) {
+            sourcePositions.push({
+              x: margin + Math.random() * (SIZE - 2 * margin),
+              y: margin + Math.random() * (SIZE - 2 * margin),
+              amplitude: 0.8 + Math.random() * 0.4
+            });
+          }
+          break;
+
+        case 'linear':
+          // Sources along left edge creating parallel waves
+          for (let i = 0; i < n; i++) {
+            sourcePositions.push({
+              x: -100,
+              y: (i + 0.5) * SIZE / n,
+              amplitude: 1
+            });
+          }
+          break;
+
+        case 'radial':
+          // Single center source
+          sourcePositions.push({
+            x: SIZE / 2,
+            y: SIZE / 2,
+            amplitude: 1
+          });
+          break;
+
+        case 'grid':
+          // Regular grid
+          const gridSize = Math.ceil(Math.sqrt(n));
+          const spacing = SIZE / (gridSize + 1);
+          for (let i = 0; i < n; i++) {
+            const row = Math.floor(i / gridSize);
+            const col = i % gridSize;
+            sourcePositions.push({
+              x: (col + 1) * spacing,
+              y: (row + 1) * spacing,
+              amplitude: 1
+            });
+          }
+          break;
+      }
+    }
+
+    function waveFunction(x, y) {
+      const phaseRad = params.phase * Math.PI / 180;
+      let sum = 0;
+
+      for (const src of sourcePositions) {
+        const dx = x - src.x;
+        const dy = y - src.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Wave equation with decay
+        const decay = Math.exp(-params.decay * dist);
+        const wave = Math.sin((dist / params.wavelength) * TWO_PI + phaseRad);
+
+        sum += wave * decay * src.amplitude;
+      }
+
+      return sum;
+    }
+
+    function generateWaves() {
+      generateSourcePositions();
+
+      // Compute wave field
+      const grid = [];
+      for (let j = 0; j <= RESOLUTION; j++) {
+        const row = [];
+        for (let i = 0; i <= RESOLUTION; i++) {
+          const x = (i / RESOLUTION) * SIZE;
+          const y = (j / RESOLUTION) * SIZE;
+          row.push(waveFunction(x, y));
+        }
+        grid.push(row);
+      }
+
+      // Find min/max for normalization
+      let minVal = Infinity, maxVal = -Infinity;
+      for (const row of grid) {
+        for (const val of row) {
+          minVal = Math.min(minVal, val);
+          maxVal = Math.max(maxVal, val);
+        }
+      }
+
+      // Extract contours using marching squares
+      contours = [];
+      const levels = params.contourLevels;
+
+      for (let level = 0; level < levels; level++) {
+        const t = (level + 0.5) / levels;
+        const threshold = minVal + t * (maxVal - minVal);
+        const levelContours = marchingSquares(grid, threshold);
+        contours.push(...levelContours);
+      }
+
+      drawWaves();
+    }
+
+    function marchingSquares(grid, threshold) {
+      const lines = [];
+      const cellW = SIZE / RESOLUTION;
+      const cellH = SIZE / RESOLUTION;
+
+      for (let j = 0; j < RESOLUTION; j++) {
+        for (let i = 0; i < RESOLUTION; i++) {
+          const a = grid[j][i] >= threshold ? 1 : 0;
+          const b = grid[j][i + 1] >= threshold ? 1 : 0;
+          const c = grid[j + 1][i + 1] >= threshold ? 1 : 0;
+          const d = grid[j + 1][i] >= threshold ? 1 : 0;
+
+          const caseIndex = a * 8 + b * 4 + c * 2 + d;
+
+          const x = i * cellW;
+          const y = j * cellH;
+
+          // Interpolation
+          const lerp_ab = Math.abs(grid[j][i] - grid[j][i + 1]) > 0.001
+            ? (grid[j][i] - threshold) / (grid[j][i] - grid[j][i + 1])
+            : 0.5;
+          const lerp_bc = Math.abs(grid[j][i + 1] - grid[j + 1][i + 1]) > 0.001
+            ? (grid[j][i + 1] - threshold) / (grid[j][i + 1] - grid[j + 1][i + 1])
+            : 0.5;
+          const lerp_cd = Math.abs(grid[j + 1][i] - grid[j + 1][i + 1]) > 0.001
+            ? (grid[j + 1][i] - threshold) / (grid[j + 1][i] - grid[j + 1][i + 1])
+            : 0.5;
+          const lerp_da = Math.abs(grid[j][i] - grid[j + 1][i]) > 0.001
+            ? (grid[j][i] - threshold) / (grid[j][i] - grid[j + 1][i])
+            : 0.5;
+
+          const points = {
+            top: { x: x + lerp_ab * cellW, y: y },
+            right: { x: x + cellW, y: y + lerp_bc * cellH },
+            bottom: { x: x + lerp_cd * cellW, y: y + cellH },
+            left: { x: x, y: y + lerp_da * cellH }
+          };
+
+          switch (caseIndex) {
+            case 1: case 14: lines.push([points.left, points.bottom]); break;
+            case 2: case 13: lines.push([points.bottom, points.right]); break;
+            case 3: case 12: lines.push([points.left, points.right]); break;
+            case 4: case 11: lines.push([points.top, points.right]); break;
+            case 5:
+              lines.push([points.left, points.top]);
+              lines.push([points.bottom, points.right]);
+              break;
+            case 6: case 9: lines.push([points.top, points.bottom]); break;
+            case 7: case 8: lines.push([points.left, points.top]); break;
+            case 10:
+              lines.push([points.top, points.right]);
+              lines.push([points.left, points.bottom]);
+              break;
+          }
+        }
+      }
+
+      return lines;
+    }
+
+    function drawWaves() {
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      // Draw contours
+      for (const segment of contours) {
+        line(segment[0].x, segment[0].y, segment[1].x, segment[1].y);
+      }
+
+      // Draw source positions
+      if (params.showSources && params.patternType !== 'linear') {
+        fill(200, 50, 50);
+        noStroke();
+        for (const src of sourcePositions) {
+          if (src.x >= 0 && src.x <= SIZE && src.y >= 0 && src.y <= SIZE) {
+            ellipse(src.x, src.y, 10, 10);
+          }
+        }
+      }
+    }
+
+    function generateSVG() {
+      const paths = [];
+
+      // Contour lines
+      for (const segment of contours) {
+        paths.push({
+          d: `M ${segment[0].x} ${segment[0].y} L ${segment[1].x} ${segment[1].y}`,
+          stroke: params.strokeColor
+        });
+      }
+
+      // Source points
+      if (params.showSources && params.patternType !== 'linear') {
+        for (const src of sourcePositions) {
+          if (src.x >= 0 && src.x <= SIZE && src.y >= 0 && src.y <= SIZE) {
+            paths.push({
+              d: `M ${src.x - 5} ${src.y} a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0`,
+              fill: '#C83232',
+              stroke: 'none'
+            });
+          }
+        }
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, {
+        backgroundColor: params.bgColor,
+        strokeWidth: params.strokeWeight
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Moiré Patterns - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-secondary, #1a1a2e);
+      border-radius: 8px;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary, #888);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #333);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: var(--accent-primary, #4a9eff);
+      color: white;
+    }
+    button.secondary {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #444);
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="algorithm-container">
+    <aside class="controls-panel">
+      <h2>Moiré Patterns</h2>
+
+      <div id="controls">
+        <div class="control-group">
+          <label>Pattern Type:
+            <select id="patternType">
+              <option value="circles">Concentric Circles</option>
+              <option value="lines">Parallel Lines</option>
+              <option value="radial">Radial Lines</option>
+              <option value="grid">Grid</option>
+              <option value="spiral">Spiral</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Line Spacing: <span id="spacing-val">8</span></label>
+          <input type="range" id="spacing" min="2" max="20" value="8" step="0.5">
+        </div>
+
+        <div class="control-group">
+          <label>Line Count: <span id="lineCount-val">50</span></label>
+          <input type="range" id="lineCount" min="10" max="150" value="50">
+        </div>
+
+        <div class="control-group">
+          <label>Offset X: <span id="offsetX-val">50</span></label>
+          <input type="range" id="offsetX" min="-200" max="200" value="50">
+        </div>
+
+        <div class="control-group">
+          <label>Offset Y: <span id="offsetY-val">50</span></label>
+          <input type="range" id="offsetY" min="-200" max="200" value="50">
+        </div>
+
+        <div class="control-group">
+          <label>Rotation: <span id="rotation-val">15</span>°</label>
+          <input type="range" id="rotation" min="0" max="90" value="15" step="0.5">
+        </div>
+
+        <div class="control-group">
+          <label>Scale Layer 2: <span id="scale2-val">1.0</span></label>
+          <input type="range" id="scale2" min="0.8" max="1.2" value="1.0" step="0.01">
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Weight: <span id="strokeWeight-val">0.8</span></label>
+          <input type="range" id="strokeWeight" min="0.2" max="2" value="0.8" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showLayer1" checked> Show Layer 1
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showLayer2" checked> Show Layer 2
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="animate"> Animate
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="regenerate">Regenerate</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="exportSVG">Export SVG</button>
+          <button class="secondary" id="exportPNG">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    // Parameters
+    const params = {
+      patternType: 'circles',
+      spacing: 8,
+      lineCount: 50,
+      offsetX: 50,
+      offsetY: 50,
+      rotation: 15,
+      scale2: 1.0,
+      strokeWeight: 0.8,
+      showLayer1: true,
+      showLayer2: true,
+      animate: false
+    };
+
+    let canvas;
+    let animationAngle = 0;
+    const SIZE = 800;
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+
+      // Setup controls
+      setupControls();
+
+      // Initial draw
+      generateMoire();
+    }
+
+    function setupControls() {
+      const controls = ['spacing', 'lineCount', 'offsetX', 'offsetY', 'rotation', 'scale2', 'strokeWeight'];
+
+      controls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          if (!params.animate) generateMoire();
+        });
+      });
+
+      document.getElementById('patternType').addEventListener('change', (e) => {
+        params.patternType = e.target.value;
+        if (!params.animate) generateMoire();
+      });
+
+      document.getElementById('showLayer1').addEventListener('change', (e) => {
+        params.showLayer1 = e.target.checked;
+        if (!params.animate) generateMoire();
+      });
+
+      document.getElementById('showLayer2').addEventListener('change', (e) => {
+        params.showLayer2 = e.target.checked;
+        if (!params.animate) generateMoire();
+      });
+
+      document.getElementById('animate').addEventListener('change', (e) => {
+        params.animate = e.target.checked;
+        if (params.animate) {
+          loop();
+        } else {
+          noLoop();
+          generateMoire();
+        }
+      });
+
+      document.getElementById('regenerate').addEventListener('click', generateMoire);
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, 'moire-pattern');
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, 'moire-pattern');
+      });
+
+      noLoop();
+    }
+
+    function draw() {
+      if (params.animate) {
+        animationAngle += 0.5;
+        generateMoire(animationAngle);
+      }
+    }
+
+    function generateMoire(animOffset = 0) {
+      background(255);
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+
+      // Draw Layer 1
+      if (params.showLayer1) {
+        push();
+        translate(cx, cy);
+        drawPattern(0, 0, 0, 1);
+        pop();
+      }
+
+      // Draw Layer 2 with offset and rotation
+      if (params.showLayer2) {
+        push();
+        translate(cx + params.offsetX, cy + params.offsetY);
+        rotate(radians(params.rotation + animOffset));
+        scale(params.scale2);
+        drawPattern(0, 0, 0, 1);
+        pop();
+      }
+    }
+
+    function drawPattern(x, y, angle, scale) {
+      const count = params.lineCount;
+      const spacing = params.spacing;
+      const maxRadius = SIZE * 0.8;
+
+      switch (params.patternType) {
+        case 'circles':
+          drawConcentricCircles(count, spacing);
+          break;
+        case 'lines':
+          drawParallelLines(count, spacing);
+          break;
+        case 'radial':
+          drawRadialLines(count);
+          break;
+        case 'grid':
+          drawGrid(count, spacing);
+          break;
+        case 'spiral':
+          drawSpiral(count, spacing);
+          break;
+      }
+    }
+
+    function drawConcentricCircles(count, spacing) {
+      for (let i = 1; i <= count; i++) {
+        const r = i * spacing;
+        ellipse(0, 0, r * 2, r * 2);
+      }
+    }
+
+    function drawParallelLines(count, spacing) {
+      const half = (count * spacing) / 2;
+      for (let i = 0; i <= count; i++) {
+        const y = -half + i * spacing;
+        line(-SIZE, y, SIZE, y);
+      }
+    }
+
+    function drawRadialLines(count) {
+      const angleStep = TWO_PI / count;
+      for (let i = 0; i < count; i++) {
+        const angle = i * angleStep;
+        const x = cos(angle) * SIZE;
+        const y = sin(angle) * SIZE;
+        line(0, 0, x, y);
+      }
+    }
+
+    function drawGrid(count, spacing) {
+      const half = (count * spacing) / 2;
+      // Horizontal
+      for (let i = 0; i <= count; i++) {
+        const y = -half + i * spacing;
+        line(-SIZE, y, SIZE, y);
+      }
+      // Vertical
+      for (let i = 0; i <= count; i++) {
+        const x = -half + i * spacing;
+        line(x, -SIZE, x, SIZE);
+      }
+    }
+
+    function drawSpiral(count, spacing) {
+      beginShape();
+      const maxAngle = count * TWO_PI / 10;
+      for (let a = 0; a < maxAngle; a += 0.05) {
+        const r = a * spacing / TWO_PI;
+        const x = cos(a) * r;
+        const y = sin(a) * r;
+        vertex(x, y);
+      }
+      endShape();
+    }
+
+    function generateSVG() {
+      const paths = [];
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const count = params.lineCount;
+      const spacing = params.spacing;
+
+      // Generate paths for both layers
+      if (params.showLayer1) {
+        paths.push(...generatePatternPaths(cx, cy, 0, 1));
+      }
+
+      if (params.showLayer2) {
+        const cosR = Math.cos(params.rotation * Math.PI / 180);
+        const sinR = Math.sin(params.rotation * Math.PI / 180);
+        paths.push(...generatePatternPaths(
+          cx + params.offsetX,
+          cy + params.offsetY,
+          params.rotation,
+          params.scale2
+        ));
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, { backgroundColor: 'white', strokeWidth: params.strokeWeight });
+    }
+
+    function generatePatternPaths(cx, cy, rotation, scale) {
+      const paths = [];
+      const count = params.lineCount;
+      const spacing = params.spacing;
+      const radRot = rotation * Math.PI / 180;
+
+      switch (params.patternType) {
+        case 'circles':
+          for (let i = 1; i <= count; i++) {
+            const r = i * spacing * scale;
+            const points = [];
+            for (let a = 0; a <= TWO_PI; a += 0.05) {
+              points.push({
+                x: cx + Math.cos(a + radRot) * r,
+                y: cy + Math.sin(a + radRot) * r
+              });
+            }
+            paths.push({ d: TSExport.pointsToPath(points, true), stroke: '#000000' });
+          }
+          break;
+
+        case 'lines':
+          const half = (count * spacing * scale) / 2;
+          for (let i = 0; i <= count; i++) {
+            const y = -half + i * spacing * scale;
+            const x1 = -SIZE * Math.cos(radRot) - y * Math.sin(radRot) + cx;
+            const y1 = -SIZE * Math.sin(radRot) + y * Math.cos(radRot) + cy;
+            const x2 = SIZE * Math.cos(radRot) - y * Math.sin(radRot) + cx;
+            const y2 = SIZE * Math.sin(radRot) + y * Math.cos(radRot) + cy;
+            paths.push({ d: `M ${x1} ${y1} L ${x2} ${y2}`, stroke: '#000000' });
+          }
+          break;
+
+        case 'radial':
+          const angleStep = TWO_PI / count;
+          for (let i = 0; i < count; i++) {
+            const angle = i * angleStep + radRot;
+            const x = Math.cos(angle) * SIZE * scale + cx;
+            const y = Math.sin(angle) * SIZE * scale + cy;
+            paths.push({ d: `M ${cx} ${cy} L ${x} ${y}`, stroke: '#000000' });
+          }
+          break;
+
+        case 'grid':
+          const halfG = (count * spacing * scale) / 2;
+          for (let i = 0; i <= count; i++) {
+            const offset = -halfG + i * spacing * scale;
+            // Horizontal
+            const hx1 = -SIZE * Math.cos(radRot) - offset * Math.sin(radRot) + cx;
+            const hy1 = -SIZE * Math.sin(radRot) + offset * Math.cos(radRot) + cy;
+            const hx2 = SIZE * Math.cos(radRot) - offset * Math.sin(radRot) + cx;
+            const hy2 = SIZE * Math.sin(radRot) + offset * Math.cos(radRot) + cy;
+            paths.push({ d: `M ${hx1} ${hy1} L ${hx2} ${hy2}`, stroke: '#000000' });
+            // Vertical
+            const vx1 = offset * Math.cos(radRot) - SIZE * Math.sin(radRot) + cx;
+            const vy1 = offset * Math.sin(radRot) + (-SIZE) * Math.cos(radRot) + cy;
+            const vx2 = offset * Math.cos(radRot) - (-SIZE) * Math.sin(radRot) + cx;
+            const vy2 = offset * Math.sin(radRot) + SIZE * Math.cos(radRot) + cy;
+            paths.push({ d: `M ${vx1} ${vy1} L ${vx2} ${vy2}`, stroke: '#000000' });
+          }
+          break;
+
+        case 'spiral':
+          const points = [];
+          const maxAngle = count * TWO_PI / 10;
+          for (let a = 0; a < maxAngle; a += 0.05) {
+            const r = a * spacing * scale / TWO_PI;
+            points.push({
+              x: Math.cos(a + radRot) * r + cx,
+              y: Math.sin(a + radRot) * r + cy
+            });
+          }
+          paths.push({ d: TSExport.pointsToPath(points, false), stroke: '#000000' });
+          break;
+      }
+
+      return paths;
+    }
+  </script>
+</body>
+</html>

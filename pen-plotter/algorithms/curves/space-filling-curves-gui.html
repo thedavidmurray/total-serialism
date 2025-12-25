@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Space-Filling Curves - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-secondary, #1a1a2e);
+      border-radius: 8px;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary, #888);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #333);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: var(--accent-primary, #4a9eff);
+      color: white;
+    }
+    button.secondary {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #444);
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+    .info-text {
+      font-size: 11px;
+      color: var(--text-secondary, #666);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="algorithm-container">
+    <aside class="controls-panel">
+      <h2>Space-Filling Curves</h2>
+
+      <div id="controls">
+        <div class="control-group">
+          <label>Curve Type:
+            <select id="curveType">
+              <option value="hilbert">Hilbert Curve</option>
+              <option value="peano">Peano Curve</option>
+              <option value="moore">Moore Curve</option>
+              <option value="gosper">Gosper Curve</option>
+              <option value="dragon">Dragon Curve</option>
+              <option value="sierpinski">Sierpinski Curve</option>
+            </select>
+          </label>
+          <p class="info-text" id="curve-info">Square-filling, continuous path</p>
+        </div>
+
+        <div class="control-group">
+          <label>Iterations: <span id="iterations-val">4</span></label>
+          <input type="range" id="iterations" min="1" max="8" value="4">
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Weight: <span id="strokeWeight-val">1.5</span></label>
+          <input type="range" id="strokeWeight" min="0.3" max="4" value="1.5" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>Margin: <span id="margin-val">40</span></label>
+          <input type="range" id="margin" min="10" max="100" value="40">
+        </div>
+
+        <div class="control-group">
+          <label>Rotation: <span id="rotation-val">0</span>°</label>
+          <input type="range" id="rotation" min="0" max="360" value="0">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showPoints"> Show Points
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="smoothCurve"> Smooth Curve
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="regenerate">Regenerate</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="exportSVG">Export SVG</button>
+          <button class="secondary" id="exportPNG">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    // Parameters
+    const params = {
+      curveType: 'hilbert',
+      iterations: 4,
+      strokeWeight: 1.5,
+      margin: 40,
+      rotation: 0,
+      showPoints: false,
+      smoothCurve: false
+    };
+
+    const curveInfo = {
+      hilbert: 'Square-filling, continuous path',
+      peano: '9-segment recursion, fills square',
+      moore: 'Closed Hilbert variant, loop',
+      gosper: 'Hexagonal tiling, "flowsnake"',
+      dragon: 'Self-similar fractal curve',
+      sierpinski: 'Triangular space-filling'
+    };
+
+    let canvas;
+    let points = [];
+    const SIZE = 800;
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+      setupControls();
+      generateCurve();
+    }
+
+    function setupControls() {
+      const rangeControls = ['iterations', 'strokeWeight', 'margin', 'rotation'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          generateCurve();
+        });
+      });
+
+      document.getElementById('curveType').addEventListener('change', (e) => {
+        params.curveType = e.target.value;
+        document.getElementById('curve-info').textContent = curveInfo[params.curveType];
+        // Adjust iterations for certain curves
+        const iterEl = document.getElementById('iterations');
+        if (params.curveType === 'gosper' && params.iterations > 5) {
+          params.iterations = 5;
+          iterEl.value = 5;
+          document.getElementById('iterations-val').textContent = '5';
+        }
+        generateCurve();
+      });
+
+      document.getElementById('showPoints').addEventListener('change', (e) => {
+        params.showPoints = e.target.checked;
+        drawCurve();
+      });
+
+      document.getElementById('smoothCurve').addEventListener('change', (e) => {
+        params.smoothCurve = e.target.checked;
+        drawCurve();
+      });
+
+      document.getElementById('regenerate').addEventListener('click', generateCurve);
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, `${params.curveType}-curve`);
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, `${params.curveType}-curve`);
+      });
+    }
+
+    function generateCurve() {
+      points = [];
+
+      switch (params.curveType) {
+        case 'hilbert': generateHilbert(); break;
+        case 'peano': generatePeano(); break;
+        case 'moore': generateMoore(); break;
+        case 'gosper': generateGosper(); break;
+        case 'dragon': generateDragon(); break;
+        case 'sierpinski': generateSierpinski(); break;
+      }
+
+      // Scale and center points
+      normalizePoints();
+      drawCurve();
+    }
+
+    // ===== HILBERT CURVE =====
+    function generateHilbert() {
+      const n = Math.pow(2, params.iterations);
+      for (let i = 0; i < n * n; i++) {
+        const [x, y] = d2xy(n, i);
+        points.push({ x, y });
+      }
+    }
+
+    function d2xy(n, d) {
+      let rx, ry, s, t = d;
+      let x = 0, y = 0;
+      for (s = 1; s < n; s *= 2) {
+        rx = 1 & (t / 2);
+        ry = 1 & (t ^ rx);
+        [x, y] = rot(s, x, y, rx, ry);
+        x += s * rx;
+        y += s * ry;
+        t = Math.floor(t / 4);
+      }
+      return [x, y];
+    }
+
+    function rot(n, x, y, rx, ry) {
+      if (ry === 0) {
+        if (rx === 1) {
+          x = n - 1 - x;
+          y = n - 1 - y;
+        }
+        [x, y] = [y, x];
+      }
+      return [x, y];
+    }
+
+    // ===== PEANO CURVE =====
+    function generatePeano() {
+      const n = Math.pow(3, params.iterations);
+      for (let i = 0; i < n * n; i++) {
+        const [x, y] = peanoD2xy(n, i);
+        points.push({ x, y });
+      }
+    }
+
+    function peanoD2xy(n, d) {
+      let x = 0, y = 0;
+      let s = n / 3;
+      let temp = d;
+
+      while (s >= 1) {
+        const region = Math.floor(temp / (s * s));
+        temp = temp % (s * s);
+
+        const [dx, dy] = peanoRegion(region, s, temp);
+        x += dx;
+        y += dy;
+
+        s = Math.floor(s / 3);
+        if (s >= 1) {
+          temp = temp % (s * s);
+        }
+      }
+      return [x, y];
+    }
+
+    function peanoRegion(region, s, idx) {
+      const order = [
+        [0, 0], [0, 1], [0, 2],
+        [1, 2], [1, 1], [1, 0],
+        [2, 0], [2, 1], [2, 2]
+      ];
+      if (region < order.length) {
+        return [order[region][0] * s, order[region][1] * s];
+      }
+      return [0, 0];
+    }
+
+    // ===== MOORE CURVE (closed Hilbert) =====
+    function generateMoore() {
+      const instructions = lindenmayer('LFL+F+LFL', params.iterations, {
+        'L': '-RF+LFL+FR-',
+        'R': '+LF-RFR-FL+'
+      });
+      traceLSystem(instructions, 90);
+    }
+
+    // ===== GOSPER CURVE =====
+    function generateGosper() {
+      const instructions = lindenmayer('A', params.iterations, {
+        'A': 'A-B--B+A++AA+B-',
+        'B': '+A-BB--B-A++A+B'
+      });
+      traceLSystem(instructions, 60);
+    }
+
+    // ===== DRAGON CURVE =====
+    function generateDragon() {
+      const instructions = lindenmayer('FX', params.iterations, {
+        'X': 'X+YF+',
+        'Y': '-FX-Y'
+      });
+      traceLSystem(instructions, 90);
+    }
+
+    // ===== SIERPINSKI CURVE =====
+    function generateSierpinski() {
+      const instructions = lindenmayer('A', params.iterations, {
+        'A': 'B-A-B',
+        'B': 'A+B+A'
+      });
+      traceLSystem(instructions, 60);
+    }
+
+    // ===== L-SYSTEM HELPERS =====
+    function lindenmayer(axiom, iterations, rules) {
+      let current = axiom;
+      for (let i = 0; i < iterations; i++) {
+        let next = '';
+        for (const char of current) {
+          next += rules[char] || char;
+        }
+        current = next;
+      }
+      return current;
+    }
+
+    function traceLSystem(instructions, angle) {
+      let x = 0, y = 0;
+      let dir = 0;
+      const rad = angle * Math.PI / 180;
+
+      points.push({ x, y });
+
+      for (const char of instructions) {
+        if (char === 'F' || char === 'A' || char === 'B') {
+          x += Math.cos(dir);
+          y += Math.sin(dir);
+          points.push({ x, y });
+        } else if (char === '+') {
+          dir += rad;
+        } else if (char === '-') {
+          dir -= rad;
+        }
+      }
+    }
+
+    function normalizePoints() {
+      if (points.length === 0) return;
+
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+
+      for (const p of points) {
+        minX = Math.min(minX, p.x);
+        maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y);
+        maxY = Math.max(maxY, p.y);
+      }
+
+      const rangeX = maxX - minX || 1;
+      const rangeY = maxY - minY || 1;
+      const margin = params.margin;
+      const availableSize = SIZE - margin * 2;
+      const scale = availableSize / Math.max(rangeX, rangeY);
+
+      const offsetX = margin + (availableSize - rangeX * scale) / 2;
+      const offsetY = margin + (availableSize - rangeY * scale) / 2;
+
+      for (const p of points) {
+        p.x = (p.x - minX) * scale + offsetX;
+        p.y = (p.y - minY) * scale + offsetY;
+      }
+
+      // Apply rotation
+      if (params.rotation !== 0) {
+        const cx = SIZE / 2;
+        const cy = SIZE / 2;
+        const rad = params.rotation * Math.PI / 180;
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+
+        for (const p of points) {
+          const dx = p.x - cx;
+          const dy = p.y - cy;
+          p.x = cx + dx * cos - dy * sin;
+          p.y = cy + dx * sin + dy * cos;
+        }
+      }
+    }
+
+    function drawCurve() {
+      background(255);
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      if (points.length < 2) return;
+
+      if (params.smoothCurve) {
+        beginShape();
+        curveVertex(points[0].x, points[0].y);
+        for (const p of points) {
+          curveVertex(p.x, p.y);
+        }
+        curveVertex(points[points.length - 1].x, points[points.length - 1].y);
+        endShape();
+      } else {
+        beginShape();
+        for (const p of points) {
+          vertex(p.x, p.y);
+        }
+        endShape();
+      }
+
+      if (params.showPoints) {
+        fill(200, 50, 50);
+        noStroke();
+        for (const p of points) {
+          ellipse(p.x, p.y, 4, 4);
+        }
+      }
+    }
+
+    function generateSVG() {
+      if (points.length < 2) return '';
+
+      const paths = [];
+
+      if (params.smoothCurve) {
+        // Generate smooth Catmull-Rom spline approximation
+        const smoothPoints = [];
+        for (let i = 0; i < points.length - 1; i++) {
+          const p0 = points[Math.max(0, i - 1)];
+          const p1 = points[i];
+          const p2 = points[Math.min(points.length - 1, i + 1)];
+          const p3 = points[Math.min(points.length - 1, i + 2)];
+
+          for (let t = 0; t < 1; t += 0.1) {
+            const x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t +
+                      (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t * t +
+                      (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t * t * t);
+            const y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t +
+                      (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t * t +
+                      (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t * t * t);
+            smoothPoints.push({ x, y });
+          }
+        }
+        smoothPoints.push(points[points.length - 1]);
+        paths.push({ d: TSExport.pointsToPath(smoothPoints, false) });
+      } else {
+        paths.push({ d: TSExport.pointsToPath(points, false) });
+      }
+
+      if (params.showPoints) {
+        for (const p of points) {
+          paths.push({
+            d: `M ${p.x - 2} ${p.y} a 2 2 0 1 0 4 0 a 2 2 0 1 0 -4 0`,
+            fill: '#C83232',
+            stroke: 'none'
+          });
+        }
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, {
+        backgroundColor: 'white',
+        strokeWidth: params.strokeWeight
+      });
+    }
+  </script>
+</body>
+</html>

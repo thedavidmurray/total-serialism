@@ -10,7 +10,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
-  
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -81,10 +83,37 @@
   </style>
 </head>
 <body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>L-System Tree Controls</h2>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Background Color:</label>
+        <select id="bgColor">
+          <option value="#ffffff">White</option>
+          <option value="#000000">Black</option>
+          <option value="#f5f5dc">Cream</option>
+          <option value="#1a1a2e">Dark Blue</option>
+          <option value="#2d2d2d">Charcoal</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <select id="strokeColor">
+          <option value="#000000">Black</option>
+          <option value="#ffffff">White</option>
+          <option value="#ff0000">Red</option>
+          <option value="#0066cc">Blue</option>
+          <option value="#00aa00">Green</option>
+          <option value="#8B4513">Brown</option>
+        </select>
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>L-System Rules</h3>
       <div class="control">
@@ -191,6 +220,9 @@
   <script>
     // L-System parameters
     let params = {
+      // Canvas
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
       // L-System
       systemType: 'simple',
       axiom: 'F',
@@ -285,10 +317,15 @@
     }
     
     function setupControls() {
-      // Add event listeners
-      document.getElementById('systemType').addEventListener('change', (e) => {
-        params.systemType = e.target.value;
-        regenerate();
+      // Add event listeners for select elements
+      ['bgColor', 'strokeColor', 'systemType'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', (e) => {
+            params[id] = e.target.value;
+            regenerate();
+          });
+        }
       });
       document.getElementById('axiom').addEventListener('input', (e) => {
         params.axiom = e.target.value;
@@ -410,8 +447,8 @@
     }
     
     function draw() {
-      background(255);
-      stroke(0);
+      background(params.bgColor);
+      stroke(params.strokeColor);
       noFill();
       
       // Generate L-System

@@ -14,6 +14,14 @@ class UIUtils {
    * Initialize status display if not exists
    */
   initializeStatusDisplay() {
+    // Defer initialization if body doesn't exist yet
+    if (!document.body) {
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => this.initializeStatusDisplay());
+      }
+      return;
+    }
+
     // Create status container if it doesn't exist
     if (!document.getElementById('global-status')) {
       const statusContainer = document.createElement('div');
@@ -337,6 +345,40 @@ class UIUtils {
 
 // Global instance
 const uiUtils = new UIUtils();
+
+// Static method for parameter syncing
+UIUtils.setupParamSync = function(params, onChange) {
+  // Sync UI elements with params object and call onChange when values change
+  const paramKeys = Object.keys(params);
+
+  paramKeys.forEach(key => {
+    const element = document.getElementById(key);
+    if (!element) return;
+
+    const handler = () => {
+      if (element.type === 'checkbox') {
+        params[key] = element.checked;
+      } else if (element.type === 'range' || element.type === 'number') {
+        params[key] = parseFloat(element.value);
+      } else if (element.tagName === 'SELECT') {
+        params[key] = element.value;
+      } else {
+        params[key] = element.value;
+      }
+
+      // Update display if exists
+      const display = document.getElementById(`${key}-val`);
+      if (display) {
+        display.textContent = params[key];
+      }
+
+      if (onChange) onChange();
+    };
+
+    element.addEventListener('input', handler);
+    element.addEventListener('change', handler);
+  });
+};
 
 // Initialize styles
 document.addEventListener('DOMContentLoaded', () => {

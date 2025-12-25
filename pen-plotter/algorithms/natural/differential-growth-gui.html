@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Differential Growth - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-secondary, #1a1a2e);
+      border-radius: 8px;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary, #888);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #333);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: var(--accent-primary, #4a9eff);
+      color: white;
+    }
+    button.secondary {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #444);
+    }
+    button.danger {
+      background: #c44;
+      color: white;
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+    .info-text {
+      font-size: 11px;
+      color: var(--text-secondary, #666);
+      margin-top: 4px;
+    }
+    .stats {
+      font-size: 11px;
+      color: var(--text-secondary, #888);
+      padding: 8px;
+      background: var(--bg-tertiary, #252540);
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="algorithm-container">
+    <aside class="controls-panel">
+      <h2>Differential Growth</h2>
+
+      <div id="controls">
+        <div class="control-group">
+          <label>Starting Shape:
+            <select id="startShape">
+              <option value="circle">Circle</option>
+              <option value="line">Line</option>
+              <option value="square">Square</option>
+              <option value="star">Star</option>
+              <option value="random">Random Points</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Starting Points: <span id="startPoints-val">32</span></label>
+          <input type="range" id="startPoints" min="8" max="128" value="32">
+        </div>
+
+        <div class="control-group">
+          <label>Repulsion Force: <span id="repulsion-val">1.5</span></label>
+          <input type="range" id="repulsion" min="0.5" max="5" value="1.5" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>Attraction Force: <span id="attraction-val">0.3</span></label>
+          <input type="range" id="attraction" min="0.1" max="2" value="0.3" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>Max Distance: <span id="maxDist-val">15</span></label>
+          <input type="range" id="maxDist" min="5" max="40" value="15">
+        </div>
+
+        <div class="control-group">
+          <label>Split Distance: <span id="splitDist-val">8</span></label>
+          <input type="range" id="splitDist" min="3" max="25" value="8">
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Weight: <span id="strokeWeight-val">1.2</span></label>
+          <input type="range" id="strokeWeight" min="0.3" max="3" value="1.2" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="closedLoop" checked> Closed Loop
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showPoints" checked> Show Points
+          </label>
+        </div>
+
+        <div class="stats" id="stats">
+          Points: 32 | Iterations: 0
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="toggleGrowth">Start Growing</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="stepGrowth">Step</button>
+          <button class="danger" id="reset">Reset</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="exportSVG">Export SVG</button>
+          <button class="secondary" id="exportPNG">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    // Parameters
+    const params = {
+      startShape: 'circle',
+      startPoints: 32,
+      repulsion: 1.5,
+      attraction: 0.3,
+      maxDist: 15,
+      splitDist: 8,
+      strokeWeight: 1.2,
+      closedLoop: true,
+      showPoints: true
+    };
+
+    let canvas;
+    let nodes = [];
+    let growing = false;
+    let iterations = 0;
+    const SIZE = 800;
+    const MAX_NODES = 5000;
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+      setupControls();
+      initializeNodes();
+      drawCurve();
+    }
+
+    function setupControls() {
+      const rangeControls = ['startPoints', 'repulsion', 'attraction', 'maxDist', 'splitDist', 'strokeWeight'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          if (id === 'startPoints') {
+            growing = false;
+            document.getElementById('toggleGrowth').textContent = 'Start Growing';
+            initializeNodes();
+          }
+          drawCurve();
+        });
+      });
+
+      document.getElementById('startShape').addEventListener('change', (e) => {
+        params.startShape = e.target.value;
+        if (!growing) {
+          initializeNodes();
+          drawCurve();
+        }
+      });
+
+      document.getElementById('closedLoop').addEventListener('change', (e) => {
+        params.closedLoop = e.target.checked;
+        drawCurve();
+      });
+
+      document.getElementById('showPoints').addEventListener('change', (e) => {
+        params.showPoints = e.target.checked;
+        drawCurve();
+      });
+
+      document.getElementById('toggleGrowth').addEventListener('click', () => {
+        growing = !growing;
+        document.getElementById('toggleGrowth').textContent = growing ? 'Stop' : 'Start Growing';
+        if (growing) loop();
+        else noLoop();
+      });
+
+      document.getElementById('stepGrowth').addEventListener('click', () => {
+        growStep();
+        drawCurve();
+      });
+
+      document.getElementById('reset').addEventListener('click', () => {
+        growing = false;
+        document.getElementById('toggleGrowth').textContent = 'Start Growing';
+        noLoop();
+        initializeNodes();
+        drawCurve();
+      });
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, 'differential-growth');
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, 'differential-growth');
+      });
+
+      noLoop();
+    }
+
+    function initializeNodes() {
+      nodes = [];
+      iterations = 0;
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const n = params.startPoints;
+
+      switch (params.startShape) {
+        case 'circle':
+          const radius = 300;
+          for (let i = 0; i < n; i++) {
+            const angle = (i / n) * TWO_PI;
+            nodes.push({
+              x: cx + cos(angle) * radius,
+              y: cy + sin(angle) * radius,
+              vx: 0,
+              vy: 0
+            });
+          }
+          break;
+
+        case 'line':
+          const lineLen = 300;
+          for (let i = 0; i < n; i++) {
+            const t = i / (n - 1);
+            nodes.push({
+              x: cx - lineLen / 2 + t * lineLen,
+              y: cy,
+              vx: 0,
+              vy: 0
+            });
+          }
+          break;
+
+        case 'square':
+          const side = 200;
+          const perSide = Math.ceil(n / 4);
+          for (let i = 0; i < n; i++) {
+            const sideIdx = Math.floor(i / perSide);
+            const t = (i % perSide) / perSide;
+            let x, y;
+            switch (sideIdx) {
+              case 0: x = cx - side/2 + t * side; y = cy - side/2; break;
+              case 1: x = cx + side/2; y = cy - side/2 + t * side; break;
+              case 2: x = cx + side/2 - t * side; y = cy + side/2; break;
+              default: x = cx - side/2; y = cy + side/2 - t * side; break;
+            }
+            nodes.push({ x, y, vx: 0, vy: 0 });
+          }
+          break;
+
+        case 'star':
+          const outerR = 150;
+          const innerR = 60;
+          const points = 5;
+          for (let i = 0; i < n; i++) {
+            const angle = (i / n) * TWO_PI - HALF_PI;
+            const r = (Math.floor(i * points / n) % 2 === 0) ? outerR : innerR;
+            const t = (i * points / n) % 1;
+            const nextR = (Math.floor(i * points / n) % 2 === 0) ? innerR : outerR;
+            const actualR = lerp(r, nextR, t);
+            nodes.push({
+              x: cx + cos(angle) * actualR,
+              y: cy + sin(angle) * actualR,
+              vx: 0,
+              vy: 0
+            });
+          }
+          break;
+
+        case 'random':
+          for (let i = 0; i < n; i++) {
+            const angle = random(TWO_PI);
+            const r = random(50, 150);
+            nodes.push({
+              x: cx + cos(angle) * r,
+              y: cy + sin(angle) * r,
+              vx: 0,
+              vy: 0
+            });
+          }
+          // Sort by angle for continuous path
+          nodes.sort((a, b) => {
+            return atan2(a.y - cy, a.x - cx) - atan2(b.y - cy, b.x - cx);
+          });
+          break;
+      }
+
+      updateStats();
+    }
+
+    function draw() {
+      if (growing && nodes.length < MAX_NODES) {
+        growStep();
+        drawCurve();
+      }
+    }
+
+    function growStep() {
+      if (nodes.length === 0) return;
+
+      iterations++;
+
+      // Reset velocities
+      for (const node of nodes) {
+        node.vx = 0;
+        node.vy = 0;
+      }
+
+      // Apply repulsion between all nodes
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[j].x - nodes[i].x;
+          const dy = nodes[j].y - nodes[i].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < params.maxDist && dist > 0.1) {
+            const force = params.repulsion / (dist * dist);
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
+
+            nodes[i].vx -= fx;
+            nodes[i].vy -= fy;
+            nodes[j].vx += fx;
+            nodes[j].vy += fy;
+          }
+        }
+      }
+
+      // Apply attraction to neighbors
+      const len = nodes.length;
+      for (let i = 0; i < len; i++) {
+        const prev = params.closedLoop ? nodes[(i - 1 + len) % len] : (i > 0 ? nodes[i - 1] : null);
+        const next = params.closedLoop ? nodes[(i + 1) % len] : (i < len - 1 ? nodes[i + 1] : null);
+
+        if (prev) {
+          const dx = prev.x - nodes[i].x;
+          const dy = prev.y - nodes[i].y;
+          nodes[i].vx += dx * params.attraction * 0.5;
+          nodes[i].vy += dy * params.attraction * 0.5;
+        }
+
+        if (next) {
+          const dx = next.x - nodes[i].x;
+          const dy = next.y - nodes[i].y;
+          nodes[i].vx += dx * params.attraction * 0.5;
+          nodes[i].vy += dy * params.attraction * 0.5;
+        }
+      }
+
+      // Apply velocities with damping
+      const damping = 0.5;
+      for (const node of nodes) {
+        node.x += node.vx * damping;
+        node.y += node.vy * damping;
+
+        // Constrain to canvas
+        node.x = constrain(node.x, 20, SIZE - 20);
+        node.y = constrain(node.y, 20, SIZE - 20);
+      }
+
+      // Split edges that are too long
+      if (nodes.length < MAX_NODES) {
+        const newNodes = [];
+        for (let i = 0; i < nodes.length; i++) {
+          newNodes.push(nodes[i]);
+
+          const nextIdx = params.closedLoop ? (i + 1) % nodes.length : i + 1;
+          if (nextIdx < nodes.length || params.closedLoop) {
+            const next = nodes[nextIdx];
+            const dx = next.x - nodes[i].x;
+            const dy = next.y - nodes[i].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist > params.splitDist) {
+              // Add midpoint
+              newNodes.push({
+                x: (nodes[i].x + next.x) / 2 + random(-1, 1),
+                y: (nodes[i].y + next.y) / 2 + random(-1, 1),
+                vx: 0,
+                vy: 0
+              });
+            }
+          }
+        }
+        nodes = newNodes;
+      }
+
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('stats').textContent =
+        `Points: ${nodes.length} | Iterations: ${iterations}`;
+    }
+
+    function drawCurve() {
+      background(255);
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      if (nodes.length < 2) return;
+
+      beginShape();
+      for (const node of nodes) {
+        vertex(node.x, node.y);
+      }
+      if (params.closedLoop) {
+        endShape(CLOSE);
+      } else {
+        endShape();
+      }
+
+      if (params.showPoints) {
+        fill(200, 50, 50);
+        noStroke();
+        for (const node of nodes) {
+          ellipse(node.x, node.y, 4, 4);
+        }
+      }
+    }
+
+    function generateSVG() {
+      if (nodes.length < 2) return '';
+
+      const paths = [];
+      const points = nodes.map(n => ({ x: n.x, y: n.y }));
+
+      paths.push({
+        d: TSExport.pointsToPath(points, params.closedLoop)
+      });
+
+      if (params.showPoints) {
+        for (const node of nodes) {
+          paths.push({
+            d: `M ${node.x - 2} ${node.y} a 2 2 0 1 0 4 0 a 2 2 0 1 0 -4 0`,
+            fill: '#C83232',
+            stroke: 'none'
+          });
+        }
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, {
+        backgroundColor: 'white',
+        strokeWidth: params.strokeWeight
+      });
+    }
+  </script>
+</body>
+</html>

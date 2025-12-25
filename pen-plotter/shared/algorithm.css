@@ -1491,3 +1491,29 @@ body.ts-fullscreen-mode .ts-zoom-toolbar {
   border: 1px solid var(--ts-border-default);
   border-radius: var(--ts-radius-md);
 }
+
+/* ============================================
+   BACK LINK (Navigation to Index)
+   ============================================ */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ts-space-sm);
+  margin-bottom: var(--ts-space-md);
+  padding: var(--ts-space-sm) 0;
+  color: var(--ts-text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  transition: color var(--ts-transition-fast);
+}
+
+.back-link:hover {
+  color: var(--ts-accent-primary);
+}
+
+.back-link::before {
+  content: '←';
+  font-size: 0.85rem;
+}

@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>String Art - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../canvas-layout.js"></script>
+
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    #controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg-secondary, #1a1a2e);
+      border-radius: 8px;
+      max-width: 320px;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary, #888);
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    select {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #333);
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+    button.primary {
+      background: var(--accent-primary, #4a9eff);
+      color: white;
+    }
+    button.secondary {
+      background: var(--bg-tertiary, #252540);
+      color: var(--text-primary, #fff);
+      border: 1px solid var(--border-color, #444);
+    }
+    button:hover {
+      filter: brightness(1.1);
+    }
+    .info-text {
+      font-size: 11px;
+      color: var(--text-secondary, #666);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="ts-layout">
+    <aside class="ts-control-panel">
+      <h2>String Art</h2>
+
+      <div id="controls">
+        <div class="control-group">
+          <label>Pattern Type:
+            <select id="patternType">
+              <option value="cardioid">Cardioid</option>
+              <option value="nephroid">Nephroid</option>
+              <option value="deltoid">Deltoid</option>
+              <option value="astroid">Astroid</option>
+              <option value="parabola">Parabolic Envelope</option>
+              <option value="web">Circle Web</option>
+              <option value="bezier">Bezier Envelope</option>
+            </select>
+          </label>
+          <p class="info-text" id="pattern-info">Heart-shaped curve from circle chords</p>
+        </div>
+
+        <div class="control-group">
+          <label>Points: <span id="points-val">72</span></label>
+          <input type="range" id="points" min="12" max="180" value="72">
+        </div>
+
+        <div class="control-group">
+          <label>Multiplier: <span id="multiplier-val">2.0</span></label>
+          <input type="range" id="multiplier" min="1" max="10" value="2" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>Radius: <span id="radius-val">350</span></label>
+          <input type="range" id="radius" min="100" max="380" value="350">
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Weight: <span id="strokeWeight-val">0.5</span></label>
+          <input type="range" id="strokeWeight" min="0.2" max="2" value="0.5" step="0.1">
+        </div>
+
+        <div class="control-group">
+          <label>Rotation: <span id="rotation-val">0</span>°</label>
+          <input type="range" id="rotation" min="0" max="360" value="0">
+        </div>
+
+        <div class="control-group" id="skipGroup" style="display:none">
+          <label>Skip Distance: <span id="skip-val">3</span></label>
+          <input type="range" id="skip" min="1" max="20" value="3">
+          <p class="info-text">Connect to every Nth point</p>
+        </div>
+
+        <div class="control-group" id="marginGroup" style="display:none">
+          <label>Corner Margin: <span id="margin-val">50</span></label>
+          <input type="range" id="margin" min="20" max="150" value="50">
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showCircle"> Show Base Circle
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>
+            <input type="checkbox" id="showPoints" checked> Show Points
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="primary" id="regenerateBtn">Regenerate</button>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="randomizeBtn">Randomize All</button>
+        </div>
+
+        <div class="control-group" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color, #333);">
+          <label>Paper Size:
+            <select id="paperSize">
+              <option value="custom">Custom (800×800px)</option>
+              <option value="a5">A5 (148×210mm)</option>
+              <option value="a4">A4 (210×297mm)</option>
+              <option value="a3">A3 (297×420mm)</option>
+              <option value="letter">US Letter</option>
+              <option value="square">Square (300×300mm)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Background:
+            <select id="bgColor">
+              <option value="#ffffff">White</option>
+              <option value="#f7f2e8">Cream</option>
+              <option value="#000000">Black</option>
+              <option value="#1a1a2e">Dark Blue</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="control-group">
+          <label>Stroke Color:
+            <select id="strokeColor">
+              <option value="#000000">Black</option>
+              <option value="#222222">Dark Gray</option>
+              <option value="#ffffff">White</option>
+              <option value="#324c9e">Blue</option>
+              <option value="#c83232">Red</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="btn-row">
+          <button class="secondary" id="exportSVG">Export SVG</button>
+          <button class="secondary" id="exportPNG">Export PNG</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="ts-canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    const params = {
+      patternType: 'cardioid',
+      points: 72,
+      multiplier: 2,
+      radius: 350,
+      strokeWeight: 0.5,
+      rotation: 0,
+      showCircle: false,
+      showPoints: true,
+      skip: 3,
+      margin: 50,
+      paperSize: 'custom',
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    const patternInfo = {
+      cardioid: 'Heart-shaped curve from circle chords',
+      nephroid: 'Kidney-shaped, uses 3x multiplier',
+      deltoid: '3-cusped hypocycloid pattern',
+      astroid: '4-cusped star pattern',
+      parabola: 'Parabolic envelope from perpendicular lines',
+      web: 'Radial connections creating web pattern',
+      bezier: 'Curved envelope from Bezier approximation'
+    };
+
+    let canvas;
+    let lines = [];
+    let SIZE = 800;
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+      setupControls();
+      generatePattern();
+    }
+
+    function setupControls() {
+      const rangeControls = ['points', 'multiplier', 'radius', 'strokeWeight', 'rotation', 'skip', 'margin'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          generatePattern();
+        });
+      });
+
+      document.getElementById('patternType').addEventListener('change', (e) => {
+        params.patternType = e.target.value;
+        document.getElementById('pattern-info').textContent = patternInfo[params.patternType];
+
+        // Set default multiplier for each pattern
+        const defaults = {
+          cardioid: 2, nephroid: 3, deltoid: 3, astroid: 4,
+          parabola: 1, web: 5, bezier: 2
+        };
+        params.multiplier = defaults[params.patternType] || 2;
+        document.getElementById('multiplier').value = params.multiplier;
+        document.getElementById('multiplier-val').textContent = params.multiplier;
+
+        // Show/hide pattern-specific controls
+        document.getElementById('skipGroup').style.display =
+          params.patternType === 'web' ? 'flex' : 'none';
+        document.getElementById('marginGroup').style.display =
+          params.patternType === 'parabola' ? 'flex' : 'none';
+
+        generatePattern();
+      });
+
+      document.getElementById('showCircle').addEventListener('change', (e) => {
+        params.showCircle = e.target.checked;
+        drawPattern();
+      });
+
+      document.getElementById('showPoints').addEventListener('change', (e) => {
+        params.showPoints = e.target.checked;
+        drawPattern();
+      });
+
+      document.getElementById('regenerateBtn').addEventListener('click', () => {
+        // Randomize rotation for visible change
+        params.rotation = Math.floor(Math.random() * 360);
+        document.getElementById('rotation').value = params.rotation;
+        document.getElementById('rotation-val').textContent = params.rotation;
+        generatePattern();
+      });
+
+      document.getElementById('randomizeBtn').addEventListener('click', () => {
+        // Randomize all parameters
+        params.points = Math.floor(Math.random() * 120) + 24; // 24-144
+        params.multiplier = (Math.random() * 6 + 1.5).toFixed(1); // 1.5-7.5
+        params.radius = Math.floor(Math.random() * 200) + 150; // 150-350
+        params.rotation = Math.floor(Math.random() * 360);
+        params.skip = Math.floor(Math.random() * 10) + 2; // 2-12
+        params.margin = Math.floor(Math.random() * 80) + 30; // 30-110
+
+        // Update all UI elements
+        document.getElementById('points').value = params.points;
+        document.getElementById('points-val').textContent = params.points;
+        document.getElementById('multiplier').value = params.multiplier;
+        document.getElementById('multiplier-val').textContent = params.multiplier;
+        document.getElementById('radius').value = params.radius;
+        document.getElementById('radius-val').textContent = params.radius;
+        document.getElementById('rotation').value = params.rotation;
+        document.getElementById('rotation-val').textContent = params.rotation;
+        document.getElementById('skip').value = params.skip;
+        document.getElementById('skip-val').textContent = params.skip;
+        document.getElementById('margin').value = params.margin;
+        document.getElementById('margin-val').textContent = params.margin;
+
+        generatePattern();
+      });
+
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const paperDims = CanvasLayout.getSize(params.paperSize);
+        SIZE = Math.max(paperDims.width, paperDims.height);
+        if (SIZE > 800) SIZE = Math.min(SIZE, 1200); // Cap for performance
+        resizeCanvas(SIZE, SIZE);
+        // Adjust radius to fit new size
+        params.radius = Math.min(params.radius, SIZE / 2 - 50);
+        document.getElementById('radius').max = SIZE / 2 - 20;
+        document.getElementById('radius').value = params.radius;
+        document.getElementById('radius-val').textContent = params.radius;
+        generatePattern();
+      });
+
+      document.getElementById('bgColor').addEventListener('change', (e) => {
+        params.bgColor = e.target.value;
+        drawPattern();
+      });
+
+      document.getElementById('strokeColor').addEventListener('change', (e) => {
+        params.strokeColor = e.target.value;
+        drawPattern();
+      });
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, `string-art-${params.patternType}`);
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, `string-art-${params.patternType}`);
+      });
+    }
+
+    function generatePattern() {
+      lines = [];
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const n = params.points;
+      const r = params.radius;
+      const rot = params.rotation * Math.PI / 180;
+
+      // Generate points on circle
+      const circlePoints = [];
+      for (let i = 0; i < n; i++) {
+        const angle = (i / n) * TWO_PI + rot;
+        circlePoints.push({
+          x: cx + Math.cos(angle) * r,
+          y: cy + Math.sin(angle) * r
+        });
+      }
+
+      switch (params.patternType) {
+        case 'cardioid':
+        case 'nephroid':
+          // Connect point i to point (i * multiplier) % n
+          for (let i = 0; i < n; i++) {
+            const j = Math.floor(i * params.multiplier) % n;
+            lines.push({
+              x1: circlePoints[i].x,
+              y1: circlePoints[i].y,
+              x2: circlePoints[j].x,
+              y2: circlePoints[j].y
+            });
+          }
+          break;
+
+        case 'deltoid':
+          // 3-cusped hypocycloid approximation
+          for (let i = 0; i < n; i++) {
+            const j = Math.floor(i * 3) % n;
+            const k = (n - 1 - Math.floor(i * 2)) % n;
+            lines.push({
+              x1: circlePoints[i].x,
+              y1: circlePoints[i].y,
+              x2: circlePoints[(j + k) % n].x,
+              y2: circlePoints[(j + k) % n].y
+            });
+          }
+          break;
+
+        case 'astroid':
+          // 4-cusped pattern
+          for (let i = 0; i < n; i++) {
+            const j = (n - 1 - i) % n;
+            lines.push({
+              x1: circlePoints[i].x,
+              y1: circlePoints[i].y,
+              x2: circlePoints[j].x,
+              y2: circlePoints[j].y
+            });
+          }
+          break;
+
+        case 'parabola':
+          // Create perpendicular lines pattern
+          const margin = params.margin;
+          const step = (SIZE - 2 * margin) / n;
+          for (let i = 0; i <= n; i++) {
+            // Horizontal to vertical connections
+            const x1 = margin + i * step;
+            const y1 = SIZE - margin;
+            const x2 = margin;
+            const y2 = SIZE - margin - i * step;
+            lines.push({ x1, y1, x2, y2 });
+
+            // Mirror on other side
+            lines.push({
+              x1: SIZE - x1,
+              y1: y1,
+              x2: SIZE - x2,
+              y2: y2
+            });
+          }
+          // Top parabolas
+          for (let i = 0; i <= n; i++) {
+            const x1 = margin + i * step;
+            const y1 = margin;
+            const x2 = margin;
+            const y2 = margin + i * step;
+            lines.push({ x1, y1, x2, y2 });
+
+            lines.push({
+              x1: SIZE - x1,
+              y1: y1,
+              x2: SIZE - x2,
+              y2: y2
+            });
+          }
+          break;
+
+        case 'web':
+          // Connect every point to points at skip distance
+          const skipDist = params.skip;
+          for (let i = 0; i < n; i++) {
+            // Connect to point at skip distance
+            const j = (i + skipDist) % n;
+            lines.push({
+              x1: circlePoints[i].x,
+              y1: circlePoints[i].y,
+              x2: circlePoints[j].x,
+              y2: circlePoints[j].y
+            });
+            // Also connect to opposite side for web effect
+            const k = (i + Math.floor(n / 2)) % n;
+            if (i < n / 2) { // Avoid duplicates
+              lines.push({
+                x1: circlePoints[i].x,
+                y1: circlePoints[i].y,
+                x2: circlePoints[k].x,
+                y2: circlePoints[k].y
+              });
+            }
+          }
+          break;
+
+        case 'bezier':
+          // Create envelope using tangent-like lines
+          for (let i = 0; i < n; i++) {
+            const t = i / n;
+            const nextT = (i + 1) / n;
+
+            // Connect point to point across with bezier-like curve
+            const j = Math.floor((i + n/2 + i * params.multiplier/10) % n);
+            lines.push({
+              x1: circlePoints[i].x,
+              y1: circlePoints[i].y,
+              x2: circlePoints[j].x,
+              y2: circlePoints[j].y
+            });
+          }
+          break;
+      }
+
+      drawPattern();
+    }
+
+    function drawPattern() {
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const r = params.radius;
+      const rot = params.rotation * Math.PI / 180;
+
+      // Draw base circle if enabled
+      if (params.showCircle) {
+        stroke(180);
+        strokeWeight(0.5);
+        ellipse(cx, cy, r * 2, r * 2);
+        stroke(params.strokeColor);
+        strokeWeight(params.strokeWeight);
+      }
+
+      // Draw lines
+      for (const l of lines) {
+        line(l.x1, l.y1, l.x2, l.y2);
+      }
+
+      // Draw points if enabled
+      if (params.showPoints && params.patternType !== 'parabola') {
+        fill(200, 50, 50);
+        noStroke();
+        const n = params.points;
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * TWO_PI + rot;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          ellipse(x, y, 4, 4);
+        }
+      }
+    }
+
+    function generateSVG() {
+      const paths = [];
+      const cx = SIZE / 2;
+      const cy = SIZE / 2;
+      const r = params.radius;
+      const rot = params.rotation * Math.PI / 180;
+
+      // Base circle
+      if (params.showCircle) {
+        paths.push({
+          d: `M ${cx + r} ${cy} A ${r} ${r} 0 1 1 ${cx - r} ${cy} A ${r} ${r} 0 1 1 ${cx + r} ${cy}`,
+          stroke: '#CCCCCC',
+          strokeWidth: 0.5
+        });
+      }
+
+      // Lines
+      for (const l of lines) {
+        paths.push({
+          d: `M ${l.x1} ${l.y1} L ${l.x2} ${l.y2}`,
+          stroke: params.strokeColor
+        });
+      }
+
+      // Points
+      if (params.showPoints && params.patternType !== 'parabola') {
+        const n = params.points;
+        for (let i = 0; i < n; i++) {
+          const angle = (i / n) * TWO_PI + rot;
+          const x = cx + Math.cos(angle) * r;
+          const y = cy + Math.sin(angle) * r;
+          paths.push({
+            d: `M ${x - 2} ${y} a 2 2 0 1 0 4 0 a 2 2 0 1 0 -4 0`,
+            fill: params.strokeColor,
+            stroke: 'none'
+          });
+        }
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, {
+        backgroundColor: params.bgColor,
+        strokeWidth: params.strokeWeight
+      });
+    }
+  </script>
+</body>
+</html>

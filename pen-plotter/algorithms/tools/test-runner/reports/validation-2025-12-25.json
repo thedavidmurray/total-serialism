@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-12-25T01:14:44.475Z",
+  "passed": 0,
+  "failed": 0,
+  "warnings": 1,
+  "tests": [
+    {
+      "name": "string art",
+      "category": "geometric",
+      "filename": "string-art-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/string-art-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "72.00 → 96.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No console errors",
+          "pass": false,
+          "detail": "Failed to load resource: the server responded with a status of 404 (File not fou",
+          "warn": true
+        }
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (File not found)"
+      ],
+      "pageErrors": [],
+      "status": "warn"
+    }
+  ]
+}
