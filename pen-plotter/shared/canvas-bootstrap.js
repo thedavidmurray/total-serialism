@@ -1005,6 +1005,7 @@
     defaults: {},
     onRandomize: null,
     onReset: null,
+    canvasControls: null,
 
     /**
      * Initialize global actions
@@ -1015,6 +1016,7 @@
       this.defaults = options.defaults || JSON.parse(JSON.stringify(this.params));
       this.onRandomize = options.onRandomize || null;
       this.onReset = options.onReset || null;
+      this.canvasControls = options.canvasControls || null;
 
       // Set up keyboard shortcuts
       document.addEventListener('keydown', (e) => {
@@ -1032,14 +1034,37 @@
         }
       });
 
+      // Set up Randomize All button if it exists
+      this.setupRandomizeButton();
+
       console.log('[TSGlobalActions] Initialized');
       return this;
+    },
+
+    /**
+     * Set up Randomize All button
+     * @param {string} buttonId ID of the button element
+     */
+    setupRandomizeButton: function(buttonId = 'randomizeAll') {
+      const button = document.getElementById(buttonId);
+      if (button) {
+        button.addEventListener('click', () => this.randomize());
+        console.log('[TSGlobalActions] Randomize All button attached');
+      }
     },
 
     /**
      * Randomize all parameters
      */
     randomize: function() {
+      // Use TSCanvasControls if available for color randomization
+      if (this.canvasControls && typeof this.canvasControls.randomizeAll === 'function') {
+        this.canvasControls.randomizeAll();
+        TSToast.show('Colors randomized (WCAG AA)', 'info', 1500);
+        return;
+      }
+
+      // Fallback to legacy onRandomize callback
       if (this.onRandomize) {
         this.onRandomize();
         TSToast.show('Parameters randomized', 'info', 1500);
@@ -1101,5 +1126,8 @@
   global.TSFullscreen = TSFullscreen;
   global.TSSeed = TSSeed;
   global.TSGlobalActions = TSGlobalActions;
+
+  // TSCanvasControls is exported from canvas-controls.js
+  // This provides a reference for convenience when both are loaded
 
 })(typeof window !== 'undefined' ? window : this);
