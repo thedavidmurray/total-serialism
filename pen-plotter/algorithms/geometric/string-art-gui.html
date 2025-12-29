@@ -215,6 +215,10 @@
       strokeColor: '#000000'
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     const patternInfo = {
       cardioid: 'Heart-shaped curve from circle chords',
       nephroid: 'Kidney-shaped, uses 3x multiplier',

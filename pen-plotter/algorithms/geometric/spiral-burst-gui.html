@@ -348,6 +348,11 @@
     };
 
     let params = { ...spiralParams };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     let seed = Math.floor(Math.random() * 1000000);
     let autoRegenerate = false; // Default OFF for performance
     let regenTimer;

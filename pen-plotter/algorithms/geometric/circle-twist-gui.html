@@ -306,7 +306,11 @@
       connectLayers: false,
       showCenterPoint: false
     };
-    
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     let layers = [];
     let svgCanvas;
     let animationTime = 0;

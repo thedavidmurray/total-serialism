@@ -212,6 +212,10 @@
       animate: false
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     let canvas;
     let animationAngle = 0;
 
