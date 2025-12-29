@@ -316,6 +316,7 @@
         // Canvas controls for unified color handling
         const canvasControls = new TSCanvasControls();
         canvasControls.bind(params);
+        canvasControls.setupRandomizeButton();
 
         // Initialize preset manager when DOM is loaded
         window.addEventListener('DOMContentLoaded', () => {

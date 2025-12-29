@@ -280,6 +280,7 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
+        canvasControls.setupRandomizeButton();
 
         function initCanvasSize() {
             const size = CanvasLayout.getSize(params.paperSize);
