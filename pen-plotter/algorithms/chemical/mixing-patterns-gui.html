@@ -248,6 +248,10 @@
             strokeColor: '#000000'
         };
 
+        // Canvas controls for unified color handling
+        const canvasControls = new TSCanvasControls();
+        canvasControls.bind(params);
+
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let width, height;

@@ -467,6 +467,10 @@
       gradientEffect: 'none'
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     // p5.js setup
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);

@@ -313,6 +313,10 @@
             frameInterval: 500
         };
 
+        // Canvas controls for unified color handling
+        const canvasControls = new TSCanvasControls();
+        canvasControls.bind(params);
+
         // Initialize preset manager when DOM is loaded
         window.addEventListener('DOMContentLoaded', () => {
             presetManager = new PresetManager({
