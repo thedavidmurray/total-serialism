@@ -155,6 +155,80 @@ describe('TSCanvasControls', () => {
       controls.randomizeAll();
       expect(regenCallback).toHaveBeenCalled();
     });
+
+    // Gap 2 Fix: Param validation tests
+    test('should return early and log error for null params (Gap 2)', () => {
+      if (!TSCanvasControls) return;
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const controls = new TSCanvasControls();
+
+      const result = controls.bind(null);
+
+      expect(result).toBe(controls); // should still return this
+      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('bind() requires'));
+      consoleSpy.mockRestore();
+    });
+
+    test('should return early and log error for undefined params (Gap 2)', () => {
+      if (!TSCanvasControls) return;
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const controls = new TSCanvasControls();
+
+      const result = controls.bind(undefined);
+
+      expect(result).toBe(controls);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    test('should return early and log error for array params (Gap 2)', () => {
+      if (!TSCanvasControls) return;
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+      const controls = new TSCanvasControls();
+
+      const result = controls.bind([1, 2, 3]);
+
+      expect(result).toBe(controls);
+      expect(consoleSpy).toHaveBeenCalled();
+      consoleSpy.mockRestore();
+    });
+
+    // Gap 3 Fix: Algorithm params take precedence
+    test('should NOT overwrite existing algorithm params (Gap 3)', () => {
+      if (!TSCanvasControls) return;
+
+      const controls = new TSCanvasControls(); // defaults to white bg, black stroke
+      const algorithmParams = {
+        bgColor: '#ff0000',  // algorithm wants red background
+        strokeColor: '#00ff00', // algorithm wants green stroke
+        density: 50
+      };
+
+      controls.bind(algorithmParams);
+
+      // Algorithm's custom colors should be preserved, NOT overwritten
+      expect(algorithmParams.bgColor).toBe('#ff0000');
+      expect(algorithmParams.strokeColor).toBe('#00ff00');
+      // Missing params should get defaults
+      expect(algorithmParams.paperSize).toBe('a4');
+    });
+
+    test('should sync internal params with bound object values (Gap 3)', () => {
+      if (!TSCanvasControls) return;
+
+      const controls = new TSCanvasControls();
+      const algorithmParams = {
+        bgColor: '#ff0000'
+      };
+
+      controls.bind(algorithmParams);
+
+      // Internal params should reflect the algorithm's values
+      expect(controls.params.bgColor).toBe('#ff0000');
+    });
   });
 
   describe('setupEventListeners()', () => {
@@ -207,6 +281,103 @@ describe('TSCanvasControls', () => {
       expect(params.bgColor).toBe('#ffffff');
       params.bgColor = '#ff0000';
       expect(params.bgColor).toBe('#ff0000');
+    });
+
+    // Gap 1 Fix: Missing element warning test
+    test('should warn about missing required elements (Gap 1)', () => {
+      if (!TSCanvasControls) return;
+
+      // Clear mock elements to simulate missing DOM
+      delete mockElements['bgColor'];
+      delete mockElements['strokeColor'];
+
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const controls = new TSCanvasControls();
+      controls.setupEventListeners(jest.fn());
+
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Missing required elements'),
+        expect.any(Array)
+      );
+      consoleSpy.mockRestore();
+    });
+
+    test('should NOT warn when all required elements exist (Gap 1)', () => {
+      if (!TSCanvasControls) return;
+
+      // Create mock elements
+      const bgColorEl = mockElement('bgColor', 'color');
+      const strokeColorEl = mockElement('strokeColor', 'color');
+
+      // Spy on document.getElementById to return our mocks
+      const getElSpy = jest.spyOn(document, 'getElementById').mockImplementation((id) => {
+        if (id === 'bgColor') return bgColorEl;
+        if (id === 'strokeColor') return strokeColorEl;
+        return null;
+      });
+
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+      const controls = new TSCanvasControls();
+      controls.setupEventListeners(jest.fn());
+
+      // Should not warn about missing elements
+      const missingElementsWarning = consoleSpy.mock.calls.find(
+        call => call[0] && call[0].includes('Missing required elements')
+      );
+      expect(missingElementsWarning).toBeUndefined();
+
+      consoleSpy.mockRestore();
+      getElSpy.mockRestore();
+    });
+  });
+
+  describe('updateDOMFromParams() (Gap 7)', () => {
+    test('should have updateDOMFromParams method', () => {
+      if (!TSCanvasControls) return;
+
+      const controls = new TSCanvasControls();
+      expect(typeof controls.updateDOMFromParams).toBe('function');
+    });
+
+    test('should sync DOM elements with param values', () => {
+      if (!TSCanvasControls) return;
+
+      // Create mock elements that will be updated
+      const bgColorEl = mockElement('bgColor', 'color');
+      const strokeColorEl = mockElement('strokeColor', 'color');
+
+      // Spy on document.getElementById to return our mocks
+      const getElSpy = jest.spyOn(document, 'getElementById').mockImplementation((id) => {
+        if (id === 'bgColor') return bgColorEl;
+        if (id === 'strokeColor') return strokeColorEl;
+        return null;
+      });
+
+      const controls = new TSCanvasControls();
+      const params = {
+        bgColor: '#ff0000',
+        strokeColor: '#00ff00'
+      };
+      controls.bind(params);
+
+      controls.updateDOMFromParams();
+
+      expect(bgColorEl.value).toBe('#ff0000');
+      expect(strokeColorEl.value).toBe('#00ff00');
+
+      getElSpy.mockRestore();
+    });
+
+    test('should not throw for missing DOM elements', () => {
+      if (!TSCanvasControls) return;
+
+      delete mockElements['bgColor'];
+      delete mockElements['strokeColor'];
+
+      const controls = new TSCanvasControls();
+      controls.bind({ bgColor: '#ff0000' });
+
+      expect(() => controls.updateDOMFromParams()).not.toThrow();
     });
   });
 

@@ -79,9 +79,28 @@
      * @returns {TSCanvasControls} this for chaining
      */
     bind(paramsObject, options = {}) {
-      // Merge our controls into the algorithm's params
-      Object.assign(paramsObject, this.params);
+      // Gap 2 Fix: Validate params object
+      if (!paramsObject || typeof paramsObject !== 'object' || Array.isArray(paramsObject)) {
+        console.error('[TSCanvasControls] bind() requires a valid object parameter');
+        return this;
+      }
+
+      // Gap 3 Fix: Algorithm params take precedence - only fill in missing keys
+      // This prevents TSCanvasControls from overwriting custom defaults
+      Object.keys(this.params).forEach(key => {
+        if (!(key in paramsObject)) {
+          paramsObject[key] = this.params[key];
+        }
+      });
+
       this.boundParams = paramsObject;
+
+      // Sync our internal params with the bound object's values
+      Object.keys(this.params).forEach(key => {
+        if (key in paramsObject) {
+          this.params[key] = paramsObject[key];
+        }
+      });
 
       if (options.autoRegen) {
         this.autoRegen = true;
@@ -109,6 +128,13 @@
         { id: 'strokeColor', param: 'strokeColor' },
         { id: 'strokeWeight', param: 'strokeWeight', transform: parseFloat }
       ];
+
+      // Gap 1 Fix: Warn about missing elements (optional elements like strokeWeight excluded)
+      const requiredElements = ['bgColor', 'strokeColor'];
+      const missingRequired = requiredElements.filter(id => !document.getElementById(id));
+      if (missingRequired.length > 0) {
+        console.warn('[TSCanvasControls] Missing required elements:', missingRequired);
+      }
 
       mappings.forEach(({ id, param, transform }) => {
         const element = document.getElementById(id);
@@ -263,6 +289,21 @@
       } else {
         element.value = value;
       }
+    }
+
+    /**
+     * Gap 7 Fix: Sync all DOM elements from current params
+     * Call this after bind() to ensure DOM reflects actual param values
+     */
+    updateDOMFromParams() {
+      const elementsToSync = ['bgColor', 'strokeColor', 'paperSize', 'strokeWeight'];
+
+      elementsToSync.forEach(id => {
+        const value = this.boundParams ? this.boundParams[id] : this.params[id];
+        if (value !== undefined) {
+          this.updateDOMValue(id, value);
+        }
+      });
     }
 
     /**
