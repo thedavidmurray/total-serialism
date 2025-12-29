@@ -44,7 +44,9 @@
           "path": "pen-plotter/algorithms/voronoi/voronoi-stippling-gui.html",
           "featured": true,
           "complexity": "intermediate",
-          "tags": ["image-upload"]
+          "tags": [
+            "image-upload"
+          ]
         },
         {
           "id": "tsp-art",
@@ -53,7 +55,9 @@
           "path": "pen-plotter/algorithms/voronoi/tsp-art-gui.html",
           "featured": true,
           "complexity": "intermediate",
-          "tags": ["image-upload"]
+          "tags": [
+            "image-upload"
+          ]
         }
       ]
     },
@@ -69,7 +73,9 @@
           "path": "pen-plotter/algorithms/packing/circle-packing-gui.html",
           "featured": true,
           "complexity": "intermediate",
-          "tags": ["image-upload"]
+          "tags": [
+            "image-upload"
+          ]
         }
       ]
     },
@@ -398,7 +404,9 @@
           "description": "Convert images to halftone circle patterns",
           "path": "pen-plotter/algorithms/image-processing/halftone.html",
           "complexity": "intermediate",
-          "tags": ["image-upload"],
+          "tags": [
+            "image-upload"
+          ],
           "featured": true
         },
         {
@@ -407,7 +415,9 @@
           "description": "Convert images to cross-hatching patterns",
           "path": "pen-plotter/algorithms/image-processing/hatching.html",
           "complexity": "intermediate",
-          "tags": ["image-upload"]
+          "tags": [
+            "image-upload"
+          ]
         },
         {
           "id": "squigglecam",
@@ -415,7 +425,9 @@
           "description": "Convert images to flowing squiggly lines",
           "path": "pen-plotter/algorithms/image-processing/squigglecam.html",
           "complexity": "intermediate",
-          "tags": ["image-upload"]
+          "tags": [
+            "image-upload"
+          ]
         },
         {
           "id": "image-to-ascii",
@@ -423,7 +435,9 @@
           "description": "Convert images to ASCII art with pen plotter support",
           "path": "pen-plotter/algorithms/image-processing/image-to-ascii-gui.html",
           "complexity": "beginner",
-          "tags": ["image-upload"],
+          "tags": [
+            "image-upload"
+          ],
           "featured": true
         },
         {
@@ -432,7 +446,9 @@
           "description": "Floyd-Steinberg, Atkinson, Bayer, and Sierra dithering for pen plotting",
           "path": "pen-plotter/algorithms/image-processing/dithering-gui.html",
           "complexity": "intermediate",
-          "tags": ["image-upload"],
+          "tags": [
+            "image-upload"
+          ],
           "featured": true
         }
       ]
@@ -522,7 +538,9 @@
           "description": "AI-powered pattern generation using ML5",
           "path": "pen-plotter/algorithms/ai/ml5-patterns-gui.html",
           "complexity": "advanced",
-          "tags": ["image-upload"]
+          "tags": [
+            "image-upload"
+          ]
         }
       ]
     },
@@ -575,7 +593,10 @@
           "path": "pen-plotter/algorithms/tools/plotter-prep.html",
           "featured": true,
           "complexity": "beginner",
-          "tags": ["image-upload", "file-upload"]
+          "tags": [
+            "image-upload",
+            "file-upload"
+          ]
         },
         {
           "id": "export-formats",
@@ -593,14 +614,16 @@
           "path": "pen-plotter/algorithms/tools/plot-simulator.html",
           "featured": true,
           "complexity": "beginner",
-          "tags": ["file-upload"]
+          "tags": [
+            "file-upload"
+          ]
         }
       ]
     }
   },
   "stats": {
-    "totalAlgorithms": 79,
-    "totalCategories": 15,
-    "featuredCount": 22
+    "totalAlgorithms": 64,
+    "totalCategories": 16,
+    "featuredCount": 23
   }
 }
