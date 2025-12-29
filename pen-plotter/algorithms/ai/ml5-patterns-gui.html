@@ -12,6 +12,7 @@
   <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
@@ -177,6 +178,9 @@
         <label>Stroke Color:</label>
         <input type="color" id="strokeColor" value="#000000">
       </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
     </div>
 
     <div class="control-group" id="sketchRNNControls">
@@ -327,6 +331,13 @@
       colorMode: 'monochrome',
       lineWeight: 2
     };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
     
     let model;
     let svgCanvas;
@@ -362,6 +373,7 @@
       });
 
       setupControls();
+      canvasControls.setupRandomizeButton();
       loadModel();
     }
 

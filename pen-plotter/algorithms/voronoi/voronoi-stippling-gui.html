@@ -11,6 +11,7 @@
     <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
     <script src="../../preset-manager.js"></script>
     <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     <script src="../../upload-helper.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
@@ -199,6 +200,9 @@
                 <label>Stroke Color:</label>
                 <input type="color" id="strokeColor" value="#000000">
             </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
         </div>
 
         <div class="control-group">
@@ -308,6 +312,13 @@
             showDelaunay: false,
             showImage: true
         };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
 
         let points = [];
         let sourceImage = null;

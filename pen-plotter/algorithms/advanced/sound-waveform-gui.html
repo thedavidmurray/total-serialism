@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
     <script src="../../preset-manager.js"></script>
     <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
     
@@ -120,6 +121,9 @@
             <label>Stroke Color:</label>
             <input type="color" id="strokeColor" value="#00ff00">
         </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
 
         <div id="status" class="status inactive">Microphone Inactive</div>
         
@@ -222,6 +226,13 @@
             trails: true,
             recording: false
         };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
         
         function setup() {
             const size = CanvasLayout.getSize(params.paperSize);
@@ -244,6 +255,7 @@
             amplitude = new p5.Amplitude();
 
             setupControls();
+      canvasControls.setupRandomizeButton();
 
             // Initialize preset manager
             presetManager = new PresetManager({

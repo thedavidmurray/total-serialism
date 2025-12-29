@@ -12,6 +12,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
   <script src="../../shared/gif-exporter.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
@@ -162,6 +163,9 @@
       <div class="control">
         <label>Stroke Color:</label>
         <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
       </div>
     </div>
 
@@ -323,6 +327,13 @@
       showGrid: true,
       hiddenLines: false
     };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
     
     let heightGrid = [];
     let riverPaths = [];
@@ -373,6 +384,7 @@
       });
 
       setupControls();
+      canvasControls.setupRandomizeButton();
       regenerate();
     }
 

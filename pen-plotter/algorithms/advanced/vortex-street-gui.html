@@ -11,6 +11,7 @@
     <script src="../../preset-manager.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
     <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     
   <!-- Total Serialism Design System -->
@@ -109,6 +110,9 @@
             <label>Stroke Color</label>
             <input type="color" id="strokeColor" value="#000000">
         </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
 
         <div class="control-group">
             <label>Obstacle Shape:</label>
@@ -211,6 +215,13 @@
             showTrails: false,
             animate: true
         };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
         
         class FluidSimulation {
             constructor(res) {
@@ -464,6 +475,7 @@
             });
 
             setupControls();
+      canvasControls.setupRandomizeButton();
 
             // Initialize preset manager
             presetManager = new PresetManager({

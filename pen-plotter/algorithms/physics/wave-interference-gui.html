@@ -9,6 +9,7 @@
   <title>Wave Interference - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
 
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -159,6 +160,9 @@
             <input type="color" id="strokeColor" value="#000000">
           </label>
         </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
 
         <div class="btn-row">
           <button class="secondary" id="exportSVG">Export SVG</button>

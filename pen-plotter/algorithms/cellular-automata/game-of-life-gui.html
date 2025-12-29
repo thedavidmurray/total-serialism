@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
@@ -157,6 +158,9 @@
         <label>Stroke Color:</label>
         <input type="color" id="strokeColor" value="#4CAF50">
       </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
     </div>
 
     <div id="generation">Generation: 0</div>
@@ -265,6 +269,13 @@
       showGrid: true,
       showTrails: false
     };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
     
     // Pattern library
     const patterns = {
@@ -329,6 +340,7 @@
 
       // Setup controls
       setupControls();
+      canvasControls.setupRandomizeButton();
 
       // Initialize preset manager
       presetManager = new PresetManager({

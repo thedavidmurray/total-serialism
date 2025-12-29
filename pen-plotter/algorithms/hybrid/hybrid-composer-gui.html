@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Hybrid Algorithm Composer</title>
     <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     <script src="../../preset-manager.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
@@ -326,6 +327,9 @@
                 <input type="color" id="strokeColor" value="#000000">
             </label>
         </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
 
         <div class="section">
             <button onclick="generate()" style="width: 100%; padding: 12px; font-size: 16px;">

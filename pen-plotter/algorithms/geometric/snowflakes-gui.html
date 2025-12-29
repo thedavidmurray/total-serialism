@@ -11,6 +11,7 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
@@ -140,6 +141,9 @@
       <div class="control">
         <label>Stroke Color:</label>
         <input type="color" id="strokeColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
       </div>
     </div>
 
@@ -308,6 +312,13 @@
       lineTaper: 0.8,
       showConstruction: false
     };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
     
     let svgCanvas;
     let autoRegenerate = true;
@@ -322,6 +333,7 @@
       svgCanvas.parent('canvas-container');
 
       setupControls();
+      canvasControls.setupRandomizeButton();
       regenerate();
     }
 

@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../shared/ascii-art.js"></script>
   <script src="../../preset-manager.js"></script>
@@ -225,6 +226,9 @@
         <label>Text Color:</label>
         <input type="color" id="strokeColor" value="#00ff00">
       </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
     </div>
 
     <div class="control-group">
@@ -341,6 +345,13 @@
       dotSize: 2
     };
 
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       canvas = createCanvas(size.width, size.height);
@@ -364,6 +375,7 @@
       });
 
       setupControls();
+      canvasControls.setupRandomizeButton();
 
       // Initialize preset manager
       presetManager = new PresetManager({

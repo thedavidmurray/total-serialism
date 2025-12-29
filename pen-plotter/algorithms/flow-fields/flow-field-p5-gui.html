@@ -12,6 +12,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../../../../layer-export.js"></script>
   <script src="../../../../layer-export-ui.js"></script>
@@ -119,6 +120,9 @@
         <label>Stroke Color:</label>
         <input type="color" id="strokeColor" value="#000000">
       </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
     </div>
 
     <div class="control-group">
@@ -224,6 +228,13 @@
       strokeColor: '#000000'
     };
 
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
+
     let particles = [];
     let presetManager;
     let layerExportUI;
@@ -241,6 +252,7 @@
 
       // Set up controls
       setupControls();
+      canvasControls.setupRandomizeButton();
 
       // Initialize preset manager
       presetManager = new PresetManager({
