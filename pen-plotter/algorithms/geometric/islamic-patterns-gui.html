@@ -491,6 +491,11 @@
       rotation: 0,
       scale: 0.9
     };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;

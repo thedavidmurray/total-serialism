@@ -193,6 +193,10 @@
       smoothCurve: false
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     const curveInfo = {
       hilbert: 'Square-filling, continuous path',
       peano: '9-segment recursion, fills square',

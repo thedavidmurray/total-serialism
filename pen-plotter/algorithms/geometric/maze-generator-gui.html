@@ -200,6 +200,10 @@
       seed: 12345
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     const algoInfo = {
       recursive: 'DFS-based, creates long winding passages',
       prim: 'Grows from random points, more branching',

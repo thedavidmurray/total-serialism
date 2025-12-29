@@ -239,6 +239,10 @@
       showBoundary: true
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     // Famous Julia set constants
     const juliaPresets = [
       { real: -0.7, imag: 0.27, name: 'Douady rabbit' },

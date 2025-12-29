@@ -494,7 +494,11 @@
       saturation: 70,
       brightness: 80
     };
-    
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       let canvas = createCanvas(size.width, size.height);

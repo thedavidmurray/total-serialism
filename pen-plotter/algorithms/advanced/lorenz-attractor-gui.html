@@ -208,6 +208,10 @@
       strokeColor: '#000000'
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     const attractorInfo = {
       lorenz: 'Classic butterfly chaos (1963)',
       rossler: 'Spiral chaos, simpler dynamics',
