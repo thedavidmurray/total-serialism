@@ -381,6 +381,10 @@
             strokeColor: '#000000'
         };
 
+        // Canvas controls for unified color handling
+        const canvasControls = new TSCanvasControls();
+        canvasControls.bind(params);
+
         // Initialize the hybrid engine
         const engine = new HybridEngine();
         const canvas = document.getElementById('preview-canvas');

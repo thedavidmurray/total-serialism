@@ -346,6 +346,10 @@
       bgColor: '#000000'
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     let sourceImage = null;
     let asciiText = '';
     let svgCanvas;

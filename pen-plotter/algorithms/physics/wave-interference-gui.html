@@ -192,6 +192,10 @@
       strokeColor: '#000000'
     };
 
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
     const patternInfo = {
       circular: 'Multiple circular wave sources',
       linear: 'Parallel linear wave fronts',
