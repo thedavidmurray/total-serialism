@@ -179,7 +179,7 @@
      * Set up the Randomize All button
      * @param {string} buttonId - ID of the randomize button
      */
-    setupRandomizeButton(buttonId) {
+    setupRandomizeButton(buttonId = 'randomizeAll') {
       const button = document.getElementById(buttonId);
       if (!button) return;
 
