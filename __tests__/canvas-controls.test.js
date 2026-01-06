@@ -59,7 +59,7 @@ describe('TSCanvasControls', () => {
       if (!TSCanvasControls) return; // Skip if not implemented
 
       expect(TSCanvasControls.DEFAULTS).toBeDefined();
-      expect(TSCanvasControls.DEFAULTS.paperSize).toBe('a4');
+      expect(TSCanvasControls.DEFAULTS.paperSize).toBe('a3');
       expect(TSCanvasControls.DEFAULTS.bgColor).toBe('#ffffff');
       expect(TSCanvasControls.DEFAULTS.strokeColor).toBe('#000000');
       expect(TSCanvasControls.DEFAULTS.strokeWeight).toBe(1);
@@ -82,7 +82,7 @@ describe('TSCanvasControls', () => {
 
       const controls = new TSCanvasControls();
 
-      expect(controls.params.paperSize).toBe('a4');
+      expect(controls.params.paperSize).toBe('a3');
       expect(controls.params.bgColor).toBe('#ffffff');
       expect(controls.params.strokeColor).toBe('#000000');
       expect(controls.params.strokeWeight).toBe(1);
@@ -96,7 +96,7 @@ describe('TSCanvasControls', () => {
         strokeColor: '#ffffff'
       });
 
-      expect(controls.params.paperSize).toBe('a4'); // default
+      expect(controls.params.paperSize).toBe('a3'); // default
       expect(controls.params.bgColor).toBe('#000000'); // custom
       expect(controls.params.strokeColor).toBe('#ffffff'); // custom
     });
@@ -123,7 +123,7 @@ describe('TSCanvasControls', () => {
 
       controls.bind(algorithmParams);
 
-      expect(algorithmParams.paperSize).toBe('a4');
+      expect(algorithmParams.paperSize).toBe('a3');
       expect(algorithmParams.bgColor).toBe('#ffffff');
       expect(algorithmParams.strokeColor).toBe('#000000');
       expect(algorithmParams.density).toBe(50); // original preserved
@@ -213,7 +213,7 @@ describe('TSCanvasControls', () => {
       expect(algorithmParams.bgColor).toBe('#ff0000');
       expect(algorithmParams.strokeColor).toBe('#00ff00');
       // Missing params should get defaults
-      expect(algorithmParams.paperSize).toBe('a4');
+      expect(algorithmParams.paperSize).toBe('a3');
     });
 
     test('should sync internal params with bound object values (Gap 3)', () => {

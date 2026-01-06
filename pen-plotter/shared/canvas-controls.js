@@ -23,7 +23,7 @@
      * These are the ONLY source of truth - no more inconsistent defaults
      */
     static DEFAULTS = {
-      paperSize: 'a4',
+      paperSize: 'a3',  // Default for iDraw A3 plotter
       bgColor: '#ffffff',
       strokeColor: '#000000',
       strokeWeight: 1
