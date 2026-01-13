@@ -401,23 +401,31 @@
         
         function optimizePaths() {
             if (originalPaths.length === 0) return;
-            
+
             try {
                 showLoading();
-                
-                // Run optimization
-                const result = optimizer.optimize(originalPaths);
-                optimizedPaths = result.paths;
-                
+
+                // Get optimization options from UI
+                const options = {
+                    merge: true,
+                    sort: true,
+                    reloop: true,
+                    simplify: true,
+                    tolerance: parseFloat(document.getElementById('simplifyTolerance').value)
+                };
+
+                // Run optimization - PathOptimizer.optimize returns an array directly
+                optimizedPaths = optimizer.optimize(originalPaths, options);
+
                 // Visualize and update stats
                 visualizePaths();
-                updateStatistics(result.statistics);
-                
+                updateStatistics();
+
                 // Enable export buttons
                 document.getElementById('exportSVGBtn').disabled = false;
                 document.getElementById('exportGCodeBtn').disabled = false;
                 document.getElementById('exportJSONBtn').disabled = false;
-                
+
                 hideError();
             } catch (error) {
                 showError(`Optimization error: ${error.message}`);
@@ -524,16 +532,16 @@
             return `hsl(${hue}, 70%, 50%)`;
         }
         
-        function updateStatistics(optimizationStats) {
+        function updateStatistics() {
             const statsGrid = document.getElementById('statsGrid');
-            
+
             if (!originalPaths.length && !optimizedPaths.length) {
                 statsGrid.innerHTML = '<div class="loading">Load or generate paths to see statistics</div>';
                 return;
             }
-            
+
             const originalStats = OptimizerUtils.analyzePaths(originalPaths);
-            const optimizedStats = optimizedPaths.length > 0 ? 
+            const optimizedStats = optimizedPaths.length > 0 ?
                 OptimizerUtils.analyzePaths(optimizedPaths) : null;
             
             let html = '';
@@ -579,13 +587,13 @@
                 optimizedStats?.colors.size,
                 'colors');
             
-            // Optimization time
-            if (optimizationStats?.optimizationTime) {
-                html += createStatCard('Optimization Time', 
+            // Optimization time from PathOptimizer stats (if available)
+            if (optimizer.stats && optimizer.stats.timeSaved) {
+                html += createStatCard('Time Saved',
                     null,
-                    optimizationStats.optimizationTime.toFixed(1) + 'ms');
+                    optimizer.stats.timeSaved.toFixed(1) + 's');
             }
-            
+
             statsGrid.innerHTML = html;
         }
         

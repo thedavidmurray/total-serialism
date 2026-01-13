@@ -415,8 +415,86 @@
     }
 
     function parseSVG(svgText) {
-      // Use PathOptimizer to parse SVG
-      const paths = pathOptimizer.parseSVGPath(svgText);
+      // Parse SVG and extract paths
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgText, 'image/svg+xml');
+      const paths = [];
+
+      doc.querySelectorAll('path').forEach(pathEl => {
+        const d = pathEl.getAttribute('d');
+        if (!d) return;
+
+        const points = [];
+        const commands = d.match(/[MmLlHhVvCcSsQqTtAaZz][^MmLlHhVvCcSsQqTtAaZz]*/g);
+        if (!commands) return;
+
+        let x = 0, y = 0, startX = 0, startY = 0;
+
+        commands.forEach(cmd => {
+          const type = cmd[0];
+          const coords = cmd.slice(1).trim().split(/[\s,]+/).filter(s => s).map(parseFloat);
+
+          switch (type) {
+            case 'M':
+              x = coords[0]; y = coords[1];
+              startX = x; startY = y;
+              points.push({ x, y });
+              break;
+            case 'm':
+              x += coords[0]; y += coords[1];
+              startX = x; startY = y;
+              points.push({ x, y });
+              break;
+            case 'L':
+              for (let i = 0; i < coords.length; i += 2) {
+                x = coords[i]; y = coords[i + 1];
+                points.push({ x, y });
+              }
+              break;
+            case 'l':
+              for (let i = 0; i < coords.length; i += 2) {
+                x += coords[i]; y += coords[i + 1];
+                points.push({ x, y });
+              }
+              break;
+            case 'H': x = coords[0]; points.push({ x, y }); break;
+            case 'h': x += coords[0]; points.push({ x, y }); break;
+            case 'V': y = coords[0]; points.push({ x, y }); break;
+            case 'v': y += coords[0]; points.push({ x, y }); break;
+            case 'Z': case 'z':
+              points.push({ x: startX, y: startY });
+              break;
+          }
+        });
+
+        if (points.length > 1) {
+          paths.push({ points, closed: d.toUpperCase().includes('Z') });
+        }
+      });
+
+      // Also parse polylines and polygons
+      doc.querySelectorAll('polyline, polygon').forEach(el => {
+        const pointsStr = el.getAttribute('points');
+        if (!pointsStr) return;
+        const coords = pointsStr.trim().split(/[\s,]+/).map(parseFloat);
+        const points = [];
+        for (let i = 0; i < coords.length; i += 2) {
+          points.push({ x: coords[i], y: coords[i + 1] });
+        }
+        if (points.length > 1) {
+          paths.push({ points, closed: el.tagName === 'polygon' });
+        }
+      });
+
+      // Parse lines
+      doc.querySelectorAll('line').forEach(el => {
+        const x1 = parseFloat(el.getAttribute('x1')) || 0;
+        const y1 = parseFloat(el.getAttribute('y1')) || 0;
+        const x2 = parseFloat(el.getAttribute('x2')) || 0;
+        const y2 = parseFloat(el.getAttribute('y2')) || 0;
+        paths.push({ points: [{ x: x1, y: y1 }, { x: x2, y: y2 }], closed: false });
+      });
+
       return paths;
     }
 
@@ -473,7 +551,7 @@
     function updatePreview() {
       const paths = optimizedPaths.length > 0 ? optimizedPaths : currentPaths;
       if (paths.length === 0) return;
-      
+
       // Get current options
       const options = {
         showTravelPaths: document.getElementById('showTravelPaths').checked,
@@ -490,21 +568,125 @@
           document.getElementById('travelOpacity').value / 100
         )
       };
-      
-      // Create debug preview
+
+      // Update debugPreview options
       debugPreview.options = { ...debugPreview.options, ...options };
-      const preview = debugPreview.createPreview(paths, width, height);
-      
-      // Draw to p5 canvas
+
+      // Draw directly to p5 canvas instead of using createPreview
       clear();
       background(255);
-      
-      const img = createImg(preview.imageData);
-      img.hide();
-      image(img, 0, 0);
-      
-      // Update statistics
-      updateStats(preview.stats);
+
+      // Draw travel paths first
+      if (options.showTravelPaths) {
+        stroke(options.travelColor);
+        strokeWeight(1);
+        drawingContext.setLineDash([5, 5]);
+        let currentPos = { x: 0, y: 0 };
+        paths.forEach(path => {
+          if (!path.points || path.points.length === 0) return;
+          line(currentPos.x, currentPos.y, path.points[0].x, path.points[0].y);
+          currentPos = path.points[path.points.length - 1];
+        });
+        drawingContext.setLineDash([]);
+      }
+
+      // Draw actual paths
+      stroke(options.drawColor);
+      strokeWeight(2);
+      noFill();
+      paths.forEach(path => {
+        if (!path.points || path.points.length < 2) return;
+        beginShape();
+        path.points.forEach(p => vertex(p.x, p.y));
+        if (path.closed) endShape(CLOSE);
+        else endShape();
+      });
+
+      // Draw markers
+      if (options.showStartEnd) {
+        noStroke();
+        paths.forEach(path => {
+          if (!path.points || path.points.length < 2) return;
+          // Start (green circle)
+          fill(0, 255, 0);
+          ellipse(path.points[0].x, path.points[0].y, 10);
+          // End (red square)
+          fill(255, 0, 0);
+          rectMode(CENTER);
+          rect(path.points[path.points.length-1].x, path.points[path.points.length-1].y, 8, 8);
+          rectMode(CORNER);
+        });
+      }
+
+      // Draw direction arrows
+      if (options.showDirection) {
+        fill(0);
+        noStroke();
+        paths.forEach(path => {
+          if (!path.points || path.points.length < 3) return;
+          const midIdx = Math.floor(path.points.length / 2);
+          const p1 = path.points[midIdx - 1];
+          const p2 = path.points[midIdx];
+          const angle = atan2(p2.y - p1.y, p2.x - p1.x);
+          const midX = (p1.x + p2.x) / 2;
+          const midY = (p1.y + p2.y) / 2;
+          push();
+          translate(midX, midY);
+          rotate(angle);
+          triangle(6, 0, -4, -4, -4, 4);
+          pop();
+        });
+      }
+
+      // Calculate and update stats
+      const stats = calculateStats(paths);
+      updateStats(stats);
+    }
+
+    function calculateStats(paths) {
+      let pathCount = paths.length;
+      let pointCount = 0;
+      let penLifts = 0;
+      let drawDistance = 0;
+      let travelDistance = 0;
+      let currentPos = { x: 0, y: 0 };
+
+      paths.forEach(path => {
+        if (!path.points || path.points.length === 0) return;
+        const startPoint = path.points[0];
+        const dist = debugPreview.distance(currentPos, startPoint);
+        if (dist > 1) {
+          travelDistance += dist;
+          penLifts++;
+        }
+        for (let i = 1; i < path.points.length; i++) {
+          drawDistance += debugPreview.distance(path.points[i - 1], path.points[i]);
+        }
+        pointCount += path.points.length;
+        currentPos = path.points[path.points.length - 1];
+      });
+
+      const totalDistance = drawDistance + travelDistance;
+      const efficiency = totalDistance > 0 ? Math.round((drawDistance / totalDistance) * 100) : 0;
+      const totalTime = drawDistance / 50 + travelDistance / 100 + penLifts * 0.2;
+
+      return {
+        paths: pathCount,
+        points: pointCount,
+        penLifts: penLifts,
+        drawDistance: Math.round(drawDistance * 10) / 10,
+        travelDistance: Math.round(travelDistance * 10) / 10,
+        totalDistance: Math.round(totalDistance * 10) / 10,
+        efficiency: efficiency,
+        estimatedTime: formatTime(totalTime)
+      };
+    }
+
+    function formatTime(seconds) {
+      if (seconds < 60) return Math.round(seconds) + 's';
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.round(seconds % 60);
+      return mins + 'm ' + secs + 's';
     }
 
     function updateStats(stats) {

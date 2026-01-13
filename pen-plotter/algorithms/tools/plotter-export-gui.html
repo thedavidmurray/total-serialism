@@ -484,16 +484,53 @@
         // Load paths into preview
         function loadPaths(paths) {
             currentPaths = paths;
-            
-            // Optimize if needed
+
+            // Optimize if needed using simple nearest-neighbor
             const optimizeCheckbox = document.getElementById('svgOptimize');
-            if (optimizeCheckbox.checked) {
-                currentPaths = PathOptimizer.optimize(currentPaths);
+            if (optimizeCheckbox && optimizeCheckbox.checked && currentPaths.length > 1) {
+                currentPaths = optimizePathOrder(currentPaths);
             }
-            
+
             // Update preview
             preview.loadPaths(currentPaths);
             updateStats();
+        }
+
+        // Simple nearest-neighbor path optimization
+        function optimizePathOrder(paths) {
+            if (paths.length <= 1) return paths;
+
+            const optimized = [];
+            const remaining = [...paths];
+            optimized.push(remaining.shift());
+
+            while (remaining.length > 0) {
+                const lastPath = optimized[optimized.length - 1];
+                const lastPoint = lastPath.points[lastPath.points.length - 1];
+
+                let nearestIndex = 0;
+                let nearestDistance = Infinity;
+
+                remaining.forEach((path, index) => {
+                    if (path.points && path.points.length > 0) {
+                        const dist = distance(lastPoint, path.points[0]);
+                        if (dist < nearestDistance) {
+                            nearestDistance = dist;
+                            nearestIndex = index;
+                        }
+                    }
+                });
+
+                optimized.push(remaining.splice(nearestIndex, 1)[0]);
+            }
+
+            return optimized;
+        }
+
+        function distance(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
         }
 
         // Update statistics
