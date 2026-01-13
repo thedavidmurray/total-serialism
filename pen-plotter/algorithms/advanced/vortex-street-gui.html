@@ -451,9 +451,14 @@
                 const sepY1 = cy + r * 0.7;
                 const sepY2 = cy - r * 0.7;
                 
-                if (sepX < this.res - 1) {
-                    this.v[sepX][floor(sepY1)] += vortexStrength;
-                    this.v[sepX][floor(sepY2)] -= vortexStrength;
+                const y1 = floor(sepY1);
+                const y2 = floor(sepY2);
+                if (sepX < this.res - 1 && sepX >= 0 &&
+                    y1 >= 0 && y1 < this.res &&
+                    y2 >= 0 && y2 < this.res &&
+                    this.v[sepX]) {
+                    this.v[sepX][y1] += vortexStrength;
+                    this.v[sepX][y2] -= vortexStrength;
                 }
             }
         }
