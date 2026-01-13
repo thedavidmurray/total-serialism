@@ -1,10 +1,8 @@
 // Total Serialism v3 Engine - Maximum Variety & Beauty
 // Inspired by Fidenza, QQL, and FxHash best practices
 
-// Import dependencies from window (browser environment)
-const CollisionDetectionSystem = window.CollisionDetectionSystem;
-const CollisionStrategies = window.CollisionStrategies;
-const GoldenRatioComposition = window.GoldenRatioComposition;
+// Dependencies are loaded via separate script tags and available on window
+// We use window references directly to avoid redeclaring identifiers
 
 // Total Serialism Library Implementation
 const TS = {
@@ -477,8 +475,8 @@ class TotalSerialismArtwork {
         this.svgPaths = [];
         
         // Initialize collision detection system
-        if (this.enableCollisionDetection && CollisionDetectionSystem) {
-            this.collisionSystem = new CollisionDetectionSystem(
+        if (this.enableCollisionDetection && window.CollisionDetectionSystem) {
+            this.collisionSystem = new window.CollisionDetectionSystem(
                 this.width,
                 this.height,
                 40,
@@ -487,8 +485,8 @@ class TotalSerialismArtwork {
         }
 
         // Initialize golden ratio composition system
-        if (this.enableGoldenRatio && GoldenRatioComposition) {
-            this.compositionSystem = new GoldenRatioComposition(
+        if (this.enableGoldenRatio && window.GoldenRatioComposition) {
+            this.compositionSystem = new window.GoldenRatioComposition(
                 this.width,
                 this.height,
                 () => TS.Rand.float()
@@ -861,8 +859,8 @@ class TotalSerialismArtwork {
                             particle
                         );
                         
-                        if (collision.collides && CollisionStrategies) {
-                            const strategy = CollisionStrategies.flowFieldStrategy(collision, particle);
+                        if (collision.collides && window.CollisionStrategies) {
+                            const strategy = window.CollisionStrategies.flowFieldStrategy(collision, particle);
                             if (strategy) {
                                 angle += strategy.angleAdjustment || 0;
                                 speed *= strategy.speedMultiplier || 1;

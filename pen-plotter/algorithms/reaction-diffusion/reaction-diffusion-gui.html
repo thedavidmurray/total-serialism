@@ -360,11 +360,7 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-    let autoRegenerate = false;
-    let regenTimer;
-    const REGEN_DEBOUNCE = 150;
-    let fitZoomCtl;
-    
+
     // Laplacian kernel for diffusion
     const laplacian = [
       [0.05, 0.2, 0.05],
