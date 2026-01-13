@@ -9,30 +9,24 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ============================================
-       DESIGN TOKENS (matching algorithm.css)
+       TUFTE-INSPIRED DESIGN SYSTEM
+       Principles: Maximum data-ink ratio, minimal chartjunk
        ============================================ */
     :root {
-      --ts-bg-deep: #06060a;
-      --ts-bg-base: #0c0c12;
-      --ts-bg-panel: #13131b;
-      --ts-bg-control: #1a1a24;
-      --ts-bg-hover: #22222e;
-      --ts-bg-active: #2a2a38;
+      /* Simplified palette - just 2 accent colors */
+      --ts-bg-deep: #0a0a0c;
+      --ts-bg-base: #111114;
+      --ts-bg-panel: #18181c;
+      --ts-bg-hover: #1f1f24;
 
-      --ts-accent-primary: #00d4aa;
-      --ts-accent-secondary: #ff9500;
-      --ts-accent-tertiary: #7b68ee;
-      --ts-accent-danger: #ff4757;
+      --ts-accent: #00d4aa;
+      --ts-accent-dim: rgba(0, 212, 170, 0.15);
 
-      --ts-glow-primary: rgba(0, 212, 170, 0.4);
-      --ts-glow-secondary: rgba(255, 149, 0, 0.4);
+      --ts-text-primary: #e4e4e8;
+      --ts-text-secondary: #8888a0;
+      --ts-text-muted: #555566;
 
-      --ts-text-primary: #e8e8ec;
-      --ts-text-secondary: #9898a8;
-      --ts-text-muted: #5a5a6e;
-
-      --ts-border-subtle: rgba(255, 255, 255, 0.06);
-      --ts-border-default: rgba(255, 255, 255, 0.1);
+      --ts-border: rgba(255, 255, 255, 0.08);
 
       --ts-font-mono: 'JetBrains Mono', monospace;
     }
@@ -59,164 +53,140 @@
       line-height: 1.5;
     }
 
-    /* Subtle grid texture */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(0, 212, 170, 0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 212, 170, 0.02) 1px, transparent 1px);
-      background-size: 40px 40px;
-      pointer-events: none;
-      z-index: 0;
-    }
+    /* No grid texture - clean background */
 
     /* ============================================
-       HEADER
+       HEADER - Minimal, functional
        ============================================ */
     .header {
       position: sticky;
       top: 0;
       z-index: 100;
       background: var(--ts-bg-base);
-      border-bottom: 1px solid var(--ts-border-default);
-      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--ts-border);
     }
 
     .header-inner {
-      max-width: 1600px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 1.5rem 2rem;
+      padding: 1rem 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 2rem;
-      flex-wrap: wrap;
+      gap: 1.5rem;
     }
 
     .logo-section {
       display: flex;
       align-items: center;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .logo-mark {
-      width: 40px;
-      height: 40px;
-      border: 2px solid var(--ts-accent-primary);
-      border-radius: 4px;
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid var(--ts-accent);
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
     }
 
     .logo-mark::before {
       content: '';
-      width: 20px;
-      height: 20px;
-      border: 2px solid var(--ts-accent-primary);
-      border-radius: 50%;
-    }
-
-    .logo-mark::after {
-      content: '';
-      position: absolute;
-      width: 8px;
-      height: 8px;
-      background: var(--ts-accent-primary);
+      width: 12px;
+      height: 12px;
+      border: 1.5px solid var(--ts-accent);
       border-radius: 50%;
     }
 
     .logo-text {
       display: flex;
       flex-direction: column;
+      gap: 0;
     }
 
     .logo-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--ts-text-primary);
     }
 
     .logo-subtitle {
-      font-size: 0.7rem;
-      letter-spacing: 0.15em;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
       color: var(--ts-text-muted);
     }
 
     .stats {
       display: flex;
-      gap: 2rem;
+      gap: 1.5rem;
     }
 
     .stat {
-      text-align: center;
+      text-align: right;
     }
 
     .stat-value {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 500;
+      color: var(--ts-text-primary);
     }
 
     .stat-label {
-      font-size: 0.65rem;
-      letter-spacing: 0.1em;
+      font-size: 0.55rem;
+      letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--ts-text-muted);
     }
 
     /* ============================================
-       SEARCH & FILTERS
+       SEARCH & FILTERS - Clean, functional
        ============================================ */
     .controls {
       background: var(--ts-bg-panel);
-      border-bottom: 1px solid var(--ts-border-subtle);
-      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--ts-border);
+      padding: 1rem 1.5rem;
       position: sticky;
-      top: 76px;
+      top: 52px;
       z-index: 99;
     }
 
     .controls-inner {
-      max-width: 1600px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
     .search-row {
       display: flex;
       gap: 1rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+      align-items: center;
     }
 
     .search-box {
       flex: 1;
-      min-width: 250px;
+      max-width: 400px;
       position: relative;
     }
 
     .search-input {
       width: 100%;
-      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      padding: 0.5rem 0.75rem 0.5rem 2rem;
       font-family: var(--ts-font-mono);
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       background: var(--ts-bg-deep);
-      border: 1px solid var(--ts-border-default);
-      border-radius: 6px;
+      border: 1px solid var(--ts-border);
+      border-radius: 3px;
       color: var(--ts-text-primary);
-      transition: all 0.2s ease;
     }
 
     .search-input:focus {
       outline: none;
-      border-color: var(--ts-accent-primary);
-      box-shadow: 0 0 0 3px var(--ts-glow-primary);
+      border-color: var(--ts-accent);
     }
 
     .search-input::placeholder {
@@ -225,232 +195,218 @@
 
     .search-icon {
       position: absolute;
-      left: 0.75rem;
+      left: 0.5rem;
       top: 50%;
       transform: translateY(-50%);
       color: var(--ts-text-muted);
       pointer-events: none;
+      width: 14px;
+      height: 14px;
     }
 
     .result-count {
-      display: flex;
-      align-items: center;
-      padding: 0 1rem;
-      font-size: 0.8rem;
-      color: var(--ts-text-secondary);
-      white-space: nowrap;
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
     }
 
     .result-count strong {
-      color: var(--ts-accent-primary);
-      margin-right: 0.25rem;
+      color: var(--ts-text-secondary);
+    }
+
+    /* View toggle */
+    .view-toggle {
+      margin-left: auto;
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .view-btn {
+      padding: 0.4rem 0.6rem;
+      background: transparent;
+      border: 1px solid var(--ts-border);
+      border-radius: 3px;
+      color: var(--ts-text-muted);
+      cursor: pointer;
+      font-size: 0.7rem;
+    }
+
+    .view-btn:hover {
+      color: var(--ts-text-secondary);
+    }
+
+    .view-btn.active {
+      background: var(--ts-accent-dim);
+      border-color: var(--ts-accent);
+      color: var(--ts-accent);
     }
 
     .filter-row {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.35rem;
       flex-wrap: wrap;
     }
 
     .filter-btn {
-      padding: 0.5rem 1rem;
+      padding: 0.35rem 0.6rem;
       font-family: var(--ts-font-mono);
-      font-size: 0.7rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
+      font-size: 0.65rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
-      background: var(--ts-bg-control);
-      border: 1px solid var(--ts-border-subtle);
-      border-radius: 4px;
-      color: var(--ts-text-secondary);
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 2px;
+      color: var(--ts-text-muted);
       cursor: pointer;
-      transition: all 0.15s ease;
     }
 
     .filter-btn:hover {
-      background: var(--ts-bg-hover);
-      border-color: var(--ts-border-default);
-      color: var(--ts-text-primary);
+      color: var(--ts-text-secondary);
     }
 
     .filter-btn.active {
-      background: var(--ts-accent-primary);
-      border-color: var(--ts-accent-primary);
-      color: var(--ts-bg-deep);
+      background: var(--ts-accent-dim);
+      border-color: var(--ts-accent);
+      color: var(--ts-accent);
     }
 
     /* ============================================
-       GRID
+       GRID - High density, clean
        ============================================ */
     .main {
-      max-width: 1600px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 2rem;
-      position: relative;
-      z-index: 1;
+      padding: 1rem 1.5rem;
     }
 
+    /* Grid View (default) */
     .grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
     }
 
     @media (max-width: 1200px) {
-      .grid { grid-template-columns: repeat(3, 1fr); }
+      .grid { grid-template-columns: repeat(4, 1fr); }
     }
 
     @media (max-width: 900px) {
-      .grid { grid-template-columns: repeat(2, 1fr); }
+      .grid { grid-template-columns: repeat(3, 1fr); }
     }
 
     @media (max-width: 600px) {
+      .grid { grid-template-columns: repeat(2, 1fr); }
+      .header-inner { padding: 0.75rem 1rem; }
+      .controls { padding: 0.75rem 1rem; top: 44px; }
+      .view-toggle { display: none; }
+    }
+
+    @media (max-width: 400px) {
       .grid { grid-template-columns: 1fr; }
-      .header-inner { padding: 1rem; }
-      .stats { display: none; }
-      .controls { padding: 1rem; top: 60px; }
+    }
+
+    /* List View */
+    .grid.list-view {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+
+    .grid.list-view .card {
+      border-radius: 0;
+      border-bottom: 1px solid var(--ts-border);
+      border-left: none;
+      border-right: none;
+      border-top: none;
+    }
+
+    .grid.list-view .card-link {
+      padding: 0.5rem 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .grid.list-view .card-header {
+      margin: 0;
+      flex: 1;
+      flex-direction: row;
+      align-items: center;
+    }
+
+    .grid.list-view .card-title {
+      font-size: 0.8rem;
+    }
+
+    .grid.list-view .card-badge {
+      font-size: 0.55rem;
+      padding: 0.2rem 0.4rem;
+    }
+
+    .grid.list-view .card-meta {
+      display: none;
     }
 
     /* ============================================
-       ALGORITHM CARDS
+       ALGORITHM CARDS - Minimal, no chartjunk
        ============================================ */
     .card {
       background: var(--ts-bg-panel);
-      border: 1px solid var(--ts-border-subtle);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: all 0.2s ease;
-      animation: cardFadeIn 0.4s ease-out backwards;
-      position: relative;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--ts-accent-primary), var(--ts-accent-tertiary));
-      opacity: 0;
-      transition: opacity 0.2s ease;
+      border: 1px solid var(--ts-border);
+      border-radius: 3px;
     }
 
     .card:hover {
-      border-color: var(--ts-accent-primary);
-      transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    }
-
-    .card:hover::before {
-      opacity: 1;
+      background: var(--ts-bg-hover);
     }
 
     .card-link {
       display: block;
-      padding: 1.25rem;
+      padding: 0.6rem 0.75rem;
       text-decoration: none;
       color: inherit;
     }
 
     .card-header {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
-      margin-bottom: 0.75rem;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
     }
 
     .card-title {
-      font-size: 0.9rem;
-      font-weight: 500;
+      font-size: 0.75rem;
+      font-weight: 400;
       color: var(--ts-text-primary);
       line-height: 1.3;
     }
 
+    /* Single unified badge style - no color coding */
     .card-badge {
       flex-shrink: 0;
-      padding: 0.25rem 0.5rem;
-      font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
+      padding: 0.15rem 0.35rem;
+      font-size: 0.5rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
       text-transform: uppercase;
-      border-radius: 3px;
-      white-space: nowrap;
+      border-radius: 2px;
+      background: var(--ts-bg-hover);
+      color: var(--ts-text-muted);
+      border: 1px solid var(--ts-border);
     }
-
-    /* Category badge colors */
-    .badge-geometric { background: #1e3a5f; color: #5dade2; }
-    .badge-cellular-automata { background: #1e4d2b; color: #58d68d; }
-    .badge-voronoi { background: #4a235a; color: #bb8fce; }
-    .badge-flow-fields { background: #1b4f72; color: #85c1e9; }
-    .badge-natural { background: #145a32; color: #82e0aa; }
-    .badge-chemical { background: #5b2c6f; color: #d7bde2; }
-    .badge-reaction-diffusion { background: #641e16; color: #f1948a; }
-    .badge-symmetry { background: #1a5276; color: #aed6f1; }
-    .badge-physics { background: #7b241c; color: #f5b7b1; }
-    .badge-hybrid { background: #4a235a; color: #d2b4de; }
-    .badge-ai { background: #154360; color: #76d7c4; }
-    .badge-curves { background: #186a3b; color: #7dcea0; }
-    .badge-textures { background: #6e2c00; color: #f5cba7; }
-    .badge-packing { background: #1b2631; color: #aab7b8; }
-    .badge-advanced { background: #4a1942; color: #f8c471; }
-    .badge-trees-lsystems { background: #0b5345; color: #a3e4d7; }
-    .badge-image-processing { background: #512e5f; color: #e8daef; }
-    .badge-tools { background: #1c2833; color: #99a3a4; }
 
     .card-meta {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.7rem;
+      font-size: 0.6rem;
       color: var(--ts-text-muted);
-    }
-
-    .card-path {
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    .card-arrow {
-      margin-left: auto;
-      opacity: 0;
-      transform: translateX(-4px);
-      transition: all 0.2s ease;
-      color: var(--ts-accent-primary);
-    }
-
-    .card:hover .card-arrow {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    /* Hidden state for filtered cards */
+    /* Hidden state */
     .card.hidden {
       display: none;
     }
-
-    @keyframes cardFadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Stagger animation */
-    .card:nth-child(1) { animation-delay: 0.02s; }
-    .card:nth-child(2) { animation-delay: 0.04s; }
-    .card:nth-child(3) { animation-delay: 0.06s; }
-    .card:nth-child(4) { animation-delay: 0.08s; }
-    .card:nth-child(5) { animation-delay: 0.10s; }
-    .card:nth-child(6) { animation-delay: 0.12s; }
-    .card:nth-child(7) { animation-delay: 0.14s; }
-    .card:nth-child(8) { animation-delay: 0.16s; }
 
     /* ============================================
        EMPTY STATE
@@ -458,40 +414,34 @@
     .empty-state {
       grid-column: 1 / -1;
       text-align: center;
-      padding: 4rem 2rem;
+      padding: 3rem 1rem;
       color: var(--ts-text-muted);
     }
 
-    .empty-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      opacity: 0.5;
-    }
-
     .empty-text {
-      font-size: 1rem;
+      font-size: 0.8rem;
     }
 
     /* ============================================
        FOOTER
        ============================================ */
     .footer {
-      max-width: 1600px;
+      max-width: 1400px;
       margin: 0 auto;
-      padding: 2rem;
-      border-top: 1px solid var(--ts-border-subtle);
+      padding: 1.5rem;
+      border-top: 1px solid var(--ts-border);
       text-align: center;
       color: var(--ts-text-muted);
-      font-size: 0.75rem;
+      font-size: 0.65rem;
     }
 
     .footer a {
-      color: var(--ts-accent-primary);
+      color: var(--ts-text-secondary);
       text-decoration: none;
     }
 
     .footer a:hover {
-      text-decoration: underline;
+      color: var(--ts-accent);
     }
   </style>
 </head>
@@ -522,29 +472,33 @@
     <div class="controls-inner">
       <div class="search-row">
         <div class="search-box">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"/>
             <path d="M21 21l-4.35-4.35"/>
           </svg>
-          <input type="text" class="search-input" id="search" placeholder="Search algorithms..." autocomplete="off">
+          <input type="text" class="search-input" id="search" placeholder="Search..." autocomplete="off">
         </div>
         <div class="result-count">
           <strong id="visible-count">65</strong> shown
+        </div>
+        <div class="view-toggle">
+          <button class="view-btn active" data-view="grid" title="Grid view">Grid</button>
+          <button class="view-btn" data-view="list" title="List view">List</button>
         </div>
       </div>
       <div class="filter-row" id="filters">
         <button class="filter-btn active" data-filter="all">All</button>
         <button class="filter-btn" data-filter="geometric">Geometric</button>
-        <button class="filter-btn" data-filter="cellular-automata">Cellular Automata</button>
+        <button class="filter-btn" data-filter="cellular-automata">Cellular</button>
         <button class="filter-btn" data-filter="voronoi">Voronoi</button>
-        <button class="filter-btn" data-filter="flow-fields">Flow Fields</button>
+        <button class="filter-btn" data-filter="flow-fields">Flow</button>
         <button class="filter-btn" data-filter="natural">Natural</button>
         <button class="filter-btn" data-filter="chemical">Chemical</button>
-        <button class="filter-btn" data-filter="reaction-diffusion">Reaction-Diffusion</button>
+        <button class="filter-btn" data-filter="reaction-diffusion">R-D</button>
         <button class="filter-btn" data-filter="symmetry">Symmetry</button>
         <button class="filter-btn" data-filter="physics">Physics</button>
         <button class="filter-btn" data-filter="advanced">Advanced</button>
-        <button class="filter-btn" data-filter="trees-lsystems">L-Systems</button>
+        <button class="filter-btn" data-filter="trees-lsystems">L-Sys</button>
         <button class="filter-btn" data-filter="image-processing">Image</button>
         <button class="filter-btn" data-filter="tools">Tools</button>
       </div>
@@ -741,6 +695,16 @@
         e.target.classList.add('active');
         currentFilter = e.target.dataset.filter;
         applyFilters();
+      }
+    });
+
+    // View toggle
+    document.querySelector('.view-toggle').addEventListener('click', (e) => {
+      if (e.target.classList.contains('view-btn')) {
+        document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        const view = e.target.dataset.view;
+        grid.classList.toggle('list-view', view === 'list');
       }
     });
 
