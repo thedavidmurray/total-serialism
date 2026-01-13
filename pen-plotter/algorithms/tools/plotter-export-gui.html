@@ -409,54 +409,8 @@
         </div>
     </div>
 
-    <script type="module">
-        // Import the modules (in real use, these would be proper ES6 imports)
-        // For now, we'll include them inline
-        
-        // Simple path optimizer (integrate with your actual optimizer)
-        class PathOptimizer {
-            static optimize(paths) {
-                // Simple nearest neighbor optimization
-                if (paths.length <= 1) return paths;
-                
-                const optimized = [];
-                const remaining = [...paths];
-                optimized.push(remaining.shift());
-                
-                while (remaining.length > 0) {
-                    const lastPath = optimized[optimized.length - 1];
-                    const lastPoint = lastPath.points[lastPath.points.length - 1];
-                    
-                    let nearestIndex = 0;
-                    let nearestDistance = Infinity;
-                    
-                    remaining.forEach((path, index) => {
-                        if (path.points && path.points.length > 0) {
-                            const dist = PathOptimizer.distance(lastPoint, path.points[0]);
-                            if (dist < nearestDistance) {
-                                nearestDistance = dist;
-                                nearestIndex = index;
-                            }
-                        }
-                    });
-                    
-                    optimized.push(remaining.splice(nearestIndex, 1)[0]);
-                }
-                
-                return optimized;
-            }
-            
-            static distance(p1, p2) {
-                const dx = p2.x - p1.x;
-                const dy = p2.y - p1.y;
-                return Math.sqrt(dx * dx + dy * dy);
-            }
-        }
-
-        // TODO: Include the exporter modules - these would need to be bundled or loaded separately
-        // GCodeExporter, HPGLExporter, and PlotPreview classes should be defined in separate files
-        // and imported via script tags or a module bundler
-
+    <script src="../../shared/plotter-export.js"></script>
+    <script>
         // Initialize the GUI
         const canvas = document.getElementById('canvas');
         const preview = new PlotPreview(canvas, {

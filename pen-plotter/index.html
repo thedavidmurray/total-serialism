@@ -299,10 +299,41 @@
       .header-inner { padding: 0.75rem 1rem; }
       .controls { padding: 0.75rem 1rem; top: 44px; }
       .view-toggle { display: none; }
+      .main { padding: 0.75rem; }
+      .card-link { padding: 0.5rem 0.6rem; }
+      .card-title { font-size: 0.7rem; }
+      .card-badge { font-size: 0.45rem; padding: 0.1rem 0.25rem; }
+      .card-meta { font-size: 0.5rem; }
     }
 
     @media (max-width: 400px) {
       .grid { grid-template-columns: 1fr; }
+      .header-inner { padding: 0.5rem 0.75rem; gap: 0.5rem; }
+      .logo-title { font-size: 0.75rem; }
+      .logo-subtitle { display: none; }
+      .logo-mark { width: 24px; height: 24px; }
+      .logo-mark::before { width: 10px; height: 10px; }
+      .stats { gap: 1rem; }
+      .stat-value { font-size: 0.9rem; }
+      .stat-label { font-size: 0.5rem; }
+      .controls { padding: 0.5rem 0.75rem; top: 38px; }
+      .search-input { font-size: 0.75rem; padding: 0.4rem 0.6rem 0.4rem 1.75rem; }
+      .filter-row { gap: 0.25rem; }
+      .filter-btn { padding: 0.25rem 0.4rem; font-size: 0.55rem; }
+      .main { padding: 0.5rem; }
+      .grid { gap: 0.35rem; }
+      .card-link { padding: 0.5rem; }
+      .card-header { gap: 0.35rem; }
+      .card-title { font-size: 0.7rem; word-break: break-word; }
+      .card-badge { font-size: 0.45rem; padding: 0.1rem 0.2rem; }
+      .card-meta { font-size: 0.5rem; }
+    }
+
+    @media (max-width: 320px) {
+      html { font-size: 12px; }
+      .header-inner { padding: 0.4rem 0.5rem; }
+      .controls { padding: 0.4rem 0.5rem; }
+      .main { padding: 0.4rem; }
     }
 
     /* List View */
