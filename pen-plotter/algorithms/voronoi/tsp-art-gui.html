@@ -18,236 +18,243 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
     }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .panel {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      color: white;
-      margin-bottom: 20px;
-      font-size: 2.5em;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .subtitle {
-      color: rgba(255, 255, 255, 0.9);
-      margin-bottom: 30px;
-      font-size: 1.1em;
-    }
-
-    .control-group {
-      margin-bottom: 24px;
-    }
-
-    .control-group h3 {
-      margin-bottom: 12px;
-      color: #333;
-      font-size: 0.9em;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #555;
-      font-size: 0.9em;
-      font-weight: 500;
-    }
-
-    input[type="range"],
-    input[type="number"],
-    select,
-    input[type="file"] {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.9em;
-    }
-
-    input[type="range"] {
-      padding: 0;
-    }
-
-    .range-value {
-      float: right;
-      color: #667eea;
-      font-weight: 600;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button.secondary {
-      background: #6c757d;
-    }
-
-    button.secondary:hover {
-      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
-    }
-
-    .canvas-container {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    #canvas-container {
+      flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
     }
-
-    .stats {
-      margin-top: 16px;
-      padding: 16px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      font-size: 0.85em;
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
     }
-
-    .stats div {
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
-      color: #555;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
     }
-
-    .stats div:last-child {
-      margin-bottom: 0;
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
     }
-
-    .stats .value {
-      font-weight: 600;
-      color: #667eea;
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
     }
-
-    .algorithm-info {
-      background: #e7f3ff;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.85em;
-      color: #004085;
-      margin-bottom: 16px;
-      line-height: 1.5;
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
     }
-
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .range-value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
     .button-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 8px;
     }
-
     .checkbox-group {
       display: flex;
       align-items: center;
+      gap: 8px;
       margin-bottom: 12px;
     }
-
     .checkbox-group input[type="checkbox"] {
-      width: auto;
-      margin-right: 8px;
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
     }
-
     .checkbox-group label {
       margin-bottom: 0;
     }
-
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stats .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
     #imagePreview {
       max-width: 100%;
       margin-bottom: 12px;
-      border-radius: 6px;
+      border-radius: var(--ts-radius-md);
       display: none;
     }
-
     .progress-bar {
       width: 100%;
       height: 8px;
-      background: #e9ecef;
-      border-radius: 4px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
       overflow: hidden;
       margin-bottom: 12px;
       display: none;
     }
-
     .progress-fill {
       height: 100%;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: var(--ts-accent-primary);
       transition: width 0.3s;
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-  <h1>🛤️ TSP Art Generator</h1>
-  <p class="subtitle">Create continuous single-line drawings using Traveling Salesman Problem algorithms</p>
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
 
-  <div class="container">
-    <!-- Controls Panel -->
-    <div class="panel">
-      <div class="algorithm-info">
-        <strong>TSP Art:</strong> Generates a continuous path through points by solving the Traveling Salesman Problem. Perfect for single-line pen plotter drawings.
-      </div>
+  <div id="controls">
+    <h2>TSP Art Generator</h2>
 
-      <!-- Preset Manager Container -->
-      <div id="preset-container"></div>
+    <div class="algorithm-info">
+      <strong>TSP Art:</strong> Generates a continuous path through points by solving the Traveling Salesman Problem. Perfect for single-line pen plotter drawings.
+    </div>
 
-      <!-- Canvas Settings -->
-      <div class="control-group">
-        <h3>📐 Canvas Settings</h3>
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
 
-        <label>
-          Paper Size
-          <select id="paperSize">
+    <!-- Canvas Settings -->
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
             <option value="square800" selected>Square (800×800)</option>
             <option value="landscape800x600">Landscape (800×600)</option>
             <option value="a4portrait">A4 Portrait</option>
@@ -388,30 +395,24 @@
         <button onclick="exportPNG()">Export PNG</button>
       </div>
 
-      <!-- Statistics -->
-      <div class="stats" id="stats">
-        <div>
-          <span>Points:</span>
-          <span class="value" id="statPoints">0</span>
-        </div>
-        <div>
-          <span>Path Length:</span>
-          <span class="value" id="statLength">0</span>
-        </div>
-        <div>
-          <span>Improvement:</span>
-          <span class="value" id="statImprovement">0%</span>
-        </div>
-        <div>
-          <span>Algorithm:</span>
-          <span class="value" id="statAlgorithm">-</span>
-        </div>
+    <!-- Statistics -->
+    <div class="stats" id="stats">
+      <div>
+        <span>Points:</span>
+        <span class="value" id="statPoints">0</span>
       </div>
-    </div>
-
-    <!-- Canvas -->
-    <div class="canvas-container">
-      <div id="canvas"></div>
+      <div>
+        <span>Path Length:</span>
+        <span class="value" id="statLength">0</span>
+      </div>
+      <div>
+        <span>Improvement:</span>
+        <span class="value" id="statImprovement">0%</span>
+      </div>
+      <div>
+        <span>Algorithm:</span>
+        <span class="value" id="statAlgorithm">-</span>
+      </div>
     </div>
   </div>
 
