@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastUpdated": "2024-11-10",
+  "lastUpdated": "2025-01-14",
   "categories": {
     "core": {
       "name": "Core Engines",
@@ -227,6 +227,36 @@
           "description": "Celestial patterns and star fields",
           "path": "pen-plotter/algorithms/natural/astronomy-gui.html",
           "complexity": "beginner"
+        },
+        {
+          "id": "phyllotaxis",
+          "name": "Phyllotaxis Spirals",
+          "description": "Golden ratio spiral patterns inspired by sunflowers and pinecones",
+          "path": "pen-plotter/algorithms/natural/phyllotaxis-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        },
+        {
+          "id": "dla",
+          "name": "DLA Growth",
+          "description": "Diffusion-Limited Aggregation for organic tree-like structures",
+          "path": "pen-plotter/algorithms/natural/dla-gui.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "physarum",
+          "name": "Physarum Simulation",
+          "description": "Slime mold transport network simulation",
+          "path": "pen-plotter/algorithms/natural/physarum-gui.html",
+          "featured": true,
+          "complexity": "advanced"
+        },
+        {
+          "id": "space-colonization",
+          "name": "Space Colonization",
+          "description": "Organic branching tree structures using attraction points",
+          "path": "pen-plotter/algorithms/natural/space-colonization-gui.html",
+          "complexity": "advanced"
         }
       ]
     },
@@ -369,6 +399,14 @@
           "description": "Audio waveform visualization and synthesis",
           "path": "pen-plotter/algorithms/advanced/sound-waveform-gui.html",
           "complexity": "advanced"
+        },
+        {
+          "id": "strange-attractors",
+          "name": "Strange Attractors",
+          "description": "Chaotic attractor systems: Lorenz, Rössler, Clifford, Aizawa, Thomas, Chua",
+          "path": "pen-plotter/algorithms/advanced/strange-attractors-gui.html",
+          "featured": true,
+          "complexity": "advanced"
         }
       ]
     },
@@ -450,6 +488,26 @@
             "image-upload"
           ],
           "featured": true
+        },
+        {
+          "id": "contour-lines",
+          "name": "Contour Lines",
+          "description": "Topographic contour extraction from images using Marching Squares",
+          "path": "pen-plotter/algorithms/image-processing/contour-lines-gui.html",
+          "complexity": "intermediate",
+          "tags": [
+            "image-upload"
+          ]
+        },
+        {
+          "id": "flow-hatching",
+          "name": "Flow Hatching",
+          "description": "Flow-field guided hatching following image structure",
+          "path": "pen-plotter/algorithms/image-processing/flow-hatching-gui.html",
+          "complexity": "advanced",
+          "tags": [
+            "image-upload"
+          ]
         }
       ]
     },
@@ -495,6 +553,14 @@
           "path": "pen-plotter/algorithms/geometric/islamic-patterns-gui.html",
           "featured": true,
           "complexity": "intermediate"
+        },
+        {
+          "id": "aperiodic-tilings",
+          "name": "Aperiodic Tilings",
+          "description": "Hat, Spectre, and Penrose aperiodic monotile patterns",
+          "path": "pen-plotter/algorithms/symmetry/aperiodic-tilings-gui.html",
+          "featured": true,
+          "complexity": "advanced"
         }
       ]
     },
@@ -509,6 +575,58 @@
           "description": "Physics-based particle simulation",
           "path": "pen-plotter/algorithms/physics/particle-system-gui.html",
           "complexity": "intermediate"
+        },
+        {
+          "id": "boids-flocking",
+          "name": "Boids Flocking",
+          "description": "Reynolds flocking simulation with separation, alignment, and cohesion",
+          "path": "pen-plotter/algorithms/physics/boids-flocking-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        },
+        {
+          "id": "cloth-simulation",
+          "name": "Cloth Simulation",
+          "description": "Spring-mass fabric simulation with wind and gravity",
+          "path": "pen-plotter/algorithms/physics/cloth-simulation-gui.html",
+          "complexity": "advanced"
+        },
+        {
+          "id": "magnetic-field",
+          "name": "Magnetic Field Lines",
+          "description": "Visualization of magnetic dipole field patterns",
+          "path": "pen-plotter/algorithms/physics/magnetic-field-gui.html",
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "curves": {
+      "name": "Space-Filling Curves",
+      "description": "Mathematically optimal space-filling curve algorithms",
+      "icon": "🌀",
+      "algorithms": [
+        {
+          "id": "space-filling-expanded",
+          "name": "Space-Filling Curves",
+          "description": "Hilbert, Peano, Moore, Dragon, Gosper, Sierpiński, and Lévy C curves",
+          "path": "pen-plotter/algorithms/curves/space-filling-expanded-gui.html",
+          "featured": true,
+          "complexity": "intermediate"
+        }
+      ]
+    },
+    "fluid-dynamics": {
+      "name": "Fluid Dynamics",
+      "description": "Fluid simulation and flow visualization",
+      "icon": "💧",
+      "algorithms": [
+        {
+          "id": "fluid-dynamics",
+          "name": "Fluid Dynamics",
+          "description": "Navier-Stokes fluid simulation with streamlines and velocity visualization",
+          "path": "pen-plotter/algorithms/fluid-dynamics/fluid-dynamics-gui.html",
+          "featured": true,
+          "complexity": "advanced"
         }
       ]
     },
@@ -622,8 +740,8 @@
     }
   },
   "stats": {
-    "totalAlgorithms": 64,
-    "totalCategories": 16,
-    "featuredCount": 23
+    "totalAlgorithms": 77,
+    "totalCategories": 18,
+    "featuredCount": 30
   }
 }

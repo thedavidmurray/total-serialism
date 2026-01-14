@@ -500,11 +500,9 @@
 
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
-      // Use a smaller simulation size for performance
-      const maxDim = 600;
-      const scale = Math.min(maxDim / size.width, maxDim / size.height, 1);
-      simWidth = Math.floor(size.width * scale);
-      simHeight = Math.floor(size.height * scale);
+      // Use actual canvas size for display, but simulation runs at lower resolution
+      simWidth = size.width;
+      simHeight = size.height;
 
       canvas = createCanvas(simWidth, simHeight);
       canvas.parent('canvas-container');
@@ -761,10 +759,8 @@
 
     function resizeCanvasForPaperSize() {
       const size = CanvasLayout.getSize(params.paperSize);
-      const maxDim = 600;
-      const scale = Math.min(maxDim / size.width, maxDim / size.height, 1);
-      simWidth = Math.floor(size.width * scale);
-      simHeight = Math.floor(size.height * scale);
+      simWidth = size.width;
+      simHeight = size.height;
 
       resizeCanvas(simWidth, simHeight);
 
