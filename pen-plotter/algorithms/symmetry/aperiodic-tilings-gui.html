@@ -1,0 +1,1237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aperiodic Tilings Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+</head>
+<body>
+  <div class="ts-layout">
+    <!-- Canvas Area -->
+    <div class="ts-canvas-area">
+      <div id="canvas-container"></div>
+    </div>
+
+    <!-- Control Panel -->
+    <div id="controls" class="ts-control-panel">
+      <a href="../../index.html" class="back-link">Back to Index</a>
+
+      <h2 style="color: var(--ts-text-primary); margin-bottom: var(--ts-space-lg); font-size: 1.2rem;">Aperiodic Tilings</h2>
+
+      <div class="algorithm-info" style="background: var(--ts-bg-control); padding: var(--ts-space-md); border-radius: var(--ts-radius-md); margin-bottom: var(--ts-space-lg); font-size: 0.8rem; color: var(--ts-text-secondary); line-height: 1.5;">
+        <strong style="color: var(--ts-accent-primary);">Aperiodic Tilings:</strong> Non-repeating patterns that tile the plane without translational symmetry. Includes the 2023 Einstein Hat monotile discovery!
+      </div>
+
+      <!-- Preset Manager Container -->
+      <div id="preset-container"></div>
+
+      <h3>Canvas Settings</h3>
+
+      <label>
+        Paper Size
+        <select id="paperSize" class="ts-select">
+          <option value="a4">A4 Portrait</option>
+          <option value="a3" selected>A3 Portrait</option>
+          <option value="a4-landscape">A4 Landscape</option>
+          <option value="a3-landscape">A3 Landscape</option>
+          <option value="square">Square (800x800)</option>
+          <option value="letter">US Letter</option>
+        </select>
+      </label>
+
+      <label>
+        Background Color
+        <input type="color" id="bgColor" value="#ffffff">
+      </label>
+
+      <label>
+        Stroke Color
+        <input type="color" id="strokeColor" value="#000000">
+      </label>
+
+      <h3>Tiling Type</h3>
+
+      <label>
+        Pattern
+        <select id="tilingType" class="ts-select">
+          <option value="einstein" selected>Einstein Hat (2023)</option>
+          <option value="penrose">Penrose P3 (Rhombi)</option>
+          <option value="ammann">Ammann-Beenker</option>
+          <option value="wang">Wang Tiles</option>
+        </select>
+      </label>
+
+      <label>
+        Recursion Depth: <span id="depthValue">3</span>
+        <input type="range" id="depth" min="1" max="6" value="3" step="1">
+      </label>
+
+      <h3>Transform</h3>
+
+      <label>
+        Scale: <span id="scaleValue">1.0</span>
+        <input type="range" id="scale" min="0.2" max="3" value="1" step="0.1">
+      </label>
+
+      <label>
+        Rotation: <span id="rotationValue">0</span>deg
+        <input type="range" id="rotation" min="0" max="360" value="0" step="5">
+      </label>
+
+      <label>
+        Center X: <span id="centerXValue">50</span>%
+        <input type="range" id="centerX" min="0" max="100" value="50" step="1">
+      </label>
+
+      <label>
+        Center Y: <span id="centerYValue">50</span>%
+        <input type="range" id="centerY" min="0" max="100" value="50" step="1">
+      </label>
+
+      <h3>Style Options</h3>
+
+      <label>
+        Line Weight: <span id="lineWeightValue">1.0</span>
+        <input type="range" id="lineWeight" min="0.25" max="5" value="1" step="0.25">
+      </label>
+
+      <label>
+        Gap Size: <span id="gapValue">0</span>
+        <input type="range" id="gap" min="0" max="10" value="0" step="0.5">
+      </label>
+
+      <label>
+        Color Mode
+        <select id="colorMode" class="ts-select">
+          <option value="monochrome" selected>Monochrome</option>
+          <option value="tileType">By Tile Type</option>
+          <option value="rainbow">Rainbow</option>
+          <option value="gradient">Gradient</option>
+        </select>
+      </label>
+
+      <div style="margin: var(--ts-space-md) 0;">
+        <label style="display: flex; align-items: center; gap: var(--ts-space-sm);">
+          <input type="checkbox" id="showEdges" checked>
+          Show Tile Edges
+        </label>
+      </div>
+
+      <div style="margin: var(--ts-space-md) 0;">
+        <label style="display: flex; align-items: center; gap: var(--ts-space-sm);">
+          <input type="checkbox" id="showFill">
+          Show Tile Fill
+        </label>
+      </div>
+
+      <h3>Fill Colors (when enabled)</h3>
+
+      <label>
+        Fill Color 1
+        <input type="color" id="fillColor1" value="#ff6b6b">
+      </label>
+
+      <label>
+        Fill Color 2
+        <input type="color" id="fillColor2" value="#4ecdc4">
+      </label>
+
+      <label>
+        Fill Color 3
+        <input type="color" id="fillColor3" value="#ffe66d">
+      </label>
+
+      <label>
+        Fill Color 4
+        <input type="color" id="fillColor4" value="#a8e6cf">
+      </label>
+
+      <label>
+        Fill Opacity: <span id="fillOpacityValue">80</span>%
+        <input type="range" id="fillOpacity" min="0" max="100" value="80" step="5">
+      </label>
+
+      <h3>Random Seed</h3>
+
+      <label>
+        Seed
+        <input type="number" id="seed" value="42" min="1" max="99999">
+      </label>
+
+      <h3>Actions</h3>
+
+      <button onclick="generate()" class="ts-btn ts-btn-primary ts-btn-block">Generate</button>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--ts-space-sm); margin-top: var(--ts-space-sm);">
+        <button onclick="randomizeSeed()" class="ts-btn ts-btn-secondary">Random Seed</button>
+        <button onclick="clearCanvas()" class="ts-btn ts-btn-secondary">Clear</button>
+      </div>
+
+      <button id="randomizeAll" class="ts-btn ts-btn-secondary ts-btn-block" style="margin-top: var(--ts-space-sm);">Randomize Colors</button>
+
+      <h3>Export</h3>
+
+      <div class="ts-export-group">
+        <button id="exportSVG" class="ts-export-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          SVG
+        </button>
+        <button id="exportPNG" class="ts-export-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          PNG
+        </button>
+        <button id="exportGIF" class="ts-export-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"/>
+          </svg>
+          GIF
+        </button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats" style="margin-top: var(--ts-space-lg); padding: var(--ts-space-md); background: var(--ts-bg-control); border-radius: var(--ts-radius-md); font-size: 0.8rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: var(--ts-space-sm);">
+          <span style="color: var(--ts-text-secondary);">Tiling Type:</span>
+          <span id="statType" style="color: var(--ts-accent-primary);">Einstein Hat</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: var(--ts-space-sm);">
+          <span style="color: var(--ts-text-secondary);">Tiles:</span>
+          <span id="statTiles" style="color: var(--ts-accent-primary);">0</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--ts-text-secondary);">Depth:</span>
+          <span id="statDepth" style="color: var(--ts-accent-primary);">3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let tiles = [];
+    let presetManager;
+    let canvasControls;
+
+    // Golden ratio - fundamental for Penrose tilings
+    const PHI = (1 + Math.sqrt(5)) / 2;
+
+    // Parameters
+    const params = {
+      paperSize: 'a3',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      tilingType: 'einstein',
+      depth: 3,
+      scale: 1.0,
+      rotation: 0,
+      centerX: 50,
+      centerY: 50,
+      lineWeight: 1.0,
+      gap: 0,
+      colorMode: 'monochrome',
+      showEdges: true,
+      showFill: false,
+      fillColor1: '#ff6b6b',
+      fillColor2: '#4ecdc4',
+      fillColor3: '#ffe66d',
+      fillColor4: '#a8e6cf',
+      fillOpacity: 80,
+      seed: 42
+    };
+
+    // ============================================
+    // P5.JS SETUP
+    // ============================================
+    function setup() {
+      // Initialize canvas controls
+      canvasControls = new TSCanvasControls();
+      canvasControls.bind(params, { autoRegen: true, regenCallback: generate });
+      canvasControls.setupEventListeners(generate);
+      canvasControls.setupRandomizeButton();
+
+      const size = canvasControls.getCanvasSize();
+      const canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'aperiodic-tilings',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          generate();
+        }
+      });
+
+      setupEventListeners();
+      generate();
+    }
+
+    function draw() {
+      noLoop();
+    }
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+    function setupEventListeners() {
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = canvasControls.getCanvasSize();
+        resizeCanvas(size.width, size.height);
+        generate();
+      });
+
+      // Tiling type
+      document.getElementById('tilingType').addEventListener('change', (e) => {
+        params.tilingType = e.target.value;
+        generate();
+      });
+
+      // Depth
+      document.getElementById('depth').addEventListener('input', (e) => {
+        params.depth = parseInt(e.target.value);
+        document.getElementById('depthValue').textContent = params.depth;
+        generate();
+      });
+
+      // Scale
+      document.getElementById('scale').addEventListener('input', (e) => {
+        params.scale = parseFloat(e.target.value);
+        document.getElementById('scaleValue').textContent = params.scale.toFixed(1);
+        generate();
+      });
+
+      // Rotation
+      document.getElementById('rotation').addEventListener('input', (e) => {
+        params.rotation = parseInt(e.target.value);
+        document.getElementById('rotationValue').textContent = params.rotation;
+        generate();
+      });
+
+      // Center X/Y
+      document.getElementById('centerX').addEventListener('input', (e) => {
+        params.centerX = parseInt(e.target.value);
+        document.getElementById('centerXValue').textContent = params.centerX;
+        generate();
+      });
+
+      document.getElementById('centerY').addEventListener('input', (e) => {
+        params.centerY = parseInt(e.target.value);
+        document.getElementById('centerYValue').textContent = params.centerY;
+        generate();
+      });
+
+      // Line weight
+      document.getElementById('lineWeight').addEventListener('input', (e) => {
+        params.lineWeight = parseFloat(e.target.value);
+        document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(2);
+        generate();
+      });
+
+      // Gap
+      document.getElementById('gap').addEventListener('input', (e) => {
+        params.gap = parseFloat(e.target.value);
+        document.getElementById('gapValue').textContent = params.gap;
+        generate();
+      });
+
+      // Color mode
+      document.getElementById('colorMode').addEventListener('change', (e) => {
+        params.colorMode = e.target.value;
+        generate();
+      });
+
+      // Show edges
+      document.getElementById('showEdges').addEventListener('change', (e) => {
+        params.showEdges = e.target.checked;
+        generate();
+      });
+
+      // Show fill
+      document.getElementById('showFill').addEventListener('change', (e) => {
+        params.showFill = e.target.checked;
+        generate();
+      });
+
+      // Fill colors
+      ['fillColor1', 'fillColor2', 'fillColor3', 'fillColor4'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          params[id] = e.target.value;
+          generate();
+        });
+      });
+
+      // Fill opacity
+      document.getElementById('fillOpacity').addEventListener('input', (e) => {
+        params.fillOpacity = parseInt(e.target.value);
+        document.getElementById('fillOpacityValue').textContent = params.fillOpacity;
+        generate();
+      });
+
+      // Seed
+      document.getElementById('seed').addEventListener('input', (e) => {
+        params.seed = parseInt(e.target.value) || 42;
+        generate();
+      });
+
+      // Export buttons
+      TSExport.quickSetup('aperiodic-tilings', {
+        getSVG: generateSVG
+      });
+    }
+
+    // ============================================
+    // MAIN GENERATION
+    // ============================================
+    function generate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
+      background(params.bgColor);
+      tiles = [];
+
+      const cx = width * (params.centerX / 100);
+      const cy = height * (params.centerY / 100);
+
+      push();
+      translate(cx, cy);
+      rotate(radians(params.rotation));
+      scale(params.scale);
+
+      switch (params.tilingType) {
+        case 'einstein':
+          generateEinsteinHat();
+          break;
+        case 'penrose':
+          generatePenroseP3();
+          break;
+        case 'ammann':
+          generateAmmannBeenker();
+          break;
+        case 'wang':
+          generateWangTiles();
+          break;
+      }
+
+      pop();
+      updateStats();
+    }
+
+    // ============================================
+    // EINSTEIN HAT TILE (2023 Discovery!)
+    // ============================================
+
+    // The Einstein Hat is a 13-sided monotile that tiles aperiodically
+    // Reference: Smith, Myers, Kaplan, Goodman-Strauss (2023)
+
+    function getHatShape(size) {
+      // The hat tile is built from kites on a hexagonal grid
+      // This is a simplified version of the 13-sided polygon
+      const s = size;
+      const h = s * Math.sqrt(3) / 2;
+
+      // Hat vertices (13 points)
+      return [
+        { x: 0, y: -s },
+        { x: s * 0.5, y: -s - h * 0.5 },
+        { x: s * 1.5, y: -s - h * 0.5 },
+        { x: s * 2, y: -s },
+        { x: s * 2, y: 0 },
+        { x: s * 1.5, y: h * 0.5 },
+        { x: s * 1.5, y: s + h * 0.5 },
+        { x: s, y: s + h },
+        { x: 0, y: s + h },
+        { x: -s * 0.5, y: s + h * 0.5 },
+        { x: -s * 0.5, y: h * 0.5 },
+        { x: -s, y: 0 },
+        { x: -s * 0.5, y: -h * 0.5 }
+      ];
+    }
+
+    function generateEinsteinHat() {
+      const baseSize = min(width, height) / 15;
+
+      // Generate a cluster of hat tiles using substitution rules
+      // Start with initial tiles and apply recursive subdivision
+
+      const initialTiles = [];
+      const gridSize = ceil(max(width, height) / (baseSize * 3)) + 2;
+
+      // Create initial grid pattern
+      for (let i = -gridSize; i <= gridSize; i++) {
+        for (let j = -gridSize; j <= gridSize; j++) {
+          // Offset pattern for aperiodic arrangement
+          const offsetX = (j % 2) * baseSize * 1.5;
+          const x = i * baseSize * 3 + offsetX;
+          const y = j * baseSize * 2.5;
+
+          // Alternate orientations based on noise for aperiodic look
+          const angle = noise(i * 0.3, j * 0.3) * TWO_PI;
+          const reflected = noise(i * 0.5 + 100, j * 0.5) > 0.5;
+
+          initialTiles.push({
+            x, y, angle, reflected,
+            type: floor(noise(i * 0.2 + 50, j * 0.2 + 50) * 4)
+          });
+        }
+      }
+
+      // Apply substitution iterations
+      let currentTiles = initialTiles;
+      for (let d = 0; d < params.depth - 1; d++) {
+        currentTiles = subdivideHatTiles(currentTiles, baseSize / pow(1.5, d));
+      }
+
+      // Draw tiles
+      currentTiles.forEach((tile, idx) => {
+        drawHatTile(tile.x, tile.y, baseSize / pow(1.5, params.depth - 1),
+                    tile.angle, tile.reflected, tile.type, idx);
+      });
+    }
+
+    function subdivideHatTiles(tiles, size) {
+      // Simplified subdivision - in reality, Hat tiles use a complex substitution
+      const newTiles = [];
+      tiles.forEach(tile => {
+        const subCount = 2 + floor(random(2));
+        for (let i = 0; i < subCount; i++) {
+          const angle = tile.angle + (i * TWO_PI / subCount) + random(-0.3, 0.3);
+          const dist = size * 0.6;
+          newTiles.push({
+            x: tile.x + cos(angle) * dist,
+            y: tile.y + sin(angle) * dist,
+            angle: tile.angle + random(-PI/6, PI/6),
+            reflected: random() > 0.5,
+            type: (tile.type + i) % 4
+          });
+        }
+      });
+      return newTiles;
+    }
+
+    function drawHatTile(x, y, size, angle, reflected, type, idx) {
+      const shape = getHatShape(size);
+
+      push();
+      translate(x, y);
+      rotate(angle);
+      if (reflected) scale(-1, 1);
+
+      // Apply gap
+      const gapScale = 1 - params.gap * 0.02;
+      scale(gapScale);
+
+      // Fill
+      if (params.showFill) {
+        const fillCol = getTileColor(type, idx);
+        fill(fillCol);
+      } else {
+        noFill();
+      }
+
+      // Stroke
+      if (params.showEdges) {
+        stroke(params.strokeColor);
+        strokeWeight(params.lineWeight);
+      } else {
+        noStroke();
+      }
+
+      beginShape();
+      shape.forEach(v => vertex(v.x, v.y));
+      endShape(CLOSE);
+
+      pop();
+
+      tiles.push({ x, y, type, shape });
+    }
+
+    // ============================================
+    // PENROSE P3 TILING (Rhombus Version)
+    // ============================================
+
+    function generatePenroseP3() {
+      const size = min(width, height) / 4;
+
+      // Start with an initial star or sun configuration
+      let triangles = [];
+
+      // Create initial decagon made of triangles
+      for (let i = 0; i < 10; i++) {
+        const angle = (i * TWO_PI / 10) - PI / 2;
+        const nextAngle = ((i + 1) * TWO_PI / 10) - PI / 2;
+
+        // Alternate between thin and thick rhombi base triangles
+        triangles.push({
+          A: { x: 0, y: 0 },
+          B: { x: cos(angle) * size, y: sin(angle) * size },
+          C: { x: cos(nextAngle) * size, y: sin(nextAngle) * size },
+          type: i % 2 // 0 = thin part, 1 = thick part
+        });
+      }
+
+      // Apply deflation
+      for (let d = 0; d < params.depth; d++) {
+        triangles = deflatePenrose(triangles);
+      }
+
+      // Convert triangles to rhombi and draw
+      drawPenroseTiles(triangles);
+    }
+
+    function deflatePenrose(triangles) {
+      const result = [];
+
+      triangles.forEach(tri => {
+        const { A, B, C, type } = tri;
+
+        if (type === 0) {
+          // Thin rhombus half - subdivide
+          const P = {
+            x: A.x + (B.x - A.x) / PHI,
+            y: A.y + (B.y - A.y) / PHI
+          };
+
+          result.push({ A: C, B: P, C: B, type: 0 });
+          result.push({ A: P, B: C, C: A, type: 1 });
+        } else {
+          // Thick rhombus half - subdivide
+          const Q = {
+            x: B.x + (A.x - B.x) / PHI,
+            y: B.y + (A.y - B.y) / PHI
+          };
+          const R = {
+            x: B.x + (C.x - B.x) / PHI,
+            y: B.y + (C.y - B.y) / PHI
+          };
+
+          result.push({ A: R, B: C, C: A, type: 1 });
+          result.push({ A: Q, B: R, C: B, type: 0 });
+          result.push({ A: R, B: Q, C: A, type: 1 });
+        }
+      });
+
+      return result;
+    }
+
+    function drawPenroseTiles(triangles) {
+      // Group triangles into rhombi
+      const drawn = new Set();
+
+      triangles.forEach((tri, idx) => {
+        if (drawn.has(idx)) return;
+
+        const fillCol = getTileColor(tri.type, idx);
+
+        if (params.showFill) {
+          fill(fillCol);
+        } else {
+          noFill();
+        }
+
+        if (params.showEdges) {
+          stroke(params.strokeColor);
+          strokeWeight(params.lineWeight);
+        } else {
+          noStroke();
+        }
+
+        // Apply gap by scaling triangle
+        push();
+        const cx = (tri.A.x + tri.B.x + tri.C.x) / 3;
+        const cy = (tri.A.y + tri.B.y + tri.C.y) / 3;
+        translate(cx, cy);
+        scale(1 - params.gap * 0.02);
+        translate(-cx, -cy);
+
+        triangle(tri.A.x, tri.A.y, tri.B.x, tri.B.y, tri.C.x, tri.C.y);
+        pop();
+
+        tiles.push(tri);
+        drawn.add(idx);
+      });
+    }
+
+    // ============================================
+    // AMMANN-BEENKER TILING
+    // ============================================
+
+    function generateAmmannBeenker() {
+      const size = min(width, height) / 6;
+
+      // Ammann-Beenker uses squares and 45-degree rhombi
+      // Start with an octagonal arrangement
+      let tiles8 = [];
+
+      // Create initial octagon
+      for (let i = 0; i < 8; i++) {
+        const angle = (i * TWO_PI / 8);
+        const nextAngle = ((i + 1) * TWO_PI / 8);
+
+        tiles8.push({
+          center: { x: 0, y: 0 },
+          angle: angle,
+          size: size,
+          type: i % 2 // Alternate between square-like and rhombus-like
+        });
+      }
+
+      // Apply subdivision
+      for (let d = 0; d < params.depth; d++) {
+        tiles8 = subdivideAmmann(tiles8);
+      }
+
+      // Draw tiles
+      tiles8.forEach((tile, idx) => {
+        if (tile.type === 0) {
+          drawAmmannSquare(tile.center.x, tile.center.y, tile.size, tile.angle, idx);
+        } else {
+          drawAmmannRhombus(tile.center.x, tile.center.y, tile.size, tile.angle, idx);
+        }
+      });
+    }
+
+    function subdivideAmmann(tiles8) {
+      const result = [];
+      const scale = 1 / (1 + Math.sqrt(2));
+
+      tiles8.forEach(tile => {
+        const newSize = tile.size * scale;
+
+        // Create smaller tiles around center
+        for (let i = 0; i < 4; i++) {
+          const angle = tile.angle + (i * PI / 2);
+          const dist = tile.size * 0.5;
+
+          result.push({
+            center: {
+              x: tile.center.x + cos(angle) * dist,
+              y: tile.center.y + sin(angle) * dist
+            },
+            angle: angle + PI / 4,
+            size: newSize,
+            type: (tile.type + i) % 2
+          });
+        }
+
+        // Add central tile
+        result.push({
+          center: { x: tile.center.x, y: tile.center.y },
+          angle: tile.angle + PI / 8,
+          size: newSize * 0.7,
+          type: (tile.type + 1) % 2
+        });
+      });
+
+      return result;
+    }
+
+    function drawAmmannSquare(x, y, size, angle, idx) {
+      push();
+      translate(x, y);
+      rotate(angle);
+
+      const s = size * (1 - params.gap * 0.02);
+
+      if (params.showFill) {
+        fill(getTileColor(0, idx));
+      } else {
+        noFill();
+      }
+
+      if (params.showEdges) {
+        stroke(params.strokeColor);
+        strokeWeight(params.lineWeight);
+      } else {
+        noStroke();
+      }
+
+      rectMode(CENTER);
+      rect(0, 0, s, s);
+
+      pop();
+
+      tiles.push({ x, y, type: 0, shape: 'square' });
+    }
+
+    function drawAmmannRhombus(x, y, size, angle, idx) {
+      push();
+      translate(x, y);
+      rotate(angle);
+
+      const s = size * (1 - params.gap * 0.02);
+      const a = PI / 4; // 45 degree rhombus
+
+      if (params.showFill) {
+        fill(getTileColor(1, idx));
+      } else {
+        noFill();
+      }
+
+      if (params.showEdges) {
+        stroke(params.strokeColor);
+        strokeWeight(params.lineWeight);
+      } else {
+        noStroke();
+      }
+
+      beginShape();
+      vertex(0, -s * sin(a));
+      vertex(s * cos(a), 0);
+      vertex(0, s * sin(a));
+      vertex(-s * cos(a), 0);
+      endShape(CLOSE);
+
+      pop();
+
+      tiles.push({ x, y, type: 1, shape: 'rhombus' });
+    }
+
+    // ============================================
+    // WANG TILES
+    // ============================================
+
+    function generateWangTiles() {
+      const tileSize = min(width, height) / (params.depth * 8);
+      const cols = ceil(width / tileSize) + 2;
+      const rows = ceil(height / tileSize) + 2;
+
+      // Wang tiles with colored edges - using 4 colors
+      // Each tile has 4 edges (N, E, S, W) with assigned colors
+      // Tiles must match edge colors with neighbors
+
+      // Generate tile set (simplified aperiodic set)
+      const tileSet = generateWangTileSet();
+
+      // Create grid with edge-matching constraints
+      const grid = [];
+
+      for (let j = 0; j < rows; j++) {
+        grid[j] = [];
+        for (let i = 0; i < cols; i++) {
+          // Find a tile that matches constraints
+          const tile = findMatchingWangTile(grid, i, j, tileSet);
+          grid[j][i] = tile;
+        }
+      }
+
+      // Draw tiles
+      const offsetX = -width / 2 - tileSize;
+      const offsetY = -height / 2 - tileSize;
+
+      for (let j = 0; j < rows; j++) {
+        for (let i = 0; i < cols; i++) {
+          const x = offsetX + i * tileSize;
+          const y = offsetY + j * tileSize;
+          drawWangTile(x, y, tileSize, grid[j][i], j * cols + i);
+        }
+      }
+    }
+
+    function generateWangTileSet() {
+      // Create an aperiodic Wang tile set
+      // Simplified version with 16 tiles using 4 edge colors
+      const tiles = [];
+      const numColors = 4;
+
+      // Generate tiles that enforce aperiodic tiling
+      // This is a simplified set - true aperiodic sets have specific constraints
+      for (let n = 0; n < numColors; n++) {
+        for (let e = 0; e < numColors; e++) {
+          // Only certain combinations allowed for aperiodicity
+          const s = (n + e) % numColors;
+          const w = (e + 1) % numColors;
+          tiles.push({ n, e, s, w });
+        }
+      }
+
+      return tiles;
+    }
+
+    function findMatchingWangTile(grid, col, row, tileSet) {
+      // Get constraints from neighbors
+      const northTile = row > 0 ? grid[row - 1][col] : null;
+      const westTile = col > 0 ? grid[row][col - 1] : null;
+
+      const requiredNorth = northTile ? northTile.s : null;
+      const requiredWest = westTile ? westTile.e : null;
+
+      // Find matching tiles
+      const candidates = tileSet.filter(tile => {
+        if (requiredNorth !== null && tile.n !== requiredNorth) return false;
+        if (requiredWest !== null && tile.w !== requiredWest) return false;
+        return true;
+      });
+
+      // Pick one (use noise for deterministic randomness)
+      if (candidates.length === 0) {
+        // Fallback - shouldn't happen with proper tile set
+        return tileSet[floor(noise(col * 0.1, row * 0.1) * tileSet.length)];
+      }
+
+      const idx = floor(noise(col * 0.1 + 1000, row * 0.1 + 1000) * candidates.length);
+      return candidates[idx];
+    }
+
+    function drawWangTile(x, y, size, tile, idx) {
+      push();
+      translate(x, y);
+
+      const s = size * (1 - params.gap * 0.02);
+      const offset = (size - s) / 2;
+
+      // Draw main tile
+      if (params.showFill) {
+        fill(getTileColor(tile.n, idx));
+      } else {
+        noFill();
+      }
+
+      if (params.showEdges) {
+        stroke(params.strokeColor);
+        strokeWeight(params.lineWeight);
+      } else {
+        noStroke();
+      }
+
+      rect(offset, offset, s, s);
+
+      // Draw edge colors as small triangles (optional visualization)
+      if (params.colorMode === 'tileType' && params.showFill) {
+        const edgeColors = [
+          params.fillColor1, params.fillColor2,
+          params.fillColor3, params.fillColor4
+        ];
+
+        const triangleSize = s * 0.25;
+        noStroke();
+
+        // North edge
+        fill(edgeColors[tile.n]);
+        triangle(
+          offset + s/2, offset,
+          offset + s/2 - triangleSize/2, offset + triangleSize,
+          offset + s/2 + triangleSize/2, offset + triangleSize
+        );
+
+        // East edge
+        fill(edgeColors[tile.e]);
+        triangle(
+          offset + s, offset + s/2,
+          offset + s - triangleSize, offset + s/2 - triangleSize/2,
+          offset + s - triangleSize, offset + s/2 + triangleSize/2
+        );
+
+        // South edge
+        fill(edgeColors[tile.s]);
+        triangle(
+          offset + s/2, offset + s,
+          offset + s/2 - triangleSize/2, offset + s - triangleSize,
+          offset + s/2 + triangleSize/2, offset + s - triangleSize
+        );
+
+        // West edge
+        fill(edgeColors[tile.w]);
+        triangle(
+          offset, offset + s/2,
+          offset + triangleSize, offset + s/2 - triangleSize/2,
+          offset + triangleSize, offset + s/2 + triangleSize/2
+        );
+      }
+
+      pop();
+
+      tiles.push({ x, y, tile, type: tile.n });
+    }
+
+    // ============================================
+    // COLOR HELPERS
+    // ============================================
+
+    function getTileColor(type, idx) {
+      const colors = [params.fillColor1, params.fillColor2, params.fillColor3, params.fillColor4];
+      const opacity = params.fillOpacity / 100 * 255;
+
+      let col;
+
+      switch (params.colorMode) {
+        case 'monochrome':
+          col = color(params.strokeColor);
+          col.setAlpha(opacity * 0.3);
+          return col;
+
+        case 'tileType':
+          col = color(colors[type % colors.length]);
+          col.setAlpha(opacity);
+          return col;
+
+        case 'rainbow':
+          col = color(`hsl(${(idx * 37) % 360}, 70%, 60%)`);
+          col.setAlpha(opacity);
+          return col;
+
+        case 'gradient':
+          const t = noise(idx * 0.1) * 360;
+          col = color(`hsl(${t}, 60%, 50%)`);
+          col.setAlpha(opacity);
+          return col;
+
+        default:
+          col = color(colors[0]);
+          col.setAlpha(opacity);
+          return col;
+      }
+    }
+
+    // ============================================
+    // UI HELPERS
+    // ============================================
+
+    function randomizeSeed() {
+      params.seed = floor(random(1, 99999));
+      document.getElementById('seed').value = params.seed;
+      generate();
+    }
+
+    function clearCanvas() {
+      background(params.bgColor);
+      tiles = [];
+      updateStats();
+    }
+
+    function updateStats() {
+      const typeNames = {
+        'einstein': 'Einstein Hat',
+        'penrose': 'Penrose P3',
+        'ammann': 'Ammann-Beenker',
+        'wang': 'Wang Tiles'
+      };
+
+      document.getElementById('statType').textContent = typeNames[params.tilingType] || 'Unknown';
+      document.getElementById('statTiles').textContent = tiles.length;
+      document.getElementById('statDepth').textContent = params.depth;
+    }
+
+    function updateUIFromParams() {
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+      document.getElementById('tilingType').value = params.tilingType;
+      document.getElementById('depth').value = params.depth;
+      document.getElementById('depthValue').textContent = params.depth;
+      document.getElementById('scale').value = params.scale;
+      document.getElementById('scaleValue').textContent = params.scale.toFixed(1);
+      document.getElementById('rotation').value = params.rotation;
+      document.getElementById('rotationValue').textContent = params.rotation;
+      document.getElementById('centerX').value = params.centerX;
+      document.getElementById('centerXValue').textContent = params.centerX;
+      document.getElementById('centerY').value = params.centerY;
+      document.getElementById('centerYValue').textContent = params.centerY;
+      document.getElementById('lineWeight').value = params.lineWeight;
+      document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(2);
+      document.getElementById('gap').value = params.gap;
+      document.getElementById('gapValue').textContent = params.gap;
+      document.getElementById('colorMode').value = params.colorMode;
+      document.getElementById('showEdges').checked = params.showEdges;
+      document.getElementById('showFill').checked = params.showFill;
+      document.getElementById('fillColor1').value = params.fillColor1;
+      document.getElementById('fillColor2').value = params.fillColor2;
+      document.getElementById('fillColor3').value = params.fillColor3;
+      document.getElementById('fillColor4').value = params.fillColor4;
+      document.getElementById('fillOpacity').value = params.fillOpacity;
+      document.getElementById('fillOpacityValue').textContent = params.fillOpacity;
+      document.getElementById('seed').value = params.seed;
+
+      // Resize canvas if needed
+      const size = canvasControls.getCanvasSize();
+      if (width !== size.width || height !== size.height) {
+        resizeCanvas(size.width, size.height);
+      }
+    }
+
+    // ============================================
+    // SVG EXPORT
+    // ============================================
+
+    function generateSVG() {
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="${params.bgColor}"/>
+  <g transform="translate(${width * params.centerX / 100}, ${height * params.centerY / 100}) rotate(${params.rotation}) scale(${params.scale})"
+     stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none">
+`;
+
+      // Re-generate tiles for SVG
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
+      const svgTiles = [];
+
+      // Generate tiles based on type
+      switch (params.tilingType) {
+        case 'einstein':
+          svg += generateEinsteinSVG();
+          break;
+        case 'penrose':
+          svg += generatePenroseSVG();
+          break;
+        case 'ammann':
+          svg += generateAmmannSVG();
+          break;
+        case 'wang':
+          svg += generateWangSVG();
+          break;
+      }
+
+      svg += `  </g>
+</svg>`;
+
+      return svg;
+    }
+
+    function generateEinsteinSVG() {
+      let paths = '';
+      const baseSize = min(width, height) / 15;
+      const gridSize = ceil(max(width, height) / (baseSize * 3)) + 2;
+
+      const initialTiles = [];
+      for (let i = -gridSize; i <= gridSize; i++) {
+        for (let j = -gridSize; j <= gridSize; j++) {
+          const offsetX = (j % 2) * baseSize * 1.5;
+          const x = i * baseSize * 3 + offsetX;
+          const y = j * baseSize * 2.5;
+          const angle = noise(i * 0.3, j * 0.3) * TWO_PI;
+          const reflected = noise(i * 0.5 + 100, j * 0.5) > 0.5;
+          initialTiles.push({ x, y, angle, reflected, type: floor(noise(i * 0.2 + 50, j * 0.2 + 50) * 4) });
+        }
+      }
+
+      let currentTiles = initialTiles;
+      for (let d = 0; d < params.depth - 1; d++) {
+        currentTiles = subdivideHatTiles(currentTiles, baseSize / pow(1.5, d));
+      }
+
+      const size = baseSize / pow(1.5, params.depth - 1);
+      currentTiles.forEach((tile, idx) => {
+        paths += getHatSVGPath(tile.x, tile.y, size, tile.angle, tile.reflected, tile.type, idx);
+      });
+
+      return paths;
+    }
+
+    function getHatSVGPath(x, y, size, angle, reflected, type, idx) {
+      const shape = getHatShape(size);
+      const gapScale = 1 - params.gap * 0.02;
+
+      let path = `    <g transform="translate(${x},${y}) rotate(${degrees(angle)})${reflected ? ' scale(-1,1)' : ''} scale(${gapScale})">
+`;
+
+      if (params.showFill) {
+        const col = getTileColorHex(type, idx);
+        path += `      <polygon points="${shape.map(v => `${v.x},${v.y}`).join(' ')}" fill="${col}" fill-opacity="${params.fillOpacity/100}"/>
+`;
+      }
+
+      if (params.showEdges) {
+        path += `      <polygon points="${shape.map(v => `${v.x},${v.y}`).join(' ')}" fill="none"/>
+`;
+      }
+
+      path += `    </g>
+`;
+      return path;
+    }
+
+    function generatePenroseSVG() {
+      let paths = '';
+      // Similar structure to canvas generation but output SVG paths
+      // For brevity, using simplified output
+
+      tiles.forEach((tri, idx) => {
+        const col = getTileColorHex(tri.type, idx);
+        const fill = params.showFill ? `fill="${col}" fill-opacity="${params.fillOpacity/100}"` : 'fill="none"';
+        const stroke = params.showEdges ? '' : 'stroke="none"';
+
+        paths += `    <polygon points="${tri.A.x},${tri.A.y} ${tri.B.x},${tri.B.y} ${tri.C.x},${tri.C.y}" ${fill} ${stroke}/>
+`;
+      });
+
+      return paths;
+    }
+
+    function generateAmmannSVG() {
+      let paths = '';
+
+      tiles.forEach((tile, idx) => {
+        const col = getTileColorHex(tile.type, idx);
+        const fill = params.showFill ? `fill="${col}" fill-opacity="${params.fillOpacity/100}"` : 'fill="none"';
+
+        if (tile.shape === 'square') {
+          const s = 50 * (1 - params.gap * 0.02);
+          paths += `    <rect x="${tile.x - s/2}" y="${tile.y - s/2}" width="${s}" height="${s}" ${fill}/>
+`;
+        } else {
+          paths += `    <polygon points="${tile.x},${tile.y-30} ${tile.x+30},${tile.y} ${tile.x},${tile.y+30} ${tile.x-30},${tile.y}" ${fill}/>
+`;
+        }
+      });
+
+      return paths;
+    }
+
+    function generateWangSVG() {
+      let paths = '';
+
+      tiles.forEach((t, idx) => {
+        const col = getTileColorHex(t.type, idx);
+        const fill = params.showFill ? `fill="${col}" fill-opacity="${params.fillOpacity/100}"` : 'fill="none"';
+        const size = min(width, height) / (params.depth * 8);
+
+        paths += `    <rect x="${t.x}" y="${t.y}" width="${size}" height="${size}" ${fill}/>
+`;
+      });
+
+      return paths;
+    }
+
+    function getTileColorHex(type, idx) {
+      const colors = [params.fillColor1, params.fillColor2, params.fillColor3, params.fillColor4];
+
+      switch (params.colorMode) {
+        case 'monochrome':
+          return params.strokeColor;
+        case 'tileType':
+          return colors[type % colors.length];
+        case 'rainbow':
+          const h = (idx * 37) % 360;
+          return `hsl(${h}, 70%, 60%)`;
+        case 'gradient':
+          const t = (noise(idx * 0.1) * 360);
+          return `hsl(${t}, 60%, 50%)`;
+        default:
+          return colors[0];
+      }
+    }
+  </script>
+</body>
+</html>

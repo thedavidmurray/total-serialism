@@ -488,11 +488,11 @@
       </div>
       <div class="stats">
         <div class="stat">
-          <div class="stat-value" id="total-count">65</div>
+          <div class="stat-value" id="total-count">78</div>
           <div class="stat-label">Algorithms</div>
         </div>
         <div class="stat">
-          <div class="stat-value">18</div>
+          <div class="stat-value">19</div>
           <div class="stat-label">Categories</div>
         </div>
       </div>
@@ -510,7 +510,7 @@
           <input type="text" class="search-input" id="search" placeholder="Search..." autocomplete="off">
         </div>
         <div class="result-count">
-          <strong id="visible-count">65</strong> shown
+          <strong id="visible-count">78</strong> shown
         </div>
         <div class="view-toggle">
           <button class="view-btn active" data-view="grid" title="Grid view">Grid</button>
@@ -531,6 +531,8 @@
         <button class="filter-btn" data-filter="advanced">Advanced</button>
         <button class="filter-btn" data-filter="trees-lsystems">L-Sys</button>
         <button class="filter-btn" data-filter="image-processing">Image</button>
+        <button class="filter-btn" data-filter="curves">Curves</button>
+        <button class="filter-btn" data-filter="fluid-dynamics">Fluid</button>
         <button class="filter-btn" data-filter="tools">Tools</button>
       </div>
     </div>
@@ -580,11 +582,15 @@
       { name: "Flow Field P5", category: "flow-fields", path: "algorithms/flow-fields/flow-field-p5-gui.html" },
       { name: "Flow Field Collision", category: "flow-fields", path: "algorithms/flow-fields/flow-field-collision.html" },
 
-      // Natural (4)
+      // Natural (8)
       { name: "Lightning", category: "natural", path: "algorithms/natural/lightning-gui.html" },
       { name: "Coral Growth", category: "natural", path: "algorithms/natural/coral-growth-gui.html" },
       { name: "Crystal Growth", category: "natural", path: "algorithms/natural/crystal-growth-gui.html" },
       { name: "Astronomy", category: "natural", path: "algorithms/natural/astronomy-gui.html" },
+      { name: "Phyllotaxis", category: "natural", path: "algorithms/natural/phyllotaxis-gui.html" },
+      { name: "DLA Growth", category: "natural", path: "algorithms/natural/dla-gui.html" },
+      { name: "Physarum Slime", category: "natural", path: "algorithms/natural/physarum-gui.html" },
+      { name: "Space Colonization", category: "natural", path: "algorithms/natural/space-colonization-gui.html" },
 
       // Chemical (6)
       { name: "Belousov-Zhabotinsky", category: "chemical", path: "algorithms/chemical/belousov-zhabotinsky-gui.html" },
@@ -599,33 +605,40 @@
       { name: "Reaction-Diffusion Enhanced", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-enhanced.html" },
       { name: "Reaction-Diffusion Layers", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-layers.html" },
 
-      // Symmetry (3)
+      // Symmetry (4)
       { name: "Truchet Tiles", category: "symmetry", path: "algorithms/symmetry/truchet-tiles-gui.html" },
       { name: "Kumiko Pattern", category: "symmetry", path: "algorithms/symmetry/kumiko-pattern.html" },
       { name: "Zellige Pattern", category: "symmetry", path: "algorithms/symmetry/zellige-pattern.html" },
+      { name: "Aperiodic Tilings", category: "symmetry", path: "algorithms/symmetry/aperiodic-tilings-gui.html" },
 
-      // Physics (2)
+      // Physics (5)
       { name: "Particle System", category: "physics", path: "algorithms/physics/particle-system-gui.html" },
+      { name: "Boids Flocking", category: "physics", path: "algorithms/physics/boids-flocking-gui.html" },
+      { name: "Cloth Simulation", category: "physics", path: "algorithms/physics/cloth-simulation-gui.html" },
+      { name: "Magnetic Fields", category: "physics", path: "algorithms/physics/magnetic-field-gui.html" },
       { name: "Test Color Controls", category: "physics", path: "algorithms/physics/test-color-controls.html" },
 
-      // Advanced (4)
+      // Advanced (5)
       { name: "Chladni Patterns", category: "advanced", path: "algorithms/advanced/chladni-patterns-gui.html" },
       { name: "Parametric Surfaces", category: "advanced", path: "algorithms/advanced/parametric-surfaces-gui.html" },
       { name: "Sound Waveform", category: "advanced", path: "algorithms/advanced/sound-waveform-gui.html" },
       { name: "Vortex Street", category: "advanced", path: "algorithms/advanced/vortex-street-gui.html" },
+      { name: "Strange Attractors", category: "advanced", path: "algorithms/advanced/strange-attractors-gui.html" },
 
       // Trees & L-Systems (3)
       { name: "Tree", category: "trees-lsystems", path: "algorithms/trees-lsystems/tree-gui.html" },
       { name: "Tree Working", category: "trees-lsystems", path: "algorithms/trees-lsystems/tree-working.html" },
       { name: "L-System Simple", category: "trees-lsystems", path: "algorithms/trees-lsystems/lsystem-simple.html" },
 
-      // Image Processing (6)
+      // Image Processing (8)
       { name: "ASCII Art", category: "image-processing", path: "algorithms/image-processing/ascii-art-gui.html" },
       { name: "Dithering", category: "image-processing", path: "algorithms/image-processing/dithering-gui.html" },
       { name: "Halftone", category: "image-processing", path: "algorithms/image-processing/halftone.html" },
       { name: "Hatching", category: "image-processing", path: "algorithms/image-processing/hatching.html" },
       { name: "Image to ASCII", category: "image-processing", path: "algorithms/image-processing/image-to-ascii-gui.html" },
       { name: "SquiggleCam", category: "image-processing", path: "algorithms/image-processing/squigglecam.html" },
+      { name: "Contour Lines", category: "image-processing", path: "algorithms/image-processing/contour-lines-gui.html" },
+      { name: "Flow Hatching", category: "image-processing", path: "algorithms/image-processing/flow-hatching-gui.html" },
 
       // Tools (6)
       { name: "Canvas Runner", category: "tools", path: "algorithms/tools/canvas-runner.html" },
@@ -635,8 +648,14 @@
       { name: "Plotter Export", category: "tools", path: "algorithms/tools/plotter-export-gui.html" },
       { name: "Plotter Prep", category: "tools", path: "algorithms/tools/plotter-prep.html" },
 
-      // Other categories
+      // Curves (2)
       { name: "Hilbert Curve", category: "curves", path: "algorithms/curves/hilbert-curve-gui.html" },
+      { name: "Space-Filling Curves", category: "curves", path: "algorithms/curves/space-filling-expanded-gui.html" },
+
+      // Fluid Dynamics (1)
+      { name: "Fluid Dynamics", category: "fluid-dynamics", path: "algorithms/fluid-dynamics/fluid-dynamics-gui.html" },
+
+      // Other categories
       { name: "Hatching Demo", category: "textures", path: "algorithms/textures/hatching-demo.html" },
       { name: "Circle Packing", category: "packing", path: "algorithms/packing/circle-packing-gui.html" },
       { name: "Hybrid Composer", category: "hybrid", path: "algorithms/hybrid/hybrid-composer-gui.html" },

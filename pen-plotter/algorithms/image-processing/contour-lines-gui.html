@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Contour Lines - Topographic Map Style</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <link rel="stylesheet" href="../../preset-manager.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: var(--ts-font-mono);
+      display: flex;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #controls {
+      width: 340px;
+      padding: 20px;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+      padding-bottom: 15px;
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    .control label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+    }
+    .control input[type="range"] {
+      width: 100%;
+    }
+    .control span {
+      font-weight: bold;
+      color: var(--ts-accent-primary);
+    }
+    #image-upload-area {
+      border: 2px dashed var(--ts-accent-primary);
+      border-radius: var(--ts-radius-md);
+      padding: 30px 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: 15px;
+    }
+    #image-upload-area:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-accent-secondary);
+    }
+    #image-upload-area.dragover {
+      background: var(--ts-bg-active);
+      border-color: var(--ts-accent-secondary);
+    }
+    .upload-text {
+      color: var(--ts-text-secondary);
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+    }
+    .upload-icon {
+      font-size: 32px;
+      color: var(--ts-accent-primary);
+      margin-bottom: 8px;
+    }
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 8px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-sm);
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: rgba(0, 212, 170, 0.2);
+      color: var(--ts-accent-primary);
+      border: 1px solid var(--ts-accent-primary);
+    }
+    #processing-status.error {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--ts-accent-danger);
+      border: 1px solid var(--ts-accent-danger);
+    }
+    #processing-status.processing {
+      background: rgba(255, 149, 0, 0.2);
+      color: var(--ts-accent-secondary);
+      border: 1px solid var(--ts-accent-secondary);
+    }
+    .stats {
+      font-size: 0.75rem;
+      color: var(--ts-text-secondary);
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-sm);
+    }
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .button-group button {
+      flex: 1;
+      min-width: 80px;
+    }
+    .preview-options {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    .preview-options label {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .preview-options input[type="checkbox"] {
+      margin-right: 6px;
+    }
+    .source-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    .source-toggle button {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid var(--ts-border-default);
+      background: var(--ts-bg-control);
+      color: var(--ts-text-secondary);
+      border-radius: var(--ts-radius-sm);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .source-toggle button.active {
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border-color: var(--ts-accent-primary);
+    }
+    .source-toggle button:hover:not(.active) {
+      background: var(--ts-bg-hover);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="controls">
+    <a href="../../index.html" class="back-link">Back to Index</a>
+    <h2>Contour Lines</h2>
+    <p style="margin-top: 0; color: var(--ts-text-muted); font-size: 0.8rem;">
+      Generate topographic-style contour lines from images or procedural height maps
+    </p>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Input Source</h3>
+      <div class="source-toggle">
+        <button id="sourceImage" class="active">Image</button>
+        <button id="sourceProcedural">Procedural</button>
+      </div>
+
+      <div id="image-input-section">
+        <div id="image-upload-area">
+          <div class="upload-icon">&#x1F5BC;</div>
+          <div class="upload-text">Drop image here or click to browse</div>
+          <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+        </div>
+      </div>
+
+      <div id="procedural-input-section" style="display: none;">
+        <div class="control">
+          <label>Height Map Type:</label>
+          <select id="heightMapType">
+            <option value="perlin">Perlin Noise</option>
+            <option value="simplex">Simplex Noise</option>
+            <option value="radial">Radial Gradient</option>
+            <option value="peaks">Multiple Peaks</option>
+            <option value="ridged">Ridged Noise</option>
+            <option value="terraces">Terraced</option>
+          </select>
+        </div>
+        <div class="control">
+          <label>Noise Scale: <span id="noiseScale-value">0.005</span></label>
+          <input type="range" id="noiseScale" min="0.001" max="0.02" step="0.001" value="0.005">
+        </div>
+        <div class="control">
+          <label>Octaves: <span id="octaves-value">4</span></label>
+          <input type="range" id="octaves" min="1" max="8" step="1" value="4">
+        </div>
+        <div class="control">
+          <label>Persistence: <span id="persistence-value">0.5</span></label>
+          <input type="range" id="persistence" min="0.1" max="0.9" step="0.05" value="0.5">
+        </div>
+        <div class="control">
+          <label>Peak Count: <span id="peakCount-value">5</span></label>
+          <input type="range" id="peakCount" min="1" max="15" step="1" value="5">
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Contour Settings</h3>
+      <div class="control">
+        <label>Number of Levels: <span id="contourLevels-value">20</span></label>
+        <input type="range" id="contourLevels" min="5" max="50" step="1" value="20">
+      </div>
+      <div class="control">
+        <label>Minimum Value: <span id="minValue-value">0</span></label>
+        <input type="range" id="minValue" min="0" max="200" step="5" value="0">
+      </div>
+      <div class="control">
+        <label>Maximum Value: <span id="maxValue-value">255</span></label>
+        <input type="range" id="maxValue" min="50" max="255" step="5" value="255">
+      </div>
+      <div class="control">
+        <label>Smoothing (Blur): <span id="smoothing-value">2</span></label>
+        <input type="range" id="smoothing" min="0" max="10" step="1" value="2">
+      </div>
+      <div class="control">
+        <label>Line Simplification: <span id="simplification-value">1.0</span></label>
+        <input type="range" id="simplification" min="0" max="5" step="0.1" value="1.0">
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="invertBrightness"> Invert Brightness
+        </label>
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="adaptiveDensity"> Adaptive Density (more lines in steep areas)
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Major/Minor Contours</h3>
+      <div class="control">
+        <label>Major Contour Every: <span id="majorInterval-value">5</span> lines</label>
+        <input type="range" id="majorInterval" min="1" max="10" step="1" value="5">
+      </div>
+      <div class="control">
+        <label>Major Line Weight: <span id="majorWeight-value">1.5</span></label>
+        <input type="range" id="majorWeight" min="0.5" max="4" step="0.25" value="1.5">
+      </div>
+      <div class="control">
+        <label>Minor Line Weight: <span id="minorWeight-value">0.5</span></label>
+        <input type="range" id="minorWeight" min="0.1" max="2" step="0.1" value="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="a4">A4 Portrait</option>
+          <option value="a3" selected>A3 Portrait</option>
+          <option value="square">Square (300mm)</option>
+          <option value="letter">US Letter</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn ts-btn-secondary">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="showOriginal"> Show Original
+        </label>
+        <label>
+          <input type="checkbox" id="showContours" checked> Show Contours
+        </label>
+      </div>
+      <div class="control" style="margin-top: 10px;">
+        <label>
+          <input type="checkbox" id="autoRegenerate" checked> Auto-regenerate on change
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button onclick="regenerate()" class="ts-btn ts-btn-primary">Generate Contours</button>
+      <div class="button-group" style="margin-top: 10px;">
+        <button onclick="exportSVG()" id="exportSVGBtn" class="ts-btn ts-btn-secondary">SVG</button>
+        <button onclick="exportPNG()" id="exportPNGBtn" class="ts-btn ts-btn-secondary">PNG</button>
+        <button onclick="exportGIF()" id="exportGIFBtn" class="ts-btn ts-btn-secondary">GIF</button>
+      </div>
+      <div class="control" style="margin-top: 10px;">
+        <label>Seed:</label>
+        <div id="seed-display">-</div>
+      </div>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats" style="display: none;">
+        <div>Contour Lines: <strong id="lineCountStat">0</strong></div>
+        <div>Total Segments: <strong id="segmentCountStat">0</strong></div>
+        <div>Path Length: <strong id="pathLengthStat">0</strong>mm</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Parameters object
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      source: 'image',
+      heightMapType: 'perlin',
+      noiseScale: 0.005,
+      octaves: 4,
+      persistence: 0.5,
+      peakCount: 5,
+      contourLevels: 20,
+      minValue: 0,
+      maxValue: 255,
+      smoothing: 2,
+      simplification: 1.0,
+      invertBrightness: false,
+      adaptiveDensity: false,
+      majorInterval: 5,
+      majorWeight: 1.5,
+      minorWeight: 0.5,
+      paperSize: 'a3',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      showOriginal: false,
+      showContours: true,
+      autoRegenerate: true
+    };
+
+    // Canvas controls for color randomization
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor,
+      strokeColor: params.strokeColor
+    });
+    canvasControls.bind(params);
+
+    let img = null;
+    let heightMap = [];
+    let contours = [];
+    let presetManager;
+    let processing = false;
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      pixelDensity(1);
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'contour-lines',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 1000000);
+          params.noiseScale = random(0.002, 0.015);
+          params.octaves = Math.floor(random(2, 7));
+          params.contourLevels = Math.floor(random(10, 40));
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
+      // Generate initial procedural height map
+      if (params.source === 'procedural') {
+        generateProceduralHeightMap();
+        regenerate();
+      }
+
+      noLoop();
+    }
+
+    function setupControls() {
+      // Source toggle
+      document.getElementById('sourceImage').addEventListener('click', () => {
+        params.source = 'image';
+        document.getElementById('sourceImage').classList.add('active');
+        document.getElementById('sourceProcedural').classList.remove('active');
+        document.getElementById('image-input-section').style.display = 'block';
+        document.getElementById('procedural-input-section').style.display = 'none';
+        if (img) regenerate();
+      });
+
+      document.getElementById('sourceProcedural').addEventListener('click', () => {
+        params.source = 'procedural';
+        document.getElementById('sourceProcedural').classList.add('active');
+        document.getElementById('sourceImage').classList.remove('active');
+        document.getElementById('image-input-section').style.display = 'none';
+        document.getElementById('procedural-input-section').style.display = 'block';
+        generateProceduralHeightMap();
+        regenerate();
+      });
+
+      // Image upload
+      setupImageUpload();
+
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = CanvasLayout.getSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+        if (params.source === 'procedural') {
+          generateProceduralHeightMap();
+        }
+        queueRegenerate();
+      });
+
+      // Color inputs
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        queueRegenerate();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        queueRegenerate();
+      });
+
+      // Range inputs with value display
+      const rangeInputs = [
+        'contourLevels', 'minValue', 'maxValue', 'smoothing', 'simplification',
+        'majorInterval', 'majorWeight', 'minorWeight',
+        'noiseScale', 'octaves', 'persistence', 'peakCount'
+      ];
+
+      rangeInputs.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('input', (e) => {
+            params[id] = parseFloat(e.target.value);
+            document.getElementById(id + '-value').textContent = e.target.value;
+            if (params.source === 'procedural' && ['noiseScale', 'octaves', 'persistence', 'peakCount', 'heightMapType'].includes(id)) {
+              generateProceduralHeightMap();
+            }
+            queueRegenerate();
+          });
+        }
+      });
+
+      // Select inputs
+      ['heightMapType'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', (e) => {
+            params[id] = e.target.value;
+            if (params.source === 'procedural') {
+              generateProceduralHeightMap();
+            }
+            queueRegenerate();
+          });
+        }
+      });
+
+      // Checkbox inputs
+      ['invertBrightness', 'adaptiveDensity', 'showOriginal', 'showContours', 'autoRegenerate'].forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('change', (e) => {
+            params[id] = e.target.checked;
+            if (id === 'showOriginal' || id === 'showContours') {
+              redraw();
+            } else if (id !== 'autoRegenerate') {
+              queueRegenerate();
+            }
+          });
+        }
+      });
+
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function setupImageUpload() {
+      const uploadArea = document.getElementById('image-upload-area');
+      const fileInput = document.getElementById('imageUpload');
+
+      uploadArea.addEventListener('click', () => fileInput.click());
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          loadImageFile(e.target.files[0]);
+        }
+      });
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+          loadImageFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function loadImageFile(file) {
+      if (!file.type.match('image.*')) {
+        showStatus('Please upload an image file', 'error');
+        return;
+      }
+
+      showStatus('Loading image...', 'processing');
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result,
+          (loadedImg) => {
+            img = loadedImg;
+            showStatus(`Image loaded: ${loadedImg.width}x${loadedImg.height}px`, 'success');
+            params.source = 'image';
+            document.getElementById('sourceImage').classList.add('active');
+            document.getElementById('sourceProcedural').classList.remove('active');
+            document.getElementById('image-input-section').style.display = 'block';
+            document.getElementById('procedural-input-section').style.display = 'none';
+            regenerate();
+          },
+          (error) => {
+            showStatus('Failed to load image', 'error');
+            console.error('Image load error:', error);
+          }
+        );
+      };
+      reader.onerror = () => showStatus('Failed to read file', 'error');
+      reader.readAsDataURL(file);
+    }
+
+    let regenTimer;
+    function queueRegenerate() {
+      if (!params.autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(regenerate, 300);
+    }
+
+    function generateProceduralHeightMap() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      heightMap = [];
+
+      noiseSeed(params.seed);
+      randomSeed(params.seed);
+
+      // Generate peak positions for 'peaks' mode
+      let peaks = [];
+      if (params.heightMapType === 'peaks') {
+        for (let i = 0; i < params.peakCount; i++) {
+          peaks.push({
+            x: random(0.1, 0.9) * size.width,
+            y: random(0.1, 0.9) * size.height,
+            strength: random(0.5, 1.0),
+            radius: random(0.1, 0.4) * min(size.width, size.height)
+          });
+        }
+      }
+
+      for (let y = 0; y < size.height; y++) {
+        heightMap[y] = [];
+        for (let x = 0; x < size.width; x++) {
+          let value = 0;
+
+          switch (params.heightMapType) {
+            case 'perlin':
+              value = fractalNoise(x, y, params.noiseScale, params.octaves, params.persistence);
+              break;
+
+            case 'simplex':
+              // Simplex-like using p5's noise with offset
+              value = fractalNoise(x + 1000, y + 1000, params.noiseScale, params.octaves, params.persistence);
+              value = (value + fractalNoise(x * 1.5, y * 1.5, params.noiseScale * 0.7, params.octaves, params.persistence)) / 2;
+              break;
+
+            case 'radial':
+              const cx = size.width / 2;
+              const cy = size.height / 2;
+              const maxDist = dist(0, 0, cx, cy);
+              const d = dist(x, y, cx, cy);
+              value = 1 - (d / maxDist);
+              // Add some noise variation
+              value += fractalNoise(x, y, params.noiseScale * 2, 2, 0.5) * 0.3;
+              value = constrain(value, 0, 1);
+              break;
+
+            case 'peaks':
+              value = 0;
+              for (let peak of peaks) {
+                const pd = dist(x, y, peak.x, peak.y);
+                const influence = peak.strength * exp(-(pd * pd) / (2 * peak.radius * peak.radius));
+                value = max(value, influence);
+              }
+              // Add subtle noise
+              value += fractalNoise(x, y, params.noiseScale, 2, 0.5) * 0.2;
+              value = constrain(value, 0, 1);
+              break;
+
+            case 'ridged':
+              let ridged = fractalNoise(x, y, params.noiseScale, params.octaves, params.persistence);
+              ridged = abs(ridged - 0.5) * 2; // Create ridges
+              ridged = 1 - ridged; // Invert for peaks at ridges
+              value = pow(ridged, 2);
+              break;
+
+            case 'terraces':
+              value = fractalNoise(x, y, params.noiseScale, params.octaves, params.persistence);
+              // Quantize to create terraces
+              const terraceCount = 8;
+              value = floor(value * terraceCount) / terraceCount;
+              break;
+          }
+
+          heightMap[y][x] = value * 255;
+        }
+      }
+    }
+
+    function fractalNoise(x, y, scale, octaves, persistence) {
+      let total = 0;
+      let frequency = 1;
+      let amplitude = 1;
+      let maxValue = 0;
+
+      for (let i = 0; i < octaves; i++) {
+        total += noise(x * scale * frequency, y * scale * frequency) * amplitude;
+        maxValue += amplitude;
+        amplitude *= persistence;
+        frequency *= 2;
+      }
+
+      return total / maxValue;
+    }
+
+    function getHeightMapValue(x, y) {
+      if (params.source === 'image' && img) {
+        // Sample from image
+        const imgX = constrain(floor(map(x, 0, width, 0, img.width)), 0, img.width - 1);
+        const imgY = constrain(floor(map(y, 0, height, 0, img.height)), 0, img.height - 1);
+        const idx = (imgY * img.width + imgX) * 4;
+        const r = img.pixels[idx];
+        const g = img.pixels[idx + 1];
+        const b = img.pixels[idx + 2];
+        return (r + g + b) / 3;
+      } else if (params.source === 'procedural' && heightMap.length > 0) {
+        const hy = constrain(floor(y), 0, heightMap.length - 1);
+        const hx = constrain(floor(x), 0, (heightMap[hy] ? heightMap[hy].length - 1 : 0));
+        return heightMap[hy] ? heightMap[hy][hx] : 128;
+      }
+      return 128;
+    }
+
+    function regenerate() {
+      if (processing) return;
+
+      if (params.source === 'image' && !img) {
+        showStatus('Please upload an image first', 'error');
+        return;
+      }
+
+      processing = true;
+      showStatus('Extracting contours...', 'processing');
+
+      // Set seeds
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      document.getElementById('seed-display').textContent = params.seed;
+
+      // Load image pixels if needed
+      if (params.source === 'image' && img) {
+        img.loadPixels();
+      }
+
+      // Create smoothed height field
+      const fieldWidth = Math.ceil(width / 2);
+      const fieldHeight = Math.ceil(height / 2);
+      let field = [];
+
+      for (let y = 0; y < fieldHeight; y++) {
+        field[y] = [];
+        for (let x = 0; x < fieldWidth; x++) {
+          let sum = 0;
+          let count = 0;
+          const radius = params.smoothing;
+
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const sx = (x * 2 + dx);
+              const sy = (y * 2 + dy);
+              if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
+                sum += getHeightMapValue(sx, sy);
+                count++;
+              }
+            }
+          }
+
+          let value = count > 0 ? sum / count : 128;
+
+          if (params.invertBrightness) {
+            value = 255 - value;
+          }
+
+          field[y][x] = value;
+        }
+      }
+
+      // Generate contour levels
+      let levels = [];
+      const range = params.maxValue - params.minValue;
+
+      if (params.adaptiveDensity) {
+        // Calculate gradient magnitude for adaptive density
+        let gradients = [];
+        let maxGrad = 0;
+
+        for (let y = 1; y < fieldHeight - 1; y++) {
+          for (let x = 1; x < fieldWidth - 1; x++) {
+            const gx = field[y][x + 1] - field[y][x - 1];
+            const gy = field[y + 1][x] - field[y - 1][x];
+            const grad = sqrt(gx * gx + gy * gy);
+            gradients.push({ y, x, grad });
+            maxGrad = max(maxGrad, grad);
+          }
+        }
+
+        // Create adaptive levels based on gradient distribution
+        const baseInterval = range / params.contourLevels;
+        for (let i = 0; i <= params.contourLevels; i++) {
+          levels.push(params.minValue + i * baseInterval);
+        }
+
+        // Add extra levels in high-gradient areas
+        gradients.sort((a, b) => b.grad - a.grad);
+        const topGradients = gradients.slice(0, Math.floor(gradients.length * 0.1));
+        topGradients.forEach(g => {
+          const val = field[g.y][g.x];
+          if (val >= params.minValue && val <= params.maxValue) {
+            // Add nearby levels
+            const nearby = baseInterval * 0.5;
+            if (!levels.includes(val)) {
+              levels.push(val);
+            }
+          }
+        });
+
+        levels.sort((a, b) => a - b);
+        // Remove duplicates
+        levels = [...new Set(levels.map(l => Math.round(l * 10) / 10))];
+      } else {
+        // Uniform distribution
+        for (let i = 0; i <= params.contourLevels; i++) {
+          levels.push(params.minValue + (i / params.contourLevels) * range);
+        }
+      }
+
+      // Extract contours using Marching Squares
+      contours = [];
+
+      levels.forEach((level, levelIndex) => {
+        const levelContours = marchingSquares(field, level, fieldWidth, fieldHeight);
+
+        levelContours.forEach(contourPoints => {
+          if (contourPoints.length >= 2) {
+            // Apply simplification
+            const simplified = simplifyPath(contourPoints, params.simplification);
+
+            if (simplified.length >= 2) {
+              const isMajor = (levelIndex % params.majorInterval) === 0;
+              contours.push({
+                points: simplified,
+                level: level,
+                isMajor: isMajor,
+                levelIndex: levelIndex
+              });
+            }
+          }
+        });
+      });
+
+      // Update stats
+      updateStats();
+
+      processing = false;
+      showStatus('Contours generated!', 'success');
+      redraw();
+    }
+
+    // Marching Squares algorithm implementation
+    function marchingSquares(field, threshold, fieldWidth, fieldHeight) {
+      const contours = [];
+      const visited = new Set();
+
+      // Edge table for marching squares
+      const edgeTable = [
+        [], // 0
+        [[0, 3]], // 1
+        [[0, 1]], // 2
+        [[1, 3]], // 3
+        [[1, 2]], // 4
+        [[0, 1], [2, 3]], // 5 (saddle)
+        [[0, 2]], // 6
+        [[2, 3]], // 7
+        [[2, 3]], // 8
+        [[0, 2]], // 9
+        [[0, 3], [1, 2]], // 10 (saddle)
+        [[1, 2]], // 11
+        [[1, 3]], // 12
+        [[0, 1]], // 13
+        [[0, 3]], // 14
+        [] // 15
+      ];
+
+      // Get cell configuration
+      function getCellConfig(x, y) {
+        let config = 0;
+        if (field[y][x] >= threshold) config |= 1;
+        if (field[y][x + 1] >= threshold) config |= 2;
+        if (field[y + 1][x + 1] >= threshold) config |= 4;
+        if (field[y + 1][x] >= threshold) config |= 8;
+        return config;
+      }
+
+      // Linear interpolation for edge crossing
+      function interpolate(v1, v2, x1, y1, x2, y2) {
+        if (abs(v1 - v2) < 0.0001) return { x: (x1 + x2) / 2, y: (y1 + y2) / 2 };
+        const t = (threshold - v1) / (v2 - v1);
+        return {
+          x: x1 + t * (x2 - x1),
+          y: y1 + t * (y2 - y1)
+        };
+      }
+
+      // Get edge point
+      function getEdgePoint(x, y, edge) {
+        const v00 = field[y][x];
+        const v10 = field[y][x + 1];
+        const v11 = field[y + 1][x + 1];
+        const v01 = field[y + 1][x];
+
+        switch (edge) {
+          case 0: return interpolate(v00, v10, x, y, x + 1, y);
+          case 1: return interpolate(v10, v11, x + 1, y, x + 1, y + 1);
+          case 2: return interpolate(v01, v11, x, y + 1, x + 1, y + 1);
+          case 3: return interpolate(v00, v01, x, y, x, y + 1);
+        }
+      }
+
+      // Trace a single contour
+      function traceContour(startX, startY, startEdge) {
+        const points = [];
+        let x = startX, y = startY;
+        let prevEdge = -1;
+        const maxIterations = fieldWidth * fieldHeight * 4;
+        let iterations = 0;
+
+        while (iterations < maxIterations) {
+          const key = `${x},${y}`;
+          const config = getCellConfig(x, y);
+          const edges = edgeTable[config];
+
+          if (edges.length === 0) break;
+
+          // Find the exit edge
+          let exitEdge = -1;
+          for (let e of edges) {
+            const [e1, e2] = e;
+            if (e1 !== prevEdge && e2 !== prevEdge) {
+              exitEdge = (e1 === (prevEdge + 2) % 4) ? e2 : e1;
+              break;
+            }
+          }
+
+          if (exitEdge === -1) {
+            exitEdge = edges[0][0] === prevEdge ? edges[0][1] : edges[0][0];
+          }
+
+          const pt = getEdgePoint(x, y, exitEdge);
+          points.push({ x: pt.x * 2, y: pt.y * 2 }); // Scale back to canvas size
+
+          // Move to next cell
+          let nextX = x, nextY = y;
+          let nextPrevEdge = exitEdge;
+
+          switch (exitEdge) {
+            case 0: nextY--; nextPrevEdge = 2; break;
+            case 1: nextX++; nextPrevEdge = 3; break;
+            case 2: nextY++; nextPrevEdge = 0; break;
+            case 3: nextX--; nextPrevEdge = 1; break;
+          }
+
+          // Check if we've returned to start or gone out of bounds
+          if (nextX < 0 || nextX >= fieldWidth - 1 || nextY < 0 || nextY >= fieldHeight - 1) break;
+          if (nextX === startX && nextY === startY && points.length > 2) break;
+
+          x = nextX;
+          y = nextY;
+          prevEdge = nextPrevEdge;
+          iterations++;
+        }
+
+        return points;
+      }
+
+      // Find all contours at this level
+      for (let y = 0; y < fieldHeight - 1; y++) {
+        for (let x = 0; x < fieldWidth - 1; x++) {
+          const config = getCellConfig(x, y);
+          const edges = edgeTable[config];
+
+          if (edges.length > 0) {
+            const key = `${x},${y},${config}`;
+            if (!visited.has(key)) {
+              visited.add(key);
+              const points = traceContour(x, y, edges[0][0]);
+              if (points.length >= 3) {
+                contours.push(points);
+              }
+            }
+          }
+        }
+      }
+
+      return contours;
+    }
+
+    // Ramer-Douglas-Peucker line simplification
+    function simplifyPath(points, tolerance) {
+      if (points.length < 3 || tolerance <= 0) return points;
+
+      function perpendicularDistance(point, lineStart, lineEnd) {
+        const dx = lineEnd.x - lineStart.x;
+        const dy = lineEnd.y - lineStart.y;
+        const mag = sqrt(dx * dx + dy * dy);
+
+        if (mag === 0) return dist(point.x, point.y, lineStart.x, lineStart.y);
+
+        const u = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / (mag * mag);
+        const closestX = lineStart.x + u * dx;
+        const closestY = lineStart.y + u * dy;
+
+        return dist(point.x, point.y, closestX, closestY);
+      }
+
+      function simplifySection(start, end) {
+        let maxDist = 0;
+        let maxIndex = 0;
+
+        for (let i = start + 1; i < end; i++) {
+          const d = perpendicularDistance(points[i], points[start], points[end]);
+          if (d > maxDist) {
+            maxDist = d;
+            maxIndex = i;
+          }
+        }
+
+        if (maxDist > tolerance) {
+          const left = simplifySection(start, maxIndex);
+          const right = simplifySection(maxIndex, end);
+          return [...left.slice(0, -1), ...right];
+        } else {
+          return [points[start], points[end]];
+        }
+      }
+
+      return simplifySection(0, points.length - 1);
+    }
+
+    function draw() {
+      background(params.bgColor);
+
+      // Show original/height map if enabled
+      if (params.showOriginal) {
+        if (params.source === 'image' && img) {
+          push();
+          tint(255, 100);
+          image(img, 0, 0, width, height);
+          pop();
+        } else if (params.source === 'procedural' && heightMap.length > 0) {
+          push();
+          loadPixels();
+          for (let y = 0; y < height; y++) {
+            for (let x = 0; x < width; x++) {
+              const hy = constrain(floor(y), 0, heightMap.length - 1);
+              const hx = constrain(floor(x), 0, heightMap[hy].length - 1);
+              const val = heightMap[hy][hx];
+              const idx = (y * width + x) * 4;
+              pixels[idx] = val;
+              pixels[idx + 1] = val;
+              pixels[idx + 2] = val;
+              pixels[idx + 3] = 100;
+            }
+          }
+          updatePixels();
+          pop();
+        }
+      }
+
+      // Draw contours
+      if (params.showContours && contours.length > 0) {
+        noFill();
+
+        contours.forEach(contour => {
+          const weight = contour.isMajor ? params.majorWeight : params.minorWeight;
+          strokeWeight(weight);
+          stroke(params.strokeColor);
+
+          beginShape();
+          contour.points.forEach(pt => {
+            vertex(pt.x, pt.y);
+          });
+          endShape();
+        });
+      }
+
+      noLoop();
+    }
+
+    function updateStats() {
+      let totalSegments = 0;
+      let totalLength = 0;
+
+      contours.forEach(contour => {
+        totalSegments += contour.points.length - 1;
+        for (let i = 1; i < contour.points.length; i++) {
+          totalLength += dist(
+            contour.points[i - 1].x, contour.points[i - 1].y,
+            contour.points[i].x, contour.points[i].y
+          );
+        }
+      });
+
+      // Convert pixels to mm (assuming 96 DPI)
+      const lengthMM = (totalLength * 25.4 / 96).toFixed(1);
+
+      document.getElementById('lineCountStat').textContent = contours.length;
+      document.getElementById('segmentCountStat').textContent = totalSegments;
+      document.getElementById('pathLengthStat').textContent = lengthMM;
+      document.getElementById('stats').style.display = 'block';
+    }
+
+    function updateUIFromParams() {
+      // Update source toggle
+      if (params.source === 'image') {
+        document.getElementById('sourceImage').classList.add('active');
+        document.getElementById('sourceProcedural').classList.remove('active');
+        document.getElementById('image-input-section').style.display = 'block';
+        document.getElementById('procedural-input-section').style.display = 'none';
+      } else {
+        document.getElementById('sourceProcedural').classList.add('active');
+        document.getElementById('sourceImage').classList.remove('active');
+        document.getElementById('image-input-section').style.display = 'none';
+        document.getElementById('procedural-input-section').style.display = 'block';
+      }
+
+      // Update all inputs
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const valueDisplay = document.getElementById(key + '-value');
+            if (valueDisplay) valueDisplay.textContent = params[key];
+          } else if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else if (element.type === 'color' || element.tagName === 'SELECT') {
+            element.value = params[key];
+          }
+        }
+      });
+
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Export functions
+    function exportSVG() {
+      if (contours.length === 0) {
+        showStatus('No contours to export', 'error');
+        return;
+      }
+
+      // Build SVG manually for precise control
+      let svgPaths = '';
+
+      contours.forEach(contour => {
+        if (contour.points.length < 2) return;
+
+        const weight = contour.isMajor ? params.majorWeight : params.minorWeight;
+        let d = `M ${contour.points[0].x.toFixed(2)} ${contour.points[0].y.toFixed(2)}`;
+
+        for (let i = 1; i < contour.points.length; i++) {
+          d += ` L ${contour.points[i].x.toFixed(2)} ${contour.points[i].y.toFixed(2)}`;
+        }
+
+        svgPaths += `  <path d="${d}" stroke="${params.strokeColor}" stroke-width="${weight}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>\n`;
+      });
+
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="100%" height="100%" fill="${params.bgColor}"/>
+${svgPaths}</svg>`;
+
+      TSExport.downloadSVG(svgContent, `contour-lines-${params.seed}`);
+    }
+
+    function exportPNG() {
+      if (contours.length === 0) {
+        showStatus('No contours to export', 'error');
+        return;
+      }
+
+      const canvas = document.querySelector('#canvas-container canvas');
+      if (canvas) {
+        TSExport.downloadPNG(canvas, `contour-lines-${params.seed}`, { scale: 2 });
+      }
+    }
+
+    function exportGIF() {
+      if (params.source !== 'procedural') {
+        showStatus('GIF export only available for procedural mode', 'error');
+        return;
+      }
+
+      showStatus('Generating GIF frames...', 'processing');
+
+      const originalSeed = params.seed;
+      const frames = [];
+      const totalFrames = 30;
+
+      // Create offscreen canvas
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = width;
+      offCanvas.height = height;
+      const ctx = offCanvas.getContext('2d');
+
+      for (let f = 0; f < totalFrames; f++) {
+        params.seed = originalSeed + f * 100;
+        generateProceduralHeightMap();
+
+        // Regenerate contours (simplified inline version)
+        noiseSeed(params.seed);
+        regenerateContoursOnly();
+
+        // Draw frame
+        ctx.fillStyle = params.bgColor;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = params.strokeColor;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        contours.forEach(contour => {
+          if (contour.points.length < 2) return;
+
+          ctx.lineWidth = contour.isMajor ? params.majorWeight : params.minorWeight;
+          ctx.beginPath();
+          ctx.moveTo(contour.points[0].x, contour.points[0].y);
+
+          for (let i = 1; i < contour.points.length; i++) {
+            ctx.lineTo(contour.points[i].x, contour.points[i].y);
+          }
+          ctx.stroke();
+        });
+
+        // Clone canvas for GIF frame
+        const frameCanvas = document.createElement('canvas');
+        frameCanvas.width = width;
+        frameCanvas.height = height;
+        frameCanvas.getContext('2d').drawImage(offCanvas, 0, 0);
+        frames.push(frameCanvas);
+      }
+
+      // Restore original seed
+      params.seed = originalSeed;
+      generateProceduralHeightMap();
+      regenerate();
+
+      // Create GIF
+      TSExport.downloadGIF(frames, `contour-lines-${params.seed}`, { fps: 10 })
+        .then(() => showStatus('GIF exported!', 'success'))
+        .catch(err => showStatus('GIF export failed: ' + err.message, 'error'));
+    }
+
+    // Simplified contour regeneration for GIF frames (no status updates)
+    function regenerateContoursOnly() {
+      const fieldWidth = Math.ceil(width / 2);
+      const fieldHeight = Math.ceil(height / 2);
+      let field = [];
+
+      for (let y = 0; y < fieldHeight; y++) {
+        field[y] = [];
+        for (let x = 0; x < fieldWidth; x++) {
+          let sum = 0, count = 0;
+          const radius = params.smoothing;
+
+          for (let dy = -radius; dy <= radius; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const sx = (x * 2 + dx);
+              const sy = (y * 2 + dy);
+              if (sx >= 0 && sx < width && sy >= 0 && sy < height) {
+                sum += getHeightMapValue(sx, sy);
+                count++;
+              }
+            }
+          }
+
+          let value = count > 0 ? sum / count : 128;
+          if (params.invertBrightness) value = 255 - value;
+          field[y][x] = value;
+        }
+      }
+
+      let levels = [];
+      const range = params.maxValue - params.minValue;
+      for (let i = 0; i <= params.contourLevels; i++) {
+        levels.push(params.minValue + (i / params.contourLevels) * range);
+      }
+
+      contours = [];
+      levels.forEach((level, levelIndex) => {
+        const levelContours = marchingSquares(field, level, fieldWidth, fieldHeight);
+        levelContours.forEach(contourPoints => {
+          if (contourPoints.length >= 2) {
+            const simplified = simplifyPath(contourPoints, params.simplification);
+            if (simplified.length >= 2) {
+              const isMajor = (levelIndex % params.majorInterval) === 0;
+              contours.push({
+                points: simplified,
+                level: level,
+                isMajor: isMajor,
+                levelIndex: levelIndex
+              });
+            }
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

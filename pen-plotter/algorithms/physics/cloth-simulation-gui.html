@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Cloth/String Simulation - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../shared/gif-exporter.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: var(--ts-font-mono);
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 1px solid var(--ts-border-subtle);
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: var(--ts-accent-primary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-default);
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--ts-text-primary);
+      border-radius: 50%;
+      border: 2px solid var(--ts-accent-primary);
+      cursor: pointer;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      font-size: 0.85rem;
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: 0 0 20px var(--ts-glow-primary);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-accent-primary);
+      box-shadow: none;
+    }
+    .preset-btn {
+      background: var(--ts-accent-tertiary);
+    }
+    .preset-btn:hover {
+      background: #9b88ff;
+    }
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+      background: var(--ts-bg-deep);
+      padding: 2px 8px;
+      border-radius: 4px;
+      min-width: 48px;
+      text-align: center;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checkbox-container input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.85);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      border: 1px solid var(--ts-border-subtle);
+    }
+    #info-display div {
+      margin: 4px 0;
+    }
+    #info-display span {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+    .export-btn {
+      background: var(--ts-accent-secondary);
+    }
+    .export-btn:hover {
+      background: #ffaa33;
+    }
+    #gif-progress {
+      display: none;
+      background: var(--ts-bg-control);
+      padding: 12px;
+      border-radius: 6px;
+      margin-top: 10px;
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ts-accent-primary), var(--ts-accent-tertiary));
+      transition: width 0.3s;
+    }
+    .color-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-input-group input[type="color"] {
+      width: 48px;
+      height: 36px;
+      border: 2px solid var(--ts-border-default);
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      padding: 2px;
+    }
+    .color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    .color-input-group input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-group button {
+      margin: 0;
+    }
+    .interaction-hint {
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+      margin-top: 8px;
+      padding: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      border-left: 2px solid var(--ts-accent-primary);
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Particles: <span id="particle-count">0</span></div>
+      <div>Constraints: <span id="constraint-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+      <div>State: <span id="sim-state">Running</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Cloth/String Simulation</h2>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square">Square (800x800)</option>
+          <option value="a4">A4 Portrait</option>
+          <option value="a3" selected>A3 Portrait</option>
+          <option value="a4-landscape">A4 Landscape</option>
+          <option value="a3-landscape">A3 Landscape</option>
+          <option value="letter">US Letter</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <div class="btn-group">
+        <button id="play-pause">Pause</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+      <button id="step" class="secondary">Step Forward</button>
+      <div class="interaction-hint">
+        Click and drag particles to interact. Hold SHIFT to pin/unpin points.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Simulation Mode</h3>
+      <div class="control">
+        <label>Mode:</label>
+        <select id="simMode">
+          <option value="string">Single String/Rope</option>
+          <option value="cloth" selected>Cloth Grid (NxM)</option>
+          <option value="net">Net/Mesh</option>
+          <option value="curtain">Hanging Curtain</option>
+          <option value="hammock">Hammock Shape</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Width (particles): <span class="value" id="gridWidth-val">20</span></label>
+        <input type="range" id="gridWidth" min="2" max="50" value="20">
+      </div>
+      <div class="control">
+        <label>Height (particles): <span class="value" id="gridHeight-val">15</span></label>
+        <input type="range" id="gridHeight" min="2" max="50" value="15">
+      </div>
+      <div class="control">
+        <label>Rest Length (spacing): <span class="value" id="restLength-val">25</span></label>
+        <input type="range" id="restLength" min="5" max="60" step="1" value="25">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Physics</h3>
+      <div class="control">
+        <label>Gravity: <span class="value" id="gravity-val">0.5</span></label>
+        <input type="range" id="gravity" min="0" max="2" step="0.05" value="0.5">
+      </div>
+      <div class="control">
+        <label>Wind Strength: <span class="value" id="windStrength-val">0</span></label>
+        <input type="range" id="windStrength" min="0" max="2" step="0.05" value="0">
+      </div>
+      <div class="control">
+        <label>Wind Direction: <span class="value" id="windDirection-val">0</span>deg</label>
+        <input type="range" id="windDirection" min="0" max="360" step="5" value="0">
+      </div>
+      <div class="control">
+        <label>Stiffness (iterations): <span class="value" id="stiffness-val">5</span></label>
+        <input type="range" id="stiffness" min="1" max="20" value="5">
+      </div>
+      <div class="control">
+        <label>Damping: <span class="value" id="damping-val">0.99</span></label>
+        <input type="range" id="damping" min="0.9" max="1" step="0.005" value="0.99">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Fixed Points</h3>
+      <div class="control">
+        <label>Pin Mode:</label>
+        <select id="pinMode">
+          <option value="top">Top Edge</option>
+          <option value="corners">Corners Only</option>
+          <option value="topCorners">Top Corners</option>
+          <option value="sides">Left & Right Edges</option>
+          <option value="hammock">Hammock (4 corners)</option>
+          <option value="none">No Pins (free fall)</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="enableTearing">
+        <label for="enableTearing">Enable Tearing</label>
+      </div>
+      <div class="control">
+        <label>Tear Threshold: <span class="value" id="tearThreshold-val">80</span></label>
+        <input type="range" id="tearThreshold" min="20" max="200" value="80">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Draw Mode:</label>
+        <select id="drawMode">
+          <option value="mesh">Mesh Lines (Both)</option>
+          <option value="horizontal">Horizontal Only</option>
+          <option value="vertical">Vertical Only</option>
+          <option value="fill">Fill Quads</option>
+          <option value="points">Points Only</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Thickness: <span class="value" id="lineThickness-val">1</span></label>
+        <input type="range" id="lineThickness" min="0.5" max="5" step="0.5" value="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showPins" checked>
+        <label for="showPins">Show Pinned Points</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showStress">
+        <label for="showStress">Show Stress (color)</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Color Settings</h3>
+      <div class="control">
+        <label>Background:</label>
+        <div class="color-input-group">
+          <input type="color" id="bgColor" value="#ffffff">
+          <span id="bgColor-hex">#ffffff</span>
+        </div>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <div class="color-input-group">
+          <input type="color" id="strokeColor" value="#000000">
+          <span id="strokeColor-hex">#000000</span>
+        </div>
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Quick Presets</h3>
+      <div class="btn-group">
+        <button class="preset-btn" onclick="loadQuickPreset('string')">Rope</button>
+        <button class="preset-btn" onclick="loadQuickPreset('cloth')">Cloth</button>
+        <button class="preset-btn" onclick="loadQuickPreset('net')">Net</button>
+        <button class="preset-btn" onclick="loadQuickPreset('curtain')">Curtain</button>
+        <button class="preset-btn" onclick="loadQuickPreset('hammock')">Hammock</button>
+        <button class="preset-btn" onclick="loadQuickPreset('flag')">Flag</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="btn-group">
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============================================
+    // PARTICLE CLASS - Verlet Integration
+    // ============================================
+    class Particle {
+      constructor(x, y, pinned = false) {
+        this.x = x;
+        this.y = y;
+        this.oldX = x;
+        this.oldY = y;
+        this.pinned = pinned;
+        this.mass = 1;
+      }
+
+      update(gravity, damping, wind) {
+        if (this.pinned) return;
+
+        // Verlet integration
+        const vx = (this.x - this.oldX) * damping;
+        const vy = (this.y - this.oldY) * damping;
+
+        this.oldX = this.x;
+        this.oldY = this.y;
+
+        this.x += vx + wind.x;
+        this.y += vy + gravity + wind.y;
+      }
+
+      constrainToBounds(w, h, margin = 10) {
+        if (this.pinned) return;
+
+        if (this.x < margin) {
+          this.x = margin;
+          this.oldX = this.x;
+        }
+        if (this.x > w - margin) {
+          this.x = w - margin;
+          this.oldX = this.x;
+        }
+        if (this.y < margin) {
+          this.y = margin;
+          this.oldY = this.y;
+        }
+        if (this.y > h - margin) {
+          this.y = h - margin;
+          this.oldY = this.y;
+        }
+      }
+    }
+
+    // ============================================
+    // CONSTRAINT CLASS - Distance Constraint
+    // ============================================
+    class Constraint {
+      constructor(p1, p2, restLength = null) {
+        this.p1 = p1;
+        this.p2 = p2;
+        this.restLength = restLength !== null ? restLength : this.getDistance();
+        this.active = true;
+      }
+
+      getDistance() {
+        const dx = this.p2.x - this.p1.x;
+        const dy = this.p2.y - this.p1.y;
+        return Math.sqrt(dx * dx + dy * dy);
+      }
+
+      getStress() {
+        return Math.abs(this.getDistance() - this.restLength) / this.restLength;
+      }
+
+      satisfy() {
+        if (!this.active) return;
+
+        const dx = this.p2.x - this.p1.x;
+        const dy = this.p2.y - this.p1.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist === 0) return;
+
+        const diff = (this.restLength - dist) / dist;
+        const offsetX = dx * diff * 0.5;
+        const offsetY = dy * diff * 0.5;
+
+        if (!this.p1.pinned) {
+          this.p1.x -= offsetX;
+          this.p1.y -= offsetY;
+        }
+        if (!this.p2.pinned) {
+          this.p2.x += offsetX;
+          this.p2.y += offsetY;
+        }
+      }
+
+      checkTear(threshold) {
+        if (!this.active) return false;
+        const dist = this.getDistance();
+        if (dist > threshold) {
+          this.active = false;
+          return true;
+        }
+        return false;
+      }
+    }
+
+    // ============================================
+    // CLOTH SIMULATION CLASS
+    // ============================================
+    class ClothSimulation {
+      constructor() {
+        this.particles = [];
+        this.constraints = [];
+        this.gridWidth = 20;
+        this.gridHeight = 15;
+        this.horizontalConstraints = [];
+        this.verticalConstraints = [];
+      }
+
+      createString(startX, startY, numParticles, restLength, pinStart = true, pinEnd = false) {
+        this.particles = [];
+        this.constraints = [];
+        this.horizontalConstraints = [];
+        this.verticalConstraints = [];
+        this.gridWidth = numParticles;
+        this.gridHeight = 1;
+
+        for (let i = 0; i < numParticles; i++) {
+          const pinned = (i === 0 && pinStart) || (i === numParticles - 1 && pinEnd);
+          const p = new Particle(startX + i * restLength, startY, pinned);
+          this.particles.push(p);
+
+          if (i > 0) {
+            const c = new Constraint(this.particles[i - 1], this.particles[i], restLength);
+            this.constraints.push(c);
+            this.horizontalConstraints.push(c);
+          }
+        }
+      }
+
+      createGrid(startX, startY, gridW, gridH, restLength, pinMode = 'top') {
+        this.particles = [];
+        this.constraints = [];
+        this.horizontalConstraints = [];
+        this.verticalConstraints = [];
+        this.gridWidth = gridW;
+        this.gridHeight = gridH;
+
+        // Create particles
+        for (let y = 0; y < gridH; y++) {
+          for (let x = 0; x < gridW; x++) {
+            const px = startX + x * restLength;
+            const py = startY + y * restLength;
+            const pinned = this.shouldPin(x, y, gridW, gridH, pinMode);
+            this.particles.push(new Particle(px, py, pinned));
+          }
+        }
+
+        // Create constraints
+        for (let y = 0; y < gridH; y++) {
+          for (let x = 0; x < gridW; x++) {
+            const idx = y * gridW + x;
+
+            // Horizontal constraint
+            if (x < gridW - 1) {
+              const c = new Constraint(this.particles[idx], this.particles[idx + 1], restLength);
+              this.constraints.push(c);
+              this.horizontalConstraints.push(c);
+            }
+
+            // Vertical constraint
+            if (y < gridH - 1) {
+              const c = new Constraint(this.particles[idx], this.particles[idx + gridW], restLength);
+              this.constraints.push(c);
+              this.verticalConstraints.push(c);
+            }
+          }
+        }
+      }
+
+      createNet(startX, startY, gridW, gridH, restLength) {
+        // Create grid with diagonal constraints for more stability
+        this.createGrid(startX, startY, gridW, gridH, restLength, 'top');
+
+        // Add diagonal constraints for structural integrity
+        const diagLength = restLength * Math.SQRT2;
+        for (let y = 0; y < gridH - 1; y++) {
+          for (let x = 0; x < gridW - 1; x++) {
+            const idx = y * gridW + x;
+            // Diagonal \
+            this.constraints.push(new Constraint(
+              this.particles[idx],
+              this.particles[idx + gridW + 1],
+              diagLength
+            ));
+          }
+        }
+      }
+
+      createHammock(startX, startY, gridW, gridH, restLength) {
+        this.createGrid(startX, startY, gridW, gridH, restLength, 'hammock');
+      }
+
+      createCurtain(startX, startY, gridW, gridH, restLength) {
+        this.createGrid(startX, startY, gridW, gridH, restLength, 'top');
+      }
+
+      shouldPin(x, y, gridW, gridH, mode) {
+        switch (mode) {
+          case 'top':
+            return y === 0;
+          case 'corners':
+            return (x === 0 || x === gridW - 1) && (y === 0 || y === gridH - 1);
+          case 'topCorners':
+            return y === 0 && (x === 0 || x === gridW - 1);
+          case 'sides':
+            return x === 0 || x === gridW - 1;
+          case 'hammock':
+            return (x === 0 || x === gridW - 1) && (y === 0 || y === gridH - 1);
+          case 'none':
+            return false;
+          default:
+            return y === 0;
+        }
+      }
+
+      updatePinMode(mode) {
+        for (let y = 0; y < this.gridHeight; y++) {
+          for (let x = 0; x < this.gridWidth; x++) {
+            const idx = y * this.gridWidth + x;
+            if (idx < this.particles.length) {
+              this.particles[idx].pinned = this.shouldPin(x, y, this.gridWidth, this.gridHeight, mode);
+            }
+          }
+        }
+      }
+
+      update(gravity, damping, wind, iterations, enableTearing, tearThreshold, canvasW, canvasH) {
+        // Update particles
+        const windVec = {
+          x: wind.strength * Math.cos(wind.direction),
+          y: wind.strength * Math.sin(wind.direction)
+        };
+
+        // Add some noise to wind
+        const noiseAmount = wind.strength * 0.3;
+        windVec.x += (Math.random() - 0.5) * noiseAmount;
+        windVec.y += (Math.random() - 0.5) * noiseAmount;
+
+        for (const p of this.particles) {
+          p.update(gravity, damping, windVec);
+          p.constrainToBounds(canvasW, canvasH);
+        }
+
+        // Satisfy constraints multiple times for stiffness
+        for (let i = 0; i < iterations; i++) {
+          for (const c of this.constraints) {
+            c.satisfy();
+          }
+        }
+
+        // Check for tearing
+        if (enableTearing) {
+          for (const c of this.constraints) {
+            c.checkTear(tearThreshold);
+          }
+        }
+      }
+
+      getParticleAt(mx, my, radius = 20) {
+        let closest = null;
+        let minDist = radius;
+
+        for (const p of this.particles) {
+          const dx = p.x - mx;
+          const dy = p.y - my;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = p;
+          }
+        }
+
+        return closest;
+      }
+
+      getLineSegments(mode = 'mesh') {
+        const segments = [];
+
+        const addSegment = (c) => {
+          if (c.active) {
+            segments.push({
+              x1: c.p1.x,
+              y1: c.p1.y,
+              x2: c.p2.x,
+              y2: c.p2.y,
+              stress: c.getStress()
+            });
+          }
+        };
+
+        switch (mode) {
+          case 'horizontal':
+            this.horizontalConstraints.forEach(addSegment);
+            break;
+          case 'vertical':
+            this.verticalConstraints.forEach(addSegment);
+            break;
+          case 'mesh':
+          default:
+            this.constraints.forEach(addSegment);
+            break;
+        }
+
+        return segments;
+      }
+
+      getQuads() {
+        const quads = [];
+
+        if (this.gridHeight < 2) return quads;
+
+        for (let y = 0; y < this.gridHeight - 1; y++) {
+          for (let x = 0; x < this.gridWidth - 1; x++) {
+            const idx = y * this.gridWidth + x;
+            const p1 = this.particles[idx];
+            const p2 = this.particles[idx + 1];
+            const p3 = this.particles[idx + this.gridWidth + 1];
+            const p4 = this.particles[idx + this.gridWidth];
+
+            // Check if all connecting constraints are active
+            const h1 = this.horizontalConstraints.find(c =>
+              (c.p1 === p1 && c.p2 === p2) || (c.p1 === p2 && c.p2 === p1));
+            const h2 = this.horizontalConstraints.find(c =>
+              (c.p1 === p4 && c.p2 === p3) || (c.p1 === p3 && c.p2 === p4));
+            const v1 = this.verticalConstraints.find(c =>
+              (c.p1 === p1 && c.p2 === p4) || (c.p1 === p4 && c.p2 === p1));
+            const v2 = this.verticalConstraints.find(c =>
+              (c.p1 === p2 && c.p2 === p3) || (c.p1 === p3 && c.p2 === p2));
+
+            const allActive = (!h1 || h1.active) && (!h2 || h2.active) &&
+                              (!v1 || v1.active) && (!v2 || v2.active);
+
+            if (allActive) {
+              quads.push([p1, p2, p3, p4]);
+            }
+          }
+        }
+
+        return quads;
+      }
+    }
+
+    // ============================================
+    // GLOBAL VARIABLES
+    // ============================================
+    let cloth;
+    let isPaused = false;
+    let gifExporter;
+    let presetManager;
+    let draggedParticle = null;
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+
+    // Parameters
+    let params = {
+      paperSize: 'a3',
+      simMode: 'cloth',
+      gridWidth: 20,
+      gridHeight: 15,
+      restLength: 25,
+      gravity: 0.5,
+      windStrength: 0,
+      windDirection: 0,
+      stiffness: 5,
+      damping: 0.99,
+      pinMode: 'top',
+      enableTearing: false,
+      tearThreshold: 80,
+      drawMode: 'mesh',
+      lineThickness: 1,
+      showPins: true,
+      showStress: false,
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    canvasControls.bind(params);
+
+    // ============================================
+    // P5.JS SETUP
+    // ============================================
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      // Initialize cloth
+      cloth = new ClothSimulation();
+      initializeCloth();
+
+      // Setup event handlers for paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+        initializeCloth();
+      });
+
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 3,
+        quality: 10,
+        width: size.width,
+        height: size.height,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording'
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}`
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width =
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+        }
+      });
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'cloth-simulation',
+        container: '#preset-container',
+        onSave: () => ({ ...params }),
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          initializeCloth();
+        },
+        onRandomize: () => {
+          randomizeParams();
+          updateUIFromParams();
+          initializeCloth();
+        }
+      });
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+    }
+
+    function initializeCloth() {
+      const margin = 60;
+      const availWidth = width - margin * 2;
+      const availHeight = height - margin * 2;
+
+      // Calculate optimal starting position
+      const clothWidth = (params.gridWidth - 1) * params.restLength;
+      const clothHeight = (params.gridHeight - 1) * params.restLength;
+
+      const startX = margin + (availWidth - clothWidth) / 2;
+      const startY = margin + 20;
+
+      switch (params.simMode) {
+        case 'string':
+          cloth.createString(startX, height / 2, params.gridWidth, params.restLength, true, false);
+          break;
+        case 'cloth':
+          cloth.createGrid(startX, startY, params.gridWidth, params.gridHeight, params.restLength, params.pinMode);
+          break;
+        case 'net':
+          cloth.createNet(startX, startY, params.gridWidth, params.gridHeight, params.restLength);
+          break;
+        case 'curtain':
+          cloth.createCurtain(startX, startY, params.gridWidth, params.gridHeight, params.restLength);
+          break;
+        case 'hammock':
+          cloth.createHammock(startX, startY, params.gridWidth, params.gridHeight, params.restLength);
+          break;
+      }
+
+      updateInfoDisplay();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+    }
+
+    // ============================================
+    // P5.JS DRAW
+    // ============================================
+    function draw() {
+      // Background
+      background(params.bgColor);
+
+      // Update simulation
+      if (!isPaused) {
+        const wind = {
+          strength: params.windStrength,
+          direction: radians(params.windDirection)
+        };
+
+        cloth.update(
+          params.gravity,
+          params.damping,
+          wind,
+          params.stiffness,
+          params.enableTearing,
+          params.tearThreshold,
+          width,
+          height
+        );
+      }
+
+      // Draw cloth
+      if (params.drawMode === 'fill') {
+        drawQuads();
+      } else if (params.drawMode === 'points') {
+        drawPoints();
+      } else {
+        drawLines();
+      }
+
+      // Draw pinned points
+      if (params.showPins) {
+        drawPinnedPoints();
+      }
+
+      // Update info display
+      updateInfoDisplay();
+
+      // Capture GIF frame if recording
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.captureFrame();
+      }
+    }
+
+    function drawLines() {
+      const segments = cloth.getLineSegments(params.drawMode);
+
+      strokeWeight(params.lineThickness);
+      noFill();
+
+      for (const seg of segments) {
+        if (params.showStress) {
+          // Color based on stress
+          const stressColor = lerpColor(
+            color(params.strokeColor),
+            color(255, 0, 0),
+            constrain(seg.stress * 5, 0, 1)
+          );
+          stroke(stressColor);
+        } else {
+          stroke(params.strokeColor);
+        }
+
+        line(seg.x1, seg.y1, seg.x2, seg.y2);
+      }
+    }
+
+    function drawQuads() {
+      const quads = cloth.getQuads();
+
+      strokeWeight(params.lineThickness * 0.5);
+      stroke(params.strokeColor);
+
+      for (const quad of quads) {
+        // Calculate average stress for color
+        if (params.showStress) {
+          const avgY = (quad[0].y + quad[1].y + quad[2].y + quad[3].y) / 4;
+          const normalizedY = avgY / height;
+          const fillColor = lerpColor(
+            color(params.bgColor),
+            color(params.strokeColor),
+            normalizedY * 0.5
+          );
+          fill(fillColor);
+        } else {
+          // Gradient fill based on position
+          const avgY = (quad[0].y + quad[1].y + quad[2].y + quad[3].y) / 4;
+          const alpha = map(avgY, 0, height, 50, 200);
+          const c = color(params.strokeColor);
+          fill(red(c), green(c), blue(c), alpha);
+        }
+
+        beginShape();
+        vertex(quad[0].x, quad[0].y);
+        vertex(quad[1].x, quad[1].y);
+        vertex(quad[2].x, quad[2].y);
+        vertex(quad[3].x, quad[3].y);
+        endShape(CLOSE);
+      }
+    }
+
+    function drawPoints() {
+      noStroke();
+      fill(params.strokeColor);
+
+      for (const p of cloth.particles) {
+        const size = p.pinned ? 8 : 4;
+        ellipse(p.x, p.y, size);
+      }
+    }
+
+    function drawPinnedPoints() {
+      noStroke();
+      fill(255, 100, 100);
+
+      for (const p of cloth.particles) {
+        if (p.pinned) {
+          ellipse(p.x, p.y, 10);
+        }
+      }
+    }
+
+    function updateInfoDisplay() {
+      document.getElementById('particle-count').textContent = cloth.particles.length;
+      document.getElementById('constraint-count').textContent =
+        cloth.constraints.filter(c => c.active).length;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+      document.getElementById('sim-state').textContent = isPaused ? 'Paused' : 'Running';
+    }
+
+    // ============================================
+    // CONTROLS SETUP
+    // ============================================
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? 'Play' : 'Pause';
+      });
+
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        initializeCloth();
+      });
+
+      // Step
+      document.getElementById('step').addEventListener('click', () => {
+        if (isPaused) {
+          const wind = {
+            strength: params.windStrength,
+            direction: radians(params.windDirection)
+          };
+          cloth.update(
+            params.gravity,
+            params.damping,
+            wind,
+            params.stiffness,
+            params.enableTearing,
+            params.tearThreshold,
+            width,
+            height
+          );
+        }
+      });
+
+      // Simulation mode
+      document.getElementById('simMode').addEventListener('change', (e) => {
+        params.simMode = e.target.value;
+        // Auto-adjust settings for different modes
+        if (params.simMode === 'string') {
+          params.gridHeight = 1;
+          document.getElementById('gridHeight').value = 1;
+          document.getElementById('gridHeight-val').textContent = 1;
+        }
+        initializeCloth();
+      });
+
+      // Grid settings
+      ['gridWidth', 'gridHeight', 'restLength'].forEach(param => {
+        const element = document.getElementById(param);
+        element.addEventListener('input', (e) => {
+          params[param] = parseInt(e.target.value);
+          document.getElementById(param + '-val').textContent = e.target.value;
+        });
+        element.addEventListener('change', () => initializeCloth());
+      });
+
+      // Physics settings
+      ['gravity', 'windStrength', 'windDirection', 'stiffness', 'damping', 'tearThreshold'].forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+          });
+        }
+      });
+
+      // Pin mode
+      document.getElementById('pinMode').addEventListener('change', (e) => {
+        params.pinMode = e.target.value;
+        cloth.updatePinMode(params.pinMode);
+      });
+
+      // Enable tearing
+      document.getElementById('enableTearing').addEventListener('change', (e) => {
+        params.enableTearing = e.target.checked;
+      });
+
+      // Draw mode
+      document.getElementById('drawMode').addEventListener('change', (e) => {
+        params.drawMode = e.target.value;
+      });
+
+      // Line thickness
+      document.getElementById('lineThickness').addEventListener('input', (e) => {
+        params.lineThickness = parseFloat(e.target.value);
+        document.getElementById('lineThickness-val').textContent = e.target.value;
+      });
+
+      // Checkboxes
+      document.getElementById('showPins').addEventListener('change', (e) => {
+        params.showPins = e.target.checked;
+      });
+
+      document.getElementById('showStress').addEventListener('change', (e) => {
+        params.showStress = e.target.checked;
+      });
+
+      // Color inputs
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        document.getElementById('bgColor-hex').textContent = e.target.value;
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        document.getElementById('strokeColor-hex').textContent = e.target.value;
+      });
+    }
+
+    function updateUIFromParams() {
+      // Update select elements
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('simMode').value = params.simMode;
+      document.getElementById('pinMode').value = params.pinMode;
+      document.getElementById('drawMode').value = params.drawMode;
+
+      // Update range inputs
+      ['gridWidth', 'gridHeight', 'restLength', 'gravity', 'windStrength',
+       'windDirection', 'stiffness', 'damping', 'tearThreshold', 'lineThickness'].forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.value = params[param];
+          const valElement = document.getElementById(param + '-val');
+          if (valElement) {
+            valElement.textContent = params[param];
+          }
+        }
+      });
+
+      // Update checkboxes
+      document.getElementById('enableTearing').checked = params.enableTearing;
+      document.getElementById('showPins').checked = params.showPins;
+      document.getElementById('showStress').checked = params.showStress;
+
+      // Update color inputs
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('bgColor-hex').textContent = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+      document.getElementById('strokeColor-hex').textContent = params.strokeColor;
+    }
+
+    function randomizeParams() {
+      // Randomize colors
+      canvasControls.randomizeColors();
+      params.bgColor = canvasControls.params.bgColor;
+      params.strokeColor = canvasControls.params.strokeColor;
+
+      // Randomize physics
+      params.gravity = random(0.1, 1.5);
+      params.windStrength = random(0, 1);
+      params.windDirection = random(0, 360);
+      params.damping = random(0.95, 0.999);
+      params.stiffness = floor(random(2, 15));
+
+      // Randomize grid
+      params.gridWidth = floor(random(8, 35));
+      params.gridHeight = floor(random(8, 30));
+      params.restLength = floor(random(10, 40));
+
+      // Random mode
+      const modes = ['string', 'cloth', 'net', 'curtain', 'hammock'];
+      params.simMode = random(modes);
+
+      // Random pin mode
+      const pinModes = ['top', 'corners', 'topCorners', 'sides', 'hammock'];
+      params.pinMode = random(pinModes);
+
+      // Random draw mode
+      const drawModes = ['mesh', 'horizontal', 'vertical', 'fill'];
+      params.drawMode = random(drawModes);
+    }
+
+    // ============================================
+    // QUICK PRESETS
+    // ============================================
+    function loadQuickPreset(preset) {
+      switch (preset) {
+        case 'string':
+          params.simMode = 'string';
+          params.gridWidth = 30;
+          params.gridHeight = 1;
+          params.restLength = 20;
+          params.gravity = 0.8;
+          params.windStrength = 0;
+          params.stiffness = 8;
+          params.pinMode = 'topCorners';
+          params.drawMode = 'mesh';
+          break;
+
+        case 'cloth':
+          params.simMode = 'cloth';
+          params.gridWidth = 25;
+          params.gridHeight = 20;
+          params.restLength = 20;
+          params.gravity = 0.5;
+          params.windStrength = 0.2;
+          params.windDirection = 45;
+          params.stiffness = 5;
+          params.pinMode = 'top';
+          params.drawMode = 'mesh';
+          break;
+
+        case 'net':
+          params.simMode = 'net';
+          params.gridWidth = 15;
+          params.gridHeight = 15;
+          params.restLength = 30;
+          params.gravity = 0.3;
+          params.windStrength = 0;
+          params.stiffness = 10;
+          params.pinMode = 'corners';
+          params.drawMode = 'mesh';
+          break;
+
+        case 'curtain':
+          params.simMode = 'curtain';
+          params.gridWidth = 40;
+          params.gridHeight = 25;
+          params.restLength = 15;
+          params.gravity = 0.4;
+          params.windStrength = 0.3;
+          params.windDirection = 0;
+          params.stiffness = 3;
+          params.pinMode = 'top';
+          params.drawMode = 'vertical';
+          break;
+
+        case 'hammock':
+          params.simMode = 'hammock';
+          params.gridWidth = 20;
+          params.gridHeight = 12;
+          params.restLength = 25;
+          params.gravity = 0.6;
+          params.windStrength = 0;
+          params.stiffness = 8;
+          params.pinMode = 'hammock';
+          params.drawMode = 'mesh';
+          break;
+
+        case 'flag':
+          params.simMode = 'cloth';
+          params.gridWidth = 30;
+          params.gridHeight = 20;
+          params.restLength = 15;
+          params.gravity = 0.1;
+          params.windStrength = 1.5;
+          params.windDirection = 0;
+          params.stiffness = 4;
+          params.pinMode = 'sides';
+          params.drawMode = 'fill';
+          break;
+      }
+
+      updateUIFromParams();
+      initializeCloth();
+    }
+
+    // ============================================
+    // MOUSE INTERACTION
+    // ============================================
+    function mousePressed() {
+      if (mouseX < 0 || mouseX > width || mouseY < 0 || mouseY > height) return;
+
+      const particle = cloth.getParticleAt(mouseX, mouseY);
+
+      if (particle) {
+        if (keyIsDown(SHIFT)) {
+          // Toggle pin state
+          particle.pinned = !particle.pinned;
+        } else {
+          // Start dragging
+          draggedParticle = particle;
+        }
+      }
+    }
+
+    function mouseDragged() {
+      if (draggedParticle) {
+        draggedParticle.x = mouseX;
+        draggedParticle.y = mouseY;
+        draggedParticle.oldX = mouseX;
+        draggedParticle.oldY = mouseY;
+      }
+    }
+
+    function mouseReleased() {
+      draggedParticle = null;
+    }
+
+    // ============================================
+    // EXPORT FUNCTIONS
+    // ============================================
+    function exportSVG() {
+      const segments = cloth.getLineSegments(params.drawMode === 'fill' ? 'mesh' : params.drawMode);
+
+      let pathsData = [];
+
+      if (params.drawMode === 'fill') {
+        // Export quads as filled paths
+        const quads = cloth.getQuads();
+        for (const quad of quads) {
+          const d = `M ${quad[0].x} ${quad[0].y} L ${quad[1].x} ${quad[1].y} L ${quad[2].x} ${quad[2].y} L ${quad[3].x} ${quad[3].y} Z`;
+          pathsData.push({
+            d: d,
+            stroke: params.strokeColor,
+            strokeWidth: params.lineThickness * 0.5,
+            fill: 'none'
+          });
+        }
+      } else if (params.drawMode === 'points') {
+        // Export points as small circles
+        for (const p of cloth.particles) {
+          const r = p.pinned ? 4 : 2;
+          // Approximate circle with path
+          pathsData.push({
+            d: `M ${p.x - r} ${p.y} a ${r} ${r} 0 1 0 ${r * 2} 0 a ${r} ${r} 0 1 0 ${-r * 2} 0`,
+            stroke: 'none',
+            strokeWidth: 0,
+            fill: params.strokeColor
+          });
+        }
+      } else {
+        // Export line segments
+        for (const seg of segments) {
+          pathsData.push({
+            d: `M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`,
+            stroke: params.strokeColor,
+            strokeWidth: params.lineThickness,
+            fill: 'none'
+          });
+        }
+      }
+
+      // Add pinned points markers
+      if (params.showPins) {
+        for (const p of cloth.particles) {
+          if (p.pinned) {
+            pathsData.push({
+              d: `M ${p.x - 5} ${p.y} a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0`,
+              stroke: 'none',
+              strokeWidth: 0,
+              fill: '#ff6464'
+            });
+          }
+        }
+      }
+
+      const svg = TSExport.createSVG(pathsData, width, height, {
+        backgroundColor: params.bgColor,
+        strokeColor: params.strokeColor,
+        strokeWidth: params.lineThickness
+      });
+
+      TSExport.downloadSVG(svg, 'cloth-simulation');
+    }
+
+    function exportPNG() {
+      const canvas = document.querySelector('#canvas-container canvas');
+      if (canvas) {
+        TSExport.downloadPNG(canvas, 'cloth-simulation', { scale: 2 });
+      }
+    }
+
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        gifExporter.start();
+      }
+    }
+
+    // Keyboard shortcuts
+    function keyPressed() {
+      if (key === ' ') {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? 'Play' : 'Pause';
+        return false; // Prevent scrolling
+      }
+      if (key === 'r' || key === 'R') {
+        initializeCloth();
+      }
+    }
+  </script>
+</body>
+</html>

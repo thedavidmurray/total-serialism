@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Magnetic Field Visualization - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../shared/gif-exporter.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #00d4aa;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00d4aa;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      font-family: 'JetBrains Mono', monospace;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #00d4aa;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #00e8bb;
+    }
+    button:active {
+      background: #00c49a;
+    }
+    .secondary {
+      background: #555;
+      color: #fff;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .value {
+      font-weight: bold;
+      color: #00d4aa;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+      accent-color: #00d4aa;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .export-btn {
+      background: #ff6b6b;
+      color: #fff;
+    }
+    .export-btn:hover {
+      background: #ff5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #00d4aa;
+      transition: width 0.3s;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 36px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+    }
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .color-picker-row label {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .pole-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .pole-north { background: #ff4444; }
+    .pole-south { background: #4444ff; }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Poles: <span id="pole-count">2</span></div>
+      <div>Field Lines: <span id="line-count">0</span></div>
+      <div>Mode: <span id="viz-mode">Field Lines</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Magnetic Field</h2>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square">Square (300x300mm)</option>
+          <option value="a4">A4 Portrait</option>
+          <option value="a3" selected>A3 Portrait</option>
+          <option value="letter">US Letter</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="regenerate">Regenerate</button>
+      <button id="randomize-poles" class="secondary">Randomize Pole Positions</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Pole Configuration</h3>
+      <div class="control">
+        <label>Number of Poles: <span class="value" id="numPoles-val">2</span></label>
+        <input type="range" id="numPoles" min="1" max="8" value="2">
+      </div>
+      <div class="control">
+        <label>Pole Strength: <span class="value" id="poleStrength-val">100</span></label>
+        <input type="range" id="poleStrength" min="10" max="500" value="100">
+      </div>
+      <div class="control">
+        <label>Pole Arrangement:</label>
+        <select id="poleArrangement">
+          <option value="dipole">Dipole (N-S pair)</option>
+          <option value="random">Random</option>
+          <option value="circle">Circle</option>
+          <option value="line">Linear</option>
+          <option value="grid">Grid</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="alternatePoles" checked>
+        <label for="alternatePoles">Alternate N/S poles</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Field Lines</h3>
+      <div class="control">
+        <label>Lines per Pole: <span class="value" id="linesPerPole-val">16</span></label>
+        <input type="range" id="linesPerPole" min="4" max="48" step="2" value="16">
+      </div>
+      <div class="control">
+        <label>Max Line Length: <span class="value" id="maxLineLength-val">500</span></label>
+        <input type="range" id="maxLineLength" min="100" max="2000" value="500">
+      </div>
+      <div class="control">
+        <label>Step Size: <span class="value" id="stepSize-val">3</span></label>
+        <input type="range" id="stepSize" min="1" max="10" value="3">
+      </div>
+      <div class="control">
+        <label>Integration Method:</label>
+        <select id="integrationMethod">
+          <option value="rk4" selected>RK4 (Runge-Kutta)</option>
+          <option value="euler">Euler</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Visualization Mode</h3>
+      <div class="control">
+        <label>Display Mode:</label>
+        <select id="vizMode">
+          <option value="fieldLines" selected>Field Lines</option>
+          <option value="ironFilings">Iron Filings</option>
+          <option value="both">Both</option>
+          <option value="vectors">Vector Field</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group" id="iron-filing-controls">
+      <h3>Iron Filings</h3>
+      <div class="control">
+        <label>Filing Count: <span class="value" id="filingCount-val">2000</span></label>
+        <input type="range" id="filingCount" min="500" max="10000" step="100" value="2000">
+      </div>
+      <div class="control">
+        <label>Filing Size: <span class="value" id="filingSize-val">8</span></label>
+        <input type="range" id="filingSize" min="2" max="20" value="8">
+      </div>
+      <div class="control">
+        <label>Filing Weight: <span class="value" id="filingWeight-val">0.8</span></label>
+        <input type="range" id="filingWeight" min="0.3" max="3" step="0.1" value="0.8">
+      </div>
+    </div>
+
+    <div class="control-group" id="vector-controls">
+      <h3>Vector Field</h3>
+      <div class="control">
+        <label>Grid Resolution: <span class="value" id="vectorGrid-val">30</span></label>
+        <input type="range" id="vectorGrid" min="10" max="60" value="30">
+      </div>
+      <div class="control">
+        <label>Arrow Scale: <span class="value" id="arrowScale-val">15</span></label>
+        <input type="range" id="arrowScale" min="5" max="40" value="15">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showPoles" checked>
+        <label for="showPoles">Show Poles</label>
+      </div>
+      <div class="control">
+        <label>Pole Size: <span class="value" id="poleSize-val">15</span></label>
+        <input type="range" id="poleSize" min="5" max="40" value="15">
+      </div>
+      <div class="control">
+        <label>Line Thickness: <span class="value" id="lineWeight-val">1.0</span></label>
+        <input type="range" id="lineWeight" min="0.3" max="4" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Colors</h3>
+      <div class="control color-picker-row">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control color-picker-row">
+        <label>Stroke:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control color-picker-row">
+        <label><span class="pole-indicator pole-north"></span>North Pole:</label>
+        <input type="color" id="northColor" value="#ff4444">
+      </div>
+      <div class="control color-picker-row">
+        <label><span class="pole-indicator pole-south"></span>South Pole:</label>
+        <input type="color" id="southColor" value="#4444ff">
+      </div>
+      <div class="control">
+        <button id="randomizeAll">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Quick Presets</h3>
+      <button class="secondary" onclick="loadQuickPreset('classic')">Classic Bar Magnet</button>
+      <button class="secondary" onclick="loadQuickPreset('horseshoe')">Horseshoe Magnet</button>
+      <button class="secondary" onclick="loadQuickPreset('quadrupole')">Quadrupole</button>
+      <button class="secondary" onclick="loadQuickPreset('dense')">Dense Field</button>
+      <button class="secondary" onclick="loadQuickPreset('chaotic')">Chaotic Multi-pole</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Magnetic Field Visualization
+    // Based on the Biot-Savart law: B = (mu_0/4pi) * (m/r^2)
+
+    // Magnetic pole class
+    class MagneticPole {
+      constructor(x, y, strength, isNorth = true) {
+        this.position = createVector(x, y);
+        this.strength = strength; // Positive for north, negative for south
+        this.isNorth = isNorth;
+      }
+
+      // Calculate magnetic field contribution at a point
+      getFieldAt(point) {
+        const r = p5.Vector.sub(point, this.position);
+        const distance = r.mag();
+
+        if (distance < 5) {
+          return createVector(0, 0); // Avoid singularity at pole
+        }
+
+        // B = (mu_0/4pi) * (m/r^2) * r_hat
+        // Simplified: field strength proportional to m/r^2
+        const magnitude = this.strength / (distance * distance);
+        r.normalize();
+        r.mult(magnitude);
+
+        return r;
+      }
+    }
+
+    // Field line class for storing traced paths
+    class FieldLine {
+      constructor() {
+        this.points = [];
+      }
+
+      addPoint(x, y) {
+        this.points.push(createVector(x, y));
+      }
+    }
+
+    // Global variables
+    let poles = [];
+    let fieldLines = [];
+    let ironFilings = [];
+    let gifExporter;
+    let presetManager;
+    let needsRedraw = true;
+    let draggingPole = null;
+
+    // Parameters
+    let params = {
+      paperSize: 'a3',
+      numPoles: 2,
+      poleStrength: 100,
+      poleArrangement: 'dipole',
+      alternatePoles: true,
+      linesPerPole: 16,
+      maxLineLength: 500,
+      stepSize: 3,
+      integrationMethod: 'rk4',
+      vizMode: 'fieldLines',
+      filingCount: 2000,
+      filingSize: 8,
+      filingWeight: 0.8,
+      vectorGrid: 30,
+      arrowScale: 15,
+      showPoles: true,
+      poleSize: 15,
+      lineWeight: 1.0,
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      northColor: '#ff4444',
+      southColor: '#4444ff'
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      // Initialize poles and generate field
+      initializePoles();
+      generateField();
+
+      // Canvas settings event handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 5,
+        quality: 10,
+        width: size.width,
+        height: size.height,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording'
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}`
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width =
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          const link = document.createElement('a');
+          link.href = result.url;
+          link.download = `magnetic-field-${Date.now()}.gif`;
+          link.click();
+        }
+      });
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'magnetic-field',
+        container: '#preset-container',
+        onSave: () => {
+          return { ...params };
+        },
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          initializePoles();
+          generateField();
+        },
+        onRandomize: () => {
+          params.numPoles = Math.floor(random(2, 8));
+          params.poleStrength = Math.floor(random(50, 300));
+          params.linesPerPole = Math.floor(random(8, 32));
+          params.maxLineLength = Math.floor(random(200, 800));
+
+          updateUIFromParams();
+          initializePoles();
+          generateField();
+        }
+      });
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+      updateVizModeControls();
+    }
+
+    function initializePoles() {
+      poles = [];
+      const arrangement = params.poleArrangement;
+      const n = params.numPoles;
+      const strength = params.poleStrength;
+
+      switch (arrangement) {
+        case 'dipole':
+          // Classic N-S pair
+          poles.push(new MagneticPole(width * 0.35, height * 0.5, strength, true));
+          poles.push(new MagneticPole(width * 0.65, height * 0.5, -strength, false));
+          break;
+
+        case 'random':
+          for (let i = 0; i < n; i++) {
+            const x = random(width * 0.15, width * 0.85);
+            const y = random(height * 0.15, height * 0.85);
+            const isNorth = params.alternatePoles ? (i % 2 === 0) : random() > 0.5;
+            poles.push(new MagneticPole(x, y, isNorth ? strength : -strength, isNorth));
+          }
+          break;
+
+        case 'circle':
+          const radius = min(width, height) * 0.3;
+          for (let i = 0; i < n; i++) {
+            const angle = (TWO_PI / n) * i;
+            const x = width / 2 + cos(angle) * radius;
+            const y = height / 2 + sin(angle) * radius;
+            const isNorth = params.alternatePoles ? (i % 2 === 0) : true;
+            poles.push(new MagneticPole(x, y, isNorth ? strength : -strength, isNorth));
+          }
+          break;
+
+        case 'line':
+          const spacing = width * 0.6 / (n + 1);
+          for (let i = 0; i < n; i++) {
+            const x = width * 0.2 + spacing * (i + 1);
+            const y = height / 2;
+            const isNorth = params.alternatePoles ? (i % 2 === 0) : true;
+            poles.push(new MagneticPole(x, y, isNorth ? strength : -strength, isNorth));
+          }
+          break;
+
+        case 'grid':
+          const cols = Math.ceil(Math.sqrt(n));
+          const rows = Math.ceil(n / cols);
+          const cellW = width * 0.6 / cols;
+          const cellH = height * 0.6 / rows;
+          let idx = 0;
+          for (let row = 0; row < rows && idx < n; row++) {
+            for (let col = 0; col < cols && idx < n; col++) {
+              const x = width * 0.2 + cellW * (col + 0.5);
+              const y = height * 0.2 + cellH * (row + 0.5);
+              const isNorth = params.alternatePoles ? ((row + col) % 2 === 0) : true;
+              poles.push(new MagneticPole(x, y, isNorth ? strength : -strength, isNorth));
+              idx++;
+            }
+          }
+          break;
+      }
+
+      document.getElementById('pole-count').textContent = poles.length;
+    }
+
+    function getTotalField(point) {
+      let field = createVector(0, 0);
+      for (let pole of poles) {
+        field.add(pole.getFieldAt(point));
+      }
+      return field;
+    }
+
+    // RK4 integration step
+    function rk4Step(point, stepSize, forward = true) {
+      const direction = forward ? 1 : -1;
+      const h = stepSize * direction;
+
+      const k1 = getTotalField(point).normalize();
+      const k2 = getTotalField(p5.Vector.add(point, p5.Vector.mult(k1, h / 2))).normalize();
+      const k3 = getTotalField(p5.Vector.add(point, p5.Vector.mult(k2, h / 2))).normalize();
+      const k4 = getTotalField(p5.Vector.add(point, p5.Vector.mult(k3, h))).normalize();
+
+      const result = p5.Vector.mult(k1, 1);
+      result.add(p5.Vector.mult(k2, 2));
+      result.add(p5.Vector.mult(k3, 2));
+      result.add(k4);
+      result.div(6);
+      result.mult(h);
+
+      return p5.Vector.add(point, result);
+    }
+
+    // Euler integration step
+    function eulerStep(point, stepSize, forward = true) {
+      const direction = forward ? 1 : -1;
+      const field = getTotalField(point);
+      field.normalize();
+      field.mult(stepSize * direction);
+      return p5.Vector.add(point, field);
+    }
+
+    function traceFieldLine(startPoint, forward = true) {
+      const line = new FieldLine();
+      let currentPoint = startPoint.copy();
+      let steps = 0;
+      const maxSteps = params.maxLineLength / params.stepSize;
+
+      while (steps < maxSteps) {
+        // Check if out of bounds
+        if (currentPoint.x < 0 || currentPoint.x > width ||
+            currentPoint.y < 0 || currentPoint.y > height) {
+          break;
+        }
+
+        // Check if too close to any pole
+        let tooClose = false;
+        for (let pole of poles) {
+          if (p5.Vector.dist(currentPoint, pole.position) < 10) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (tooClose) break;
+
+        line.addPoint(currentPoint.x, currentPoint.y);
+
+        // Integration step
+        if (params.integrationMethod === 'rk4') {
+          currentPoint = rk4Step(currentPoint, params.stepSize, forward);
+        } else {
+          currentPoint = eulerStep(currentPoint, params.stepSize, forward);
+        }
+
+        steps++;
+      }
+
+      return line;
+    }
+
+    function generateFieldLines() {
+      fieldLines = [];
+
+      // Trace field lines from each north pole
+      for (let pole of poles) {
+        if (!pole.isNorth) continue;
+
+        const numLines = params.linesPerPole;
+        const startRadius = params.poleSize + 5;
+
+        for (let i = 0; i < numLines; i++) {
+          const angle = (TWO_PI / numLines) * i;
+          const startX = pole.position.x + cos(angle) * startRadius;
+          const startY = pole.position.y + sin(angle) * startRadius;
+          const startPoint = createVector(startX, startY);
+
+          // Trace forward (following field direction)
+          const line = traceFieldLine(startPoint, true);
+          if (line.points.length > 2) {
+            fieldLines.push(line);
+          }
+        }
+      }
+
+      // For single-pole scenarios, trace from boundary
+      if (poles.length === 1) {
+        const numBoundaryLines = params.linesPerPole;
+        for (let i = 0; i < numBoundaryLines; i++) {
+          const t = i / numBoundaryLines;
+          // Start from edges
+          let startX, startY;
+          if (i < numBoundaryLines / 4) {
+            startX = 10;
+            startY = height * (t * 4);
+          } else if (i < numBoundaryLines / 2) {
+            startX = width - 10;
+            startY = height * ((t - 0.25) * 4);
+          } else if (i < numBoundaryLines * 3 / 4) {
+            startX = width * ((t - 0.5) * 4);
+            startY = 10;
+          } else {
+            startX = width * ((t - 0.75) * 4);
+            startY = height - 10;
+          }
+          const startPoint = createVector(startX, startY);
+          const line = traceFieldLine(startPoint, poles[0].isNorth);
+          if (line.points.length > 2) {
+            fieldLines.push(line);
+          }
+        }
+      }
+
+      document.getElementById('line-count').textContent = fieldLines.length;
+    }
+
+    function generateIronFilings() {
+      ironFilings = [];
+      const count = params.filingCount;
+
+      for (let i = 0; i < count; i++) {
+        const x = random(width);
+        const y = random(height);
+        const point = createVector(x, y);
+
+        // Check if too close to any pole
+        let tooClose = false;
+        for (let pole of poles) {
+          if (p5.Vector.dist(point, pole.position) < params.poleSize + 5) {
+            tooClose = true;
+            break;
+          }
+        }
+
+        if (!tooClose) {
+          const field = getTotalField(point);
+          const angle = field.heading();
+          ironFilings.push({ x, y, angle, length: params.filingSize });
+        }
+      }
+    }
+
+    function generateField() {
+      if (params.vizMode === 'fieldLines' || params.vizMode === 'both') {
+        generateFieldLines();
+      }
+      if (params.vizMode === 'ironFilings' || params.vizMode === 'both') {
+        generateIronFilings();
+      }
+      needsRedraw = true;
+    }
+
+    function updateUIFromParams() {
+      document.getElementById('paperSize').value = params.paperSize;
+
+      const rangeParams = ['numPoles', 'poleStrength', 'linesPerPole', 'maxLineLength',
+                          'stepSize', 'filingCount', 'filingSize', 'filingWeight',
+                          'vectorGrid', 'arrowScale', 'poleSize', 'lineWeight'];
+
+      rangeParams.forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.value = params[param];
+          const valueDisplay = document.getElementById(param + '-val');
+          if (valueDisplay) valueDisplay.textContent = params[param];
+        }
+      });
+
+      document.getElementById('poleArrangement').value = params.poleArrangement;
+      document.getElementById('integrationMethod').value = params.integrationMethod;
+      document.getElementById('vizMode').value = params.vizMode;
+      document.getElementById('alternatePoles').checked = params.alternatePoles;
+      document.getElementById('showPoles').checked = params.showPoles;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+      document.getElementById('northColor').value = params.northColor;
+      document.getElementById('southColor').value = params.southColor;
+
+      updateVizModeControls();
+    }
+
+    function updateVizModeControls() {
+      const ironControls = document.getElementById('iron-filing-controls');
+      const vectorControls = document.getElementById('vector-controls');
+      const mode = params.vizMode;
+
+      ironControls.style.display = (mode === 'ironFilings' || mode === 'both') ? 'block' : 'none';
+      vectorControls.style.display = mode === 'vectors' ? 'block' : 'none';
+
+      document.getElementById('viz-mode').textContent =
+        { fieldLines: 'Field Lines', ironFilings: 'Iron Filings', both: 'Both', vectors: 'Vectors' }[mode];
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      initializePoles();
+      generateField();
+    }
+
+    function setupControls() {
+      // Regenerate button
+      document.getElementById('regenerate').addEventListener('click', () => {
+        initializePoles();
+        generateField();
+      });
+
+      // Randomize poles
+      document.getElementById('randomize-poles').addEventListener('click', () => {
+        const savedArrangement = params.poleArrangement;
+        params.poleArrangement = 'random';
+        initializePoles();
+        params.poleArrangement = savedArrangement;
+        generateField();
+      });
+
+      // Range parameter controls
+      const rangeParams = ['numPoles', 'poleStrength', 'linesPerPole', 'maxLineLength',
+                          'stepSize', 'filingCount', 'filingSize', 'filingWeight',
+                          'vectorGrid', 'arrowScale', 'poleSize', 'lineWeight'];
+
+      rangeParams.forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+
+            // Regenerate for parameters that affect field calculation
+            if (['numPoles', 'poleStrength', 'linesPerPole', 'maxLineLength', 'stepSize',
+                 'filingCount', 'filingSize'].includes(param)) {
+              if (param === 'numPoles') {
+                initializePoles();
+              }
+              generateField();
+            } else {
+              needsRedraw = true;
+            }
+          });
+        }
+      });
+
+      // Select controls
+      document.getElementById('poleArrangement').addEventListener('change', (e) => {
+        params.poleArrangement = e.target.value;
+        initializePoles();
+        generateField();
+      });
+
+      document.getElementById('integrationMethod').addEventListener('change', (e) => {
+        params.integrationMethod = e.target.value;
+        generateField();
+      });
+
+      document.getElementById('vizMode').addEventListener('change', (e) => {
+        params.vizMode = e.target.value;
+        updateVizModeControls();
+        generateField();
+      });
+
+      // Checkboxes
+      document.getElementById('alternatePoles').addEventListener('change', (e) => {
+        params.alternatePoles = e.target.checked;
+        initializePoles();
+        generateField();
+      });
+
+      document.getElementById('showPoles').addEventListener('change', (e) => {
+        params.showPoles = e.target.checked;
+        needsRedraw = true;
+      });
+
+      // Color pickers
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        needsRedraw = true;
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        needsRedraw = true;
+      });
+
+      document.getElementById('northColor').addEventListener('input', (e) => {
+        params.northColor = e.target.value;
+        needsRedraw = true;
+      });
+
+      document.getElementById('southColor').addEventListener('input', (e) => {
+        params.southColor = e.target.value;
+        needsRedraw = true;
+      });
+
+      // Randomize colors button
+      document.getElementById('randomizeAll').addEventListener('click', () => {
+        const colors = canvasControls.randomizeColors();
+        params.bgColor = colors.bgColor;
+        params.strokeColor = colors.strokeColor;
+        document.getElementById('bgColor').value = params.bgColor;
+        document.getElementById('strokeColor').value = params.strokeColor;
+        needsRedraw = true;
+      });
+    }
+
+    function draw() {
+      if (!needsRedraw) {
+        // Capture GIF frame if recording
+        if (gifExporter && gifExporter.isRecording()) {
+          gifExporter.captureFrame();
+        }
+        return;
+      }
+
+      background(params.bgColor);
+
+      const mode = params.vizMode;
+
+      // Draw field lines
+      if (mode === 'fieldLines' || mode === 'both') {
+        noFill();
+        stroke(params.strokeColor);
+        strokeWeight(params.lineWeight);
+
+        for (let line of fieldLines) {
+          if (line.points.length < 2) continue;
+
+          beginShape();
+          for (let point of line.points) {
+            vertex(point.x, point.y);
+          }
+          endShape();
+        }
+      }
+
+      // Draw iron filings
+      if (mode === 'ironFilings' || mode === 'both') {
+        stroke(params.strokeColor);
+        strokeWeight(params.filingWeight);
+
+        for (let filing of ironFilings) {
+          const halfLen = filing.length / 2;
+          const x1 = filing.x + cos(filing.angle) * halfLen;
+          const y1 = filing.y + sin(filing.angle) * halfLen;
+          const x2 = filing.x - cos(filing.angle) * halfLen;
+          const y2 = filing.y - sin(filing.angle) * halfLen;
+          line(x1, y1, x2, y2);
+        }
+      }
+
+      // Draw vector field
+      if (mode === 'vectors') {
+        const gridSize = params.vectorGrid;
+        const cellW = width / gridSize;
+        const cellH = height / gridSize;
+        const arrowLen = params.arrowScale;
+
+        stroke(params.strokeColor);
+        strokeWeight(params.lineWeight);
+
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            const x = cellW * (i + 0.5);
+            const y = cellH * (j + 0.5);
+            const point = createVector(x, y);
+
+            // Check if too close to any pole
+            let tooClose = false;
+            for (let pole of poles) {
+              if (p5.Vector.dist(point, pole.position) < params.poleSize + 5) {
+                tooClose = true;
+                break;
+              }
+            }
+
+            if (!tooClose) {
+              const field = getTotalField(point);
+              const magnitude = field.mag();
+              field.normalize();
+
+              // Scale by log of magnitude for better visualization
+              const scale = min(arrowLen, log(magnitude + 1) * arrowLen / 3);
+              field.mult(scale);
+
+              // Draw arrow
+              const endX = x + field.x;
+              const endY = y + field.y;
+              line(x, y, endX, endY);
+
+              // Arrowhead
+              push();
+              translate(endX, endY);
+              rotate(field.heading());
+              const headSize = scale * 0.3;
+              line(0, 0, -headSize, headSize / 2);
+              line(0, 0, -headSize, -headSize / 2);
+              pop();
+            }
+          }
+        }
+      }
+
+      // Draw poles
+      if (params.showPoles) {
+        for (let pole of poles) {
+          const col = pole.isNorth ? params.northColor : params.southColor;
+          fill(col);
+          stroke(params.strokeColor);
+          strokeWeight(2);
+          ellipse(pole.position.x, pole.position.y, params.poleSize * 2);
+
+          // Label
+          fill(params.strokeColor);
+          noStroke();
+          textAlign(CENTER, CENTER);
+          textSize(params.poleSize);
+          text(pole.isNorth ? 'N' : 'S', pole.position.x, pole.position.y);
+        }
+      }
+
+      needsRedraw = false;
+
+      // Capture GIF frame if recording
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.captureFrame();
+      }
+    }
+
+    // Mouse interaction for dragging poles
+    function mousePressed() {
+      const canvasRect = document.querySelector('#canvas-container canvas').getBoundingClientRect();
+      const mx = (mouseX / canvasRect.width) * width;
+      const my = (mouseY / canvasRect.height) * height;
+
+      for (let pole of poles) {
+        if (dist(mx, my, pole.position.x, pole.position.y) < params.poleSize) {
+          draggingPole = pole;
+          break;
+        }
+      }
+    }
+
+    function mouseDragged() {
+      if (draggingPole) {
+        const canvasRect = document.querySelector('#canvas-container canvas').getBoundingClientRect();
+        draggingPole.position.x = constrain((mouseX / canvasRect.width) * width, 0, width);
+        draggingPole.position.y = constrain((mouseY / canvasRect.height) * height, 0, height);
+        generateField();
+      }
+    }
+
+    function mouseReleased() {
+      draggingPole = null;
+    }
+
+    // Quick presets
+    function loadQuickPreset(name) {
+      switch (name) {
+        case 'classic':
+          params.numPoles = 2;
+          params.poleArrangement = 'dipole';
+          params.poleStrength = 150;
+          params.linesPerPole = 24;
+          params.maxLineLength = 600;
+          params.vizMode = 'fieldLines';
+          break;
+
+        case 'horseshoe':
+          params.numPoles = 2;
+          params.poleArrangement = 'line';
+          params.poleStrength = 200;
+          params.linesPerPole = 20;
+          params.maxLineLength = 400;
+          params.vizMode = 'fieldLines';
+          break;
+
+        case 'quadrupole':
+          params.numPoles = 4;
+          params.poleArrangement = 'circle';
+          params.alternatePoles = true;
+          params.poleStrength = 120;
+          params.linesPerPole = 12;
+          params.maxLineLength = 400;
+          params.vizMode = 'fieldLines';
+          break;
+
+        case 'dense':
+          params.numPoles = 2;
+          params.poleArrangement = 'dipole';
+          params.poleStrength = 100;
+          params.linesPerPole = 48;
+          params.maxLineLength = 800;
+          params.vizMode = 'both';
+          params.filingCount = 4000;
+          params.filingSize = 6;
+          break;
+
+        case 'chaotic':
+          params.numPoles = 6;
+          params.poleArrangement = 'random';
+          params.alternatePoles = true;
+          params.poleStrength = 80;
+          params.linesPerPole = 8;
+          params.maxLineLength = 300;
+          params.vizMode = 'ironFilings';
+          params.filingCount = 6000;
+          break;
+      }
+
+      updateUIFromParams();
+      initializePoles();
+      generateField();
+    }
+
+    // Export functions
+    function exportSVG() {
+      let paths = [];
+
+      // Add field lines
+      if (params.vizMode === 'fieldLines' || params.vizMode === 'both') {
+        for (let line of fieldLines) {
+          if (line.points.length < 2) continue;
+
+          let d = `M ${line.points[0].x.toFixed(2)} ${line.points[0].y.toFixed(2)}`;
+          for (let i = 1; i < line.points.length; i++) {
+            d += ` L ${line.points[i].x.toFixed(2)} ${line.points[i].y.toFixed(2)}`;
+          }
+          paths.push({
+            d: d,
+            stroke: params.strokeColor,
+            strokeWidth: params.lineWeight,
+            fill: 'none'
+          });
+        }
+      }
+
+      // Add iron filings
+      if (params.vizMode === 'ironFilings' || params.vizMode === 'both') {
+        for (let filing of ironFilings) {
+          const halfLen = filing.length / 2;
+          const x1 = (filing.x + cos(filing.angle) * halfLen).toFixed(2);
+          const y1 = (filing.y + sin(filing.angle) * halfLen).toFixed(2);
+          const x2 = (filing.x - cos(filing.angle) * halfLen).toFixed(2);
+          const y2 = (filing.y - sin(filing.angle) * halfLen).toFixed(2);
+          paths.push({
+            d: `M ${x1} ${y1} L ${x2} ${y2}`,
+            stroke: params.strokeColor,
+            strokeWidth: params.filingWeight,
+            fill: 'none'
+          });
+        }
+      }
+
+      // Add poles
+      if (params.showPoles) {
+        for (let pole of poles) {
+          const r = params.poleSize;
+          const x = pole.position.x.toFixed(2);
+          const y = pole.position.y.toFixed(2);
+          paths.push({
+            d: `M ${x} ${(pole.position.y - r).toFixed(2)}
+                A ${r} ${r} 0 1 1 ${x} ${(pole.position.y + r).toFixed(2)}
+                A ${r} ${r} 0 1 1 ${x} ${(pole.position.y - r).toFixed(2)}`,
+            stroke: params.strokeColor,
+            strokeWidth: 2,
+            fill: pole.isNorth ? params.northColor : params.southColor
+          });
+        }
+      }
+
+      const svg = TSExport.createSVG(paths, width, height, {
+        backgroundColor: params.bgColor,
+        strokeColor: params.strokeColor,
+        strokeWidth: params.lineWeight
+      });
+
+      TSExport.downloadSVG(svg, 'magnetic-field');
+    }
+
+    function exportPNG() {
+      const canvas = document.querySelector('#canvas-container canvas');
+      if (canvas) {
+        TSExport.downloadPNG(canvas, 'magnetic-field', { scale: 2 });
+      }
+    }
+
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        // Force continuous redraw during GIF recording
+        needsRedraw = true;
+        gifExporter.start();
+      }
+    }
+  </script>
+</body>
+</html>

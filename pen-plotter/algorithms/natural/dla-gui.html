@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Diffusion-Limited Aggregation - Pen Plotter Art</title>
+
+    <!-- Total Serialism Design System -->
+    <link rel="stylesheet" href="../../shared/algorithm.css">
+    <link rel="stylesheet" href="../../preset-manager.css">
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="../../preset-manager.js"></script>
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/canvas-controls.js"></script>
+    <script src="../../shared/export-utils.js"></script>
+
+    <style>
+        /* Algorithm-specific styles */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--ts-space-sm);
+            padding: var(--ts-space-sm) var(--ts-space-md);
+            background: var(--ts-bg-deep);
+            border-radius: var(--ts-radius-md);
+            font-size: 0.75rem;
+            color: var(--ts-text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ts-text-muted);
+        }
+
+        .status-dot.running {
+            background: var(--ts-accent-primary);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .status-dot.complete {
+            background: var(--ts-accent-secondary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--ts-space-xs) 0;
+            font-size: 0.75rem;
+            color: var(--ts-text-muted);
+        }
+
+        .stats-value {
+            color: var(--ts-accent-primary);
+            font-family: var(--ts-font-display);
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--ts-space-sm);
+            margin-top: var(--ts-space-md);
+        }
+
+        .control-buttons button {
+            min-height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <a href="../../index.html" class="back-link">Back to Index</a>
+
+    <div class="container" style="display: flex; max-width: 1400px; margin: 0 auto; padding: 20px; gap: 20px;">
+        <!-- Controls Panel -->
+        <div id="controls">
+            <h3>DLA Parameters</h3>
+
+            <!-- Preset Manager Container -->
+            <div id="preset-container"></div>
+
+            <!-- Status Display -->
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </div>
+
+            <!-- Statistics -->
+            <div style="margin: 15px 0; padding: 10px; background: var(--ts-bg-deep); border-radius: var(--ts-radius-md);">
+                <div class="stats-row">
+                    <span>Particles Stuck:</span>
+                    <span class="stats-value" id="particleCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span>Total Attempts:</span>
+                    <span class="stats-value" id="attemptCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span>Connections:</span>
+                    <span class="stats-value" id="connectionCount">0</span>
+                </div>
+            </div>
+
+            <h3>Particle Settings</h3>
+
+            <label>
+                Max Particles
+                <span class="ts-label-value" id="maxParticlesValue">1000</span>
+            </label>
+            <input type="range" id="maxParticles" min="100" max="5000" step="100" value="1000">
+
+            <label>
+                Stickiness Probability
+                <span class="ts-label-value" id="stickinessValue">1.00</span>
+            </label>
+            <input type="range" id="stickiness" min="0" max="1" step="0.05" value="1">
+
+            <label>
+                Particle Size
+                <span class="ts-label-value" id="particleSizeValue">3</span>
+            </label>
+            <input type="range" id="particleSize" min="1" max="10" step="0.5" value="3">
+
+            <label>
+                Branch Probability
+                <span class="ts-label-value" id="branchProbabilityValue">0.00</span>
+            </label>
+            <input type="range" id="branchProbability" min="0" max="0.5" step="0.01" value="0">
+
+            <h3>Seed Configuration</h3>
+
+            <label>Seed Type</label>
+            <select id="seedType">
+                <option value="single">Single Point (Center)</option>
+                <option value="line">Horizontal Line</option>
+                <option value="circle">Circle</option>
+                <option value="multiple">Multiple Points</option>
+                <option value="random">Random Seeds</option>
+            </select>
+
+            <label>
+                Seed Count (for multiple/random)
+                <span class="ts-label-value" id="seedCountValue">5</span>
+            </label>
+            <input type="range" id="seedCount" min="1" max="20" step="1" value="5">
+
+            <h3>Growth Settings</h3>
+
+            <label>
+                Growth Speed
+                <span class="ts-label-value" id="growthSpeedValue">10</span>
+            </label>
+            <input type="range" id="growthSpeed" min="1" max="100" step="1" value="10">
+
+            <label>
+                Walker Steps Per Frame
+                <span class="ts-label-value" id="walkerStepsValue">50</span>
+            </label>
+            <input type="range" id="walkerSteps" min="10" max="500" step="10" value="50">
+
+            <label>
+                Spawn Radius Factor
+                <span class="ts-label-value" id="spawnRadiusValue">1.2</span>
+            </label>
+            <input type="range" id="spawnRadius" min="1.1" max="2" step="0.1" value="1.2">
+
+            <h3>Canvas Settings</h3>
+
+            <label>Paper Size</label>
+            <select id="paperSize">
+                <option value="square">Square (800x800)</option>
+                <option value="a4">A4 Portrait</option>
+                <option value="a3" selected>A3 Portrait</option>
+                <option value="a4-landscape">A4 Landscape</option>
+                <option value="a3-landscape">A3 Landscape</option>
+                <option value="letter">US Letter</option>
+            </select>
+
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#ffffff">
+
+            <label>Stroke Color</label>
+            <input type="color" id="strokeColor" value="#000000">
+
+            <label>
+                Stroke Weight
+                <span class="ts-label-value" id="strokeWeightValue">1.0</span>
+            </label>
+            <input type="range" id="strokeWeight" min="0.5" max="5" step="0.5" value="1">
+
+            <div class="control">
+                <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+            </div>
+
+            <h3>Animation Controls</h3>
+
+            <div class="control-buttons">
+                <button id="startBtn" class="ts-btn ts-btn-primary">Start</button>
+                <button id="stopBtn" class="ts-btn ts-btn-secondary">Stop</button>
+                <button id="resetBtn" class="ts-btn ts-btn-secondary">Reset</button>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <button id="stepBtn" class="ts-btn ts-btn-block">Step (Add 100 Particles)</button>
+            </div>
+
+            <h3>Export Options</h3>
+            <div class="ts-export-group">
+                <button id="exportSVG" class="ts-export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+                        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+                        <text x="7" y="16" font-size="6" fill="currentColor">SVG</text>
+                    </svg>
+                    SVG
+                </button>
+                <button id="exportPNG" class="ts-export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    PNG
+                </button>
+                <button id="exportGIF" class="ts-export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="20" rx="2"/>
+                        <path d="M10 8v8M14 8v8"/>
+                    </svg>
+                    GIF
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div id="canvas-container">
+            <!-- p5.js canvas will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DLA Algorithm Implementation
+        // ============================================
+
+        let canvas;
+        let dlaSystem;
+        let isRunning = false;
+        let presetManager;
+        let canvasControls;
+        let animationFrames = [];
+        let recordingGIF = false;
+
+        // Parameters
+        let params = {
+            paperSize: 'a3',
+            bgColor: '#ffffff',
+            strokeColor: '#000000',
+            strokeWeight: 1,
+            maxParticles: 1000,
+            stickiness: 1,
+            particleSize: 3,
+            branchProbability: 0,
+            seedType: 'single',
+            seedCount: 5,
+            growthSpeed: 10,
+            walkerSteps: 50,
+            spawnRadius: 1.2
+        };
+
+        // ============================================
+        // DLA Particle Class
+        // ============================================
+
+        class Particle {
+            constructor(x, y, isSeed = false) {
+                this.x = x;
+                this.y = y;
+                this.isSeed = isSeed;
+                this.stuck = isSeed;
+                this.parent = null; // Reference to particle it connected to
+                this.children = []; // Particles connected to this one
+                this.radius = params.particleSize;
+            }
+
+            // Random walk step
+            walk() {
+                const angle = Math.random() * Math.PI * 2;
+                const stepSize = params.particleSize * 0.5;
+                this.x += Math.cos(angle) * stepSize;
+                this.y += Math.sin(angle) * stepSize;
+            }
+
+            // Check if this particle touches the aggregate
+            checkCollision(particles, gridLookup, cellSize) {
+                const cellX = Math.floor(this.x / cellSize);
+                const cellY = Math.floor(this.y / cellSize);
+
+                // Check neighboring cells
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const key = `${cellX + dx},${cellY + dy}`;
+                        const cellParticles = gridLookup.get(key);
+                        if (!cellParticles) continue;
+
+                        for (const other of cellParticles) {
+                            if (other === this || !other.stuck) continue;
+
+                            const d = Math.hypot(this.x - other.x, this.y - other.y);
+                            const touchDistance = this.radius + other.radius;
+
+                            if (d < touchDistance) {
+                                // Apply stickiness probability
+                                if (Math.random() < params.stickiness) {
+                                    this.parent = other;
+                                    other.children.push(this);
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+                return false;
+            }
+
+            // Check if out of bounds (too far from aggregate)
+            isOutOfBounds(maxRadius, width, height) {
+                const centerX = width / 2;
+                const centerY = height / 2;
+                const d = Math.hypot(this.x - centerX, this.y - centerY);
+                return d > maxRadius * params.spawnRadius * 1.5 ||
+                       this.x < 0 || this.x > width ||
+                       this.y < 0 || this.y > height;
+            }
+        }
+
+        // ============================================
+        // DLA System Class
+        // ============================================
+
+        class DLASystem {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.particles = [];
+                this.walkers = [];
+                this.maxRadius = 10; // Tracks furthest particle from center
+                this.gridLookup = new Map();
+                this.cellSize = params.particleSize * 3;
+                this.attempts = 0;
+                this.connections = [];
+
+                this.initializeSeeds();
+            }
+
+            initializeSeeds() {
+                const centerX = this.width / 2;
+                const centerY = this.height / 2;
+
+                switch (params.seedType) {
+                    case 'single':
+                        this.addSeed(centerX, centerY);
+                        break;
+
+                    case 'line':
+                        const lineLength = this.width * 0.4;
+                        const numSeeds = Math.floor(lineLength / (params.particleSize * 2));
+                        for (let i = 0; i < numSeeds; i++) {
+                            const x = centerX - lineLength / 2 + (i / (numSeeds - 1)) * lineLength;
+                            this.addSeed(x, centerY);
+                        }
+                        break;
+
+                    case 'circle':
+                        const radius = Math.min(this.width, this.height) * 0.15;
+                        const circleSeeds = 24;
+                        for (let i = 0; i < circleSeeds; i++) {
+                            const angle = (i / circleSeeds) * Math.PI * 2;
+                            const x = centerX + Math.cos(angle) * radius;
+                            const y = centerY + Math.sin(angle) * radius;
+                            this.addSeed(x, y);
+                        }
+                        break;
+
+                    case 'multiple':
+                        for (let i = 0; i < params.seedCount; i++) {
+                            const angle = (i / params.seedCount) * Math.PI * 2;
+                            const r = Math.min(this.width, this.height) * 0.2;
+                            const x = centerX + Math.cos(angle) * r;
+                            const y = centerY + Math.sin(angle) * r;
+                            this.addSeed(x, y);
+                        }
+                        break;
+
+                    case 'random':
+                        for (let i = 0; i < params.seedCount; i++) {
+                            const x = this.width * 0.2 + Math.random() * this.width * 0.6;
+                            const y = this.height * 0.2 + Math.random() * this.height * 0.6;
+                            this.addSeed(x, y);
+                        }
+                        break;
+                }
+            }
+
+            addSeed(x, y) {
+                const seed = new Particle(x, y, true);
+                this.particles.push(seed);
+                this.addToGrid(seed);
+                this.updateMaxRadius(seed);
+            }
+
+            addToGrid(particle) {
+                const cellX = Math.floor(particle.x / this.cellSize);
+                const cellY = Math.floor(particle.y / this.cellSize);
+                const key = `${cellX},${cellY}`;
+
+                if (!this.gridLookup.has(key)) {
+                    this.gridLookup.set(key, []);
+                }
+                this.gridLookup.get(key).push(particle);
+            }
+
+            updateMaxRadius(particle) {
+                const centerX = this.width / 2;
+                const centerY = this.height / 2;
+                const d = Math.hypot(particle.x - centerX, particle.y - centerY);
+                if (d > this.maxRadius) {
+                    this.maxRadius = d;
+                }
+            }
+
+            spawnWalker() {
+                const centerX = this.width / 2;
+                const centerY = this.height / 2;
+                const spawnR = this.maxRadius * params.spawnRadius + 20;
+
+                // Spawn at random point on spawn circle
+                const angle = Math.random() * Math.PI * 2;
+                const x = centerX + Math.cos(angle) * spawnR;
+                const y = centerY + Math.sin(angle) * spawnR;
+
+                const walker = new Particle(x, y);
+                this.walkers.push(walker);
+            }
+
+            update() {
+                const stuckParticles = this.particles.filter(p => p.stuck).length;
+                if (stuckParticles >= params.maxParticles) {
+                    return false; // Done growing
+                }
+
+                // Spawn new walkers if needed
+                while (this.walkers.length < params.growthSpeed) {
+                    this.spawnWalker();
+                }
+
+                // Process walkers
+                const walkersToRemove = [];
+
+                for (let i = this.walkers.length - 1; i >= 0; i--) {
+                    const walker = this.walkers[i];
+
+                    // Each walker takes multiple steps per frame
+                    for (let step = 0; step < params.walkerSteps; step++) {
+                        walker.walk();
+                        this.attempts++;
+
+                        // Check for collision with aggregate
+                        if (walker.checkCollision(this.particles, this.gridLookup, this.cellSize)) {
+                            walker.stuck = true;
+                            walker.radius = params.particleSize;
+
+                            // Apply branch probability for random offset
+                            if (params.branchProbability > 0 && Math.random() < params.branchProbability) {
+                                const branchAngle = Math.random() * Math.PI * 2;
+                                const branchDist = params.particleSize * (0.5 + Math.random() * 1.5);
+                                walker.x += Math.cos(branchAngle) * branchDist;
+                                walker.y += Math.sin(branchAngle) * branchDist;
+                            }
+
+                            this.particles.push(walker);
+                            this.addToGrid(walker);
+                            this.updateMaxRadius(walker);
+
+                            // Record connection for drawing
+                            if (walker.parent) {
+                                this.connections.push({
+                                    x1: walker.parent.x,
+                                    y1: walker.parent.y,
+                                    x2: walker.x,
+                                    y2: walker.y
+                                });
+                            }
+
+                            walkersToRemove.push(i);
+                            break;
+                        }
+
+                        // Check if walker is too far out
+                        if (walker.isOutOfBounds(this.maxRadius, this.width, this.height)) {
+                            walkersToRemove.push(i);
+                            break;
+                        }
+                    }
+                }
+
+                // Remove processed walkers
+                for (const idx of walkersToRemove) {
+                    this.walkers.splice(idx, 1);
+                }
+
+                return true; // Still growing
+            }
+
+            getStats() {
+                return {
+                    particles: this.particles.filter(p => p.stuck).length,
+                    attempts: this.attempts,
+                    connections: this.connections.length
+                };
+            }
+
+            draw(p) {
+                p.background(params.bgColor);
+                p.stroke(params.strokeColor);
+                p.strokeWeight(params.strokeWeight);
+
+                // Draw connections (lines between stuck particles)
+                for (const conn of this.connections) {
+                    p.line(conn.x1, conn.y1, conn.x2, conn.y2);
+                }
+
+                // Optionally draw particle dots at connection points
+                // (Comment out for cleaner pen plotter output)
+                /*
+                p.noStroke();
+                p.fill(params.strokeColor);
+                for (const particle of this.particles) {
+                    if (particle.stuck) {
+                        p.ellipse(particle.x, particle.y, params.particleSize * 0.5);
+                    }
+                }
+                */
+            }
+
+            // Generate SVG content for export
+            generateSVG() {
+                const paths = [];
+
+                for (const conn of this.connections) {
+                    paths.push({
+                        d: `M ${conn.x1.toFixed(2)} ${conn.y1.toFixed(2)} L ${conn.x2.toFixed(2)} ${conn.y2.toFixed(2)}`,
+                        stroke: params.strokeColor,
+                        strokeWidth: params.strokeWeight
+                    });
+                }
+
+                return TSExport.createSVG(paths, this.width, this.height, {
+                    backgroundColor: params.bgColor,
+                    strokeColor: params.strokeColor,
+                    strokeWidth: params.strokeWeight
+                });
+            }
+        }
+
+        // ============================================
+        // p5.js Setup and Draw
+        // ============================================
+
+        function setup() {
+            const size = TSCanvasControls.PAPER_SIZES[params.paperSize] || { width: 800, height: 800 };
+            canvas = createCanvas(size.width, size.height);
+            canvas.parent('canvas-container');
+
+            dlaSystem = new DLASystem(width, height);
+
+            // Initial draw
+            dlaSystem.draw(window);
+            updateStats();
+        }
+
+        function draw() {
+            if (isRunning && dlaSystem) {
+                const stillGrowing = dlaSystem.update();
+                dlaSystem.draw(window);
+                updateStats();
+
+                // Record frame for GIF if needed
+                if (recordingGIF) {
+                    animationFrames.push(get());
+                }
+
+                if (!stillGrowing) {
+                    stopSimulation();
+                    updateStatus('Complete', 'complete');
+                }
+            }
+        }
+
+        // ============================================
+        // Control Functions
+        // ============================================
+
+        function startSimulation() {
+            isRunning = true;
+            updateStatus('Running', 'running');
+        }
+
+        function stopSimulation() {
+            isRunning = false;
+            recordingGIF = false;
+            updateStatus('Paused', '');
+        }
+
+        function resetSimulation() {
+            stopSimulation();
+
+            const size = TSCanvasControls.PAPER_SIZES[params.paperSize] || { width: 800, height: 800 };
+            resizeCanvas(size.width, size.height);
+
+            dlaSystem = new DLASystem(width, height);
+            dlaSystem.draw(window);
+
+            animationFrames = [];
+            updateStats();
+            updateStatus('Ready', '');
+        }
+
+        function stepSimulation(steps = 100) {
+            if (!dlaSystem) return;
+
+            const targetParticles = dlaSystem.particles.filter(p => p.stuck).length + steps;
+
+            while (dlaSystem.particles.filter(p => p.stuck).length < targetParticles &&
+                   dlaSystem.particles.filter(p => p.stuck).length < params.maxParticles) {
+                dlaSystem.update();
+            }
+
+            dlaSystem.draw(window);
+            updateStats();
+        }
+
+        function updateStatus(text, state) {
+            document.getElementById('statusText').textContent = text;
+            const dot = document.getElementById('statusDot');
+            dot.className = 'status-dot';
+            if (state) {
+                dot.classList.add(state);
+            }
+        }
+
+        function updateStats() {
+            if (!dlaSystem) return;
+
+            const stats = dlaSystem.getStats();
+            document.getElementById('particleCount').textContent = stats.particles;
+            document.getElementById('attemptCount').textContent = stats.attempts.toLocaleString();
+            document.getElementById('connectionCount').textContent = stats.connections;
+        }
+
+        // ============================================
+        // UI Event Handlers
+        // ============================================
+
+        function setupUI() {
+            // Slider controls with value display
+            const sliderMappings = [
+                { id: 'maxParticles', param: 'maxParticles', display: 'maxParticlesValue' },
+                { id: 'stickiness', param: 'stickiness', display: 'stickinessValue', format: v => v.toFixed(2) },
+                { id: 'particleSize', param: 'particleSize', display: 'particleSizeValue' },
+                { id: 'branchProbability', param: 'branchProbability', display: 'branchProbabilityValue', format: v => v.toFixed(2) },
+                { id: 'seedCount', param: 'seedCount', display: 'seedCountValue' },
+                { id: 'growthSpeed', param: 'growthSpeed', display: 'growthSpeedValue' },
+                { id: 'walkerSteps', param: 'walkerSteps', display: 'walkerStepsValue' },
+                { id: 'spawnRadius', param: 'spawnRadius', display: 'spawnRadiusValue', format: v => v.toFixed(1) },
+                { id: 'strokeWeight', param: 'strokeWeight', display: 'strokeWeightValue', format: v => v.toFixed(1) }
+            ];
+
+            sliderMappings.forEach(({ id, param, display, format }) => {
+                const slider = document.getElementById(id);
+                if (slider) {
+                    slider.addEventListener('input', (e) => {
+                        const value = parseFloat(e.target.value);
+                        params[param] = value;
+                        const displayEl = document.getElementById(display);
+                        if (displayEl) {
+                            displayEl.textContent = format ? format(value) : value;
+                        }
+                    });
+                }
+            });
+
+            // Select controls
+            document.getElementById('seedType').addEventListener('change', (e) => {
+                params.seedType = e.target.value;
+            });
+
+            document.getElementById('paperSize').addEventListener('change', (e) => {
+                params.paperSize = e.target.value;
+                resetSimulation();
+            });
+
+            // Color inputs
+            document.getElementById('bgColor').addEventListener('input', (e) => {
+                params.bgColor = e.target.value;
+                if (dlaSystem) dlaSystem.draw(window);
+            });
+
+            document.getElementById('strokeColor').addEventListener('input', (e) => {
+                params.strokeColor = e.target.value;
+                if (dlaSystem) dlaSystem.draw(window);
+            });
+
+            // Control buttons
+            document.getElementById('startBtn').addEventListener('click', startSimulation);
+            document.getElementById('stopBtn').addEventListener('click', stopSimulation);
+            document.getElementById('resetBtn').addEventListener('click', resetSimulation);
+            document.getElementById('stepBtn').addEventListener('click', () => stepSimulation(100));
+
+            // Canvas controls for color randomization
+            canvasControls = new TSCanvasControls({
+                bgColor: params.bgColor,
+                strokeColor: params.strokeColor
+            });
+            canvasControls.bind(params, {
+                autoRegen: false,
+                regenCallback: () => {
+                    // Update color inputs
+                    document.getElementById('bgColor').value = params.bgColor;
+                    document.getElementById('strokeColor').value = params.strokeColor;
+                    if (dlaSystem) dlaSystem.draw(window);
+                }
+            });
+            canvasControls.setupRandomizeButton('randomizeAll');
+
+            // Preset manager
+            presetManager = new PresetManager({
+                algorithmId: 'dla-growth',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    resetSimulation();
+                },
+                onRandomize: () => {
+                    params.maxParticles = 100 + Math.floor(Math.random() * 4900);
+                    params.stickiness = Math.random();
+                    params.particleSize = 1 + Math.random() * 9;
+                    params.branchProbability = Math.random() * 0.5;
+                    params.growthSpeed = 1 + Math.floor(Math.random() * 99);
+
+                    const seedTypes = ['single', 'line', 'circle', 'multiple', 'random'];
+                    params.seedType = seedTypes[Math.floor(Math.random() * seedTypes.length)];
+                    params.seedCount = 1 + Math.floor(Math.random() * 19);
+
+                    updateUIFromParams();
+                    resetSimulation();
+                    startSimulation();
+                }
+            });
+
+            // Export buttons
+            TSExport.setupButtons({
+                svg: () => {
+                    if (dlaSystem) {
+                        const svg = dlaSystem.generateSVG();
+                        TSExport.downloadSVG(svg, 'dla-growth');
+                    }
+                },
+                png: () => {
+                    const cvs = document.querySelector('#canvas-container canvas');
+                    if (cvs) {
+                        TSExport.downloadPNG(cvs, 'dla-growth', { scale: 2 });
+                    }
+                },
+                gif: async () => {
+                    if (animationFrames.length > 0) {
+                        await TSExport.downloadGIF(animationFrames, 'dla-growth', { fps: 15 });
+                    } else {
+                        // Record a growth animation
+                        recordingGIF = true;
+                        animationFrames = [];
+                        resetSimulation();
+                        startSimulation();
+
+                        // Set a timeout to stop and export
+                        setTimeout(async () => {
+                            stopSimulation();
+                            if (animationFrames.length > 0) {
+                                await TSExport.downloadGIF(animationFrames, 'dla-growth', { fps: 15 });
+                            }
+                            animationFrames = [];
+                        }, 10000); // Record for 10 seconds
+                    }
+                }
+            });
+        }
+
+        function updateUIFromParams() {
+            // Update sliders
+            const sliderUpdates = [
+                { id: 'maxParticles', display: 'maxParticlesValue' },
+                { id: 'stickiness', display: 'stickinessValue', format: v => v.toFixed(2) },
+                { id: 'particleSize', display: 'particleSizeValue' },
+                { id: 'branchProbability', display: 'branchProbabilityValue', format: v => v.toFixed(2) },
+                { id: 'seedCount', display: 'seedCountValue' },
+                { id: 'growthSpeed', display: 'growthSpeedValue' },
+                { id: 'walkerSteps', display: 'walkerStepsValue' },
+                { id: 'spawnRadius', display: 'spawnRadiusValue', format: v => v.toFixed(1) },
+                { id: 'strokeWeight', display: 'strokeWeightValue', format: v => v.toFixed(1) }
+            ];
+
+            sliderUpdates.forEach(({ id, display, format }) => {
+                const slider = document.getElementById(id);
+                const displayEl = document.getElementById(display);
+                if (slider && params[id] !== undefined) {
+                    slider.value = params[id];
+                    if (displayEl) {
+                        displayEl.textContent = format ? format(params[id]) : params[id];
+                    }
+                }
+            });
+
+            // Update selects
+            document.getElementById('seedType').value = params.seedType;
+            document.getElementById('paperSize').value = params.paperSize;
+
+            // Update colors
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
+        }
+
+        // ============================================
+        // Initialize when DOM is ready
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', setupUI);
+    </script>
+</body>
+</html>

@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Boids Flocking Simulation - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../shared/gif-exporter.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: #1a1a1a;
+      color: #fff;
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #2a2a2a;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: #1a1a1a;
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: #00d4aa;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #333;
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: #00d4aa;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      color: #ccc;
+    }
+    input[type="range"] {
+      width: 100%;
+    }
+    select {
+      width: 100%;
+      padding: 8px;
+      background: #333;
+      color: #fff;
+      border: 1px solid #555;
+      font-family: 'JetBrains Mono', monospace;
+      border-radius: 4px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0;
+      background: #00d4aa;
+      color: #000;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+    button:hover {
+      background: #00e8bb;
+    }
+    button:active {
+      background: #00c49a;
+    }
+    .secondary {
+      background: #555;
+      color: #fff;
+    }
+    .secondary:hover {
+      background: #666;
+    }
+    .value {
+      font-weight: bold;
+      color: #00d4aa;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+    .checkbox-container input {
+      margin-right: 10px;
+      accent-color: #00d4aa;
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.8);
+      padding: 10px 15px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .export-btn {
+      background: #ff6b6b;
+      color: #fff;
+    }
+    .export-btn:hover {
+      background: #ff5252;
+    }
+    #gif-progress {
+      display: none;
+      background: #333;
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #555;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: #00d4aa;
+      transition: width 0.3s;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 36px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: transparent;
+    }
+    .color-picker-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .color-picker-row label {
+      flex: 1;
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Boids: <span id="boid-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Boids Flocking</h2>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square">Square (300x300mm)</option>
+          <option value="a4">A4 Portrait</option>
+          <option value="a3" selected>A3 Portrait</option>
+          <option value="letter">US Letter</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <button id="play-pause">Pause</button>
+      <button id="reset" class="secondary">Reset Simulation</button>
+      <button id="clear-trails" class="secondary">Clear Trails</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Flock Settings</h3>
+      <div class="control">
+        <label>Number of Boids: <span class="value" id="numBoids-val">50</span></label>
+        <input type="range" id="numBoids" min="10" max="200" value="50">
+      </div>
+      <div class="control">
+        <label>Perception Radius: <span class="value" id="perceptionRadius-val">50</span></label>
+        <input type="range" id="perceptionRadius" min="20" max="200" value="50">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Behavior Weights</h3>
+      <div class="control">
+        <label>Separation: <span class="value" id="separation-val">1.5</span></label>
+        <input type="range" id="separation" min="0" max="3" step="0.1" value="1.5">
+      </div>
+      <div class="control">
+        <label>Alignment: <span class="value" id="alignment-val">1.0</span></label>
+        <input type="range" id="alignment" min="0" max="3" step="0.1" value="1.0">
+      </div>
+      <div class="control">
+        <label>Cohesion: <span class="value" id="cohesion-val">1.0</span></label>
+        <input type="range" id="cohesion" min="0" max="3" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Movement</h3>
+      <div class="control">
+        <label>Max Speed: <span class="value" id="maxSpeed-val">4</span></label>
+        <input type="range" id="maxSpeed" min="1" max="10" step="0.5" value="4">
+      </div>
+      <div class="control">
+        <label>Max Force: <span class="value" id="maxForce-val">0.2</span></label>
+        <input type="range" id="maxForce" min="0.05" max="1" step="0.05" value="0.2">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Trail Settings</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showTrails" checked>
+        <label for="showTrails">Show Trails</label>
+      </div>
+      <div class="control">
+        <label>Trail Length: <span class="value" id="trailLength-val">100</span></label>
+        <input type="range" id="trailLength" min="10" max="500" value="100">
+      </div>
+      <div class="control">
+        <label>Trail Stroke Weight: <span class="value" id="trailWeight-val">1.0</span></label>
+        <input type="range" id="trailWeight" min="0.5" max="5" step="0.5" value="1.0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Predator Mode</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="predatorMode">
+        <label for="predatorMode">Enable Predator (Mouse)</label>
+      </div>
+      <div class="control">
+        <label>Predator Avoidance: <span class="value" id="predatorAvoidance-val">5.0</span></label>
+        <input type="range" id="predatorAvoidance" min="0" max="10" step="0.5" value="5.0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Colors</h3>
+      <div class="control color-picker-row">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control color-picker-row">
+        <label>Stroke:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Quick Presets</h3>
+      <button class="secondary" onclick="loadQuickPreset('calm')">Calm School</button>
+      <button class="secondary" onclick="loadQuickPreset('chaotic')">Chaotic Swarm</button>
+      <button class="secondary" onclick="loadQuickPreset('tight')">Tight Formation</button>
+      <button class="secondary" onclick="loadQuickPreset('scattered')">Scattered Flock</button>
+      <button class="secondary" onclick="loadQuickPreset('dense')">Dense Trails</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Craig Reynolds' Boids Algorithm Implementation
+    // Three rules: Separation, Alignment, Cohesion
+
+    class Boid {
+      constructor(x, y) {
+        this.position = createVector(x, y);
+        this.velocity = p5.Vector.random2D();
+        this.velocity.setMag(random(2, 4));
+        this.acceleration = createVector(0, 0);
+        this.trail = [];
+        this.maxTrailLength = 100;
+      }
+
+      // Update trail history
+      updateTrail() {
+        this.trail.push(this.position.copy());
+        if (this.trail.length > this.maxTrailLength) {
+          this.trail.shift();
+        }
+      }
+
+      // Draw the boid's trail as a continuous path
+      drawTrail(showTrails, strokeCol, trailWeight) {
+        if (!showTrails || this.trail.length < 2) return;
+
+        noFill();
+        stroke(strokeCol);
+        strokeWeight(trailWeight);
+
+        beginShape();
+        for (let i = 0; i < this.trail.length; i++) {
+          vertex(this.trail[i].x, this.trail[i].y);
+        }
+        endShape();
+      }
+
+      // Draw the boid itself (small triangle pointing in direction of velocity)
+      drawBoid(strokeCol) {
+        push();
+        translate(this.position.x, this.position.y);
+        rotate(this.velocity.heading());
+
+        fill(strokeCol);
+        noStroke();
+
+        // Small triangle
+        const size = 4;
+        triangle(size, 0, -size, -size/2, -size, size/2);
+        pop();
+      }
+
+      // Wrap around edges (toroidal topology)
+      edges() {
+        if (this.position.x > width) {
+          this.position.x = 0;
+          this.trail = []; // Clear trail when wrapping to avoid lines across screen
+        }
+        if (this.position.x < 0) {
+          this.position.x = width;
+          this.trail = [];
+        }
+        if (this.position.y > height) {
+          this.position.y = 0;
+          this.trail = [];
+        }
+        if (this.position.y < 0) {
+          this.position.y = height;
+          this.trail = [];
+        }
+      }
+
+      // Apply a force to the boid
+      applyForce(force) {
+        this.acceleration.add(force);
+      }
+
+      // SEPARATION: Steer to avoid crowding local flockmates
+      separation(boids, perceptionRadius) {
+        let steering = createVector(0, 0);
+        let total = 0;
+
+        for (let other of boids) {
+          let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+          if (other !== this && d < perceptionRadius) {
+            let diff = p5.Vector.sub(this.position, other.position);
+            diff.div(d * d); // Weight by distance (closer = stronger repulsion)
+            steering.add(diff);
+            total++;
+          }
+        }
+
+        if (total > 0) {
+          steering.div(total);
+          steering.setMag(params.maxSpeed);
+          steering.sub(this.velocity);
+          steering.limit(params.maxForce);
+        }
+
+        return steering;
+      }
+
+      // ALIGNMENT: Steer towards average heading of local flockmates
+      alignment(boids, perceptionRadius) {
+        let steering = createVector(0, 0);
+        let total = 0;
+
+        for (let other of boids) {
+          let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+          if (other !== this && d < perceptionRadius) {
+            steering.add(other.velocity);
+            total++;
+          }
+        }
+
+        if (total > 0) {
+          steering.div(total);
+          steering.setMag(params.maxSpeed);
+          steering.sub(this.velocity);
+          steering.limit(params.maxForce);
+        }
+
+        return steering;
+      }
+
+      // COHESION: Steer towards average position of local flockmates
+      cohesion(boids, perceptionRadius) {
+        let steering = createVector(0, 0);
+        let total = 0;
+
+        for (let other of boids) {
+          let d = dist(this.position.x, this.position.y, other.position.x, other.position.y);
+          if (other !== this && d < perceptionRadius) {
+            steering.add(other.position);
+            total++;
+          }
+        }
+
+        if (total > 0) {
+          steering.div(total);
+          steering.sub(this.position);
+          steering.setMag(params.maxSpeed);
+          steering.sub(this.velocity);
+          steering.limit(params.maxForce);
+        }
+
+        return steering;
+      }
+
+      // Flee from predator (mouse position)
+      flee(predatorPos, avoidanceStrength) {
+        let steering = createVector(0, 0);
+        let d = dist(this.position.x, this.position.y, predatorPos.x, predatorPos.y);
+
+        if (d < params.perceptionRadius * 2) {
+          let diff = p5.Vector.sub(this.position, predatorPos);
+          diff.div(d);
+          diff.mult(avoidanceStrength);
+          steering.add(diff);
+          steering.setMag(params.maxSpeed * 1.5);
+          steering.sub(this.velocity);
+          steering.limit(params.maxForce * 2);
+        }
+
+        return steering;
+      }
+
+      // Apply all flocking behaviors
+      flock(boids) {
+        let sep = this.separation(boids, params.perceptionRadius);
+        let ali = this.alignment(boids, params.perceptionRadius);
+        let coh = this.cohesion(boids, params.perceptionRadius);
+
+        // Apply weights
+        sep.mult(params.separation);
+        ali.mult(params.alignment);
+        coh.mult(params.cohesion);
+
+        this.applyForce(sep);
+        this.applyForce(ali);
+        this.applyForce(coh);
+
+        // Predator avoidance
+        if (params.predatorMode && mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+          let flee = this.flee(createVector(mouseX, mouseY), params.predatorAvoidance);
+          this.applyForce(flee);
+        }
+      }
+
+      // Update position based on velocity
+      update() {
+        this.velocity.add(this.acceleration);
+        this.velocity.limit(params.maxSpeed);
+        this.position.add(this.velocity);
+        this.acceleration.mult(0);
+
+        this.updateTrail();
+        this.edges();
+      }
+    }
+
+    // Global variables
+    let boids = [];
+    let isPaused = false;
+    let gifExporter;
+    let presetManager;
+
+    // Parameters
+    let params = {
+      paperSize: 'a3',
+      numBoids: 50,
+      perceptionRadius: 50,
+      separation: 1.5,
+      alignment: 1.0,
+      cohesion: 1.0,
+      maxSpeed: 4,
+      maxForce: 0.2,
+      showTrails: true,
+      trailLength: 100,
+      trailWeight: 1.0,
+      predatorMode: false,
+      predatorAvoidance: 5.0,
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      // Initialize boids
+      initializeBoids();
+
+      // Canvas settings event handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      // Initialize GIF exporter
+      gifExporter = new GifExporter({
+        fps: 30,
+        duration: 5,
+        quality: 10,
+        width: size.width,
+        height: size.height,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+      });
+
+      gifExporter.init(canvas.canvas, {
+        onProgress: (data) => {
+          let statusText = data.phase === 'recording'
+            ? `Recording: ${data.capturedFrames}/${data.totalFrames}`
+            : `Encoding: ${Math.round(data.progress * 100)}%`;
+          document.getElementById('gif-status').textContent = statusText;
+          document.getElementById('gif-progress-bar').style.width =
+            (data.progress * 100) + '%';
+        },
+        onComplete: (result) => {
+          document.getElementById('gif-progress').style.display = 'none';
+          document.getElementById('gif-record-text').textContent = 'Record GIF';
+          console.log('GIF created!', result);
+          const link = document.createElement('a');
+          link.href = result.url;
+          link.download = `boids-flocking-${Date.now()}.gif`;
+          link.click();
+        }
+      });
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'boids-flocking',
+        container: '#preset-container',
+        onSave: () => {
+          return { ...params };
+        },
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+
+          // Reinitialize boids if count changed
+          if (boids.length !== params.numBoids) {
+            initializeBoids();
+          }
+        },
+        onRandomize: () => {
+          params.numBoids = Math.floor(random(20, 150));
+          params.perceptionRadius = Math.floor(random(30, 150));
+          params.separation = random(0.5, 2.5);
+          params.alignment = random(0.5, 2.5);
+          params.cohesion = random(0.5, 2.5);
+          params.maxSpeed = random(2, 8);
+          params.maxForce = random(0.1, 0.5);
+          params.trailLength = Math.floor(random(50, 300));
+
+          updateUIFromParams();
+          initializeBoids();
+        }
+      });
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+    }
+
+    function initializeBoids() {
+      boids = [];
+      for (let i = 0; i < params.numBoids; i++) {
+        boids.push(new Boid(random(width), random(height)));
+      }
+      // Set trail length for all boids
+      boids.forEach(b => b.maxTrailLength = params.trailLength);
+    }
+
+    function updateUIFromParams() {
+      // Update paper size
+      document.getElementById('paperSize').value = params.paperSize;
+
+      // Update range inputs
+      const rangeParams = ['numBoids', 'perceptionRadius', 'separation', 'alignment',
+                          'cohesion', 'maxSpeed', 'maxForce', 'trailLength',
+                          'trailWeight', 'predatorAvoidance'];
+
+      rangeParams.forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.value = params[param];
+          const valueDisplay = document.getElementById(param + '-val');
+          if (valueDisplay) valueDisplay.textContent = params[param];
+        }
+      });
+
+      // Update checkboxes
+      document.getElementById('showTrails').checked = params.showTrails;
+      document.getElementById('predatorMode').checked = params.predatorMode;
+
+      // Update colors
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+
+      // Update boid trail lengths
+      boids.forEach(b => b.maxTrailLength = params.trailLength);
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+
+      // Reinitialize boids within new bounds
+      initializeBoids();
+    }
+
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? 'Play' : 'Pause';
+      });
+
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        initializeBoids();
+      });
+
+      // Clear trails
+      document.getElementById('clear-trails').addEventListener('click', () => {
+        boids.forEach(b => b.trail = []);
+      });
+
+      // Number of boids - special handling to reinitialize
+      document.getElementById('numBoids').addEventListener('input', (e) => {
+        params.numBoids = parseInt(e.target.value);
+        document.getElementById('numBoids-val').textContent = e.target.value;
+      });
+
+      document.getElementById('numBoids').addEventListener('change', () => {
+        initializeBoids();
+      });
+
+      // Range parameter controls
+      const rangeParams = ['perceptionRadius', 'separation', 'alignment',
+                          'cohesion', 'maxSpeed', 'maxForce', 'trailLength',
+                          'trailWeight', 'predatorAvoidance'];
+
+      rangeParams.forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+
+            // Update trail length for all boids
+            if (param === 'trailLength') {
+              boids.forEach(b => b.maxTrailLength = params.trailLength);
+            }
+          });
+        }
+      });
+
+      // Checkboxes
+      document.getElementById('showTrails').addEventListener('change', (e) => {
+        params.showTrails = e.target.checked;
+      });
+
+      document.getElementById('predatorMode').addEventListener('change', (e) => {
+        params.predatorMode = e.target.checked;
+      });
+
+      // Color pickers
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
+
+      // Randomize colors button
+      document.getElementById('randomizeAll').addEventListener('click', () => {
+        const colors = canvasControls.randomizeColors();
+        params.bgColor = colors.bgColor;
+        params.strokeColor = colors.strokeColor;
+        document.getElementById('bgColor').value = params.bgColor;
+        document.getElementById('strokeColor').value = params.strokeColor;
+      });
+    }
+
+    function draw() {
+      // Apply background color
+      background(params.bgColor);
+
+      // Update and display boids
+      if (!isPaused) {
+        for (let boid of boids) {
+          boid.flock(boids);
+          boid.update();
+        }
+      }
+
+      // Draw all trails first (underneath boids)
+      for (let boid of boids) {
+        boid.drawTrail(params.showTrails, params.strokeColor, params.trailWeight);
+      }
+
+      // Draw all boids on top
+      for (let boid of boids) {
+        boid.drawBoid(params.strokeColor);
+      }
+
+      // Draw predator indicator if enabled
+      if (params.predatorMode && mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
+        push();
+        noFill();
+        stroke(255, 0, 0, 100);
+        strokeWeight(2);
+        ellipse(mouseX, mouseY, params.perceptionRadius * 2);
+        fill(255, 0, 0);
+        noStroke();
+        ellipse(mouseX, mouseY, 10);
+        pop();
+      }
+
+      // Update info display
+      document.getElementById('boid-count').textContent = boids.length;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+
+      // Capture GIF frame if recording
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.captureFrame();
+      }
+    }
+
+    // Quick presets
+    function loadQuickPreset(name) {
+      boids.forEach(b => b.trail = []); // Clear trails first
+
+      switch (name) {
+        case 'calm':
+          params.numBoids = 30;
+          params.separation = 1.0;
+          params.alignment = 1.5;
+          params.cohesion = 1.2;
+          params.maxSpeed = 2;
+          params.maxForce = 0.1;
+          params.perceptionRadius = 80;
+          params.trailLength = 150;
+          break;
+
+        case 'chaotic':
+          params.numBoids = 100;
+          params.separation = 2.5;
+          params.alignment = 0.3;
+          params.cohesion = 0.3;
+          params.maxSpeed = 8;
+          params.maxForce = 0.5;
+          params.perceptionRadius = 30;
+          params.trailLength = 50;
+          break;
+
+        case 'tight':
+          params.numBoids = 50;
+          params.separation = 0.8;
+          params.alignment = 2.0;
+          params.cohesion = 2.5;
+          params.maxSpeed = 3;
+          params.maxForce = 0.15;
+          params.perceptionRadius = 100;
+          params.trailLength = 100;
+          break;
+
+        case 'scattered':
+          params.numBoids = 40;
+          params.separation = 3.0;
+          params.alignment = 0.5;
+          params.cohesion = 0.5;
+          params.maxSpeed = 5;
+          params.maxForce = 0.3;
+          params.perceptionRadius = 40;
+          params.trailLength = 80;
+          break;
+
+        case 'dense':
+          params.numBoids = 80;
+          params.separation = 1.2;
+          params.alignment = 1.0;
+          params.cohesion = 1.5;
+          params.maxSpeed = 3;
+          params.maxForce = 0.2;
+          params.perceptionRadius = 60;
+          params.trailLength = 300;
+          break;
+      }
+
+      updateUIFromParams();
+      initializeBoids();
+    }
+
+    // Export functions
+    function exportSVG() {
+      // Create SVG with paths for all boid trails
+      let paths = [];
+
+      boids.forEach(boid => {
+        if (boid.trail.length >= 2) {
+          let d = `M ${boid.trail[0].x.toFixed(2)} ${boid.trail[0].y.toFixed(2)}`;
+          for (let i = 1; i < boid.trail.length; i++) {
+            d += ` L ${boid.trail[i].x.toFixed(2)} ${boid.trail[i].y.toFixed(2)}`;
+          }
+          paths.push({
+            d: d,
+            stroke: params.strokeColor,
+            strokeWidth: params.trailWeight,
+            fill: 'none'
+          });
+        }
+      });
+
+      // Add current boid positions as small circles
+      boids.forEach(boid => {
+        const x = boid.position.x.toFixed(2);
+        const y = boid.position.y.toFixed(2);
+        paths.push({
+          d: `M ${x} ${y} m -2,0 a 2,2 0 1,0 4,0 a 2,2 0 1,0 -4,0`,
+          stroke: params.strokeColor,
+          strokeWidth: 0.5,
+          fill: params.strokeColor
+        });
+      });
+
+      const svg = TSExport.createSVG(paths, width, height, {
+        backgroundColor: params.bgColor,
+        strokeColor: params.strokeColor,
+        strokeWidth: params.trailWeight
+      });
+
+      TSExport.downloadSVG(svg, 'boids-flocking');
+    }
+
+    function exportPNG() {
+      const canvas = document.querySelector('#canvas-container canvas');
+      if (canvas) {
+        TSExport.downloadPNG(canvas, 'boids-flocking', { scale: 2 });
+      }
+    }
+
+    function toggleGifRecording() {
+      if (gifExporter && gifExporter.isRecording()) {
+        gifExporter.stop();
+        document.getElementById('gif-record-text').textContent = 'Record GIF';
+      } else if (gifExporter) {
+        document.getElementById('gif-progress').style.display = 'block';
+        document.getElementById('gif-record-text').textContent = 'Stop Recording';
+        gifExporter.start();
+      }
+    }
+  </script>
+</body>
+</html>
