@@ -19,300 +19,273 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    * {
+    body {
       margin: 0;
-      padding: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
       box-sizing: border-box;
     }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      min-height: 100vh;
-      padding: 20px;
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
     }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 380px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .panel {
-      background: rgba(255, 255, 255, 0.95);
-      border-radius: 12px;
-      padding: 24px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-      max-height: 95vh;
-      overflow-y: auto;
-    }
-
-    h1 {
-      color: #00d4aa;
-      margin-bottom: 10px;
-      font-size: 2em;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .subtitle {
-      color: rgba(255, 255, 255, 0.85);
-      margin-bottom: 25px;
-      font-size: 1em;
-    }
-
     .control-group {
       margin-bottom: 20px;
       padding-bottom: 16px;
-      border-bottom: 1px solid #e0e0e0;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
-
-    .control-group:last-child {
-      border-bottom: none;
-    }
-
     .control-group h3 {
-      margin-bottom: 12px;
-      color: #333;
-      font-size: 0.85em;
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.08em;
     }
-
+    .control {
+      margin-bottom: 12px;
+    }
     label {
-      display: block;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 6px;
-      color: #444;
-      font-size: 0.85em;
-      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
     }
-
-    input[type="range"],
-    input[type="number"],
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
     select {
       width: 100%;
-      padding: 8px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 0.85em;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
     }
-
-    input[type="range"] {
-      padding: 0;
-      height: 6px;
-      cursor: pointer;
-    }
-
-    input[type="color"] {
-      width: 50px;
-      height: 32px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .color-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-
-    .color-row label {
-      margin-bottom: 0;
-      min-width: 100px;
-    }
-
-    .range-value {
-      float: right;
-      color: #0f3460;
-      font-weight: 600;
-      font-size: 0.9em;
-    }
-
-    .checkbox-group {
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .checkbox-group input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      cursor: pointer;
-    }
-
-    .checkbox-group label {
-      margin-bottom: 0;
-      cursor: pointer;
-    }
-
     button {
       width: 100%;
-      padding: 12px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #00d4aa 0%, #0f3460 100%);
-      color: white;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
       border: none;
-      border-radius: 8px;
-      font-size: 0.95em;
-      font-weight: 600;
       cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
     }
-
     button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 15px rgba(0, 212, 170, 0.4);
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
     }
-
     button:active {
-      transform: translateY(0);
+      transform: scale(0.98);
     }
-
-    button.secondary {
-      background: #6c757d;
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
     }
-
-    button.secondary:hover {
-      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
     }
-
+    .range-value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
     .button-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-bottom: 8px;
     }
-
     .button-row button {
-      margin-bottom: 0;
+      margin: 0;
     }
-
-    .canvas-container {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    .checkbox-group {
       display: flex;
-      justify-content: center;
       align-items: center;
-      position: relative;
+      gap: 8px;
+      margin-bottom: 12px;
     }
-
-    .stats {
-      margin-top: 16px;
-      padding: 14px;
-      background: #f0f4f8;
-      border-radius: 8px;
-      font-size: 0.8em;
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
     }
-
-    .stats div {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      color: #555;
-    }
-
-    .stats div:last-child {
+    .checkbox-group label {
       margin-bottom: 0;
     }
-
-    .stats .value {
-      font-weight: 600;
-      color: #0f3460;
-    }
-
-    .algorithm-info {
-      background: #e3f2fd;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.8em;
-      color: #1565c0;
-      margin-bottom: 16px;
-      line-height: 1.5;
-    }
-
-    .curve-description {
-      background: #fff3e0;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 0.75em;
-      color: #e65100;
-      margin-top: 8px;
-      line-height: 1.4;
-    }
-
-    .animation-controls {
-      background: #f5f5f5;
-      padding: 12px;
-      border-radius: 8px;
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
       margin-bottom: 10px;
     }
-
+    .color-row label {
+      margin-bottom: 0;
+      min-width: 100px;
+    }
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .curve-description {
+      background: var(--ts-bg-deep);
+      padding: 10px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.75rem;
+      color: var(--ts-text-muted);
+      margin-top: 8px;
+      line-height: 1.4;
+      border-left: 2px solid var(--ts-accent-secondary);
+    }
+    .animation-controls {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      margin-bottom: 10px;
+    }
     .progress-bar {
       width: 100%;
       height: 6px;
-      background: #ddd;
+      background: var(--ts-bg-control);
       border-radius: 3px;
       overflow: hidden;
       margin-top: 8px;
     }
-
     .progress-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #00d4aa, #0f3460);
+      background: var(--ts-accent-primary);
       transition: width 0.1s linear;
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stats .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-  <h1>Space-Filling Curves</h1>
-  <p class="subtitle">7 curve algorithms with animation and progressive drawing for pen plotting</p>
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
 
-  <div class="container">
-    <!-- Controls Panel -->
-    <div class="panel">
-      <div class="algorithm-info">
-        <strong>Space-Filling Curves:</strong> Mathematical curves that pass through every point in a 2D region. Each produces a single continuous path - ideal for pen plotting!
+  <div id="controls">
+    <h2>Space-Filling Curves</h2>
+
+    <div class="algorithm-info">
+      <strong>Space-Filling Curves:</strong> Mathematical curves that pass through every point in a 2D region. Each produces a single continuous path - ideal for pen plotting!
+    </div>
+
+    <!-- Canvas Settings -->
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <label>
+        Paper Size
+        <select id="paperSize">
+          <option value="square800" selected>Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </label>
+      <div class="color-row">
+        <label>Background</label>
+        <input type="color" id="bgColor" value="#ffffff">
       </div>
-
-      <!-- Preset Manager Container -->
-      <div id="preset-container"></div>
-
-      <!-- Canvas Settings -->
-      <div class="control-group">
-        <h3>Canvas Settings</h3>
-        <label>
-          Paper Size
-          <select id="paperSize">
-            <option value="square800" selected>Square (800x800)</option>
-            <option value="landscape800x600">Landscape (800x600)</option>
-            <option value="a4portrait">A4 Portrait</option>
-            <option value="a4landscape">A4 Landscape</option>
-            <option value="a3portrait">A3 Portrait</option>
-            <option value="a3landscape">A3 Landscape</option>
-            <option value="letterportrait">Letter Portrait</option>
-            <option value="letterlandscape">Letter Landscape</option>
-          </select>
-        </label>
-        <div class="color-row">
-          <label>Background</label>
-          <input type="color" id="bgColor" value="#ffffff">
-        </div>
-        <div class="color-row">
-          <label>Stroke Color</label>
-          <input type="color" id="strokeColor" value="#000000">
-        </div>
-        <button id="randomizeAll" class="ts-btn secondary">Randomize Colors</button>
+      <div class="color-row">
+        <label>Stroke Color</label>
+        <input type="color" id="strokeColor" value="#000000">
       </div>
+      <button id="randomizeAll" class="ts-btn secondary">Randomize Colors</button>
+    </div>
 
       <!-- Curve Type -->
       <div class="control-group">
@@ -453,13 +426,10 @@
           <span class="value" id="statComplexity">-</span>
         </div>
       </div>
-    </div>
 
-    <!-- Canvas -->
-    <div class="canvas-container">
-      <div id="canvas"></div>
+      <!-- Preset Manager (at bottom) -->
+      <div id="preset-container" style="margin-top: 20px;"></div>
     </div>
-  </div>
 
   <script>
     // Global variables
