@@ -9,175 +9,174 @@
   <title>Game of Life - Multi-Layer Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-    }
-    #controls {
-      width: 350px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
+
     .secondary {
-      background: #555;
+      background: var(--ts-bg-active) !important;
     }
+
     .secondary:hover {
-      background: #666;
+      background: var(--ts-bg-hover) !important;
     }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
+
+    .preset-btn {
+      background: var(--ts-accent-secondary) !important;
     }
+
+    .preset-btn:hover {
+      background: color-mix(in srgb, var(--ts-accent-secondary) 85%, white) !important;
+    }
+
+    .export-btn {
+      background: var(--ts-accent-tertiary) !important;
+    }
+
+    .export-btn:hover {
+      background: color-mix(in srgb, var(--ts-accent-tertiary) 85%, white) !important;
+    }
+
     #generation {
       text-align: center;
       font-size: 18px;
-      color: #4CAF50;
+      color: var(--ts-accent-primary);
       margin: 10px 0;
+      padding: 10px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
     }
+
     .layer-control {
-      background: #333;
+      background: var(--ts-bg-deep);
       padding: 10px;
       margin: 5px 0;
-      border-radius: 4px;
+      border-radius: var(--ts-radius-md);
     }
+
     .layer-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
+
     .layer-name {
       font-weight: bold;
       display: flex;
       align-items: center;
     }
+
     .color-box {
       width: 20px;
       height: 20px;
       margin-right: 10px;
-      border: 1px solid #fff;
+      border: 1px solid var(--ts-border-default);
       display: inline-block;
     }
+
     .checkbox-container {
       display: flex;
       align-items: center;
+      gap: 8px;
     }
-    .checkbox-container input {
-      margin-right: 10px;
+
+    .checkbox-container label {
+      margin-bottom: 0;
     }
+
+    .checkbox-container input[type="checkbox"] {
+      width: auto;
+    }
+
     input[type="color"] {
       width: 50px;
       height: 30px;
       border: none;
       cursor: pointer;
     }
+
     .rule-inputs {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-top: 10px;
     }
+
     .rule-input {
       display: flex;
       align-items: center;
       font-size: 12px;
     }
+
     .rule-input input {
       width: 50px;
       margin-left: 5px;
       padding: 2px;
-      background: #444;
-      color: #fff;
-      border: 1px solid #666;
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-sm);
     }
+
     #layer-preview {
       position: absolute;
       top: 10px;
       right: 10px;
       background: rgba(0,0,0,0.8);
       padding: 10px;
-      border-radius: 4px;
+      border-radius: var(--ts-radius-md);
     }
+
     .preview-item {
       display: flex;
       align-items: center;
       margin: 5px 0;
       font-size: 12px;
     }
-    .export-btn {
-      background: #2196F3;
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
     }
-    .export-btn:hover {
-      background: #1976D2;
+
+    .drawing-instructions {
+      font-size: 12px;
+      color: var(--ts-text-muted);
+      margin-top: 10px;
+      padding: 10px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
     }
   </style>
 </head>
@@ -186,18 +185,37 @@
     <div id="layer-preview"></div>
   </div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Multi-Layer Life</h2>
-    
+
     <div id="generation">Generation: 0</div>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">US Letter Landscape</option>
+          <option value="letter_portrait">US Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="custom" selected>Custom (800x600px)</option>
+        </select>
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Simulation</h3>
-      <button id="play-pause">▶ Play</button>
+      <button id="play-pause">Play</button>
       <button id="step" class="secondary">Step Forward</button>
       <button id="reset" class="secondary">Reset</button>
       <button id="clear" class="secondary">Clear All Layers</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Drawing</h3>
       <div class="control">
@@ -206,13 +224,13 @@
           <!-- Options will be populated dynamically -->
         </select>
       </div>
-      <div style="font-size: 12px; color: #888; margin-top: 10px;">
-        • Left click: Draw cells<br>
-        • Right click: Erase cells<br>
-        • Number keys 1-4: Quick layer select
+      <div class="drawing-instructions">
+        Left click: Draw cells<br>
+        Right click: Erase cells<br>
+        Number keys 1-4: Quick layer select
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Grid Settings</h3>
       <div class="control">
@@ -228,21 +246,21 @@
         <input type="range" id="speed" min="1" max="30" value="5">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Layers</h3>
       <div id="layers-container"></div>
       <button onclick="addLayer()" class="secondary">+ Add Layer</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Presets</h3>
-      <button onclick="loadPreset('twoSpecies')">Two Species Competition</button>
-      <button onclick="loadPreset('threeLayer')">Three Layer Ecosystem</button>
-      <button onclick="loadPreset('rainbow')">Rainbow Cascade</button>
-      <button onclick="loadPreset('lifeWar')">Life War (4 Teams)</button>
+      <button class="preset-btn" onclick="loadPreset('twoSpecies')">Two Species Competition</button>
+      <button class="preset-btn" onclick="loadPreset('threeLayer')">Three Layer Ecosystem</button>
+      <button class="preset-btn" onclick="loadPreset('rainbow')">Rainbow Cascade</button>
+      <button class="preset-btn" onclick="loadPreset('lifeWar')">Life War (4 Teams)</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Export Options</h3>
       <button class="export-btn" onclick="exportAllLayers()">Export All Layers (ZIP)</button>
@@ -253,7 +271,7 @@
         <input type="checkbox" id="includeRegistration" checked>
         <label for="includeRegistration">Include Registration Marks</label>
       </div>
-      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+      <div id="gif-status"></div>
     </div>
   </div>
 
@@ -267,7 +285,7 @@
     let cellSize = 10;
     let speed = 5;
     let currentDrawLayer = 0; // Layer ID to draw on
-    
+
     // Layer class
     class Layer {
       constructor(id, name, color, birthRules, survivalRules) {
@@ -283,7 +301,7 @@
         this.interaction = 'independent'; // 'independent', 'competitive', 'cooperative'
         this.initializeGrid();
       }
-      
+
       initializeGrid() {
         this.grid = [];
         this.nextGrid = [];
@@ -296,18 +314,18 @@
           }
         }
       }
-      
+
       countNeighbors(x, y, includeOtherLayers = false) {
         let count = 0;
         for (let i = -1; i <= 1; i++) {
           for (let j = -1; j <= 1; j++) {
             if (i === 0 && j === 0) continue;
-            
+
             let nx = (x + i + gridSize) % gridSize;
             let ny = (y + j + gridSize) % gridSize;
-            
+
             count += this.grid[nx][ny];
-            
+
             // Count cells from other layers if interaction enabled
             if (includeOtherLayers && this.interaction !== 'independent') {
               layers.forEach(layer => {
@@ -324,19 +342,19 @@
         }
         return Math.floor(count);
       }
-      
+
       step() {
         for (let i = 0; i < gridSize; i++) {
           for (let j = 0; j < gridSize; j++) {
             const neighbors = this.countNeighbors(i, j, true);
-            
+
             if (this.grid[i][j] === 1) {
               // Check survival
               this.nextGrid[i][j] = this.survivalRules.includes(neighbors) ? 1 : 0;
             } else {
               // Check birth
               this.nextGrid[i][j] = this.birthRules.includes(neighbors) ? 1 : 0;
-              
+
               // Prevent birth if another layer occupies the cell (competitive)
               if (this.interaction === 'competitive' && this.nextGrid[i][j] === 1) {
                 for (let layer of layers) {
@@ -349,113 +367,113 @@
             }
           }
         }
-        
+
         // Swap grids
         let temp = this.grid;
         this.grid = this.nextGrid;
         this.nextGrid = temp;
       }
     }
-    
+
     function setup() {
       let canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
-      
+
       setupControls();
-      
+
       // Initialize with two default layers
       layers.push(new Layer(0, 'Species A', '#4CAF50', [3], [2, 3]));
       layers.push(new Layer(1, 'Species B', '#2196F3', [3], [2, 3]));
-      
+
       updateLayerControls();
       updateLayerPreview();
       updateDrawLayerSelect();
-      
+
       // Load first preset
       loadPreset('twoSpecies');
     }
-    
+
     function setupControls() {
       // Play/Pause
       document.getElementById('play-pause').addEventListener('click', () => {
         isPlaying = !isPlaying;
-        document.getElementById('play-pause').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+        document.getElementById('play-pause').textContent = isPlaying ? 'Pause' : 'Play';
       });
-      
+
       // Step
       document.getElementById('step').addEventListener('click', () => {
         stepSimulation();
       });
-      
+
       // Reset
       document.getElementById('reset').addEventListener('click', () => {
         generation = 0;
         updateGenerationDisplay();
         layers.forEach(layer => layer.initializeGrid());
       });
-      
+
       // Clear
       document.getElementById('clear').addEventListener('click', () => {
         layers.forEach(layer => layer.initializeGrid());
         generation = 0;
         updateGenerationDisplay();
       });
-      
+
       // Grid controls
       document.getElementById('gridSize').addEventListener('input', (e) => {
         gridSize = parseInt(e.target.value);
         document.getElementById('gridSize-val').textContent = gridSize;
         layers.forEach(layer => layer.initializeGrid());
       });
-      
+
       document.getElementById('cellSize').addEventListener('input', (e) => {
         cellSize = parseInt(e.target.value);
         document.getElementById('cellSize-val').textContent = cellSize;
       });
-      
+
       document.getElementById('speed').addEventListener('input', (e) => {
         speed = parseInt(e.target.value);
         document.getElementById('speed-val').textContent = speed;
       });
-      
+
       // Draw layer select
       document.getElementById('draw-layer-select').addEventListener('change', (e) => {
         currentDrawLayer = parseInt(e.target.value);
       });
     }
-    
+
     function draw() {
       background(30);
-      
+
       // Update simulation
       if (isPlaying && millis() - lastUpdate > 1000 / speed) {
         stepSimulation();
         lastUpdate = millis();
       }
-      
+
       // Calculate drawing parameters
       const offsetX = (width - gridSize * cellSize) / 2;
       const offsetY = (height - gridSize * cellSize) / 2;
-      
+
       // Draw grid
       stroke(50);
       strokeWeight(0.5);
       for (let i = 0; i <= gridSize; i++) {
-        line(offsetX + i * cellSize, offsetY, 
+        line(offsetX + i * cellSize, offsetY,
              offsetX + i * cellSize, offsetY + gridSize * cellSize);
-        line(offsetX, offsetY + i * cellSize, 
+        line(offsetX, offsetY + i * cellSize,
              offsetX + gridSize * cellSize, offsetY + i * cellSize);
       }
-      
+
       // Draw layers
       layers.forEach(layer => {
         if (!layer.visible) return;
-        
+
         const c = color(layer.color);
         c.setAlpha(layer.opacity * 255);
         fill(c);
         noStroke();
-        
+
         for (let i = 0; i < gridSize; i++) {
           for (let j = 0; j < gridSize; j++) {
             if (layer.grid[i][j] === 1) {
@@ -466,32 +484,32 @@
           }
         }
       });
-      
+
       // Draw layer indicator
       drawLayerIndicator(offsetX, offsetY);
     }
-    
+
     function stepSimulation() {
       layers.forEach(layer => layer.step());
       generation++;
       updateGenerationDisplay();
     }
-    
+
     // Mouse interaction functions
     function mousePressed() {
       drawCell();
     }
-    
+
     function mouseDragged() {
       drawCell();
     }
-    
+
     function drawCell() {
       const offsetX = (width - gridSize * cellSize) / 2;
       const offsetY = (height - gridSize * cellSize) / 2;
       const gridX = Math.floor((mouseX - offsetX) / cellSize);
       const gridY = Math.floor((mouseY - offsetY) / cellSize);
-      
+
       if (gridX >= 0 && gridX < gridSize && gridY >= 0 && gridY < gridSize) {
         const layer = layers.find(l => l.id === currentDrawLayer);
         if (layer) {
@@ -499,7 +517,7 @@
         }
       }
     }
-    
+
     function keyPressed() {
       // Number keys 1-4 for quick layer selection
       if (key >= '1' && key <= '4') {
@@ -510,18 +528,18 @@
         }
       }
     }
-    
+
     function drawLayerIndicator(offsetX, offsetY) {
       const layer = layers.find(l => l.id === currentDrawLayer);
       if (!layer) return;
-      
+
       // Draw border around grid to show active layer
       push();
       stroke(layer.color);
       strokeWeight(3);
       noFill();
       rect(offsetX - 2, offsetY - 2, gridSize * cellSize + 4, gridSize * cellSize + 4);
-      
+
       // Draw layer info
       fill(layer.color);
       noStroke();
@@ -530,11 +548,11 @@
       text(`Drawing on: ${layer.name}`, offsetX, offsetY - 20);
       pop();
     }
-    
+
     function updateDrawLayerSelect() {
       const select = document.getElementById('draw-layer-select');
       select.innerHTML = '';
-      
+
       layers.forEach(layer => {
         const option = document.createElement('option');
         option.value = layer.id;
@@ -546,22 +564,22 @@
         select.appendChild(option);
       });
     }
-    
+
     function updateGenerationDisplay() {
       document.getElementById('generation').textContent = `Generation: ${generation}`;
     }
-    
+
     function addLayer() {
       const id = layers.length;
       const colors = ['#FF6B6B', '#FFE66D', '#8E7CC3', '#FF8C94', '#98D8C8'];
-      const color = colors[id % colors.length];
-      const layer = new Layer(id, `Layer ${id + 1}`, color, [3], [2, 3]);
+      const layerColor = colors[id % colors.length];
+      const layer = new Layer(id, `Layer ${id + 1}`, layerColor, [3], [2, 3]);
       layers.push(layer);
       updateLayerControls();
       updateLayerPreview();
       updateDrawLayerSelect();
     }
-    
+
     function removeLayer(id) {
       layers = layers.filter(l => l.id !== id);
       // If we removed the current draw layer, select the first available
@@ -572,11 +590,11 @@
       updateLayerPreview();
       updateDrawLayerSelect();
     }
-    
+
     function updateLayerControls() {
       const container = document.getElementById('layers-container');
       container.innerHTML = '';
-      
+
       layers.forEach(layer => {
         const div = document.createElement('div');
         div.className = 'layer-control';
@@ -584,12 +602,12 @@
           <div class="layer-header">
             <div class="layer-name">
               <span class="color-box" style="background: ${layer.color}"></span>
-              <input type="text" value="${layer.name}" onchange="updateLayerName(${layer.id}, this.value)" style="background: #444; color: #fff; border: 1px solid #666; padding: 2px;">
+              <input type="text" value="${layer.name}" onchange="updateLayerName(${layer.id}, this.value)" style="background: var(--ts-bg-control); color: var(--ts-text-primary); border: 1px solid var(--ts-border-default); padding: 2px; border-radius: var(--ts-radius-sm);">
             </div>
             <div>
               <input type="checkbox" ${layer.visible ? 'checked' : ''} onchange="toggleLayerVisibility(${layer.id})">
               <input type="color" value="${layer.color}" onchange="updateLayerColor(${layer.id}, this.value)">
-              <button onclick="removeLayer(${layer.id})" style="width: auto; padding: 5px 10px; margin: 0;">×</button>
+              <button onclick="removeLayer(${layer.id})" style="width: auto; padding: 5px 10px; margin: 0;">x</button>
             </div>
           </div>
           <div class="rule-inputs">
@@ -602,7 +620,7 @@
           </div>
           <div style="margin-top: 10px;">
             <label style="font-size: 12px;">Interaction:</label>
-            <select onchange="updateLayerInteraction(${layer.id}, this.value)" style="font-size: 12px;">
+            <select onchange="updateLayerInteraction(${layer.id}, this.value)" style="font-size: 12px; background: var(--ts-bg-control); color: var(--ts-text-primary); border: 1px solid var(--ts-border-default); border-radius: var(--ts-radius-sm);">
               <option value="independent" ${layer.interaction === 'independent' ? 'selected' : ''}>Independent</option>
               <option value="competitive" ${layer.interaction === 'competitive' ? 'selected' : ''}>Competitive</option>
               <option value="cooperative" ${layer.interaction === 'cooperative' ? 'selected' : ''}>Cooperative</option>
@@ -612,11 +630,11 @@
         container.appendChild(div);
       });
     }
-    
+
     function updateLayerPreview() {
       const preview = document.getElementById('layer-preview');
-      preview.innerHTML = '<h4 style="margin: 0 0 10px 0; font-size: 14px;">Active Layers</h4>';
-      
+      preview.innerHTML = '<h4 style="margin: 0 0 10px 0; font-size: 14px; color: var(--ts-text-secondary);">Active Layers</h4>';
+
       layers.filter(l => l.visible).forEach(layer => {
         const div = document.createElement('div');
         div.className = 'preview-item';
@@ -627,51 +645,51 @@
         preview.appendChild(div);
       });
     }
-    
+
     // Layer update functions
     function updateLayerName(id, name) {
       const layer = layers.find(l => l.id === id);
       if (layer) layer.name = name;
       updateLayerPreview();
     }
-    
-    function updateLayerColor(id, color) {
+
+    function updateLayerColor(id, newColor) {
       const layer = layers.find(l => l.id === id);
-      if (layer) layer.color = color;
+      if (layer) layer.color = newColor;
       updateLayerControls();
       updateLayerPreview();
     }
-    
+
     function toggleLayerVisibility(id) {
       const layer = layers.find(l => l.id === id);
       if (layer) layer.visible = !layer.visible;
       updateLayerPreview();
     }
-    
+
     function updateBirthRules(id, rulesStr) {
       const layer = layers.find(l => l.id === id);
       if (layer) {
         layer.birthRules = rulesStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
       }
     }
-    
+
     function updateSurvivalRules(id, rulesStr) {
       const layer = layers.find(l => l.id === id);
       if (layer) {
         layer.survivalRules = rulesStr.split(',').map(n => parseInt(n.trim())).filter(n => !isNaN(n));
       }
     }
-    
+
     function updateLayerInteraction(id, interaction) {
       const layer = layers.find(l => l.id === id);
       if (layer) layer.interaction = interaction;
     }
-    
+
     // Presets
     function loadPreset(name) {
       generation = 0;
       updateGenerationDisplay();
-      
+
       switch (name) {
         case 'twoSpecies':
           layers = [
@@ -680,7 +698,7 @@
           ];
           layers[0].interaction = 'competitive';
           layers[1].interaction = 'competitive';
-          
+
           // Random initial state
           for (let i = 0; i < gridSize; i++) {
             for (let j = 0; j < gridSize; j++) {
@@ -689,7 +707,7 @@
             }
           }
           break;
-          
+
         case 'threeLayer':
           layers = [
             new Layer(0, 'Red Colony', '#FF6B6B', [3], [2, 3]),
@@ -697,7 +715,7 @@
             new Layer(2, 'Blue Colony', '#2196F3', [3], [2, 3])
           ];
           layers.forEach(l => l.interaction = 'competitive');
-          
+
           // Three starting colonies
           const centers = [[15, 15], [35, 15], [25, 35]];
           centers.forEach((center, idx) => {
@@ -714,16 +732,16 @@
             }
           });
           break;
-          
+
         case 'rainbow':
           layers = [];
           const rainbowColors = ['#FF0000', '#FF8800', '#FFFF00', '#00FF00', '#0088FF', '#8800FF'];
-          rainbowColors.forEach((color, idx) => {
-            const layer = new Layer(idx, `Wave ${idx + 1}`, color, [3], [2, 3]);
+          rainbowColors.forEach((clr, idx) => {
+            const layer = new Layer(idx, `Wave ${idx + 1}`, clr, [3], [2, 3]);
             layer.interaction = 'cooperative';
             layers.push(layer);
           });
-          
+
           // Cascading start
           layers.forEach((layer, idx) => {
             const y = Math.floor(gridSize / 2);
@@ -734,7 +752,7 @@
             }
           });
           break;
-          
+
         case 'lifeWar':
           layers = [
             new Layer(0, 'North', '#FF6B6B', [3], [2, 3]),
@@ -743,10 +761,10 @@
             new Layer(3, 'West', '#FFE66D', [3], [2, 3])
           ];
           layers.forEach(l => l.interaction = 'competitive');
-          
+
           // Four corners start
           const corners = [
-            [0, 0], [gridSize-10, gridSize-10], 
+            [0, 0], [gridSize-10, gridSize-10],
             [gridSize-10, 0], [0, gridSize-10]
           ];
           corners.forEach((corner, idx) => {
@@ -764,41 +782,30 @@
           });
           break;
       }
-      
+
       // Set current draw layer to first layer
       if (layers.length > 0) {
         currentDrawLayer = layers[0].id;
       }
-      
+
       updateLayerControls();
       updateLayerPreview();
       updateDrawLayerSelect();
     }
-    
+
     // Export functions
     function exportLayersSeparately() {
       layers.forEach(layer => {
         if (!layer.visible) return;
-        
+
         let svg = createGraphics(gridSize * 10 + 40, gridSize * 10 + 40, SVG);
         svg.background(255);
-        
+
         // Registration marks
         if (document.getElementById('includeRegistration').checked) {
-          svg.stroke(0);
-          svg.strokeWeight(1);
-          svg.noFill();
-          // Corner marks
-          svg.line(5, 10, 15, 10);
-          svg.line(10, 5, 10, 15);
-          svg.line(svg.width - 15, 10, svg.width - 5, 10);
-          svg.line(svg.width - 10, 5, svg.width - 10, 15);
-          svg.line(5, svg.height - 10, 15, svg.height - 10);
-          svg.line(10, svg.height - 15, 10, svg.height - 5);
-          svg.line(svg.width - 15, svg.height - 10, svg.width - 5, svg.height - 10);
-          svg.line(svg.width - 10, svg.height - 15, svg.width - 10, svg.height - 5);
+          drawRegistrationMarks(svg);
         }
-        
+
         // Draw cells
         svg.fill(0);
         svg.noStroke();
@@ -809,7 +816,7 @@
             }
           }
         }
-        
+
         // Add metadata
         svg.push();
         svg.stroke(0);
@@ -819,39 +826,28 @@
         svg.text(`Color: ${layer.color}`, 100, svg.height - 5);
         svg.text(`Gen: ${generation}`, 200, svg.height - 5);
         svg.pop();
-        
+
         save(svg, `game-of-life-${layer.name.replace(/\s+/g, '-')}-gen${generation}.svg`);
         svg.remove();
       });
     }
-    
+
     function exportCombined() {
       let svg = createGraphics(gridSize * 10 + 40, gridSize * 10 + 40, SVG);
       svg.background(255);
-      
+
       // Registration marks
       if (document.getElementById('includeRegistration').checked) {
-        svg.stroke(0);
-        svg.strokeWeight(1);
-        svg.noFill();
-        // Corner marks
-        svg.line(5, 10, 15, 10);
-        svg.line(10, 5, 10, 15);
-        svg.line(svg.width - 15, 10, svg.width - 5, 10);
-        svg.line(svg.width - 10, 5, svg.width - 10, 15);
-        svg.line(5, svg.height - 10, 15, svg.height - 10);
-        svg.line(10, svg.height - 15, 10, svg.height - 5);
-        svg.line(svg.width - 15, svg.height - 10, svg.width - 5, svg.height - 10);
-        svg.line(svg.width - 10, svg.height - 15, svg.width - 10, svg.height - 5);
+        drawRegistrationMarks(svg);
       }
-      
+
       // Draw each layer with transparency
       layers.forEach(layer => {
         if (!layer.visible) return;
-        
+
         svg.fill(layer.color);
         svg.noStroke();
-        
+
         for (let i = 0; i < gridSize; i++) {
           for (let j = 0; j < gridSize; j++) {
             if (layer.grid[i][j] === 1) {
@@ -860,20 +856,40 @@
           }
         }
       });
-      
+
       save(svg, `game-of-life-combined-gen${generation}.svg`);
       svg.remove();
     }
-    
+
     function exportAllLayers() {
       // In a real implementation, this would create a ZIP file
       alert('ZIP export would package all layers with a manifest file. For now, use "Export Each Layer".');
     }
-    
+
+    function drawRegistrationMarks(svg) {
+      svg.stroke(0);
+      svg.strokeWeight(1);
+      svg.noFill();
+
+      // Corner marks
+      const marks = [
+        [10, 10],
+        [svg.width - 10, 10],
+        [10, svg.height - 10],
+        [svg.width - 10, svg.height - 10]
+      ];
+
+      marks.forEach(([x, y]) => {
+        svg.line(x - 5, y, x + 5, y);
+        svg.line(x, y - 5, x, y + 5);
+        svg.circle(x, y, 8);
+      });
+    }
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -881,79 +897,104 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Store original state
-      const originalRunning = running;
+      const originalPlaying = isPlaying;
       const originalGeneration = generation;
       const originalLayers = layers.map(layer => ({
-        ...layer,
+        id: layer.id,
+        name: layer.name,
+        color: layer.color,
+        birthRules: [...layer.birthRules],
+        survivalRules: [...layer.survivalRules],
+        visible: layer.visible,
+        opacity: layer.opacity,
+        interaction: layer.interaction,
         grid: layer.grid.map(row => [...row])
       }));
-      
-      running = false;
-      
-      // Reset all layers
-      layers.forEach(layer => {
-        clearLayer(layer);
-        initializeLayer(layer);
-      });
+
+      isPlaying = false;
+
+      // Reset all layers for animation
+      loadPreset('twoSpecies');
       generation = 0;
-      
+
       // Generate frames
       const totalFrames = 50;
       for (let frame = 0; frame < totalFrames; frame++) {
         statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
-        
+
         // Create offscreen canvas
         const offscreenCanvas = document.createElement('canvas');
         offscreenCanvas.width = width;
         offscreenCanvas.height = height;
         const ctx = offscreenCanvas.getContext('2d');
-        
+
+        // Calculate drawing parameters
+        const offsetX = (width - gridSize * cellSize) / 2;
+        const offsetY = (height - gridSize * cellSize) / 2;
+
         // Draw background
-        ctx.fillStyle = 'white';
+        ctx.fillStyle = '#1e1e1e';
         ctx.fillRect(0, 0, width, height);
-        
-        const cellSize = width / gridSize;
-        
+
+        // Draw grid
+        ctx.strokeStyle = '#333333';
+        ctx.lineWidth = 0.5;
+        for (let i = 0; i <= gridSize; i++) {
+          ctx.beginPath();
+          ctx.moveTo(offsetX + i * cellSize, offsetY);
+          ctx.lineTo(offsetX + i * cellSize, offsetY + gridSize * cellSize);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(offsetX, offsetY + i * cellSize);
+          ctx.lineTo(offsetX + gridSize * cellSize, offsetY + i * cellSize);
+          ctx.stroke();
+        }
+
         // Draw all visible layers
         layers.forEach(layer => {
           if (layer.visible) {
-            ctx.globalAlpha = 1.0;
-            const col = layer.color;
-            ctx.fillStyle = `rgb(${col.levels[0]}, ${col.levels[1]}, ${col.levels[2]})`;
-            
+            ctx.fillStyle = layer.color;
+
             for (let i = 0; i < gridSize; i++) {
               for (let j = 0; j < gridSize; j++) {
                 if (layer.grid[i][j] === 1) {
-                  ctx.fillRect(i * cellSize, j * cellSize, cellSize - 1, cellSize - 1);
+                  ctx.fillRect(offsetX + i * cellSize, offsetY + j * cellSize, cellSize, cellSize);
                 }
               }
             }
           }
         });
-        
+
         // Add frame
-        gif.addFrame(ctx, {delay: 100});
-        
+        gif.addFrame(ctx, {copy: true, delay: 100});
+
         // Update all layers for next frame
         if (frame < totalFrames - 1) {
-          layers.forEach(layer => {
-            if (layer.active) {
-              updateLayer(layer);
-            }
-          });
-          generation++;
+          stepSimulation();
         }
       }
-      
+
       // Restore original state
-      layers = originalLayers;
+      layers = originalLayers.map(data => {
+        const layer = new Layer(data.id, data.name, data.color, data.birthRules, data.survivalRules);
+        layer.visible = data.visible;
+        layer.opacity = data.opacity;
+        layer.interaction = data.interaction;
+        layer.grid = data.grid;
+        return layer;
+      });
       generation = originalGeneration;
-      running = originalRunning;
-      
+      isPlaying = originalPlaying;
+      updateGenerationDisplay();
+      updateLayerControls();
+      updateLayerPreview();
+      updateDrawLayerSelect();
+
       statusEl.textContent = 'Encoding GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF export complete!';
         const url = URL.createObjectURL(blob);
@@ -961,12 +1002,12 @@
         link.href = url;
         link.download = `game-of-life-layers.gif`;
         link.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>

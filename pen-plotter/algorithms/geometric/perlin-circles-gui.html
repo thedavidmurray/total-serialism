@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Perlin Circle Patterns</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
@@ -19,108 +16,103 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
     }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
       margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
+
     .checkbox-container {
       display: flex;
       align-items: center;
     }
+
     .checkbox-container input {
       margin-right: 10px;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    .preset-manager {
+      margin-top: 20px;
+    }
+
+    .preset-manager .control-group {
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Perlin Circle Controls</h2>
-
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
@@ -129,7 +121,12 @@
         <select id="paperSize">
           <option value="A4_landscape">A4 Landscape</option>
           <option value="A4_portrait">A4 Portrait</option>
-          <option value="square_medium">Square (800×800)</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_medium">Square (800x800)</option>
+          <option value="square_large">Square (1200x1200)</option>
         </select>
       </div>
       <div class="control">
@@ -141,7 +138,7 @@
         <input type="color" id="strokeColor" value="#000000">
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
     </div>
 
@@ -164,7 +161,7 @@
         <input type="range" id="pointsPerCircle" min="20" max="500" value="100" step="10">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Noise Settings</h3>
       <div class="control">
@@ -184,7 +181,7 @@
         <label for="animateNoise">Animate Noise</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Variation</h3>
       <div class="control">
@@ -212,7 +209,7 @@
         <input type="range" id="octaves" min="1" max="5" value="1" step="1">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Style</h3>
       <div class="control">
@@ -237,7 +234,7 @@
         <label for="closePaths">Close Paths</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Generation</h3>
       <div class="control">
@@ -252,15 +249,17 @@
       <button onclick="resetAnimation()">Reset Animation</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export SVG</button>
       <button onclick="exportPNG()">Export PNG</button>
       <button onclick="exportAnimatedSVG()">Export Animated SVG</button>
       <button onclick="exportGIF()">Export GIF</button>
-      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+      <div id="gif-status"></div>
     </div>
+
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
@@ -292,7 +291,7 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-    
+
     let circles = [];
     let svgCanvas;
     let timeOffset = 0;
@@ -301,7 +300,7 @@
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
-    
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
@@ -424,7 +423,7 @@
       // Update seed display
       document.getElementById('seed-display').textContent = params.seed;
     }
-    
+
     function regenerate() {
       window.randomSeed(params.seed);
       noiseSeed(params.seed);
@@ -436,10 +435,10 @@
         loop();
       }
     }
-    
+
     function generateCircles() {
       circles = [];
-      
+
       for (let i = 0; i < params.circleCount; i++) {
         const radius = params.baseRadius + i * params.radiusSpacing;
         const circle = {
@@ -447,16 +446,16 @@
           points: [],
           phase: i * TWO_PI / params.circleCount
         };
-        
+
         for (let j = 0; j < params.pointsPerCircle; j++) {
           const angle = (j / params.pointsPerCircle) * TWO_PI;
           circle.points.push({ angle: angle, baseRadius: radius });
         }
-        
+
         circles.push(circle);
       }
     }
-    
+
     function draw() {
       background(params.bgColor);
       stroke(params.strokeColor);
@@ -465,31 +464,31 @@
       if (params.animateNoise) {
         timeOffset += params.timeSpeed;
       }
-      
+
       // Draw each circle
       circles.forEach((circle, circleIndex) => {
         push();
-        
+
         // Apply color based on mode
         applyColor(circleIndex, circles.length);
-        
+
         strokeWeight(params.strokeWeight);
         noFill();
-        
+
         // Begin shape
         beginShape();
-        
+
         circle.points.forEach((point, pointIndex) => {
           const coords = getDistortedPoint(
-            point.angle, 
-            point.baseRadius, 
-            circleIndex, 
+            point.angle,
+            point.baseRadius,
+            circleIndex,
             pointIndex
           );
-          
+
           // Draw line
           vertex(coords.x, coords.y);
-          
+
           // Show points if enabled
           if (params.showPoints) {
             push();
@@ -499,136 +498,136 @@
             pop();
           }
         });
-        
+
         // Close path if enabled
         if (params.closePaths) {
           endShape(CLOSE);
         } else {
           endShape();
         }
-        
+
         pop();
       });
     }
-    
+
     function getDistortedPoint(angle, baseRadius, circleIndex, pointIndex) {
       let x = cos(angle) * baseRadius;
       let y = sin(angle) * baseRadius;
-      
+
       // Calculate noise value based on pattern type
       let noiseValue = 0;
-      
+
       switch (params.patternType) {
         case 'concentric':
           noiseValue = getNoiseValue(x, y, timeOffset);
           break;
-          
+
         case 'spiral':
           const spiralAngle = angle + circleIndex * 0.5;
           noiseValue = getNoiseValue(
-            cos(spiralAngle) * baseRadius, 
-            sin(spiralAngle) * baseRadius, 
+            cos(spiralAngle) * baseRadius,
+            sin(spiralAngle) * baseRadius,
             timeOffset
           );
           angle += circleIndex * 0.2;
           break;
-          
+
         case 'flower':
           const petalCount = 5;
           const petalNoise = sin(angle * petalCount) * 0.3;
           noiseValue = getNoiseValue(x, y, timeOffset) + petalNoise;
           break;
-          
+
         case 'ripple':
           const rippleDistance = sqrt(x * x + y * y);
           noiseValue = getNoiseValue(
-            rippleDistance * 0.05, 
-            angle, 
+            rippleDistance * 0.05,
+            angle,
             timeOffset
           ) * sin(rippleDistance * 0.1 - timeOffset * 50);
           break;
-          
+
         case 'vortex':
           const vortexAngle = angle + baseRadius * 0.01;
           x = cos(vortexAngle) * baseRadius;
           y = sin(vortexAngle) * baseRadius;
           noiseValue = getNoiseValue(x, y, timeOffset) * (1 + circleIndex * 0.1);
           break;
-          
+
         case 'turbulence':
           const turbX = x + getNoiseValue(x * 0.1, y * 0.1, timeOffset) * 50;
           const turbY = y + getNoiseValue(x * 0.1 + 100, y * 0.1 + 100, timeOffset) * 50;
           noiseValue = getNoiseValue(turbX * 0.01, turbY * 0.01, timeOffset + 200);
           break;
       }
-      
+
       // Apply noise to radius
       const distortedRadius = baseRadius * (1 + noiseValue * params.noiseAmplitude);
-      
+
       return {
         x: cos(angle) * distortedRadius,
         y: sin(angle) * distortedRadius
       };
     }
-    
+
     function getNoiseValue(x, y, z) {
       let value = 0;
       let amplitude = 1;
       let frequency = params.noiseScale;
       let maxValue = 0;
-      
+
       // Apply octaves
       for (let i = 0; i < params.octaves; i++) {
         let n;
-        
+
         switch (params.noiseType) {
           case 'perlin':
             n = noise(x * frequency, y * frequency, z) * 2 - 1;
             break;
-            
+
           case 'simplex':
             // Simulate simplex-like noise using perlin
             n = noise(x * frequency + 1000, y * frequency + 1000, z) * 2 - 1;
             n = n * 0.8 + noise(x * frequency * 2.1, y * frequency * 2.1, z * 2) * 0.2;
             break;
-            
+
           case 'ridged':
             n = noise(x * frequency, y * frequency, z) * 2 - 1;
             n = 1 - abs(n);
             n = n * n;
             break;
-            
+
           case 'turbulent':
             n = abs(noise(x * frequency, y * frequency, z) * 2 - 1);
             break;
         }
-        
+
         value += n * amplitude;
         maxValue += amplitude;
-        
+
         amplitude *= 0.5;
         frequency *= 2;
       }
-      
+
       return value / maxValue;
     }
-    
+
     function applyColor(index, total) {
       switch (params.colorMode) {
         case 'mono':
           stroke(0);
           break;
-          
+
         case 'gradient':
           const g = map(index, 0, total - 1, 0, 255);
           stroke(g, 0, 255 - g);
           break;
-          
+
         case 'noise':
           const n = noise(index * 0.5, timeOffset * 10) * 255;
           stroke(n, 255 - n, 128);
           break;
-          
+
         case 'rainbow':
           colorMode(HSB);
           stroke(map(index, 0, total, 0, 360), 80, 80);
@@ -636,18 +635,18 @@
           break;
       }
     }
-    
+
     function randomizeSeed() {
       params.seed = Math.floor(Math.random() * 1000000);
       document.getElementById('seed-display').textContent = params.seed;
       regenerate();
     }
-    
+
     function resetAnimation() {
       timeOffset = 0;
       regenerate();
     }
-    
+
     function saveParams() {
       const json = JSON.stringify(params, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -657,56 +656,56 @@
       a.download = `perlin-circles-${params.seed}.json`;
       a.click();
     }
-    
+
     function exportSVG() {
       save(svgCanvas, `perlin-circles-${params.patternType}-${params.seed}.svg`);
     }
-    
+
     function exportPNG() {
       save(`perlin-circles-${params.patternType}-${params.seed}.png`);
     }
-    
+
     function exportAnimatedSVG() {
       // Create animated SVG with multiple frames
       const frames = 60;
       const originalTime = timeOffset;
-      
+
       let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(${width/2}, ${height/2})">`;
-      
+
       for (let frame = 0; frame < frames; frame++) {
         timeOffset = frame * params.timeSpeed * 10;
-        
+
         circles.forEach((circle, circleIndex) => {
           svgContent += `<path d="M `;
-          
+
           circle.points.forEach((point, pointIndex) => {
             const coords = getDistortedPoint(
-              point.angle, 
-              point.baseRadius, 
-              circleIndex, 
+              point.angle,
+              point.baseRadius,
+              circleIndex,
               pointIndex
             );
-            
+
             if (pointIndex === 0) {
               svgContent += `${coords.x} ${coords.y} `;
             } else {
               svgContent += `L ${coords.x} ${coords.y} `;
             }
           });
-          
+
           if (params.closePaths) {
             svgContent += `Z`;
           }
-          
+
           svgContent += `" fill="none" stroke="black" stroke-width="${params.strokeWeight}" opacity="0">
             <animate attributeName="opacity" values="0;1;0" dur="${frames/30}s" begin="${frame/30}s" repeatCount="indefinite" />
           </path>`;
         });
       }
-      
+
       svgContent += `</g></svg>`;
-      
+
       // Download the animated SVG
       const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
@@ -714,15 +713,15 @@
       a.href = url;
       a.download = `perlin-circles-animated-${params.seed}.svg`;
       a.click();
-      
+
       // Restore original time
       timeOffset = originalTime;
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -730,50 +729,50 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Create offscreen canvas for GIF frames
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
       const ctx = offscreenCanvas.getContext('2d');
-      
+
       // Store original animation state
       const originalAnimate = params.animateNoise;
       const originalTime = timeOffset;
       params.animateNoise = false;
-      
+
       // Generate frames
       const totalFrames = 60;
       const frameDelay = 50; // milliseconds
-      
+
       for (let frame = 0; frame < totalFrames; frame++) {
         // Update time for animation
         timeOffset = originalTime + frame * params.timeSpeed * 10;
-        
+
         // Clear and draw frame
         clear();
         background(255);
         push();
         translate(width/2, height/2);
-        
+
         // Draw each circle
         circles.forEach((circle, circleIndex) => {
           push();
           applyColor(circleIndex, circles.length);
           strokeWeight(params.strokeWeight);
           noFill();
-          
+
           beginShape();
           circle.points.forEach((point, pointIndex) => {
             const coords = getDistortedPoint(
-              point.angle, 
-              point.baseRadius, 
-              circleIndex, 
+              point.angle,
+              point.baseRadius,
+              circleIndex,
               pointIndex
             );
             vertex(coords.x, coords.y);
           });
-          
+
           if (params.closePaths) {
             endShape(CLOSE);
           } else {
@@ -781,28 +780,28 @@
           }
           pop();
         });
-        
+
         pop();
-        
+
         // Copy p5 canvas to offscreen canvas
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(drawingContext.canvas, 0, 0);
-        
+
         // Add frame to GIF
         gif.addFrame(ctx, {copy: true, delay: frameDelay});
-        
+
         // Update status
         const progress = Math.round((frame + 1) / totalFrames * 100);
         statusEl.textContent = `Generating frames: ${progress}%`;
       }
-      
+
       // Restore original state
       params.animateNoise = originalAnimate;
       timeOffset = originalTime;
-      
+
       statusEl.textContent = 'Rendering GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF ready!';
         const url = URL.createObjectURL(blob);
@@ -810,12 +809,12 @@
         a.href = url;
         a.download = `perlin-circles-${params.patternType}-${params.seed}.gif`;
         a.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>

@@ -14,140 +14,106 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-      background: #333;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    button:active {
-      background: #3d8b40;
-    }
+
     .secondary {
-      background: #555;
+      background: var(--ts-bg-active) !important;
     }
+
     .secondary:hover {
-      background: #666;
+      background: var(--ts-bg-hover) !important;
     }
+
     .pattern-btn {
-      background: #2196F3;
-      margin: 2px 0;
+      background: var(--ts-accent-secondary) !important;
     }
+
     .pattern-btn:hover {
-      background: #1976D2;
+      background: color-mix(in srgb, var(--ts-accent-secondary) 85%, white) !important;
     }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
+
     #generation {
       text-align: center;
       font-size: 18px;
-      color: #4CAF50;
+      color: var(--ts-accent-primary);
       margin: 10px 0;
+      padding: 10px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
     }
+
     .checkbox-container {
       display: flex;
       align-items: center;
+      gap: 8px;
     }
-    .checkbox-container input {
-      margin-right: 10px;
+
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: auto;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Game of Life</h2>
-
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
       <div class="control">
         <label>Paper Size:</label>
         <select id="paperSize">
-          <option value="square800">Square (800×800)</option>
-          <option value="landscape800x600" selected>Landscape (800×600)</option>
-          <option value="a4portrait">A4 Portrait</option>
-          <option value="a4landscape">A4 Landscape</option>
-          <option value="letterportrait">Letter Portrait</option>
-          <option value="letterlandscape">Letter Landscape</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">US Letter Landscape</option>
+          <option value="letter_portrait">US Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="custom" selected>Custom (800x600px)</option>
         </select>
       </div>
       <div class="control">
@@ -159,7 +125,7 @@
         <input type="color" id="strokeColor" value="#4CAF50">
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
     </div>
 
@@ -167,12 +133,12 @@
 
     <div class="control-group">
       <h3>Simulation</h3>
-      <button id="play-pause">▶ Play</button>
+      <button id="play-pause">Play</button>
       <button id="step" class="secondary">Step Forward</button>
       <button id="reset" class="secondary">Reset</button>
       <button id="clear" class="secondary">Clear Grid</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Grid Settings</h3>
       <div class="control">
@@ -196,7 +162,7 @@
         </select>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Patterns</h3>
       <button class="pattern-btn" onclick="loadPattern('glider')">Glider</button>
@@ -210,7 +176,7 @@
       <button class="pattern-btn" onclick="loadPattern('acorn')">Acorn</button>
       <button class="pattern-btn" onclick="loadPattern('random')">Random (30%)</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Display</h3>
       <div class="control">
@@ -231,7 +197,7 @@
         <label for="showTrails">Show Trails</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export Current as SVG</button>
@@ -239,11 +205,14 @@
       <button onclick="exportAnimation()">Export Animation (100 frames)</button>
       <div class="control">
         <label>Export at Generation:</label>
-        <input type="number" id="exportGen" value="50" min="1" style="width: 100%; padding: 5px; background: #333; color: #fff; border: 1px solid #555;">
+        <input type="number" id="exportGen" value="50" min="1" style="width: 100%; padding: 5px; background: var(--ts-bg-deep); color: var(--ts-text-primary); border: 1px solid var(--ts-border-default); border-radius: var(--ts-radius-sm);">
       </div>
       <button onclick="exportAtGeneration()">Export at Specific Gen</button>
-      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+      <div id="gif-status"></div>
     </div>
+
+    <!-- Preset Manager Container at bottom -->
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
@@ -258,7 +227,7 @@
 
     // Parameters
     let params = {
-      paperSize: 'landscape800x600',
+      paperSize: 'custom',
       bgColor: '#1e1e1e',
       strokeColor: '#4CAF50',
       gridSize: 50,
@@ -276,7 +245,7 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-    
+
     // Pattern library
     const patterns = {
       glider: [[0,1,0],[0,0,1],[1,1,1]],
@@ -317,7 +286,7 @@
       rpentomino: [[0,1,1],[1,1,0],[0,1,0]],
       acorn: [[0,1,0,0,0,0,0],[0,0,0,1,0,0,0],[1,1,0,0,1,1,1]]
     };
-    
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       let canvas = createCanvas(size.width, size.height);
@@ -393,7 +362,7 @@
       document.getElementById('cellSize-val').textContent = params.cellSize;
       document.getElementById('speed-val').textContent = params.speed;
     }
-    
+
     function initializeGrid() {
       grid = [];
       nextGrid = [];
@@ -411,31 +380,31 @@
       generation = 0;
       updateGenerationDisplay();
     }
-    
+
     function setupControls() {
       // Play/Pause button
       document.getElementById('play-pause').addEventListener('click', () => {
         isPlaying = !isPlaying;
-        document.getElementById('play-pause').textContent = isPlaying ? '⏸ Pause' : '▶ Play';
+        document.getElementById('play-pause').textContent = isPlaying ? 'Pause' : 'Play';
       });
-      
+
       // Step button
       document.getElementById('step').addEventListener('click', () => {
         stepSimulation();
       });
-      
+
       // Reset button
       document.getElementById('reset').addEventListener('click', () => {
         generation = 0;
         updateGenerationDisplay();
         loadPattern('glider');
       });
-      
+
       // Clear button
       document.getElementById('clear').addEventListener('click', () => {
         initializeGrid();
       });
-      
+
       // Parameter controls
       ['gridSize', 'cellSize', 'speed'].forEach(param => {
         document.getElementById(param).addEventListener('input', (e) => {
@@ -446,14 +415,14 @@
           }
         });
       });
-      
+
       // Dropdowns
       ['boundary', 'renderStyle'].forEach(param => {
         document.getElementById(param).addEventListener('change', (e) => {
           params[param] = e.target.value;
         });
       });
-      
+
       // Checkboxes
       ['showGrid', 'showTrails'].forEach(param => {
         document.getElementById(param).addEventListener('change', (e) => {
@@ -469,59 +438,59 @@
         });
       });
     }
-    
+
     function draw() {
       background(params.bgColor);
-      
+
       // Update simulation
       if (isPlaying && millis() - lastUpdate > 1000 / params.speed) {
         stepSimulation();
         lastUpdate = millis();
       }
-      
+
       // Calculate drawing parameters
       const offsetX = (width - params.gridSize * params.cellSize) / 2;
       const offsetY = (height - params.gridSize * params.cellSize) / 2;
-      
+
       // Draw grid
       if (params.showGrid) {
         stroke(50);
         strokeWeight(0.5);
         for (let i = 0; i <= params.gridSize; i++) {
-          line(offsetX + i * params.cellSize, offsetY, 
+          line(offsetX + i * params.cellSize, offsetY,
                offsetX + i * params.cellSize, offsetY + params.gridSize * params.cellSize);
-          line(offsetX, offsetY + i * params.cellSize, 
+          line(offsetX, offsetY + i * params.cellSize,
                offsetX + params.gridSize * params.cellSize, offsetY + i * params.cellSize);
         }
       }
-      
+
       // Draw cells
       noStroke();
       for (let i = 0; i < params.gridSize; i++) {
         for (let j = 0; j < params.gridSize; j++) {
           const x = offsetX + i * params.cellSize;
           const y = offsetY + j * params.cellSize;
-          
+
           // Draw trails if enabled
           if (params.showTrails && trailGrid[i][j] > 0) {
             fill(76, 175, 80, trailGrid[i][j] * 25);
             rect(x, y, params.cellSize, params.cellSize);
           }
-          
+
           // Draw live cells
           if (grid[i][j] === 1) {
             fill(params.strokeColor);
-            
+
             switch (params.renderStyle) {
               case 'squares':
                 rect(x, y, params.cellSize, params.cellSize);
                 break;
               case 'circles':
-                ellipse(x + params.cellSize/2, y + params.cellSize/2, 
+                ellipse(x + params.cellSize/2, y + params.cellSize/2,
                        params.cellSize * 0.8, params.cellSize * 0.8);
                 break;
               case 'dots':
-                ellipse(x + params.cellSize/2, y + params.cellSize/2, 
+                ellipse(x + params.cellSize/2, y + params.cellSize/2,
                        params.cellSize * 0.3, params.cellSize * 0.3);
                 break;
               case 'lines':
@@ -537,7 +506,7 @@
           }
         }
       }
-      
+
       // Handle mouse interaction
       if (mouseIsPressed) {
         const gridX = Math.floor((mouseX - offsetX) / params.cellSize);
@@ -547,13 +516,13 @@
         }
       }
     }
-    
+
     function stepSimulation() {
       // Calculate next generation
       for (let i = 0; i < params.gridSize; i++) {
         for (let j = 0; j < params.gridSize; j++) {
           const neighbors = countNeighbors(i, j);
-          
+
           if (grid[i][j] === 1) {
             // Live cell
             nextGrid[i][j] = (neighbors === 2 || neighbors === 3) ? 1 : 0;
@@ -561,7 +530,7 @@
             // Dead cell
             nextGrid[i][j] = (neighbors === 3) ? 1 : 0;
           }
-          
+
           // Update trails
           if (params.showTrails) {
             if (grid[i][j] === 1) {
@@ -572,25 +541,25 @@
           }
         }
       }
-      
+
       // Swap grids
       let temp = grid;
       grid = nextGrid;
       nextGrid = temp;
-      
+
       generation++;
       updateGenerationDisplay();
     }
-    
+
     function countNeighbors(x, y) {
       let count = 0;
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
           if (i === 0 && j === 0) continue;
-          
+
           let nx = x + i;
           let ny = y + j;
-          
+
           // Handle boundary conditions
           if (params.boundary === 'wrap') {
             nx = (nx + params.gridSize) % params.gridSize;
@@ -601,16 +570,16 @@
             }
             continue;
           }
-          
+
           count += grid[nx][ny];
         }
       }
       return count;
     }
-    
+
     function loadPattern(patternName) {
       initializeGrid();
-      
+
       if (patternName === 'random') {
         for (let i = 0; i < params.gridSize; i++) {
           for (let j = 0; j < params.gridSize; j++) {
@@ -621,10 +590,10 @@
         const pattern = patterns[patternName];
         const startX = Math.floor((params.gridSize - pattern[0].length) / 2);
         const startY = Math.floor((params.gridSize - pattern.length) / 2);
-        
+
         for (let i = 0; i < pattern.length; i++) {
           for (let j = 0; j < pattern[i].length; j++) {
-            if (startX + j >= 0 && startX + j < params.gridSize && 
+            if (startX + j >= 0 && startX + j < params.gridSize &&
                 startY + i >= 0 && startY + i < params.gridSize) {
               grid[startX + j][startY + i] = pattern[i][j];
             }
@@ -632,18 +601,18 @@
         }
       }
     }
-    
+
     function updateGenerationDisplay() {
       document.getElementById('generation').textContent = `Generation: ${generation}`;
     }
-    
+
     function exportSVG() {
       let svg = createGraphics(params.gridSize * 10, params.gridSize * 10, SVG);
-      
+
       svg.background(255);
       svg.noStroke();
       svg.fill(0);
-      
+
       for (let i = 0; i < params.gridSize; i++) {
         for (let j = 0; j < params.gridSize; j++) {
           if (grid[i][j] === 1) {
@@ -668,20 +637,20 @@
           }
         }
       }
-      
+
       save(svg, `game-of-life-gen${generation}.svg`);
       svg.remove();
     }
-    
+
     function exportAnimation() {
       alert('Animation export would create 100 SVG files. This is a demo - implement batch export in production.');
     }
-    
+
     function exportAtGeneration() {
       const targetGen = parseInt(document.getElementById('exportGen').value);
       alert(`Would export at generation ${targetGen}. This is a demo - implement time travel in production.`);
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';

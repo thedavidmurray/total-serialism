@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Perlin Landscape - Topographical Contours</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
@@ -15,133 +12,130 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
     }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
       margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
+
     .checkbox-container {
       display: flex;
       align-items: center;
     }
+
     .checkbox-container input {
       margin-right: 10px;
     }
+
     .export-btn {
-      background: #FF6B6B;
+      background: var(--ts-accent-secondary) !important;
     }
+
     .export-btn:hover {
-      background: #FF5252;
+      background: #ff5252 !important;
     }
+
     #gif-progress {
       display: none;
-      background: #333;
+      background: var(--ts-bg-deep);
       padding: 10px;
-      border-radius: 4px;
+      border-radius: var(--ts-radius-md);
       margin-top: 10px;
     }
+
     .progress-bar {
       width: 100%;
       height: 20px;
-      background: #555;
+      background: var(--ts-bg-control);
       border-radius: 10px;
       overflow: hidden;
     }
+
     .progress-fill {
       height: 100%;
-      background: #4CAF50;
+      background: var(--ts-accent-primary);
       transition: width 0.3s;
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    .preset-manager {
+      margin-top: 20px;
+    }
+
+    .preset-manager .control-group {
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Perlin Landscape</h2>
 
     <div class="control-group">
@@ -149,10 +143,12 @@
       <div class="control">
         <label>Paper Size:</label>
         <select id="paperSize">
-          <option value="square800">Square (800×800)</option>
-          <option value="landscape800x600" selected>Landscape (800×600)</option>
+          <option value="square800">Square (800x800)</option>
+          <option value="landscape800x600" selected>Landscape (800x600)</option>
           <option value="a4portrait">A4 Portrait</option>
           <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
           <option value="letterportrait">Letter Portrait</option>
           <option value="letterlandscape">Letter Landscape</option>
         </select>
@@ -166,7 +162,7 @@
         <input type="color" id="strokeColor" value="#000000">
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
     </div>
 
@@ -189,7 +185,7 @@
         <input type="range" id="persistence" min="0.1" max="0.9" value="0.5" step="0.05">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Contour Lines</h3>
       <div class="control">
@@ -214,7 +210,7 @@
         <label for="showLabels">Show Elevation Labels</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>View</h3>
       <div class="control">
@@ -227,7 +223,7 @@
         </select>
       </div>
       <div class="control">
-        <label>Rotation: <span class="value" id="rotation-val">0</span>°</label>
+        <label>Rotation: <span class="value" id="rotation-val">0</span>deg</label>
         <input type="range" id="rotation" min="0" max="360" value="0" step="5">
       </div>
       <div class="control">
@@ -235,7 +231,7 @@
         <input type="range" id="zoom" min="0.5" max="3" value="1" step="0.1">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Style</h3>
       <div class="control">
@@ -261,7 +257,7 @@
         <label for="showWaterLevel">Show Water Level</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Generation</h3>
       <div class="control">
@@ -276,9 +272,6 @@
       <button onclick="saveParams()">Save Parameters</button>
     </div>
 
-    <!-- Preset Manager -->
-    <div id="preset-container"></div>
-
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export SVG</button>
@@ -292,6 +285,8 @@
         </div>
       </div>
     </div>
+
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
@@ -323,16 +318,16 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-    
+
     let heightMap = [];
     let contours = [];
     let svgCanvas;
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
-    
+
     const gridResolution = 100;
-    
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       svgCanvas = createCanvas(size.width, size.height);
@@ -349,7 +344,7 @@
       resizeCanvas(size.width, size.height);
       regenerate();
     }
-    
+
     function setupControls() {
       // Canvas settings controls
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -401,7 +396,7 @@
         });
       }
     }
-    
+
     function regenerate() {
       window.randomSeed(params.seed);
       noiseSeed(params.seed);
@@ -415,10 +410,10 @@
       clearTimeout(regenTimer);
       regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
-    
+
     function generateHeightMap() {
       heightMap = [];
-      
+
       for (let y = 0; y < gridResolution; y++) {
         heightMap[y] = [];
         for (let x = 0; x < gridResolution; x++) {
@@ -427,29 +422,29 @@
         }
       }
     }
-    
+
     function getNoiseHeight(x, y) {
       let height = 0;
       let amplitude = params.amplitude;
       let frequency = params.noiseScale;
       let maxValue = 0;
-      
+
       for (let i = 0; i < params.octaves; i++) {
         height += noise(x * frequency, y * frequency) * amplitude;
         maxValue += amplitude;
         amplitude *= params.persistence;
         frequency *= 2;
       }
-      
+
       return (height / maxValue) * params.amplitude;
     }
-    
+
     function generateContours() {
       contours = [];
       const minHeight = 0;
       const maxHeight = params.amplitude;
       const interval = (maxHeight - minHeight) / params.contourCount;
-      
+
       for (let i = 1; i < params.contourCount; i++) {
         const targetHeight = minHeight + i * interval;
         const contourLines = marchingSquares(targetHeight);
@@ -459,36 +454,36 @@
         });
       }
     }
-    
+
     function marchingSquares(threshold) {
       const lines = [];
       const cellSize = width / gridResolution;
-      
+
       for (let y = 0; y < gridResolution - 1; y++) {
         for (let x = 0; x < gridResolution - 1; x++) {
           const a = heightMap[y][x] > threshold ? 1 : 0;
           const b = heightMap[y][x + 1] > threshold ? 1 : 0;
           const c = heightMap[y + 1][x + 1] > threshold ? 1 : 0;
           const d = heightMap[y + 1][x] > threshold ? 1 : 0;
-          
+
           const index = a * 8 + b * 4 + c * 2 + d;
-          
+
           const x0 = x * cellSize;
           const y0 = y * cellSize;
           const x1 = (x + 1) * cellSize;
           const y1 = (y + 1) * cellSize;
-          
+
           // Linear interpolation for smoother lines
           const interpX = (h) => {
             const t = (threshold - heightMap[y][x]) / (heightMap[y][x + 1] - heightMap[y][x]);
             return lerp(x0, x1, t);
           };
-          
+
           const interpY = (h) => {
             const t = (threshold - heightMap[y][x]) / (heightMap[y + 1][x] - heightMap[y][x]);
             return lerp(y0, y1, t);
           };
-          
+
           // Marching squares lookup
           switch (index) {
             case 1:
@@ -556,19 +551,19 @@
           }
         }
       }
-      
+
       return lines;
     }
-    
+
     function draw() {
       background(params.bgColor);
-      
+
       push();
       translate(width/2, height/2);
       scale(params.zoom);
       rotate(radians(params.rotation));
       translate(-width/2, -height/2);
-      
+
       // Draw based on view mode
       switch (params.viewMode) {
         case 'top':
@@ -584,10 +579,10 @@
           drawDualView();
           break;
       }
-      
+
       pop();
     }
-    
+
     function drawTopView() {
       // Draw grid if enabled
       if (params.showGrid) {
@@ -601,7 +596,7 @@
           line(0, y, width, y);
         }
       }
-      
+
       // Draw water level if enabled
       if (params.showWaterLevel) {
         const waterHeight = params.amplitude * 0.3;
@@ -609,11 +604,11 @@
         noStroke();
         rect(0, 0, width, height);
       }
-      
+
       // Draw contour lines
       contours.forEach((contour, index) => {
         applyContourStyle(contour, index);
-        
+
         contour.lines.forEach(line => {
           if (params.smoothing > 1) {
             // Smooth the line
@@ -630,7 +625,7 @@
             line(line.x1, line.y1, line.x2, line.y2);
           }
         });
-        
+
         // Draw labels if enabled
         if (params.showLabels && index % 5 === 0) {
           fill(0);
@@ -641,33 +636,33 @@
         }
       });
     }
-    
+
     function drawPerspectiveView() {
       // Simple 3D-like perspective
       push();
       translate(0, height * 0.3);
       scale(1, 0.5);
-      
+
       contours.forEach((contour, index) => {
         applyContourStyle(contour, index);
         const yOffset = -index * 5;
-        
+
         contour.lines.forEach(line => {
           line(line.x1, line.y1 + yOffset, line.x2, line.y2 + yOffset);
         });
       });
-      
+
       pop();
     }
-    
+
     function drawCrossSection() {
       // Draw a cross-section view
       const y = height / 2;
-      
+
       stroke(0);
       strokeWeight(params.strokeWeight);
       noFill();
-      
+
       beginShape();
       for (let x = 0; x < gridResolution; x++) {
         const gridY = floor(y / (height / gridResolution));
@@ -677,7 +672,7 @@
         vertex(screenX, screenY);
       }
       endShape();
-      
+
       // Draw contour intersections
       contours.forEach(contour => {
         const screenY = height - contour.height;
@@ -686,14 +681,14 @@
         line(0, screenY, width, screenY);
       });
     }
-    
+
     function drawDualView() {
       // Left half: top view
       push();
       clip(0, 0, width/2, height);
       drawTopView();
       pop();
-      
+
       // Right half: cross section
       push();
       translate(width/2, 0);
@@ -701,20 +696,20 @@
       translate(-width/2, 0);
       drawCrossSection();
       pop();
-      
+
       // Divider
       stroke(0);
       strokeWeight(2);
       line(width/2, 0, width/2, height);
     }
-    
+
     function applyContourStyle(contour, index) {
-      const weight = params.contourStyle === 'weighted' 
+      const weight = params.contourStyle === 'weighted'
         ? map(contour.height, 0, params.amplitude, 0.5, params.strokeWeight * 2)
         : params.strokeWeight;
-      
+
       strokeWeight(weight);
-      
+
       // Apply color scheme
       switch (params.colorScheme) {
         case 'mono':
@@ -739,7 +734,7 @@
           stroke(0, 50, 150);
           break;
       }
-      
+
       // Apply dashed style if selected
       if (params.contourStyle === 'dashed') {
         drawingContext.setLineDash([5, 5]);
@@ -747,13 +742,13 @@
         drawingContext.setLineDash([]);
       }
     }
-    
+
     function randomizeSeed() {
       params.seed = Math.floor(Math.random() * 1000000);
       document.getElementById('seed-display').textContent = params.seed;
       regenerate();
     }
-    
+
     function saveParams() {
       const json = JSON.stringify(params, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -763,7 +758,7 @@
       a.download = `perlin-landscape-${params.seed}.json`;
       a.click();
     }
-    
+
     function exportSVG() {
       const paths = [];
       contours.forEach(contour => {
@@ -789,38 +784,38 @@
       a.click();
       URL.revokeObjectURL(url);
     }
-    
+
     function exportPNG() {
       save(`perlin-landscape-${params.viewMode}-${params.seed}.png`);
     }
-    
+
     function exportLayers() {
       // Export different elevation ranges as separate layers
       const layers = 5;
       const interval = params.amplitude / layers;
-      
+
       for (let i = 0; i < layers; i++) {
         let svg = createGraphics(width, height, SVG);
-        
+
         const minElev = i * interval;
         const maxElev = (i + 1) * interval;
-        
+
         contours.forEach(contour => {
           if (contour.height >= minElev && contour.height < maxElev) {
             svg.stroke(params.strokeColor);
             svg.strokeWeight(params.strokeWeight);
-            
+
             contour.lines.forEach(line => {
               svg.line(line.x1, line.y1, line.x2, line.y2);
             });
           }
         });
-        
+
         save(svg, `perlin-landscape-layer${i+1}-${params.seed}.svg`);
         svg.remove();
       }
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       if (!statusEl) return;
@@ -919,12 +914,12 @@
 
       gif.render();
     }
-    
+
     // Helper function for smooth interpolation
     function lerp(a, b, t) {
       return a + (b - a) * t;
     }
-    
+
     // Helper function for clipping (p5.js doesn't have built-in clip)
     function clip(x, y, w, h) {
       drawingContext.save();

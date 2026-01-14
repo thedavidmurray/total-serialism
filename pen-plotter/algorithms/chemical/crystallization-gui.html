@@ -13,113 +13,16 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
-    .checkbox-container {
-      display: flex;
-      align-items: center;
-    }
-    .checkbox-container input {
-      margin-right: 10px;
-    }
-    #gif-status {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #888;
-    }
-  </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
     <h2>Crystallization Controls</h2>
 
     <div class="control-group">
@@ -127,10 +30,12 @@
       <div class="control">
         <label>Paper Size:</label>
         <select id="paperSize">
-          <option value="square800">Square (800×800)</option>
-          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="square800">Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
           <option value="a4portrait">A4 Portrait</option>
           <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
           <option value="letterportrait">Letter Portrait</option>
           <option value="letterlandscape">Letter Landscape</option>
         </select>
@@ -262,6 +167,9 @@
       <button onclick="exportGIF()">Export GIF</button>
       <div id="gif-status"></div>
     </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
@@ -300,7 +208,8 @@
     let svgCanvas;
     let growing = true;
     let generation = 0;
-    
+    let presetManager;
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       svgCanvas = createCanvas(size.width, size.height);
@@ -320,7 +229,72 @@
 
       setupControls();
       canvasControls.setupRandomizeButton();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'crystallization',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          const crystalTypes = ['dendritic', 'dla', 'snowflake', 'voronoi', 'salt', 'quartz', 'pyrite', 'bismuth'];
+          const growthModes = ['center', 'multiple', 'edge', 'random', 'spiral'];
+          const colorModes = ['growth', 'depth', 'gradient', 'birefringence', 'monochrome'];
+          params.crystalType = random(crystalTypes);
+          params.growthMode = random(growthModes);
+          params.growthRate = random(0.1, 2);
+          params.branchingProb = random(0, 1);
+          params.temperature = random(0, 1);
+          params.supersaturation = random(0, 1);
+          params.symmetry = Math.floor(random(3, 12));
+          params.anisotropy = random(0, 1);
+          params.facetSharpness = random(0, 1);
+          params.defectRate = random(0, 0.5);
+          params.colorMode = random(colorModes);
+          params.detailLevel = random([50, 100, 150, 200]);
+          params.showGrowthFront = random() > 0.5;
+          params.showLattice = random() > 0.5;
+          params.animate = true;
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
       regenerate();
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      document.getElementById('crystalType').value = params.crystalType;
+      document.getElementById('growthMode').value = params.growthMode;
+      document.getElementById('growthRate').value = params.growthRate;
+      document.getElementById('branchingProb').value = params.branchingProb;
+      document.getElementById('temperature').value = params.temperature;
+      document.getElementById('supersaturation').value = params.supersaturation;
+      document.getElementById('symmetry').value = params.symmetry;
+      document.getElementById('anisotropy').value = params.anisotropy;
+      document.getElementById('facetSharpness').value = params.facetSharpness;
+      document.getElementById('defectRate').value = params.defectRate;
+      document.getElementById('colorMode').value = params.colorMode;
+      document.getElementById('detailLevel').value = params.detailLevel;
+      document.getElementById('showGrowthFront').checked = params.showGrowthFront;
+      document.getElementById('showLattice').checked = params.showLattice;
+      document.getElementById('animate').checked = params.animate;
+
+      // Update value displays
+      document.getElementById('growthRate-val').textContent = params.growthRate.toFixed(1);
+      document.getElementById('branchingProb-val').textContent = params.branchingProb.toFixed(2);
+      document.getElementById('temperature-val').textContent = params.temperature.toFixed(2);
+      document.getElementById('supersaturation-val').textContent = params.supersaturation.toFixed(2);
+      document.getElementById('symmetry-val').textContent = params.symmetry;
+      document.getElementById('anisotropy-val').textContent = params.anisotropy.toFixed(2);
+      document.getElementById('facetSharpness-val').textContent = params.facetSharpness.toFixed(2);
+      document.getElementById('defectRate-val').textContent = params.defectRate.toFixed(2);
+      document.getElementById('detailLevel-val').textContent = params.detailLevel;
     }
 
     function resizeCanvasForPaperSize() {

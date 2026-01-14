@@ -11,141 +11,110 @@
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    input[type="number"] {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
+
     .rule-btn {
-      background: #2196F3;
-      margin: 2px 0;
+      background: var(--ts-accent-secondary) !important;
     }
+
     .rule-btn:hover {
-      background: #1976D2;
+      background: color-mix(in srgb, var(--ts-accent-secondary) 85%, white) !important;
     }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
+
     #rule-visualization {
       display: grid;
       grid-template-columns: repeat(8, 1fr);
       gap: 10px;
       margin-top: 10px;
       padding: 10px;
-      background: #333;
-      border-radius: 4px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
     }
+
     .rule-cell {
       text-align: center;
       font-size: 12px;
     }
+
     .rule-pattern {
       display: flex;
       justify-content: center;
       margin-bottom: 5px;
     }
+
     .rule-bit {
       width: 8px;
       height: 8px;
       margin: 1px;
-      background: #666;
+      background: var(--ts-bg-active);
     }
+
     .rule-bit.active {
-      background: #4CAF50;
+      background: var(--ts-accent-primary);
     }
+
     .rule-result {
       font-weight: bold;
-      color: #4CAF50;
+      color: var(--ts-accent-primary);
     }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: auto;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
     }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Elementary CA</h2>
-
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Rule Selection</h3>
@@ -158,7 +127,7 @@
       </div>
       <div id="rule-visualization"></div>
     </div>
-    
+
     <div class="control-group">
       <h3>Famous Rules</h3>
       <button class="rule-btn" onclick="setRule(30)">Rule 30 (Chaos)</button>
@@ -170,7 +139,25 @@
       <button class="rule-btn" onclick="setRule(150)">Rule 150 (Triangular)</button>
       <button class="rule-btn" onclick="setRule(182)">Rule 182 (Patterns)</button>
     </div>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">US Letter Landscape</option>
+          <option value="letter_portrait">US Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="custom" selected>Custom (800x600px)</option>
+        </select>
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Grid Settings</h3>
       <div class="control">
@@ -186,7 +173,7 @@
         <input type="range" id="cellSize" min="1" max="10" value="3">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Initial Condition</h3>
       <div class="control">
@@ -204,7 +191,7 @@
       <button onclick="generate()">Generate</button>
       <button onclick="reset()">Reset</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Display Options</h3>
       <div class="control">
@@ -222,7 +209,7 @@
         <label for="showHistory">Show History</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export as SVG</button>
@@ -237,8 +224,11 @@
           <option value="triangles">Triangles</option>
         </select>
       </div>
-      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+      <div id="gif-status"></div>
     </div>
+
+    <!-- Preset Manager Container at bottom -->
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
@@ -270,7 +260,7 @@
       heat: { 0: [0, 0, 50], 1: [255, 100, 0] },
       rainbow: { 0: [255, 0, 255], 1: [0, 255, 255] }
     };
-    
+
     function setup() {
       let canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
@@ -334,12 +324,12 @@
       document.getElementById('height-val').textContent = params.cellHeight;
       document.getElementById('cellSize-val').textContent = params.cellSize;
     }
-    
+
     function initializeCells() {
       cells = new Array(cellWidth).fill(0);
       history = [];
       generation = 0;
-      
+
       // Set initial condition
       const pattern = document.getElementById('startPattern').value;
       switch (pattern) {
@@ -373,10 +363,10 @@
           }
           break;
       }
-      
+
       history.push([...cells]);
     }
-    
+
     function setupControls() {
       // Rule slider
       document.getElementById('rule').addEventListener('input', (e) => {
@@ -431,16 +421,16 @@
         params.showHistory = e.target.checked;
       });
     }
-    
+
     function updateRuleVisualization() {
       const container = document.getElementById('rule-visualization');
       container.innerHTML = '';
-      
+
       // Show all 8 possible neighborhood configurations
       for (let i = 7; i >= 0; i--) {
         const div = document.createElement('div');
         div.className = 'rule-cell';
-        
+
         // Show pattern
         const pattern = document.createElement('div');
         pattern.className = 'rule-pattern';
@@ -450,29 +440,29 @@
           pattern.appendChild(bit);
         }
         div.appendChild(pattern);
-        
+
         // Show result
         const result = document.createElement('div');
         result.className = 'rule-result';
         result.textContent = (rule >> i) & 1;
         div.appendChild(result);
-        
+
         container.appendChild(div);
       }
     }
-    
+
     function draw() {
       background(30);
-      
+
       const scheme = colorSchemes[document.getElementById('colorScheme').value];
       const showHistory = document.getElementById('showHistory').checked;
-      
+
       // Calculate offset to center the CA
       const totalWidth = cellWidth * cellSize;
       const totalHeight = Math.min(history.length, cellHeight) * cellSize;
       const offsetX = (width - totalWidth) / 2;
       const offsetY = (height - totalHeight) / 2;
-      
+
       // Draw cells
       noStroke();
       if (showHistory) {
@@ -494,42 +484,42 @@
         }
       }
     }
-    
+
     function generate() {
       initializeCells();
-      
+
       // Generate all generations
       for (let g = 0; g < cellHeight - 1; g++) {
         stepGeneration();
       }
     }
-    
+
     function stepGeneration() {
       const newCells = new Array(cellWidth);
-      
+
       for (let i = 0; i < cellWidth; i++) {
         // Get neighborhood
         const left = cells[(i - 1 + cellWidth) % cellWidth];
         const center = cells[i];
         const right = cells[(i + 1) % cellWidth];
-        
+
         // Calculate neighborhood index
         const neighborhood = (left << 2) | (center << 1) | right;
-        
+
         // Apply rule
         newCells[i] = (rule >> neighborhood) & 1;
       }
-      
+
       cells = newCells;
       history.push([...cells]);
       generation++;
     }
-    
+
     function reset() {
       initializeCells();
       generation = 0;
     }
-    
+
     function setRule(r) {
       rule = r;
       document.getElementById('rule').value = r;
@@ -538,19 +528,19 @@
       updateRuleVisualization();
       generate();
     }
-    
+
     function exportSVG() {
       const svgStyle = document.getElementById('svgStyle').value;
       let svg = createGraphics(cellWidth * 10, Math.min(history.length, cellHeight) * 10, SVG);
-      
+
       svg.background(255);
-      
+
       for (let y = 0; y < Math.min(history.length, cellHeight); y++) {
         for (let x = 0; x < cellWidth; x++) {
           if (history[y][x] === 1) {
             svg.fill(0);
             svg.noStroke();
-            
+
             switch (svgStyle) {
               case 'pixels':
                 svg.rect(x * 10, y * 10, 10, 10);
@@ -564,7 +554,7 @@
                 svg.ellipse(x * 10 + 5, y * 10 + 5, 5, 5);
                 break;
               case 'triangles':
-                svg.triangle(x * 10, y * 10 + 10, 
+                svg.triangle(x * 10, y * 10 + 10,
                            x * 10 + 5, y * 10,
                            x * 10 + 10, y * 10 + 10);
                 break;
@@ -572,19 +562,19 @@
           }
         }
       }
-      
+
       save(svg, `elementary-ca-rule${rule}.svg`);
       svg.remove();
     }
-    
+
     function exportPNG() {
       saveCanvas(`elementary-ca-rule${rule}`, 'png');
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -592,35 +582,35 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Store original state
       const originalHistory = history.map(row => [...row]);
-      
+
       // Clear and regenerate for animation
       history = [];
       cells = new Array(cellWidth).fill(0);
       cells[Math.floor(cellWidth / 2)] = 1;
       history.push([...cells]);
-      
+
       // Generate frames
       const totalFrames = 30;
       for (let frame = 0; frame < totalFrames; frame++) {
         statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
-        
+
         // Create offscreen canvas
         const offscreenCanvas = document.createElement('canvas');
         offscreenCanvas.width = width;
         offscreenCanvas.height = height;
         const ctx = offscreenCanvas.getContext('2d');
-        
+
         // Draw background
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
-        
+
         // Draw current history state
         ctx.fillStyle = 'black';
         const cellSize = width / cellWidth;
-        
+
         for (let row = 0; row < history.length; row++) {
           for (let col = 0; col < cellWidth; col++) {
             if (history[row][col] === 1) {
@@ -628,15 +618,15 @@
             }
           }
         }
-        
+
         // Add frame
         gif.addFrame(ctx, {delay: 100});
-        
+
         // Generate next generation
         if (history.length < cellHeight) {
           const nextGen = new Array(cellWidth).fill(0);
           const currentGen = history[history.length - 1];
-          
+
           for (let i = 0; i < cellWidth; i++) {
             const left = currentGen[(i - 1 + cellWidth) % cellWidth];
             const center = currentGen[i];
@@ -644,17 +634,17 @@
             const index = left * 4 + center * 2 + right;
             nextGen[i] = (rule >> index) & 1;
           }
-          
+
           cells = nextGen;
           history.push([...cells]);
         }
       }
-      
+
       // Restore original state
       history = originalHistory;
-      
+
       statusEl.textContent = 'Encoding GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF export complete!';
         const url = URL.createObjectURL(blob);
@@ -662,12 +652,12 @@
         link.href = url;
         link.download = `elementary-ca-rule${rule}.gif`;
         link.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>

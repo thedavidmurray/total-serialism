@@ -12,214 +12,160 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
 
+  <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    #controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-      background: var(--bg-secondary, #1a1a2e);
-      border-radius: 8px;
-      max-width: 320px;
+    /* Algorithm-specific overrides */
+    .julia-params {
+      display: none;
+      padding: 12px;
+      background: var(--ts-bg-elevated, #1a1a2e);
+      border-radius: 6px;
+      margin-top: 8px;
+      border: 1px solid var(--ts-border, #2a2a38);
     }
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+    .julia-params.visible {
+      display: block;
     }
-    .control-group label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-secondary, #888);
-    }
-    .control-group input[type="range"] {
-      width: 100%;
-    }
-    select {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #333);
-      padding: 6px 10px;
-      border-radius: 4px;
+    .info-text {
+      font-size: 11px;
+      color: var(--ts-text-muted, #5a5a6e);
+      margin-top: 4px;
     }
     .btn-row {
       display: flex;
       gap: 8px;
       margin-top: 8px;
     }
-    button {
+    .btn-row button {
       flex: 1;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 13px;
-      transition: all 0.2s ease;
-    }
-    button.primary {
-      background: var(--accent-primary, #4a9eff);
-      color: white;
     }
     button.secondary {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #444);
+      background: var(--ts-bg-elevated, #1a1a2e);
+      color: var(--ts-text-primary, #e8e8ec);
+      border: 1px solid var(--ts-border, #2a2a38);
     }
-    button:hover {
-      filter: brightness(1.1);
-    }
-    .info-text {
-      font-size: 11px;
-      color: var(--text-secondary, #666);
-      margin-top: 4px;
-    }
-    .julia-params {
-      display: none;
-      padding: 8px;
-      background: var(--bg-tertiary, #252540);
-      border-radius: 4px;
-      margin-top: 8px;
-    }
-    .julia-params.visible {
-      display: block;
+    button.secondary:hover {
+      background: var(--ts-bg-control, #22222e);
+      border-color: var(--ts-accent-primary, #00d4aa);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-  <div class="ts-layout">
-    <aside class="ts-control-panel">
-      <h2>Mandelbrot & Julia</h2>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Mandelbrot & Julia</h2>
 
-      <div id="controls">
-        <!-- Canvas Settings -->
-        <div class="control-group">
-          <label>Paper Size:
-            <select id="paperSize">
-              <option value="square800" selected>Square (800×800)</option>
-              <option value="landscape800x600">Landscape (800×600)</option>
-              <option value="a4portrait">A4 Portrait</option>
-              <option value="a4landscape">A4 Landscape</option>
-              <option value="letterportrait">Letter Portrait</option>
-              <option value="letterlandscape">Letter Landscape</option>
-            </select>
-          </label>
-          <label>Background Color:
-            <input type="color" id="bgColor" value="#ffffff">
-          </label>
-          <label>Stroke Color:
-            <input type="color" id="strokeColor" value="#000000">
-          </label>
-        </div>
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
       </div>
-
-        <div class="control-group">
-          <label>Fractal Type:
-            <select id="fractalType">
-              <option value="mandelbrot">Mandelbrot Set</option>
-              <option value="julia">Julia Set</option>
-            </select>
-          </label>
-          <p class="info-text" id="fractal-info">Classic escape-time fractal</p>
-        </div>
-
-        <div class="julia-params" id="juliaParams">
-          <div class="control-group">
-            <label>Julia C Real: <span id="juliaReal-val">-0.7</span></label>
-            <input type="range" id="juliaReal" min="-1.5" max="1.5" value="-0.7" step="0.01">
-          </div>
-          <div class="control-group">
-            <label>Julia C Imag: <span id="juliaImag-val">0.27</span></label>
-            <input type="range" id="juliaImag" min="-1.5" max="1.5" value="0.27" step="0.01">
-          </div>
-          <p class="info-text">Preset: Douady rabbit</p>
-        </div>
-
-        <div class="control-group">
-          <label>Max Iterations: <span id="maxIter-val">50</span></label>
-          <input type="range" id="maxIter" min="10" max="200" value="50">
-        </div>
-
-        <div class="control-group">
-          <label>Contour Levels: <span id="contourLevels-val">12</span></label>
-          <input type="range" id="contourLevels" min="3" max="30" value="12">
-        </div>
-
-        <div class="control-group">
-          <label>Zoom: <span id="zoom-val">1.0</span></label>
-          <input type="range" id="zoom" min="0.5" max="100" value="1" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>Center X: <span id="centerX-val">0</span></label>
-          <input type="range" id="centerX" min="-2" max="2" value="0" step="0.01">
-        </div>
-
-        <div class="control-group">
-          <label>Center Y: <span id="centerY-val">0</span></label>
-          <input type="range" id="centerY" min="-2" max="2" value="0" step="0.01">
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Weight: <span id="strokeWeight-val">0.5</span></label>
-          <input type="range" id="strokeWeight" min="0.2" max="2" value="0.5" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="showBoundary" checked> Emphasize Boundary
-          </label>
-        </div>
-
-        <div class="btn-row">
-          <button class="primary" id="regenerateBtn">Regenerate</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="randomMandelbrotBtn">Random Mandelbrot</button>
-          <button class="secondary" id="presetBtn">Random Julia</button>
-        </div>
-
-        <div class="control-group" style="margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color, #333);">
-          <label>Paper Size:
-            <select id="paperSize">
-              <option value="custom">Custom (800×800px)</option>
-              <option value="a5">A5 (148×210mm)</option>
-              <option value="a4">A4 (210×297mm)</option>
-              <option value="square">Square (300×300mm)</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Background:
-            <input type="color" id="bgColor" value="#ffffff">
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Color:
-            <input type="color" id="strokeColor" value="#000000">
-          </label>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="exportSVG">Export SVG</button>
-          <button class="secondary" id="exportPNG">Export PNG</button>
-        </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
       </div>
-    </aside>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
 
-    <main class="ts-canvas-area">
-      <div id="canvas-container"></div>
-    </main>
+    <div class="control-group">
+      <h3>Fractal Type</h3>
+      <div class="control">
+        <label>Type:</label>
+        <select id="fractalType">
+          <option value="mandelbrot">Mandelbrot Set</option>
+          <option value="julia">Julia Set</option>
+        </select>
+      </div>
+      <p class="info-text" id="fractal-info">Classic escape-time fractal</p>
+    </div>
+
+    <div class="julia-params" id="juliaParams">
+      <div class="control">
+        <label>Julia C Real: <span class="value" id="juliaReal-val">-0.7</span></label>
+        <input type="range" id="juliaReal" min="-1.5" max="1.5" value="-0.7" step="0.01">
+      </div>
+      <div class="control">
+        <label>Julia C Imag: <span class="value" id="juliaImag-val">0.27</span></label>
+        <input type="range" id="juliaImag" min="-1.5" max="1.5" value="0.27" step="0.01">
+      </div>
+      <p class="info-text">Preset: Douady rabbit</p>
+    </div>
+
+    <div class="control-group">
+      <h3>Rendering</h3>
+      <div class="control">
+        <label>Max Iterations: <span class="value" id="maxIter-val">50</span></label>
+        <input type="range" id="maxIter" min="10" max="200" value="50">
+      </div>
+      <div class="control">
+        <label>Contour Levels: <span class="value" id="contourLevels-val">12</span></label>
+        <input type="range" id="contourLevels" min="3" max="30" value="12">
+      </div>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">0.5</span></label>
+        <input type="range" id="strokeWeight" min="0.2" max="2" value="0.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="showBoundary" checked> Emphasize Boundary
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>View</h3>
+      <div class="control">
+        <label>Zoom: <span class="value" id="zoom-val">1.0</span></label>
+        <input type="range" id="zoom" min="0.5" max="100" value="1" step="0.1">
+      </div>
+      <div class="control">
+        <label>Center X: <span class="value" id="centerX-val">0</span></label>
+        <input type="range" id="centerX" min="-2" max="2" value="0" step="0.01">
+      </div>
+      <div class="control">
+        <label>Center Y: <span class="value" id="centerY-val">0</span></label>
+        <input type="range" id="centerY" min="-2" max="2" value="0" step="0.01">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="regenerateBtn">Regenerate</button>
+      <div class="btn-row">
+        <button class="secondary" id="randomMandelbrotBtn">Random Mandelbrot</button>
+        <button class="secondary" id="presetBtn">Random Julia</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="btn-row">
+        <button id="exportSVG">Export SVG</button>
+        <button id="exportPNG">Export PNG</button>
+      </div>
+    </div>
+
+    <!-- Preset Container -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
@@ -394,26 +340,6 @@
 
       document.getElementById('exportPNG').addEventListener('click', () => {
         TSExport.downloadPNG(canvas.canvas, `${params.fractalType}-fractal`);
-      });
-
-      document.getElementById('paperSize').addEventListener('change', (e) => {
-        params.paperSize = e.target.value;
-        const paperDims = CanvasLayout.getSize(params.paperSize);
-        SIZE = Math.max(paperDims.width, paperDims.height);
-        if (SIZE > 800) SIZE = Math.min(SIZE, 1000); // Cap for performance
-        RESOLUTION = Math.min(400, Math.floor(SIZE / 2));
-        resizeCanvas(SIZE, SIZE);
-        generateFractal();
-      });
-
-      document.getElementById('bgColor').addEventListener('change', (e) => {
-        params.bgColor = e.target.value;
-        drawFractal();
-      });
-
-      document.getElementById('strokeColor').addEventListener('change', (e) => {
-        params.strokeColor = e.target.value;
-        drawFractal();
       });
     }
 

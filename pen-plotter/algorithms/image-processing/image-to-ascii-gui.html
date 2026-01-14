@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Image to ASCII Art - Pen Plotter Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
@@ -10,135 +15,71 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../upload-helper.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-      display: flex;
-      background: #0a0a0a;
-      color: #00ff00;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #000;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: auto;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-    #controls {
-      width: 380px;
-      padding: 20px;
-      background: #0a0a0a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-      border-left: 2px solid #00ff00;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #00ff00;
-      text-shadow: 0 0 10px #00ff00;
-      font-size: 24px;
-      letter-spacing: 2px;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #003300;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #00cc00;
-      font-size: 14px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 12px;
-      color: #00aa00;
-    }
-    input[type="range"] {
-      width: 100%;
-      background: #001100;
-    }
+    /* Algorithm-specific overrides */
     .upload-area {
-      border: 2px dashed #0a0;
-      border-radius: 6px;
+      border: 2px dashed var(--ts-border-default, #333);
       padding: 12px;
+      border-radius: var(--ts-radius-md, 6px);
       text-align: center;
       cursor: pointer;
-      background: #000;
+      background: var(--ts-bg-control, #1a1a24);
+      color: var(--ts-text-secondary, #9898a8);
+      transition: all var(--ts-transition-fast, 120ms ease-out);
     }
     .upload-area:hover, .upload-area:focus {
-      border-color: #0f0;
+      border-color: var(--ts-accent-primary, #00d4aa);
       outline: none;
     }
-    input[type="number"], select {
-      width: 100%;
-      padding: 8px;
-      background: #001100;
-      color: #00ff00;
-      border: 1px solid #003300;
-      font-family: 'Monaco', monospace;
-      font-size: 12px;
+    .control-group {
+      margin-bottom: var(--ts-space-xl, 24px);
+      padding-bottom: var(--ts-space-lg, 16px);
+      border-bottom: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
     }
-    button {
-      width: 100%;
-      padding: 12px;
-      margin: 5px 0;
-      background: #003300;
-      color: #00ff00;
-      border: 2px solid #00ff00;
-      cursor: pointer;
-      font-size: 13px;
-      font-family: 'Monaco', monospace;
-      font-weight: bold;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      transition: all 0.3s;
+    .control-group:last-child {
+      border-bottom: none;
     }
-    button:hover {
-      background: #00ff00;
-      color: #000;
-      box-shadow: 0 0 20px #00ff00;
-    }
-    .upload-btn {
-      background: #004400;
-      border-color: #00ff00;
-    }
-    .export-btn {
-      background: #002200;
-      border-color: #00cc00;
+    .control {
+      margin-bottom: var(--ts-space-md, 12px);
     }
     .value {
-      font-weight: bold;
-      color: #00ff00;
-      text-shadow: 0 0 5px #00ff00;
+      font-weight: 600;
+      color: var(--ts-accent-primary, #00d4aa);
+      float: right;
     }
-    #image-upload {
+    .info-box {
+      background: var(--ts-bg-control, #1a1a24);
+      padding: 12px;
+      border-radius: var(--ts-radius-md, 6px);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--ts-text-secondary, #9898a8);
+      border: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      color: var(--ts-text-primary, #e8e8ec);
+      font-size: 24px;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: var(--ts-text-muted, #5a5a6e);
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
       display: none;
     }
     .file-info {
-      background: #001100;
+      background: var(--ts-bg-control, #1a1a24);
       padding: 10px;
-      border-radius: 4px;
+      border-radius: var(--ts-radius-sm, 4px);
       margin: 10px 0;
       font-size: 11px;
-      border: 1px solid #003300;
+      border: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
+      color: var(--ts-text-secondary, #9898a8);
     }
     .checkbox-container {
       display: flex;
@@ -151,42 +92,58 @@
     #preview-section {
       margin: 15px 0;
       padding: 10px;
-      background: #001100;
-      border: 1px solid #003300;
-      border-radius: 4px;
+      background: var(--ts-bg-control, #1a1a24);
+      border: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
+      border-radius: var(--ts-radius-sm, 4px);
     }
     #char-preview {
       font-family: 'Courier New', monospace;
       font-size: 14px;
-      color: #00ff00;
-      background: #000;
+      color: var(--ts-accent-primary, #00d4aa);
+      background: var(--ts-bg-deep, #000);
       padding: 10px;
-      border: 1px solid #003300;
+      border: 1px solid var(--ts-border-default, #333);
       overflow: auto;
       max-height: 100px;
     }
     .info-text {
       font-size: 11px;
-      color: #00aa00;
+      color: var(--ts-text-muted, #5a5a6e);
       margin-top: 5px;
+    }
+    .button-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .button-group button {
+      flex: 1;
+      min-width: 100px;
+    }
+    label.checkbox {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+    label.checkbox input {
+      display: inline-block;
+      margin-right: 8px;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
-  <div id="controls">
-    <h2>ASCII ART</h2>
 
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+    <h2>ASCII Art Generator</h2>
+    <div class="subtitle">Convert images to ASCII art for pen plotting</div>
 
     <div class="control-group">
       <h3>Image Upload</h3>
       <div id="uploadArea" class="upload-area" tabindex="0">Drop image or click to browse</div>
-      <input type="file" id="image-upload" accept="image/*" style="display:none;">
-      <button class="upload-btn" onclick="document.getElementById('image-upload').click()">📁 Upload Image</button>
+      <input type="file" id="image-upload" accept="image/*">
       <div class="file-info" id="file-info">No image loaded</div>
       <div class="info-text">Supported: JPG, PNG, GIF, BMP</div>
     </div>
@@ -196,12 +153,12 @@
       <div class="control">
         <label>Preset Size:</label>
         <select id="paperSize">
-          <option value="A3">A3 (297 × 420 mm)</option>
-          <option value="A4" selected>A4 (210 × 297 mm)</option>
-          <option value="A5">A5 (148 × 210 mm)</option>
-          <option value="Letter">Letter (8.5" × 11")</option>
-          <option value="Legal">Legal (8.5" × 14")</option>
-          <option value="Tabloid">Tabloid (11" × 17")</option>
+          <option value="A3">A3 (297 x 420 mm)</option>
+          <option value="A4" selected>A4 (210 x 297 mm)</option>
+          <option value="A5">A5 (148 x 210 mm)</option>
+          <option value="Letter">Letter (8.5" x 11")</option>
+          <option value="Legal">Legal (8.5" x 14")</option>
+          <option value="Tabloid">Tabloid (11" x 17")</option>
           <option value="custom">Custom</option>
         </select>
       </div>
@@ -240,7 +197,7 @@
         <input type="text" id="customChars" value=" .:-=+*#%@" style="width: 100%;">
       </div>
       <div id="preview-section">
-        <div style="font-size: 11px; margin-bottom: 5px;">Preview:</div>
+        <div style="font-size: 11px; margin-bottom: 5px; color: var(--ts-text-muted);">Preview:</div>
         <div id="char-preview"></div>
       </div>
     </div>
@@ -275,13 +232,17 @@
         <label>Contrast: <span class="value" id="contrast-val">1.0</span></label>
         <input type="range" id="contrast" min="0.1" max="3.0" value="1.0" step="0.1">
       </div>
-      <div class="control checkbox-container">
-        <input type="checkbox" id="invert">
-        <label for="invert">Invert Colors</label>
+      <div class="control">
+        <label class="checkbox">
+          <input type="checkbox" id="invert">
+          Invert Colors
+        </label>
       </div>
-      <div class="control checkbox-container">
-        <input type="checkbox" id="edgeDetect">
-        <label for="edgeDetect">Edge Detection</label>
+      <div class="control">
+        <label class="checkbox">
+          <input type="checkbox" id="edgeDetect">
+          Edge Detection
+        </label>
       </div>
     </div>
 
@@ -290,7 +251,7 @@
       <div class="control">
         <label>Text Color:</label>
         <select id="textColor">
-          <option value="#00ff00">Terminal Green</option>
+          <option value="#00d4aa">Accent Green</option>
           <option value="#000000">Black</option>
           <option value="#ffffff">White</option>
           <option value="#ff0000">Red</option>
@@ -303,21 +264,28 @@
         <input type="color" id="bgColor" value="#000000">
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
     </div>
 
     <div class="control-group">
-      <h3>Export Options</h3>
-      <button class="export-btn" onclick="exportSVG()">Export SVG</button>
-      <button class="export-btn" onclick="exportPNG()">Export PNG</button>
-      <button class="export-btn" onclick="exportTXT()">Export TXT</button>
-      <button class="export-btn" onclick="exportHTML()">Export HTML</button>
-      <div class="info-text" style="margin-top: 10px;">
-        SVG exports are perfect for pen plotters!<br>
+      <h3>Export</h3>
+      <div class="button-group">
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+      <div class="button-group" style="margin-top: 8px;">
+        <button onclick="exportTXT()">Export TXT</button>
+        <button onclick="exportHTML()">Export HTML</button>
+      </div>
+      <div class="info-box" style="margin-top: 10px;">
+        SVG exports are perfect for pen plotters!
         Maintains exact sizing for your chosen paper.
       </div>
     </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
@@ -325,9 +293,9 @@
     const charSets = {
       standard: ' .:-=+*#%@',
       detailed: ' .\'`^",:;Il!i><~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$',
-      blocks: ' ░▒▓█',
+      blocks: ' -+=*#@',
       simple: ' .:+-*#@',
-      binary: ' █'
+      binary: ' #'
     };
 
     let params = {
@@ -345,7 +313,7 @@
       contrast: 1.0,
       invert: false,
       edgeDetect: false,
-      textColor: '#00ff00',
+      textColor: '#00d4aa',
       bgColor: '#000000'
     };
 
@@ -557,7 +525,7 @@
       if (!file) return;
 
       document.getElementById('file-info').textContent =
-        `📷 ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
+        `Loaded: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`;
 
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -565,11 +533,11 @@
           sourceImage = img;
           generateASCII();
         }, () => {
-          document.getElementById('file-info').textContent = '❌ Could not read that image';
+          document.getElementById('file-info').textContent = 'Could not read that image';
         });
       };
       reader.onerror = () => {
-        document.getElementById('file-info').textContent = '❌ Could not read that image';
+        document.getElementById('file-info').textContent = 'Could not read that image';
       };
       reader.readAsDataURL(file);
     }
@@ -721,11 +689,11 @@
     }
 
     function drawPlaceholder() {
-      fill(0, 255, 0, 30);
+      fill(0, 212, 170, 30);
       noStroke();
       rect(width / 4, height / 4, width / 2, height / 2);
 
-      fill(0, 255, 0);
+      fill(0, 212, 170);
       textAlign(CENTER, CENTER);
       textSize(20);
       text('Upload an image to begin', width / 2, height / 2);
@@ -776,9 +744,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>ASCII Art</title>
   <style>
     body {

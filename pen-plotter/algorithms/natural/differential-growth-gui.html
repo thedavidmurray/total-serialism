@@ -12,192 +12,417 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--ts-font-mono);
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      min-height: 100vh;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ts-bg-base);
+      padding: 20px;
+    }
+
+    #canvas-container canvas {
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: 0 0 0 1px var(--ts-border-subtle), 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
     #controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-      background: var(--bg-secondary, #1a1a2e);
-      border-radius: 8px;
-      max-width: 320px;
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+      border-left: 1px solid var(--ts-border-subtle);
     }
+
+    #controls::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #controls::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #controls::-webkit-scrollbar-thumb {
+      background: var(--ts-bg-active);
+      border-radius: var(--ts-radius-full);
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
     .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
     .control-group label {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 12px;
-      color: var(--text-secondary, #888);
+      color: var(--ts-text-secondary);
+      margin-bottom: 8px;
     }
+
     .control-group input[type="range"] {
       width: 100%;
+      height: 6px;
+      background: var(--ts-bg-deep);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--ts-border-default);
     }
+
+    .control-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .control-group input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
     select {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #333);
-      padding: 6px 10px;
-      border-radius: 4px;
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      cursor: pointer;
     }
+
+    select:hover {
+      border-color: var(--ts-accent-primary);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-control);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ts-accent-primary);
+    }
+
     .btn-row {
       display: flex;
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 12px;
     }
+
     button {
       flex: 1;
       padding: 10px 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: var(--ts-radius-md);
       cursor: pointer;
-      font-family: inherit;
-      font-size: 13px;
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
       transition: all 0.2s ease;
     }
+
     button.primary {
-      background: var(--accent-primary, #4a9eff);
-      color: white;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
     }
+
+    button.primary:hover {
+      background: #00e8bb;
+      box-shadow: 0 0 20px var(--ts-glow-primary);
+    }
+
     button.secondary {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #444);
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
     }
+
+    button.secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+    }
+
     button.danger {
-      background: #c44;
-      color: white;
+      background: var(--ts-accent-danger);
+      color: var(--ts-text-primary);
     }
+
+    button.danger:hover {
+      filter: brightness(1.1);
+    }
+
     button:hover {
       filter: brightness(1.1);
     }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
     .info-text {
       font-size: 11px;
-      color: var(--text-secondary, #666);
+      color: var(--ts-text-muted);
       margin-top: 4px;
     }
+
     .stats {
       font-size: 11px;
-      color: var(--text-secondary, #888);
-      padding: 8px;
-      background: var(--bg-tertiary, #252540);
-      border-radius: 4px;
+      color: var(--ts-text-secondary);
+      padding: 10px;
+      background: var(--ts-bg-control);
+      border-radius: var(--ts-radius-md);
+      border: 1px solid var(--ts-border-subtle);
+      margin-bottom: 12px;
+    }
+
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+      color: var(--ts-text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: var(--ts-accent-primary);
+    }
+
+    /* Preset Manager Styles */
+    #preset-container {
+      margin-top: 20px;
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
+    }
+
+    #preset-container h3 {
+      color: var(--ts-accent-primary);
+      margin: 0 0 15px 0;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #preset-container select {
+      margin-bottom: 10px;
+    }
+
+    #preset-container input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    #preset-container input[type="text"]:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <div id="canvas-container"></div>
 
-  <div class="algorithm-container">
-    <aside class="controls-panel">
-      <h2>Differential Growth</h2>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Differential Growth</h2>
 
-      <div id="controls">
-        <div class="control-group">
-          <label>Starting Shape:
-            <select id="startShape">
-              <option value="circle">Circle</option>
-              <option value="line">Line</option>
-              <option value="square">Square</option>
-              <option value="star">Star</option>
-              <option value="random">Random Points</option>
-            </select>
-          </label>
-        </div>
-
-        <!-- Canvas Settings -->
-        <div class="control-group">
-          <label>Paper Size:
-            <select id="paperSize">
-              <option value="square800">Square (800×800)</option>
-              <option value="landscape800x600">Landscape (800×600)</option>
-              <option value="a4portrait">A4 Portrait</option>
-              <option value="a4landscape">A4 Landscape</option>
-              <option value="letterportrait">Letter Portrait</option>
-              <option value="letterlandscape">Letter Landscape</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Background: <input type="color" id="bgColor" value="#ffffff"></label>
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Color: <input type="color" id="strokeColor" value="#000000"></label>
-        </div>
+    <div class="control-group">
+      <h3>Starting Shape</h3>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <select id="startShape">
+          <option value="circle">Circle</option>
+          <option value="line">Line</option>
+          <option value="square">Square</option>
+          <option value="star">Star</option>
+          <option value="random">Random Points</option>
+        </select>
       </div>
+    </div>
 
-        <div class="control-group">
-          <label>Starting Points: <span id="startPoints-val">32</span></label>
-          <input type="range" id="startPoints" min="8" max="128" value="32">
-        </div>
-
-        <div class="control-group">
-          <label>Repulsion Force: <span id="repulsion-val">1.5</span></label>
-          <input type="range" id="repulsion" min="0.5" max="5" value="1.5" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>Attraction Force: <span id="attraction-val">0.3</span></label>
-          <input type="range" id="attraction" min="0.1" max="2" value="0.3" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>Max Distance: <span id="maxDist-val">15</span></label>
-          <input type="range" id="maxDist" min="5" max="40" value="15">
-        </div>
-
-        <div class="control-group">
-          <label>Split Distance: <span id="splitDist-val">8</span></label>
-          <input type="range" id="splitDist" min="3" max="25" value="8">
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Weight: <span id="strokeWeight-val">1.2</span></label>
-          <input type="range" id="strokeWeight" min="0.3" max="3" value="1.2" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="closedLoop" checked> Closed Loop
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="showPoints" checked> Show Points
-          </label>
-        </div>
-
-        <div class="stats" id="stats">
-          Points: 32 | Iterations: 0
-        </div>
-
-        <div class="btn-row">
-          <button class="primary" id="toggleGrowth">Start Growing</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="stepGrowth">Step</button>
-          <button class="danger" id="reset">Reset</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="exportSVG">Export SVG</button>
-          <button class="secondary" id="exportPNG">Export PNG</button>
-        </div>
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
       </div>
-    </aside>
+      <div class="control">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
+      </div>
+    </div>
 
-    <main class="canvas-area">
-      <div id="canvas-container"></div>
-    </main>
+    <div class="control-group">
+      <h3>Growth Parameters</h3>
+      <div class="control">
+        <label>Starting Points: <span class="value" id="startPoints-val">32</span></label>
+        <input type="range" id="startPoints" min="8" max="128" value="32">
+      </div>
+      <div class="control">
+        <label>Repulsion Force: <span class="value" id="repulsion-val">1.5</span></label>
+        <input type="range" id="repulsion" min="0.5" max="5" value="1.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Attraction Force: <span class="value" id="attraction-val">0.3</span></label>
+        <input type="range" id="attraction" min="0.1" max="2" value="0.3" step="0.1">
+      </div>
+      <div class="control">
+        <label>Max Distance: <span class="value" id="maxDist-val">15</span></label>
+        <input type="range" id="maxDist" min="5" max="40" value="15">
+      </div>
+      <div class="control">
+        <label>Split Distance: <span class="value" id="splitDist-val">8</span></label>
+        <input type="range" id="splitDist" min="3" max="25" value="8">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1.2</span></label>
+        <input type="range" id="strokeWeight" min="0.3" max="3" value="1.2" step="0.1">
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="closedLoop" checked> Closed Loop
+        </label>
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="showPoints" checked> Show Points
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Controls</h3>
+      <div class="stats" id="stats">
+        Points: 32 | Iterations: 0
+      </div>
+      <div class="btn-row">
+        <button class="primary" id="toggleGrowth">Start Growing</button>
+      </div>
+      <div class="btn-row">
+        <button class="secondary" id="stepGrowth">Step</button>
+        <button class="danger" id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="btn-row">
+        <button class="secondary" id="exportSVG">Export SVG</button>
+        <button class="secondary" id="exportPNG">Export PNG</button>
+      </div>
+    </div>
+
+    <div id="preset-container">
+      <h3>Presets</h3>
+      <!-- Preset controls can be added here -->
+    </div>
   </div>
 
   <script src="../../shared/canvas-layout.js"></script>

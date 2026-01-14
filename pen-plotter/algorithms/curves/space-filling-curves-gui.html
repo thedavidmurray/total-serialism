@@ -6,7 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>Space-Filling Curves - Pen Plotter</title>
+  <title>Space-Filling Curves - Total Serialism</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
@@ -15,170 +15,144 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    #controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-      background: var(--bg-secondary, #1a1a2e);
-      border-radius: 8px;
-      max-width: 320px;
-    }
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .control-group label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-secondary, #888);
-    }
-    .control-group input[type="range"] {
-      width: 100%;
-    }
-    select {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #333);
-      padding: 6px 10px;
-      border-radius: 4px;
-    }
+    /* Algorithm-specific overrides */
     .btn-row {
       display: flex;
       gap: 8px;
       margin-top: 8px;
     }
-    button {
+    .btn-row button {
       flex: 1;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 13px;
-      transition: all 0.2s ease;
     }
     button.primary {
-      background: var(--accent-primary, #4a9eff);
-      color: white;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
     }
     button.secondary {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #444);
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
     }
     button:hover {
       filter: brightness(1.1);
     }
     .info-text {
       font-size: 11px;
-      color: var(--text-secondary, #666);
+      color: var(--ts-text-muted);
       margin-top: 4px;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Space-Filling Curves</h2>
 
-  <div class="algorithm-container">
-    <aside class="controls-panel">
-      <h2>Space-Filling Curves</h2>
-
-      <div id="controls">
-        <div class="control-group">
-          <label>Paper Size:
-            <select id="paperSize">
-              <option value="square800" selected>Square (800×800)</option>
-              <option value="landscape800x600">Landscape (800×600)</option>
-              <option value="a4portrait">A4 Portrait</option>
-              <option value="a4landscape">A4 Landscape</option>
-              <option value="letterportrait">Letter Portrait</option>
-              <option value="letterlandscape">Letter Landscape</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Background Color:
-            <input type="color" id="bgColor" value="#ffffff">
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Color:
-            <input type="color" id="strokeColor" value="#000000">
-          </label>
-        </div>
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a5">A5 (148x210mm)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
       </div>
-
-        <div class="control-group">
-          <label>Curve Type:
-            <select id="curveType">
-              <option value="hilbert">Hilbert Curve</option>
-              <option value="peano">Peano Curve</option>
-              <option value="moore">Moore Curve</option>
-              <option value="gosper">Gosper Curve</option>
-              <option value="dragon">Dragon Curve</option>
-              <option value="sierpinski">Sierpinski Curve</option>
-            </select>
-          </label>
-          <p class="info-text" id="curve-info">Square-filling, continuous path</p>
-        </div>
-
-        <div class="control-group">
-          <label>Iterations: <span id="iterations-val">4</span></label>
-          <input type="range" id="iterations" min="1" max="8" value="4">
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Weight: <span id="strokeWeight-val">1.5</span></label>
-          <input type="range" id="strokeWeight" min="0.3" max="4" value="1.5" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>Margin: <span id="margin-val">40</span></label>
-          <input type="range" id="margin" min="10" max="100" value="40">
-        </div>
-
-        <div class="control-group">
-          <label>Rotation: <span id="rotation-val">0</span>°</label>
-          <input type="range" id="rotation" min="0" max="360" value="0">
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="showPoints"> Show Points
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="smoothCurve"> Smooth Curve
-          </label>
-        </div>
-
-        <div class="btn-row">
-          <button class="primary" id="regenerate">Regenerate</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="exportSVG">Export SVG</button>
-          <button class="secondary" id="exportPNG">Export PNG</button>
-        </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
       </div>
-    </aside>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
 
-    <main class="canvas-area">
-      <div id="canvas-container"></div>
-    </main>
+    <div class="control-group">
+      <h3>Curve Settings</h3>
+      <div class="control">
+        <label>Curve Type:</label>
+        <select id="curveType">
+          <option value="hilbert">Hilbert Curve</option>
+          <option value="peano">Peano Curve</option>
+          <option value="moore">Moore Curve</option>
+          <option value="gosper">Gosper Curve</option>
+          <option value="dragon">Dragon Curve</option>
+          <option value="sierpinski">Sierpinski Curve</option>
+        </select>
+      </div>
+      <p class="info-text" id="curve-info">Square-filling, continuous path</p>
+      <div class="control">
+        <label>Iterations: <span class="value" id="iterations-val">4</span></label>
+        <input type="range" id="iterations" min="1" max="8" value="4">
+      </div>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1.5</span></label>
+        <input type="range" id="strokeWeight" min="0.3" max="4" value="1.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Margin: <span class="value" id="margin-val">40</span></label>
+        <input type="range" id="margin" min="10" max="100" value="40">
+      </div>
+      <div class="control">
+        <label>Rotation: <span class="value" id="rotation-val">0</span>deg</label>
+        <input type="range" id="rotation" min="0" max="360" value="0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="showPoints"> Show Points
+        </label>
+      </div>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="smoothCurve"> Smooth Curve
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <div class="btn-row">
+        <button class="primary" id="regenerate">Regenerate</button>
+      </div>
+      <div class="btn-row">
+        <button class="secondary" id="exportSVG">Export SVG</button>
+        <button class="secondary" id="exportPNG">Export PNG</button>
+      </div>
+    </div>
+
+    <!-- Preset Container at bottom -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
+    // Paper size definitions
+    const PAPER_SIZES = {
+      square800: { width: 800, height: 800 },
+      landscape800x600: { width: 800, height: 600 },
+      a5: { width: 559, height: 794 },
+      a4portrait: { width: 794, height: 1123 },
+      a4landscape: { width: 1123, height: 794 },
+      a3portrait: { width: 1123, height: 1587 },
+      a3landscape: { width: 1587, height: 1123 },
+      letterportrait: { width: 816, height: 1056 },
+      letterlandscape: { width: 1056, height: 816 }
+    };
+
     // Parameters
     const params = {
       paperSize: 'square800',
@@ -210,7 +184,7 @@
     let points = [];
 
     function setup() {
-      const size = CanvasLayout.getSize(params.paperSize);
+      const size = PAPER_SIZES[params.paperSize];
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
@@ -234,7 +208,7 @@
     }
 
     function resizeCanvasForPaperSize() {
-      const size = CanvasLayout.getSize(params.paperSize);
+      const size = PAPER_SIZES[params.paperSize];
       resizeCanvas(size.width, size.height);
       generateCurve();
     }

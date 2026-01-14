@@ -7,218 +7,38 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <!-- Total Serialism Design System -->
+    <link rel="stylesheet" href="../../shared/algorithm.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
-
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            font-family: 'JetBrains Mono', monospace;
-            display: flex;
-            background: #1a1a1a;
-            color: #fff;
-            min-height: 100vh;
-        }
-
-        a {
-            color: #4CAF50;
-            text-decoration: none;
-        }
-
-        a:hover {
-            text-decoration: underline;
-        }
-
-        .back-link {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 14px;
-            z-index: 100;
-        }
-
-        #canvas-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #2a2a2a;
-            padding: 20px;
-            position: relative;
-        }
-
-        #canvas-container h1 {
-            margin: 0 0 15px 0;
-            font-size: 18px;
-            font-weight: 500;
-            color: #4CAF50;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        #controls {
-            width: 340px;
-            padding: 20px;
-            background: #1a1a1a;
-            height: 100vh;
-            overflow-y: auto;
-            flex-shrink: 0;
-        }
-
-        h2 {
-            margin: 0 0 20px 0;
-            color: #4CAF50;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
-        .control-group {
-            margin-bottom: 25px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #333;
-        }
-
-        .control-group:last-child {
-            border-bottom: none;
-        }
-
-        .control-group h3 {
-            margin: 0 0 15px 0;
-            color: #4CAF50;
-            font-size: 14px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .control {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 12px;
-            color: #ccc;
-        }
-
-        input[type="range"] {
-            width: 100%;
-            height: 6px;
-            background: #333;
-            border-radius: 3px;
-            outline: none;
-            -webkit-appearance: none;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 14px;
-            height: 14px;
-            background: #4CAF50;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            background: #4CAF50;
-            border-radius: 50%;
-            cursor: pointer;
-            border: none;
-        }
-
-        select {
-            width: 100%;
-            padding: 8px;
-            background: #333;
-            color: #fff;
-            border: 1px solid #555;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            cursor: pointer;
-        }
-
-        select:hover {
-            border-color: #4CAF50;
-        }
-
-        select:focus {
-            outline: none;
-            border-color: #4CAF50;
-        }
-
-        input[type="color"] {
-            width: 100%;
-            height: 35px;
-            padding: 2px;
-            background: #333;
-            border: 1px solid #555;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        input[type="color"]::-webkit-color-swatch-wrapper {
-            padding: 2px;
-        }
-
-        input[type="color"]::-webkit-color-swatch {
-            border-radius: 2px;
-            border: none;
-        }
-
-        button {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            background: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 12px;
-            border-radius: 4px;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background: #45a049;
-        }
-
+        /* Algorithm-specific overrides */
         .value {
             font-weight: 600;
-            color: #4CAF50;
+            color: var(--ts-accent-primary);
         }
 
         #seed-display {
-            font-family: 'JetBrains Mono', monospace;
-            background: #333;
+            font-family: var(--ts-font-mono);
+            background: var(--ts-bg-deep);
             padding: 5px 8px;
-            border-radius: 4px;
+            border-radius: var(--ts-radius-sm);
             font-size: 11px;
+            color: var(--ts-accent-primary);
         }
 
         .export-btn {
-            background: #FF6B6B;
+            background: var(--ts-accent-danger) !important;
         }
 
         .export-btn:hover {
-            background: #FF5252;
+            background: #ff5252 !important;
         }
 
         .randomize-btn {
-            background: #9C27B0;
+            background: var(--ts-accent-tertiary) !important;
         }
 
         .randomize-btn:hover {
-            background: #7B1FA2;
+            background: #8b7cf0 !important;
         }
 
         .button-row {
@@ -232,23 +52,23 @@
 
         #gif-progress {
             display: none;
-            background: #333;
+            background: var(--ts-bg-deep);
             padding: 10px;
-            border-radius: 4px;
+            border-radius: var(--ts-radius-md);
             margin-top: 10px;
         }
 
         .progress-bar {
             width: 100%;
             height: 20px;
-            background: #555;
+            background: var(--ts-bg-active);
             border-radius: 10px;
             overflow: hidden;
         }
 
         .progress-fill {
             height: 100%;
-            background: #4CAF50;
+            background: var(--ts-accent-primary);
             transition: width 0.3s;
         }
 
@@ -258,14 +78,14 @@
         }
 
         .preset-manager .control-group {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--ts-bg-control);
             padding: 15px;
-            border-radius: 8px;
-            border: 1px solid rgba(76, 175, 80, 0.2);
+            border-radius: var(--ts-radius-lg);
+            border: 1px solid var(--ts-border-subtle);
         }
 
         .preset-manager h3 {
-            color: #4CAF50;
+            color: var(--ts-accent-primary);
             margin-bottom: 15px;
             font-size: 14px;
             font-weight: 500;
@@ -278,41 +98,41 @@
         .preset-manager input[type="text"] {
             width: 100%;
             padding: 8px;
-            background: #2a2a2a;
-            color: #fff;
-            border: 1px solid #444;
-            border-radius: 4px;
-            font-family: 'JetBrains Mono', monospace;
+            background: var(--ts-bg-deep);
+            color: var(--ts-text-primary);
+            border: 1px solid var(--ts-border-default);
+            border-radius: var(--ts-radius-md);
+            font-family: var(--ts-font-mono);
             font-size: 12px;
             margin-bottom: 10px;
         }
 
         .preset-manager input[type="text"]:focus {
             outline: none;
-            border-color: #4CAF50;
+            border-color: var(--ts-accent-primary);
         }
 
         .preset-manager #delete-preset-btn {
-            background: #f44336;
+            background: var(--ts-accent-danger) !important;
         }
 
         .preset-manager #delete-preset-btn:hover {
-            background: #da190b;
+            background: #da190b !important;
         }
 
         .preset-manager #export-presets-btn,
         .preset-manager #import-presets-btn {
-            background: #2196F3;
+            background: var(--ts-accent-tertiary) !important;
         }
 
         .preset-manager #export-presets-btn:hover,
         .preset-manager #import-presets-btn:hover {
-            background: #0b7dda;
+            background: #6a5acd !important;
         }
 
         .preset-manager hr {
             border: none;
-            border-top: 1px solid #333;
+            border-top: 1px solid var(--ts-border-subtle);
             margin: 15px 0;
         }
 
@@ -325,19 +145,64 @@
             flex: 1;
         }
 
-        canvas {
-            border: 1px solid #333;
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--ts-border-subtle);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: var(--ts-accent-primary);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .control {
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            margin: 0 0 20px 0;
+            color: var(--ts-accent-primary);
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 35px;
+            padding: 2px;
+            background: var(--ts-bg-deep);
+            border: 1px solid var(--ts-border-default);
+            border-radius: var(--ts-radius-md);
+            cursor: pointer;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 2px;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border-radius: 2px;
+            border: none;
         }
     </style>
 </head>
 <body>
     <div id="canvas-container">
-        <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
-        <h1>Phyllotaxis Pattern Generator</h1>
         <div id="canvas-wrapper"></div>
     </div>
 
     <div id="controls">
+        <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
         <h2>Phyllotaxis Controls</h2>
 
         <div class="control-group">

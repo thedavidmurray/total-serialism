@@ -3,187 +3,137 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maze Generator - Total Serialism</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>Maze Generator - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    #controls {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-      background: var(--bg-secondary, #1a1a2e);
-      border-radius: 8px;
-      max-width: 320px;
-    }
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .control-group label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      color: var(--text-secondary, #888);
-    }
-    .control-group input[type="range"] {
-      width: 100%;
-    }
-    select {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #333);
-      padding: 6px 10px;
-      border-radius: 4px;
-    }
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    button {
-      flex: 1;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 13px;
-      transition: all 0.2s ease;
-    }
-    button.primary {
-      background: var(--accent-primary, #4a9eff);
-      color: white;
-    }
-    button.secondary {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #444);
-    }
-    button:hover {
-      filter: brightness(1.1);
-    }
+    /* Algorithm-specific overrides */
     .info-text {
       font-size: 11px;
-      color: var(--text-secondary, #666);
+      color: var(--ts-text-muted, #666);
       margin-top: 4px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-  <div class="algorithm-container">
-    <aside class="controls-panel">
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <div class="ts-header-inline">
+      <span class="ts-logo">Total Serialism</span>
       <h2>Maze Generator</h2>
+    </div>
 
-      <div id="controls">
-        <div class="control-group">
-          <label>Canvas Size:
-            <select id="paperSize">
-              <option value="square800">Square 800×800</option>
-              <option value="a4portrait">A4 Portrait</option>
-              <option value="a4landscape">A4 Landscape</option>
-              <option value="letterportrait">Letter Portrait</option>
-              <option value="letterlandscape">Letter Landscape</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Background Color:
-            <input type="color" id="bgColor" value="#ffffff">
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Color:
-            <input type="color" id="strokeColor" value="#000000">
-          </label>
-        </div>
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <label>Canvas Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square 800x800</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
       </div>
-
-        <hr style="border-color: var(--border-color, #333); margin: 12px 0;">
-
-        <div class="control-group">
-          <label>Algorithm:
-            <select id="algorithm">
-              <option value="recursive">Recursive Backtracker</option>
-              <option value="prim">Prim's Algorithm</option>
-              <option value="kruskal">Kruskal's Algorithm</option>
-              <option value="wilson">Wilson's Algorithm</option>
-              <option value="binary">Binary Tree</option>
-              <option value="sidewinder">Sidewinder</option>
-            </select>
-          </label>
-          <p class="info-text" id="algo-info">DFS-based, creates long winding passages</p>
-        </div>
-
-        <div class="control-group">
-          <label>Grid Width: <span id="cols-val">20</span></label>
-          <input type="range" id="cols" min="5" max="60" value="20">
-        </div>
-
-        <div class="control-group">
-          <label>Grid Height: <span id="rows-val">20</span></label>
-          <input type="range" id="rows" min="5" max="60" value="20">
-        </div>
-
-        <div class="control-group">
-          <label>Wall Thickness: <span id="wallThickness-val">2</span></label>
-          <input type="range" id="wallThickness" min="1" max="6" value="2" step="0.5">
-        </div>
-
-        <div class="control-group">
-          <label>Margin: <span id="margin-val">40</span></label>
-          <input type="range" id="margin" min="10" max="100" value="40">
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="showSolution" checked> Show Solution Path
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="roundCorners"> Round Corners
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Random Seed: <span id="seed-val">12345</span></label>
-          <input type="range" id="seed" min="1" max="99999" value="12345">
-        </div>
-
-        <div class="btn-row">
-          <button class="primary" id="regenerate">Generate New Maze</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="exportSVG">Export SVG</button>
-          <button class="secondary" id="exportPNG">Export PNG</button>
-        </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
       </div>
-    </aside>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
 
-    <main class="canvas-area">
-      <div id="canvas-container"></div>
-    </main>
+    <div class="control-group">
+      <h3>Algorithm</h3>
+      <div class="control">
+        <label>Algorithm:</label>
+        <select id="algorithm">
+          <option value="recursive">Recursive Backtracker</option>
+          <option value="prim">Prim's Algorithm</option>
+          <option value="kruskal">Kruskal's Algorithm</option>
+          <option value="wilson">Wilson's Algorithm</option>
+          <option value="binary">Binary Tree</option>
+          <option value="sidewinder">Sidewinder</option>
+        </select>
+      </div>
+      <p class="info-text" id="algo-info">DFS-based, creates long winding passages</p>
+    </div>
+
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Width: <span class="value" id="cols-val">20</span></label>
+        <input type="range" id="cols" min="5" max="60" value="20">
+      </div>
+      <div class="control">
+        <label>Grid Height: <span class="value" id="rows-val">20</span></label>
+        <input type="range" id="rows" min="5" max="60" value="20">
+      </div>
+      <div class="control">
+        <label>Wall Thickness: <span class="value" id="wallThickness-val">2</span></label>
+        <input type="range" id="wallThickness" min="1" max="6" value="2" step="0.5">
+      </div>
+      <div class="control">
+        <label>Margin: <span class="value" id="margin-val">40</span></label>
+        <input type="range" id="margin" min="10" max="100" value="40">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showSolution" checked>
+        <label for="showSolution">Show Solution Path</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="roundCorners">
+        <label for="roundCorners">Round Corners</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Random Seed: <span class="value" id="seed-val">12345</span></label>
+        <input type="range" id="seed" min="1" max="99999" value="12345">
+      </div>
+      <button class="ts-btn-primary" id="regenerate">Generate New Maze</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button class="ts-btn" id="exportSVG">Export SVG</button>
+      <button class="ts-btn" id="exportPNG">Export PNG</button>
+    </div>
+
+    <div class="control-group preset-container">
+      <h3>Presets</h3>
+      <p class="info-text">Choose an algorithm above to explore different maze generation techniques</p>
+    </div>
   </div>
 
-  <script src="../../shared/export-utils.js"></script>
   <script>
     // Parameters
     const params = {

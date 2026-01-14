@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Spirotron - Spirograph Pattern Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
@@ -19,127 +16,126 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
     }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
       margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
+
     .checkbox-container {
       display: flex;
       align-items: center;
     }
+
     .checkbox-container input {
       margin-right: 10px;
     }
+
     .preset-btn {
-      background: #2196F3;
+      background: var(--ts-accent-tertiary) !important;
       margin: 2px 0;
     }
+
     .preset-btn:hover {
-      background: #1976D2;
+      background: #6a5acd !important;
     }
+
     #gif-status {
       margin-top: 10px;
       font-size: 12px;
-      color: #888;
+      color: var(--ts-text-muted);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    .preset-manager {
+      margin-top: 20px;
+    }
+
+    .preset-manager .control-group {
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Spirotron Controls</h2>
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
       <div class="control">
         <label>Paper Size:</label>
         <select id="paperSize">
-          <option value="square_medium" selected>Square (800×800)</option>
+          <option value="square_medium" selected>Square (800x800)</option>
           <option value="A4_landscape">A4 Landscape</option>
           <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_large">Square (1200x1200)</option>
         </select>
       </div>
       <div class="control">
@@ -151,7 +147,7 @@
         <input type="color" id="strokeColor" value="#000000">
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
     </div>
 
@@ -170,7 +166,7 @@
         <input type="range" id="penDistance" min="0" max="200" value="43" step="1">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Pattern Settings</h3>
       <div class="control">
@@ -191,7 +187,7 @@
         </select>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Multi-Wheel Mode</h3>
       <div class="control checkbox-container">
@@ -207,7 +203,7 @@
         <input type="range" id="secondaryPen" min="0" max="100" value="15" step="1">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Style</h3>
       <div class="control">
@@ -232,16 +228,16 @@
         <label for="animateDrawing">Animate Drawing</label>
       </div>
     </div>
-    
+
     <div class="control-group">
-      <h3>Presets</h3>
+      <h3>Quick Presets</h3>
       <button class="preset-btn" onclick="loadPreset('classic')">Classic Spirograph</button>
       <button class="preset-btn" onclick="loadPreset('flower')">Flower Pattern</button>
       <button class="preset-btn" onclick="loadPreset('star')">Star Pattern</button>
       <button class="preset-btn" onclick="loadPreset('complex')">Complex Pattern</button>
       <button class="preset-btn" onclick="loadPreset('minimal')">Minimal</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Generation</h3>
       <div class="control">
@@ -255,7 +251,7 @@
       <button onclick="randomizeParams()">Randomize</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export SVG</button>
@@ -263,6 +259,8 @@
       <button onclick="exportGIF()">Export GIF</button>
       <div id="gif-status"></div>
     </div>
+
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
@@ -292,7 +290,7 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-    
+
     let points = [];
     let svgCanvas;
     let animationProgress = 0;
@@ -301,7 +299,7 @@
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
-    
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
@@ -339,7 +337,7 @@
       canvasControls.setupRandomizeButton();
       regenerate();
     }
-    
+
     function updateUIFromParams() {
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -415,14 +413,14 @@
         });
       }
     }
-    
+
     function regenerate() {
       randomSeed(params.seed);
       noiseSeed(params.seed);
       document.getElementById('seed-display').textContent = params.seed;
-      
+
       generateSpirograph();
-      
+
       if (!isAnimating) {
         redraw();
         noLoop();
@@ -434,41 +432,41 @@
       clearTimeout(regenTimer);
       regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
-    
+
     function generateSpirograph() {
       points = [];
       const R = params.outerRadius;
       const r = params.innerRadius;
       const d = params.penDistance;
-      
+
       let maxT = params.rotations * TWO_PI;
-      
+
       // Calculate the least common multiple to determine when pattern repeats
       const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
       const lcm = (a, b) => (a * b) / gcd(a, b);
-      
+
       if (params.patternType === 'hypotrochoid' || params.patternType === 'hybrid') {
         const ratio = R / r;
         const repeatFactor = lcm(R, r) / r;
         maxT = min(maxT, repeatFactor * TWO_PI * 1.1); // Add 10% to ensure closure
       }
-      
+
       for (let t = 0; t <= maxT; t += params.resolution) {
         let x, y;
-        
+
         switch (params.patternType) {
           case 'hypotrochoid':
             // Wheel rolling inside
             x = (R - r) * cos(t) + d * cos((R - r) / r * t);
             y = (R - r) * sin(t) - d * sin((R - r) / r * t);
             break;
-            
+
           case 'epitrochoid':
             // Wheel rolling outside
             x = (R + r) * cos(t) - d * cos((R + r) / r * t);
             y = (R + r) * sin(t) - d * sin((R + r) / r * t);
             break;
-            
+
           case 'hybrid':
             // Combination of both
             const hx = (R - r) * cos(t) + d * cos((R - r) / r * t);
@@ -479,7 +477,7 @@
             x = lerp(hx, ex, blend);
             y = lerp(hy, ey, blend);
             break;
-            
+
           case 'compound':
             // Multi-stage spirograph
             if (params.multiWheel) {
@@ -498,11 +496,11 @@
             }
             break;
         }
-        
+
         points.push({ x, y, t });
       }
     }
-    
+
     function draw() {
       background(params.bgColor);
       stroke(params.strokeColor);
@@ -513,17 +511,17 @@
         noFill();
         stroke(200);
         strokeWeight(0.5);
-        
+
         // Outer circle
         ellipse(0, 0, params.outerRadius * 2);
-        
+
         // Inner circle (current position)
         if (isAnimating && animationProgress < 1) {
           const t = animationProgress * params.rotations * TWO_PI;
           const cx = (params.outerRadius - params.innerRadius) * cos(t);
           const cy = (params.outerRadius - params.innerRadius) * sin(t);
           ellipse(cx, cy, params.innerRadius * 2);
-          
+
           // Pen position
           fill(255, 0, 0);
           noStroke();
@@ -534,15 +532,15 @@
           );
         }
       }
-      
+
       // Draw spirograph
       noFill();
       strokeWeight(params.strokeWeight);
-      
-      const numPoints = isAnimating ? 
-        floor(animationProgress * points.length) : 
+
+      const numPoints = isAnimating ?
+        floor(animationProgress * points.length) :
         points.length;
-      
+
       if (params.colorMode === 'mono') {
         stroke(0);
         beginShape();
@@ -558,13 +556,13 @@
               const g = map(i, 0, points.length - 1, 0, 255);
               stroke(g, 0, 255 - g);
               break;
-              
+
             case 'rainbow':
               colorMode(HSB);
               stroke(map(i, 0, points.length, 0, 360), 80, 80);
               colorMode(RGB);
               break;
-              
+
             case 'phase':
               const phase = points[i].t;
               stroke(
@@ -574,11 +572,11 @@
               );
               break;
           }
-          
+
           line(points[i-1].x, points[i-1].y, points[i].x, points[i].y);
         }
       }
-      
+
       // Update animation
       if (isAnimating && animationProgress < 1) {
         animationProgress += 0.01;
@@ -589,7 +587,7 @@
         }
       }
     }
-    
+
     function loadPreset(preset) {
       switch (preset) {
         case 'classic':
@@ -599,7 +597,7 @@
           params.patternType = 'hypotrochoid';
           params.multiWheel = false;
           break;
-          
+
         case 'flower':
           params.outerRadius = 200;
           params.innerRadius = 50;
@@ -607,7 +605,7 @@
           params.patternType = 'hypotrochoid';
           params.rotations = 10;
           break;
-          
+
         case 'star':
           params.outerRadius = 200;
           params.innerRadius = 80;
@@ -615,7 +613,7 @@
           params.patternType = 'epitrochoid';
           params.rotations = 20;
           break;
-          
+
         case 'complex':
           params.outerRadius = 200;
           params.innerRadius = 37;
@@ -625,7 +623,7 @@
           params.secondaryRadius = 23;
           params.secondaryPen = 17;
           break;
-          
+
         case 'minimal':
           params.outerRadius = 200;
           params.innerRadius = 100;
@@ -634,7 +632,7 @@
           params.rotations = 5;
           break;
       }
-      
+
       // Update UI
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -648,17 +646,17 @@
           if (display) display.textContent = params[key];
         }
       });
-      
+
       regenerate();
     }
-    
+
     function randomizeParams() {
       params.outerRadius = random(100, 250);
       params.innerRadius = random(20, min(params.outerRadius - 10, 120));
       params.penDistance = random(10, params.innerRadius * 1.5);
       params.rotations = random(5, 50);
       params.seed = Math.floor(Math.random() * 1000000);
-      
+
       // Update UI
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -668,10 +666,10 @@
           if (display) display.textContent = Math.round(params[key]);
         }
       });
-      
+
       regenerate();
     }
-    
+
     function saveParams() {
       const json = JSON.stringify(params, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -681,19 +679,19 @@
       a.download = `spirotron-${params.seed}.json`;
       a.click();
     }
-    
+
     function exportSVG() {
       save(svgCanvas, `spirotron-${params.patternType}-${params.seed}.svg`);
     }
-    
+
     function exportPNG() {
       save(`spirotron-${params.patternType}-${params.seed}.png`);
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -701,34 +699,34 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Create offscreen canvas for GIF frames
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
       const ctx = offscreenCanvas.getContext('2d');
-      
+
       // Generate frames showing the drawing process
       const totalFrames = 60;
       const frameDelay = 50; // milliseconds
-      
+
       for (let frame = 0; frame < totalFrames; frame++) {
         // Clear and draw frame
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
-        
+
         // Set up transformation
         ctx.save();
         ctx.translate(width/2, height/2);
-        
+
         // Draw progress
         const progress = frame / (totalFrames - 1);
         const numPoints = floor(progress * points.length);
-        
+
         ctx.strokeStyle = 'black';
         ctx.lineWidth = params.strokeWeight;
         ctx.beginPath();
-        
+
         for (let i = 0; i < numPoints; i++) {
           if (i === 0) {
             ctx.moveTo(points[i].x, points[i].y);
@@ -736,28 +734,28 @@
             ctx.lineTo(points[i].x, points[i].y);
           }
         }
-        
+
         ctx.stroke();
-        
+
         // Draw guide circles if enabled
         if (params.showGuides && progress < 1) {
           const t = progress * params.rotations * TWO_PI;
           const cx = (params.outerRadius - params.innerRadius) * Math.cos(t);
           const cy = (params.outerRadius - params.innerRadius) * Math.sin(t);
-          
+
           ctx.strokeStyle = '#ccc';
           ctx.lineWidth = 0.5;
-          
+
           // Outer circle
           ctx.beginPath();
           ctx.arc(0, 0, params.outerRadius, 0, Math.PI * 2);
           ctx.stroke();
-          
+
           // Inner circle
           ctx.beginPath();
           ctx.arc(cx, cy, params.innerRadius, 0, Math.PI * 2);
           ctx.stroke();
-          
+
           // Pen position
           if (numPoints > 0) {
             ctx.fillStyle = 'red';
@@ -766,19 +764,19 @@
             ctx.fill();
           }
         }
-        
+
         ctx.restore();
-        
+
         // Add frame to GIF
         gif.addFrame(ctx, {copy: true, delay: frameDelay});
-        
+
         // Update status
         const progressPercent = Math.round((frame + 1) / totalFrames * 100);
         statusEl.textContent = `Generating frames: ${progressPercent}%`;
       }
-      
+
       statusEl.textContent = 'Rendering GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF ready!';
         const url = URL.createObjectURL(blob);
@@ -786,12 +784,12 @@
         a.href = url;
         a.download = `spirotron-${params.patternType}-${params.seed}.gif`;
         a.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>

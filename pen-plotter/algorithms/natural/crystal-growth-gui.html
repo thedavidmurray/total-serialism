@@ -7,287 +7,331 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Crystal Growth - Pen Plotter Art</title>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    :root {
+      --ts-bg-deep: #0a0a0f;
+      --ts-bg-base: #12121a;
+      --ts-bg-panel: #1a1a24;
+      --ts-bg-elevated: #24242f;
+      --ts-border-subtle: #2a2a3a;
+      --ts-border-default: #3a3a4a;
+      --ts-text-primary: #e8e8ed;
+      --ts-text-secondary: #a0a0b0;
+      --ts-text-muted: #606070;
+      --ts-text-inverse: #0a0a0f;
+      --ts-accent-primary: #6366f1;
+      --ts-accent-hover: #818cf8;
+      --ts-accent-muted: rgba(99, 102, 241, 0.15);
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: var(--ts-bg-base);
+    }
+
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+
+    canvas {
+      background-color: #000000;
+      border: 1px solid var(--ts-border-subtle);
+      cursor: crosshair;
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+    }
+
+    h3 {
+      font-size: 0.85rem;
+      margin: 20px 0 12px 0;
+      color: var(--ts-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-bottom: 4px;
+      accent-color: var(--ts-accent-primary);
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      background: var(--ts-bg-elevated);
+      border: 1px solid var(--ts-border-subtle);
+      color: var(--ts-text-primary);
+      padding: 8px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      box-sizing: border-box;
+    }
+
+    input[type="color"] {
+      background: var(--ts-bg-elevated);
+      border: 1px solid var(--ts-border-subtle);
+      border-radius: 4px;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin-top: 8px;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--ts-accent-hover);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .value-display {
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+      text-align: right;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--ts-text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .back-link:hover {
+      color: var(--ts-accent-primary);
+    }
+
+    .progress {
+      width: 100%;
+      height: 4px;
+      background: var(--ts-bg-elevated);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: var(--ts-accent-primary);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .preset-container {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--ts-border-subtle);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="canvas" width="800" height="800"></canvas>
+  </div>
+
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Crystal Growth</h2>
+
+    <h3>Crystal Parameters</h3>
+    <div class="control-group">
+      <label for="crystalType">Crystal Type</label>
+      <select id="crystalType">
+        <option value="dendritic">Dendritic (Snow)</option>
+        <option value="cubic">Cubic</option>
+        <option value="hexagonal">Hexagonal</option>
+        <option value="needle">Needle</option>
+        <option value="fractal">Fractal</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="seedPattern">Seed Pattern</label>
+      <select id="seedPattern">
+        <option value="point">Single Point</option>
+        <option value="line">Line</option>
+        <option value="circle">Circle</option>
+        <option value="random">Random Points</option>
+        <option value="grid">Grid</option>
+      </select>
+    </div>
+
+    <h3>Canvas Settings</h3>
+    <div class="control-group">
+      <label for="paperSize">Paper Size</label>
+      <select id="paperSize">
+        <option value="square800">Square (800x800)</option>
+        <option value="landscape800x600">Landscape (800x600)</option>
+        <option value="a4portrait">A4 Portrait</option>
+        <option value="a4landscape">A4 Landscape</option>
+        <option value="a3portrait">A3 Portrait</option>
+        <option value="a3landscape">A3 Landscape</option>
+        <option value="letterportrait">Letter Portrait</option>
+        <option value="letterlandscape">Letter Landscape</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="bgColor">Background Color</label>
+      <input type="color" id="bgColor" value="#000000">
+    </div>
+
+    <div class="control-group">
+      <label for="strokeColor">Stroke Color</label>
+      <input type="color" id="strokeColor" value="#ffffff">
+    </div>
+
+    <div class="control-group">
+      <button id="randomizeAll">Randomize Colors</button>
+    </div>
+
+    <div class="control-group">
+      <label for="particles">Number of Particles</label>
+      <input type="range" id="particles" min="1000" max="50000" step="1000" value="10000">
+      <div class="value-display" id="particlesValue">10000</div>
+    </div>
+
+    <div class="control-group">
+      <label for="stickiness">Stickiness</label>
+      <input type="range" id="stickiness" min="0.1" max="1" step="0.1" value="0.7">
+      <div class="value-display" id="stickinessValue">0.7</div>
+    </div>
+
+    <div class="control-group">
+      <label for="growthBias">Growth Bias</label>
+      <input type="range" id="growthBias" min="0" max="2" step="0.1" value="1">
+      <div class="value-display" id="growthBiasValue">1.0</div>
+    </div>
+
+    <div class="control-group">
+      <label for="particleSize">Particle Size</label>
+      <input type="range" id="particleSize" min="1" max="5" value="2">
+      <div class="value-display" id="particleSizeValue">2</div>
+    </div>
+
+    <div class="control-group">
+      <label for="colorMode">Color Mode</label>
+      <select id="colorMode">
+        <option value="monochrome">Monochrome</option>
+        <option value="depth">Depth Based</option>
+        <option value="age">Age Based</option>
+        <option value="density">Density Based</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="symmetry">Symmetry</label>
+      <select id="symmetry">
+        <option value="none">None</option>
+        <option value="2">2-fold</option>
+        <option value="4">4-fold</option>
+        <option value="6">6-fold</option>
+        <option value="8">8-fold</option>
+      </select>
+    </div>
+
+    <div class="button-group">
+      <button onclick="growCrystal()">Grow Crystal</button>
+      <button onclick="clearCanvas()">Clear</button>
+    </div>
+
+    <div class="control-group">
+      <label>Growth Progress</label>
+      <div class="progress">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <h3>Animation</h3>
+    <div class="control-group">
+      <label for="frameInterval">Frame Interval</label>
+      <input type="range" id="frameInterval" min="100" max="2000" step="100" value="500">
+      <div class="value-display" id="frameIntervalValue">500</div>
+    </div>
+
+    <button onclick="animateGrowth()">Animate Growth</button>
+
+    <h3>Export Options</h3>
+    <div class="export-buttons">
+      <button onclick="exportSVG()">SVG</button>
+      <button onclick="exportPNG()">PNG</button>
+      <button onclick="exportGIF()">GIF</button>
+    </div>
+
+    <div class="preset-container">
+      <div id="preset-container"></div>
+    </div>
+  </div>
+
     <script src="../../preset-manager.js"></script>
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
-    
-  <!-- Total Serialism Design System -->
-  <link rel="stylesheet" href="../../shared/algorithm.css">
-  <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-        }
-        
-        .controls {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            height: fit-content;
-        }
-        
-        .canvas-container {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        canvas {
-            background-color: #000000;
-            border: 1px solid #333;
-            cursor: crosshair;
-        }
-        
-        .control-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #888;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            margin-bottom: 5px;
-        }
-        
-        input[type="number"], select {
-            width: 100%;
-            background-color: #0a0a0a;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background-color: #3a3a3a;
-            border-color: #666;
-        }
-        
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .export-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .value-display {
-            font-size: 11px;
-            color: #666;
-            text-align: right;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: normal;
-            letter-spacing: 2px;
-        }
-        
-        h3 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .progress {
-            width: 100%;
-            height: 4px;
-            background-color: #0a0a0a;
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 10px;
-        }
-        
-        .progress-bar {
-            height: 100%;
-            background-color: #4a4a4a;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-    </style>
-</head>
-<body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
-    <div class="container">
-        <div class="controls">
-            <!-- Preset Manager Container -->
-            <div id="preset-container"></div>
-
-            <h3>Crystal Parameters</h3>
-
-            <div class="control-group">
-                <label for="crystalType">Crystal Type</label>
-                <select id="crystalType">
-                    <option value="dendritic">Dendritic (Snow)</option>
-                    <option value="cubic">Cubic</option>
-                    <option value="hexagonal">Hexagonal</option>
-                    <option value="needle">Needle</option>
-                    <option value="fractal">Fractal</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="seedPattern">Seed Pattern</label>
-                <select id="seedPattern">
-                    <option value="point">Single Point</option>
-                    <option value="line">Line</option>
-                    <option value="circle">Circle</option>
-                    <option value="random">Random Points</option>
-                    <option value="grid">Grid</option>
-                </select>
-            </div>
-
-            <h3>Canvas Settings</h3>
-            <div class="control-group">
-                <label for="paperSize">Paper Size</label>
-                <select id="paperSize">
-                    <option value="square800">Square (800×800)</option>
-                    <option value="landscape800x600">Landscape (800×600)</option>
-                    <option value="a4portrait">A4 Portrait</option>
-                    <option value="a4landscape">A4 Landscape</option>
-                    <option value="letterportrait">Letter Portrait</option>
-                    <option value="letterlandscape">Letter Landscape</option>
-                </select>
-            </div>
-
-            <div class="control-group">
-                <label for="bgColor">Background Color</label>
-                <input type="color" id="bgColor" value="#000000">
-            </div>
-
-            <div class="control-group">
-                <label for="strokeColor">Stroke Color</label>
-                <input type="color" id="strokeColor" value="#ffffff">
-            </div>
-      <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
-      </div>
-
-            <div class="control-group">
-                <label for="particles">Number of Particles</label>
-                <input type="range" id="particles" min="1000" max="50000" step="1000" value="10000">
-                <div class="value-display" id="particlesValue">10000</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="stickiness">Stickiness</label>
-                <input type="range" id="stickiness" min="0.1" max="1" step="0.1" value="0.7">
-                <div class="value-display" id="stickinessValue">0.7</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="growthBias">Growth Bias</label>
-                <input type="range" id="growthBias" min="0" max="2" step="0.1" value="1">
-                <div class="value-display" id="growthBiasValue">1.0</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="particleSize">Particle Size</label>
-                <input type="range" id="particleSize" min="1" max="5" value="2">
-                <div class="value-display" id="particleSizeValue">2</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="colorMode">Color Mode</label>
-                <select id="colorMode">
-                    <option value="monochrome">Monochrome</option>
-                    <option value="depth">Depth Based</option>
-                    <option value="age">Age Based</option>
-                    <option value="density">Density Based</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="symmetry">Symmetry</label>
-                <select id="symmetry">
-                    <option value="none">None</option>
-                    <option value="2">2-fold</option>
-                    <option value="4">4-fold</option>
-                    <option value="6">6-fold</option>
-                    <option value="8">8-fold</option>
-                </select>
-            </div>
-            
-            <div class="button-group">
-                <button onclick="growCrystal()">Grow Crystal</button>
-                <button onclick="clearCanvas()">Clear</button>
-            </div>
-            
-            <div class="control-group">
-                <label>Growth Progress</label>
-                <div class="progress">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-            </div>
-            
-            <h3>Animation</h3>
-            <div class="control-group">
-                <label for="frameInterval">Frame Interval</label>
-                <input type="range" id="frameInterval" min="100" max="2000" step="100" value="500">
-                <div class="value-display" id="frameIntervalValue">500</div>
-            </div>
-            
-            <button onclick="animateGrowth()">Animate Growth</button>
-            
-            <h3>Export Options</h3>
-            <div class="export-buttons">
-                <button onclick="exportSVG()">SVG</button>
-                <button onclick="exportPNG()">PNG</button>
-                <button onclick="exportGIF()">GIF</button>
-            </div>
-        </div>
-        
-        <div class="canvas-container">
-            <h1>CRYSTAL GROWTH</h1>
-            <canvas id="canvas" width="800" height="800"></canvas>
-        </div>
-    </div>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
         const canvas = document.getElementById('canvas');
@@ -411,7 +455,7 @@
             params.strokeColor = e.target.value;
             if (crystalData) crystalData.draw(ctx);
         });
-        
+
         class CrystalGrowth {
             constructor(width, height) {
                 this.width = width;
@@ -420,12 +464,12 @@
                 this.particles = [];
                 this.age = 0;
             }
-            
+
             initializeSeed() {
                 const seedPattern = document.getElementById('seedPattern').value;
                 const centerX = this.width / 2;
                 const centerY = this.height / 2;
-                
+
                 switch(seedPattern) {
                     case 'point':
                         this.addParticle(centerX, centerY);
@@ -459,7 +503,7 @@
                         break;
                 }
             }
-            
+
             addParticle(x, y) {
                 if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
                     const index = y * this.width + x;
@@ -467,12 +511,12 @@
                     this.particles.push({x, y, age: this.age});
                 }
             }
-            
+
             checkNeighbors(x, y) {
                 const crystalType = document.getElementById('crystalType').value;
                 let neighbors = 0;
                 let directions;
-                
+
                 switch(crystalType) {
                     case 'cubic':
                         directions = [[-1,0], [1,0], [0,-1], [0,1]];
@@ -483,7 +527,7 @@
                     default:
                         directions = [[-1,-1], [-1,0], [-1,1], [0,-1], [0,1], [1,-1], [1,0], [1,1]];
                 }
-                
+
                 for (let [dx, dy] of directions) {
                     const nx = x + dx;
                     const ny = y + dy;
@@ -493,21 +537,21 @@
                         }
                     }
                 }
-                
+
                 return neighbors;
             }
-            
+
             growStep(numParticles) {
                 const stickiness = parseFloat(document.getElementById('stickiness').value);
                 const growthBias = parseFloat(document.getElementById('growthBias').value);
                 const symmetry = parseInt(document.getElementById('symmetry').value);
-                
+
                 let added = 0;
                 let attempts = 0;
-                
+
                 while (added < numParticles && attempts < numParticles * 100) {
                     attempts++;
-                    
+
                     // Random walker
                     let x, y;
                     const edge = Math.floor(Math.random() * 4);
@@ -517,7 +561,7 @@
                         case 2: x = Math.floor(Math.random() * this.width); y = 0; break;
                         case 3: x = Math.floor(Math.random() * this.width); y = this.height - 1; break;
                     }
-                    
+
                     // Random walk until hits crystal or leaves bounds
                     let steps = 0;
                     while (steps < 1000) {
@@ -527,7 +571,7 @@
                         const dx = centerX - x;
                         const dy = centerY - y;
                         const dist = Math.sqrt(dx * dx + dy * dy);
-                        
+
                         if (dist > 0) {
                             x += Math.random() < growthBias * 0.5 ? Math.sign(dx) : (Math.random() - 0.5) * 2;
                             y += Math.random() < growthBias * 0.5 ? Math.sign(dy) : (Math.random() - 0.5) * 2;
@@ -535,25 +579,25 @@
                             x += (Math.random() - 0.5) * 2;
                             y += (Math.random() - 0.5) * 2;
                         }
-                        
+
                         x = Math.round(x);
                         y = Math.round(y);
-                        
+
                         if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
                             break;
                         }
-                        
+
                         const neighbors = this.checkNeighbors(x, y);
                         if (neighbors > 0 && Math.random() < stickiness) {
                             this.addParticle(x, y);
-                            
+
                             // Add symmetric particles
                             if (symmetry > 1) {
                                 const cx = this.width / 2;
                                 const cy = this.height / 2;
                                 const angle = Math.atan2(y - cy, x - cx);
                                 const radius = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-                                
+
                                 for (let i = 1; i < symmetry; i++) {
                                     const newAngle = angle + (Math.PI * 2 * i / symmetry);
                                     const sx = Math.round(cx + Math.cos(newAngle) * radius);
@@ -561,19 +605,19 @@
                                     this.addParticle(sx, sy);
                                 }
                             }
-                            
+
                             added++;
                             break;
                         }
-                        
+
                         steps++;
                     }
                 }
-                
+
                 this.age++;
                 return added;
             }
-            
+
             draw(ctx) {
                 const colorMode = document.getElementById('colorMode').value;
                 const particleSize = parseInt(document.getElementById('particleSize').value);
@@ -589,7 +633,7 @@
                             color = params.strokeColor;
                             break;
                         case 'depth':
-                            const depth = Math.sqrt((particle.x - this.width/2) ** 2 + 
+                            const depth = Math.sqrt((particle.x - this.width/2) ** 2 +
                                                   (particle.y - this.height/2) ** 2);
                             const hue = (depth / (this.width/2)) * 240;
                             color = `hsl(${hue}, 70%, 50%)`;
@@ -604,97 +648,97 @@
                             color = `hsl(200, 70%, ${brightness}%)`;
                             break;
                     }
-                    
+
                     ctx.fillStyle = color;
-                    ctx.fillRect(particle.x - particleSize/2, particle.y - particleSize/2, 
+                    ctx.fillRect(particle.x - particleSize/2, particle.y - particleSize/2,
                                particleSize, particleSize);
                 });
             }
         }
-        
+
         async function growCrystal() {
             if (isGrowing) return;
             isGrowing = true;
-            
+
             clearCanvas();
             const crystal = new CrystalGrowth(canvas.width, canvas.height);
             crystal.initializeSeed();
-            
+
             const totalParticles = parseInt(document.getElementById('particles').value);
             const batchSize = 100;
             let grown = 0;
-            
+
             crystalData = crystal;
-            
+
             const growBatch = () => {
                 if (grown < totalParticles && isGrowing) {
                     const added = crystal.growStep(Math.min(batchSize, totalParticles - grown));
                     grown += added;
-                    
+
                     // Update progress
                     const progress = (grown / totalParticles) * 100;
                     document.getElementById('progressBar').style.width = progress + '%';
-                    
+
                     // Draw current state
                     crystal.draw(ctx);
-                    
+
                     requestAnimationFrame(growBatch);
                 } else {
                     isGrowing = false;
                     document.getElementById('progressBar').style.width = '0%';
                 }
             };
-            
+
             growBatch();
         }
-        
+
         async function animateGrowth() {
             if (isGrowing) return;
             isGrowing = true;
-            
+
             animationFrames = [];
             clearCanvas();
-            
+
             const crystal = new CrystalGrowth(canvas.width, canvas.height);
             crystal.initializeSeed();
-            
+
             const totalParticles = parseInt(document.getElementById('particles').value);
             const frameInterval = parseInt(document.getElementById('frameInterval').value);
             const framesPerCapture = Math.floor(frameInterval / 100);
-            
+
             crystalData = crystal;
-            
+
             let grown = 0;
             let frameCount = 0;
-            
+
             const growFrame = () => {
                 if (grown < totalParticles && isGrowing) {
                     const added = crystal.growStep(frameInterval);
                     grown += added;
                     frameCount++;
-                    
+
                     // Update progress
                     const progress = (grown / totalParticles) * 100;
                     document.getElementById('progressBar').style.width = progress + '%';
-                    
+
                     // Draw and capture frame
                     crystal.draw(ctx);
-                    
+
                     if (frameCount % framesPerCapture === 0) {
                         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         animationFrames.push(imageData);
                     }
-                    
+
                     setTimeout(growFrame, 50);
                 } else {
                     isGrowing = false;
                     document.getElementById('progressBar').style.width = '0%';
                 }
             };
-            
+
             growFrame();
         }
-        
+
         function clearCanvas() {
             ctx.fillStyle = params.bgColor;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -703,7 +747,7 @@
             isGrowing = false;
             document.getElementById('progressBar').style.width = '0%';
         }
-        
+
         function exportSVG() {
             if (!crystalData || crystalData.particles.length === 0) return;
 
@@ -718,7 +762,7 @@
             });
 
             svg += '</svg>';
-            
+
             const blob = new Blob([svg], {type: 'image/svg+xml'});
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -726,7 +770,7 @@
             a.download = 'crystal.svg';
             a.click();
         }
-        
+
         function exportPNG() {
             canvas.toBlob(blob => {
                 const url = URL.createObjectURL(blob);
@@ -736,24 +780,24 @@
                 a.click();
             });
         }
-        
+
         function exportGIF() {
             if (animationFrames.length === 0) {
                 alert('Please animate the growth first!');
                 return;
             }
-            
+
             const gif = new GIF({
                 workers: 2,
                 quality: 10,
                 width: canvas.width,
                 height: canvas.height
             });
-            
+
             animationFrames.forEach(frame => {
                 gif.addFrame(frame, {delay: 100});
             });
-            
+
             gif.on('finished', blob => {
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -761,18 +805,18 @@
                 a.download = 'crystal-growth.gif';
                 a.click();
             });
-            
+
             gif.render();
         }
-        
+
         // Click to add seed point
         canvas.addEventListener('click', (e) => {
             if (!crystalData || isGrowing) return;
-            
+
             const rect = canvas.getBoundingClientRect();
             const x = Math.round(e.clientX - rect.left);
             const y = Math.round(e.clientY - rect.top);
-            
+
             crystalData.addParticle(x, y);
             crystalData.draw(ctx);
         });

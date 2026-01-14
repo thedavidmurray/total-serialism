@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circle Twist Layers - Total Serialism</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>Circle Twist Layers</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
@@ -17,105 +17,34 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
+    /* Algorithm-specific overrides */
     #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-elevated, #1a1a2e);
+      padding: 6px 10px;
+      border-radius: 6px;
       font-size: 12px;
+      color: var(--ts-accent-primary, #00d4aa);
     }
     .checkbox-container {
       display: flex;
       align-items: center;
+      gap: 10px;
     }
-    .checkbox-container input {
-      margin-right: 10px;
+    #gif-status {
+      color: var(--ts-accent-secondary, #ff9500);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
   <div id="canvas-container"></div>
   <div id="controls">
-    <h2>Circle Twist Controls</h2>
+    <div class="ts-header-inline">
+      <span class="ts-logo">Total Serialism</span>
+      <h2>Circle Twist</h2>
+    </div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
@@ -157,11 +86,11 @@
         <input type="range" id="pointsPerCircle" min="20" max="200" value="60" step="5">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Twist Settings</h3>
       <div class="control">
-        <label>Twist Amount: <span class="value" id="twistAmount-val">180</span>°</label>
+        <label>Twist Amount: <span class="value" id="twistAmount-val">180</span>deg</label>
         <input type="range" id="twistAmount" min="-720" max="720" value="180" step="10">
       </div>
       <div class="control">
@@ -189,7 +118,7 @@
         <label for="reverseTwist">Reverse Twist Direction</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Pattern Variations</h3>
       <div class="control">
@@ -220,7 +149,7 @@
         <input type="range" id="animationSpeed" min="0.001" max="0.05" value="0.01" step="0.001">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Layer Styling</h3>
       <div class="control">
@@ -254,7 +183,7 @@
         <label for="showCenterPoint">Show Center Points</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Generation</h3>
       <div class="control">
@@ -266,18 +195,18 @@
       </div>
       <button onclick="regenerate()">Regenerate</button>
       <button onclick="randomizeSeed()">Random Seed</button>
-      <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       <button onclick="resetAnimation()">Reset Animation</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export SVG</button>
       <button onclick="exportPNG()">Export PNG</button>
       <button onclick="exportAnimatedSVG()">Export Animated SVG</button>
       <button onclick="exportGIF()">Export GIF</button>
-      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+      <div id="gif-status" style="margin-top: 10px; font-size: 12px;"></div>
     </div>
   </div>
 
@@ -318,7 +247,7 @@
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
-    
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       const scale = Math.min(windowWidth * 0.65 / size.width, windowHeight * 0.9 / size.height);
@@ -337,7 +266,7 @@
       resizeCanvas(size.width * scale, size.height * scale);
       regenerate();
     }
-    
+
     function setupControls() {
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -371,7 +300,7 @@
           }
         }
       });
-      
+
       // Update seed display
       document.getElementById('seed-display').textContent = params.seed;
 
@@ -392,7 +321,7 @@
       clearTimeout(regenTimer);
       regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
-    
+
     function regenerate() {
       window.randomSeed(params.seed);
       noiseSeed(params.seed);
@@ -404,10 +333,10 @@
         loop();
       }
     }
-    
+
     function generateLayers() {
       layers = [];
-      
+
       for (let i = 0; i < params.layerCount; i++) {
         const radius = params.baseRadius + i * params.layerSpacing;
         const layer = {
@@ -417,84 +346,84 @@
           twistOffset: getTwistForLayer(i),
           strokeWeight: params.strokeWeight + (random(-1, 1) * params.weightVariation)
         };
-        
+
         // Generate points for this layer
         for (let j = 0; j < params.pointsPerCircle; j++) {
           const angle = (j / params.pointsPerCircle) * TWO_PI;
           const point = getPatternPoint(angle, radius, i);
           layer.points.push(point);
         }
-        
+
         layers.push(layer);
       }
     }
-    
+
     function getTwistForLayer(layerIndex) {
       const t = layerIndex / (params.layerCount - 1); // 0 to 1
       let twistFactor;
-      
+
       switch (params.twistDistribution) {
         case 'linear':
           twistFactor = t;
           break;
-          
+
         case 'exponential':
           twistFactor = Math.pow(t, 2);
           break;
-          
+
         case 'logarithmic':
           twistFactor = Math.log(1 + t * 9) / Math.log(10);
           break;
-          
+
         case 'sine':
           twistFactor = Math.sin(t * PI / 2);
           break;
-          
+
         case 'cosine':
           twistFactor = 1 - Math.cos(t * PI / 2);
           break;
-          
+
         case 'bounce':
           twistFactor = Math.abs(Math.sin(t * PI * 3)) * t;
           break;
-          
+
         case 'elastic':
           twistFactor = Math.pow(2, -10 * t) * Math.sin((t - 0.1) * (2 * PI) / 0.4) + 1;
           break;
-          
+
         default:
           twistFactor = t;
       }
-      
+
       const twist = params.twistAmount * PI / 180 * twistFactor;
       return params.reverseTwist ? -twist : twist;
     }
-    
+
     function getPatternPoint(angle, radius, layerIndex) {
       let x, y;
-      
+
       switch (params.patternType) {
         case 'circle':
           x = cos(angle) * radius;
           y = sin(angle) * radius;
           break;
-          
+
         case 'polygon':
           const sides = params.polygonSides;
           const segment = Math.floor((angle / TWO_PI) * sides);
           const segmentAngle = (segment / sides) * TWO_PI;
           const nextSegmentAngle = ((segment + 1) / sides) * TWO_PI;
           const t = (angle - segmentAngle) / (nextSegmentAngle - segmentAngle);
-          
+
           const x1 = cos(segmentAngle) * radius;
           const y1 = sin(segmentAngle) * radius;
           const x2 = cos(nextSegmentAngle) * radius;
           const y2 = sin(nextSegmentAngle) * radius;
-          
+
           x = lerp(x1, x2, t);
           y = lerp(y1, y2, t);
           break;
-          
+
         case 'star':
           const starPoints = 5;
           const innerRadius = radius * 0.5;
@@ -503,7 +432,7 @@
           x = cos(angle) * starRadius;
           y = sin(angle) * starRadius;
           break;
-          
+
         case 'flower':
           const petalCount = 6;
           const petalDepth = radius * params.patternIntensity * 0.3;
@@ -511,7 +440,7 @@
           x = cos(angle) * petalRadius;
           y = sin(angle) * petalRadius;
           break;
-          
+
         case 'gear':
           const teeth = 12;
           const toothDepth = radius * params.patternIntensity * 0.2;
@@ -520,7 +449,7 @@
           x = cos(angle) * gearRadius;
           y = sin(angle) * gearRadius;
           break;
-          
+
         case 'wave':
           const waveFreq = 8;
           const waveAmp = radius * params.patternIntensity * 0.2;
@@ -528,15 +457,15 @@
           x = cos(angle) * waveRadius;
           y = sin(angle) * waveRadius;
           break;
-          
+
         default:
           x = cos(angle) * radius;
           y = sin(angle) * radius;
       }
-      
+
       return { x, y, angle };
     }
-    
+
     function draw() {
       background(params.bgColor);
       translate(width/2, height/2);
@@ -585,13 +514,13 @@
 
         pop();
       });
-      
+
       // Connect layers if enabled
       if (params.connectLayers) {
         push();
         strokeWeight(params.strokeWeight * 0.5);
         stroke(150, map(params.opacity, 0, 100, 0, 255));
-        
+
         // Draw radial connections
         for (let i = 0; i < params.pointsPerCircle; i += Math.floor(params.pointsPerCircle / 12)) {
           beginShape();
@@ -604,14 +533,14 @@
           });
           endShape();
         }
-        
+
         pop();
       }
-      
+
       // Reset translation
       translate(-centerOffsetX, -centerOffsetY);
     }
-    
+
     function applyLayerStyle(index, total) {
       let strokeColor;
 
@@ -646,18 +575,18 @@
 
       return strokeColor;
     }
-    
+
     function randomizeSeed() {
       params.seed = Math.floor(Math.random() * 1000000);
       document.getElementById('seed-display').textContent = params.seed;
       regenerate();
     }
-    
+
     function resetAnimation() {
       animationTime = 0;
       regenerate();
     }
-    
+
     function saveParams() {
       const json = JSON.stringify(params, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -667,36 +596,36 @@
       a.download = `circle-twist-${params.seed}.json`;
       a.click();
     }
-    
+
     function exportSVG() {
       save(svgCanvas, `circle-twist-${params.patternType}-${params.seed}.svg`);
     }
-    
+
     function exportPNG() {
       save(`circle-twist-${params.patternType}-${params.seed}.png`);
     }
-    
+
     function exportAnimatedSVG() {
       // Create animated SVG with rotation animation
       let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(${width/2}, ${height/2})">`;
-      
+
       const centerOffsetX = (params.twistCenterX / 100) * width;
       const centerOffsetY = (params.twistCenterY / 100) * height;
-      
+
       svgContent += `<g transform="translate(${centerOffsetX}, ${centerOffsetY})">`;
-      
+
       layers.forEach((layer, layerIndex) => {
-        const pathData = layer.points.map((point, i) => 
+        const pathData = layer.points.map((point, i) =>
           `${i === 0 ? 'M' : 'L'} ${point.x} ${point.y}`
         ).join(' ') + ' Z';
-        
+
         const strokeColor = params.colorMode === 'mono' ? '#000000' : '#' + Math.floor(Math.random()*16777215).toString(16);
-        
+
         svgContent += `
-          <path d="${pathData}" 
-                fill="none" 
-                stroke="${strokeColor}" 
+          <path d="${pathData}"
+                fill="none"
+                stroke="${strokeColor}"
                 stroke-width="${layer.strokeWeight}"
                 opacity="${params.opacity / 100}">
             <animateTransform
@@ -709,9 +638,9 @@
               repeatCount="indefinite" />
           </path>`;
       });
-      
+
       svgContent += `</g></g></svg>`;
-      
+
       // Download the animated SVG
       const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
@@ -720,11 +649,11 @@
       a.download = `circle-twist-animated-${params.seed}.svg`;
       a.click();
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -732,50 +661,50 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Create offscreen canvas for GIF frames
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
       const ctx = offscreenCanvas.getContext('2d');
-      
+
       // Store original animation state
       const originalAnimate = params.animateTwist;
       const originalTime = animationTime;
       params.animateTwist = false;
-      
+
       // Generate frames
       const totalFrames = 60;
       const frameDelay = 50; // milliseconds
-      
+
       for (let frame = 0; frame < totalFrames; frame++) {
         // Update animation time
         animationTime = (frame / totalFrames) * TWO_PI;
         params.animateTwist = true;
-        
+
         // Clear and draw frame
         clear();
         draw();
-        
+
         // Copy p5 canvas to offscreen canvas
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(drawingContext.canvas, 0, 0);
-        
+
         // Add frame to GIF
         gif.addFrame(ctx, {copy: true, delay: frameDelay});
-        
+
         // Update status
         const progress = Math.round((frame + 1) / totalFrames * 100);
         statusEl.textContent = `Generating frames: ${progress}%`;
       }
-      
+
       // Restore original state
       params.animateTwist = originalAnimate;
       animationTime = originalTime;
-      
+
       statusEl.textContent = 'Rendering GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF ready!';
         const url = URL.createObjectURL(blob);
@@ -783,12 +712,12 @@
         a.href = url;
         a.download = `circle-twist-${params.patternType}-${params.seed}.gif`;
         a.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>

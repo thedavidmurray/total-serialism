@@ -14,105 +14,28 @@
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
-    
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
-  <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-        }
-        #controls {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            max-width: 300px;
-            max-height: calc(100vh - 40px);
-            overflow-y: auto;
-        }
-        .control-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="range"], select {
-            width: 100%;
-        }
-        button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-            margin-top: 10px;
-        }
-        button:hover {
-            background: #45a049;
-        }
-        button.stop {
-            background: #f44336;
-        }
-        button.stop:hover {
-            background: #da190b;
-        }
-        .value-display {
-            display: inline-block;
-            width: 50px;
-            text-align: right;
-        }
-        .frequency-display {
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
-            font-family: monospace;
-            font-size: 12px;
-        }
-        .status {
-            padding: 5px 10px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        .status.active {
-            background: #4CAF50;
-            color: white;
-        }
-        .status.inactive {
-            background: #ccc;
-            color: #666;
-        }
-    </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <div id="canvas-container"></div>
 
     <div id="controls">
+      <a href="../../index.html" class="back-link">&larr; Back to Index</a>
         <h3>Sound Waveform Controls</h3>
-
-        <!-- Preset Manager Container -->
-        <div id="preset-container"></div>
 
         <!-- Canvas Settings -->
         <div class="control-group">
             <h3>Canvas Settings</h3>
             <label>Paper Size:</label>
             <select id="paperSize">
-                <option value="square800" selected>Square (800×800)</option>
-                <option value="landscape800x600">Landscape (800×600)</option>
+                <option value="square800" selected>Square (800x800)</option>
+                <option value="landscape800x600">Landscape (800x600)</option>
                 <option value="a4portrait">A4 Portrait</option>
                 <option value="a4landscape">A4 Landscape</option>
+                <option value="a3portrait">A3 Portrait</option>
+                <option value="a3landscape">A3 Landscape</option>
                 <option value="letterportrait">Letter Portrait</option>
                 <option value="letterlandscape">Letter Landscape</option>
             </select>
@@ -122,11 +45,11 @@
             <input type="color" id="strokeColor" value="#00ff00">
         </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
 
         <div id="status" class="status inactive">Microphone Inactive</div>
-        
+
         <div class="control-group">
             <label>Visualization Style:</label>
             <select id="vizStyle">
@@ -138,7 +61,7 @@
                 <option value="circular">Circular FFT</option>
             </select>
         </div>
-        
+
         <div class="control-group">
             <label>FFT Bins: <span id="fftBinsValue" class="value-display">256</span></label>
             <select id="fftBins">
@@ -149,7 +72,7 @@
                 <option value="1024">1024</option>
             </select>
         </div>
-        
+
         <div class="control-group">
             <label>Frequency Range:</label>
             <label>Min: <span id="freqMinValue" class="value-display">20</span> Hz</label>
@@ -157,48 +80,51 @@
             <label>Max: <span id="freqMaxValue" class="value-display">20000</span> Hz</label>
             <input type="range" id="freqMax" min="1000" max="20000" value="20000" step="100">
         </div>
-        
+
         <div class="control-group">
             <label>Smoothing: <span id="smoothingValue" class="value-display">0.8</span></label>
             <input type="range" id="smoothing" min="0" max="0.99" value="0.8" step="0.01">
         </div>
-        
+
         <div class="control-group">
             <label>Scale: <span id="scaleValue" class="value-display">1.0</span></label>
             <input type="range" id="scale" min="0.5" max="3" value="1" step="0.1">
         </div>
-        
+
         <div class="control-group">
             <label>Line Weight: <span id="lineWeightValue" class="value-display">2</span></label>
             <input type="range" id="lineWeight" min="1" max="5" value="2" step="0.5">
         </div>
-        
+
         <div class="control-group">
             <label>
                 <input type="checkbox" id="showPeaks" checked> Show Frequency Peaks
             </label>
         </div>
-        
+
         <div class="control-group">
             <label>
                 <input type="checkbox" id="trails" checked> Motion Trails
             </label>
         </div>
-        
+
         <div class="control-group">
             <label>
                 <input type="checkbox" id="recording"> Recording Mode
             </label>
         </div>
-        
+
         <div class="frequency-display" id="freqDisplay">
             Dominant Frequency: -- Hz<br>
             Peak Amplitude: -- dB
         </div>
-        
+
         <button onclick="toggleMic()">Start Microphone</button>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="clearCanvas()" class="stop">Clear</button>
+
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
     </div>
 
     <script>
@@ -233,10 +159,11 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-        
+
         function setup() {
             const size = CanvasLayout.getSize(params.paperSize);
-            createCanvas(size.width, size.height);
+            const canvas = createCanvas(size.width, size.height);
+            canvas.parent('canvas-container');
 
             // Canvas settings handlers
             document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -316,14 +243,14 @@
             // Clear history when changing styles
             history = [];
         }
-        
+
         function setupControls() {
             // Visualization style
             document.getElementById('vizStyle').addEventListener('change', (e) => {
                 params.vizStyle = e.target.value;
                 history = []; // Clear history when changing styles
             });
-            
+
             // FFT bins
             document.getElementById('fftBins').addEventListener('change', (e) => {
                 params.fftBins = parseInt(e.target.value);
@@ -333,47 +260,47 @@
                     fft.setInput(mic);
                 }
             });
-            
+
             // Frequency range
             document.getElementById('freqMin').addEventListener('input', (e) => {
                 params.freqMin = parseInt(e.target.value);
                 document.getElementById('freqMinValue').textContent = e.target.value;
             });
-            
+
             document.getElementById('freqMax').addEventListener('input', (e) => {
                 params.freqMax = parseInt(e.target.value);
                 document.getElementById('freqMaxValue').textContent = e.target.value;
             });
-            
+
             // Smoothing
             document.getElementById('smoothing').addEventListener('input', (e) => {
                 params.smoothing = parseFloat(e.target.value);
                 document.getElementById('smoothingValue').textContent = e.target.value;
                 fft.smooth(params.smoothing);
             });
-            
+
             // Scale
             document.getElementById('scale').addEventListener('input', (e) => {
                 params.scale = parseFloat(e.target.value);
                 document.getElementById('scaleValue').textContent = e.target.value;
             });
-            
+
             // Line weight
             document.getElementById('lineWeight').addEventListener('input', (e) => {
                 params.lineWeight = parseFloat(e.target.value);
                 document.getElementById('lineWeightValue').textContent = e.target.value;
             });
-            
+
             // Checkboxes
             document.getElementById('showPeaks').addEventListener('change', (e) => {
                 params.showPeaks = e.target.checked;
             });
-            
+
             document.getElementById('trails').addEventListener('change', (e) => {
                 params.trails = e.target.checked;
                 if (!params.trails) history = [];
             });
-            
+
             document.getElementById('recording').addEventListener('change', (e) => {
                 params.recording = e.target.checked;
                 isRecording = e.target.checked;
@@ -383,7 +310,7 @@
                 }
             });
         }
-        
+
         function toggleMic() {
             if (!micActive) {
                 mic = new p5.AudioIn();
@@ -401,7 +328,7 @@
                 updateStatus(false);
             }
         }
-        
+
         function updateStatus(active) {
             const status = document.getElementById('status');
             if (active) {
@@ -412,7 +339,7 @@
                 status.textContent = 'Microphone Inactive';
             }
         }
-        
+
         function draw() {
             if (!params.trails) {
                 background(params.bgColor);
@@ -421,19 +348,19 @@
                 bgCol.setAlpha(30);
                 background(bgCol); // Fade effect for trails
             }
-            
+
             if (micActive) {
                 // Get audio data
                 waveform = fft.waveform();
                 spectrum = fft.analyze();
-                
+
                 // Update frequency display
                 updateFrequencyDisplay();
-                
+
                 // Draw based on selected style
                 push();
                 translate(width / 2, height / 2);
-                
+
                 switch(params.vizStyle) {
                     case 'oscilloscope':
                         drawOscilloscope();
@@ -454,21 +381,21 @@
                         drawCircularFFT();
                         break;
                 }
-                
+
                 pop();
-                
+
                 // Record paths if in recording mode
                 if (isRecording) {
                     recordPath();
                 }
             }
         }
-        
+
         function drawOscilloscope() {
             stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
-            
+
             beginShape();
             for (let i = 0; i < waveform.length; i++) {
                 const x = map(i, 0, waveform.length, -width/2, width/2);
@@ -476,12 +403,12 @@
                 vertex(x, y);
             }
             endShape();
-            
+
             // Add to history for trails
             if (params.trails) {
                 history.push([...waveform]);
                 if (history.length > 10) history.shift();
-                
+
                 // Draw older waveforms with transparency
                 for (let h = 0; h < history.length - 1; h++) {
                     const histCol = color(params.strokeColor);
@@ -498,12 +425,12 @@
                 }
             }
         }
-        
+
         function drawRadial() {
             stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
-            
+
             beginShape();
             for (let i = 0; i < waveform.length; i++) {
                 const angle = map(i, 0, waveform.length, 0, TWO_PI);
@@ -515,12 +442,12 @@
             }
             endShape(CLOSE);
         }
-        
+
         function drawSpiral() {
             stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
-            
+
             const spirals = 5;
             beginShape();
             for (let i = 0; i < waveform.length; i++) {
@@ -534,12 +461,12 @@
             }
             endShape();
         }
-        
+
         function drawWaterfall() {
             // Add current spectrum to history
             history.push([...spectrum]);
             if (history.length > height / 4) history.shift();
-            
+
             // Draw waterfall
             for (let h = 0; h < history.length; h++) {
                 for (let i = 0; i < history[h].length; i++) {
@@ -552,24 +479,24 @@
                 }
             }
         }
-        
+
         function drawFrequencyBars() {
             const barWidth = width / spectrum.length;
-            
+
             noStroke();
             for (let i = 0; i < spectrum.length; i++) {
                 const freq = map(i, 0, spectrum.length, 0, 22050); // Nyquist frequency
                 if (freq >= params.freqMin && freq <= params.freqMax) {
                     const x = map(i, 0, spectrum.length, -width/2, width/2);
                     const h = map(spectrum[i], 0, 255, 0, height/2) * params.scale;
-                    
+
                     // Color based on frequency
                     const hue = map(freq, params.freqMin, params.freqMax, 0, 280);
                     fill(hue, 100, 100);
                     rect(x, 0, barWidth, -h);
                 }
             }
-            
+
             // Show peaks
             if (params.showPeaks) {
                 stroke(255, 0, 0);
@@ -582,12 +509,12 @@
                 }
             }
         }
-        
+
         function drawCircularFFT() {
             stroke(params.strokeColor);
             strokeWeight(params.lineWeight);
             noFill();
-            
+
             beginShape();
             for (let i = 0; i < spectrum.length; i++) {
                 const angle = map(i, 0, spectrum.length, 0, TWO_PI);
@@ -598,7 +525,7 @@
                 vertex(x, y);
             }
             endShape(CLOSE);
-            
+
             // Inner circle
             noFill();
             const innerCol = color(params.strokeColor);
@@ -607,39 +534,39 @@
             strokeWeight(1);
             ellipse(0, 0, 200 * params.scale, 200 * params.scale);
         }
-        
+
         function findPeaks(data) {
             const peaks = [];
             const threshold = 100; // Minimum amplitude for peak
-            
+
             for (let i = 1; i < data.length - 1; i++) {
-                if (data[i] > threshold && 
-                    data[i] > data[i-1] && 
+                if (data[i] > threshold &&
+                    data[i] > data[i-1] &&
                     data[i] > data[i+1]) {
                     peaks.push(i);
                 }
             }
-            
+
             return peaks;
         }
-        
+
         function updateFrequencyDisplay() {
             const nyquist = 22050; // Half the sample rate
             let maxAmp = 0;
             let dominantFreq = 0;
-            
+
             for (let i = 0; i < spectrum.length; i++) {
                 if (spectrum[i] > maxAmp) {
                     maxAmp = spectrum[i];
                     dominantFreq = map(i, 0, spectrum.length, 0, nyquist);
                 }
             }
-            
+
             const freqDisplay = document.getElementById('freqDisplay');
             freqDisplay.innerHTML = `Dominant Frequency: ${dominantFreq.toFixed(0)} Hz<br>` +
                                    `Peak Amplitude: ${(20 * log(maxAmp / 255) / log(10)).toFixed(1)} dB`;
         }
-        
+
         function recordPath() {
             // Store current visualization as path data
             const path = {
@@ -649,7 +576,7 @@
             };
             recordedPaths.push(path);
         }
-        
+
         function exportSVG() {
             const svg = createSVG();
             const blob = new Blob([svg], { type: 'image/svg+xml' });
@@ -660,14 +587,14 @@
             a.click();
             URL.revokeObjectURL(url);
         }
-        
+
         function createSVG() {
             const svgSize = 800;
-            
+
             let svg = `<svg width="${svgSize}" height="${svgSize}" xmlns="http://www.w3.org/2000/svg">\n`;
             svg += `<rect width="${svgSize}" height="${svgSize}" fill="white"/>\n`;
             svg += `<g transform="translate(${svgSize/2}, ${svgSize/2})">\n`;
-            
+
             // Export current visualization
             if (params.vizStyle === 'oscilloscope' && waveform.length > 0) {
                 svg += `<path d="M `;
@@ -678,7 +605,7 @@
                 }
                 svg += `" stroke="black" stroke-width="${params.lineWeight}" fill="none"/>\n`;
             }
-            
+
             // Export recorded paths if any
             if (recordedPaths.length > 0) {
                 svg += `<!-- Recorded paths: ${recordedPaths.length} -->\n`;
@@ -688,17 +615,17 @@
                     svg += `</g>\n`;
                 }
             }
-            
+
             svg += `</g>\n</svg>`;
             return svg;
         }
-        
+
         function clearCanvas() {
             background(240);
             history = [];
             recordedPaths = [];
         }
-        
+
         function resizeCanvasForPaperSize() {
             const size = CanvasLayout.getSize(params.paperSize);
             resizeCanvas(size.width, size.height);

@@ -1,11 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Perlin Spiral Patterns</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
@@ -13,110 +10,138 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
     }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
     }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
       margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
+
     .checkbox-container {
       display: flex;
       align-items: center;
     }
+
     .checkbox-container input {
       margin-right: 10px;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    .preset-manager {
+      margin-top: 20px;
+    }
+
+    .preset-manager .control-group {
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>Perlin Spiral Controls</h2>
-    
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square (800x800)</option>
+          <option value="landscape800x600" selected>Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
+
     <div class="control-group">
       <h3>Spiral Settings</h3>
       <div class="control">
@@ -147,7 +172,7 @@
         <input type="range" id="startRadius" min="0" max="50" value="10" step="1">
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Noise Settings</h3>
       <div class="control">
@@ -175,7 +200,7 @@
         <label for="animateNoise">Animate Noise</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Multiple Spirals</h3>
       <div class="control">
@@ -183,7 +208,7 @@
         <input type="range" id="spiralCount" min="1" max="10" value="1" step="1">
       </div>
       <div class="control">
-        <label>Phase Offset: <span class="value" id="phaseOffset-val">0</span>°</label>
+        <label>Phase Offset: <span class="value" id="phaseOffset-val">0</span>deg</label>
         <input type="range" id="phaseOffset" min="0" max="360" value="0" step="10">
       </div>
       <div class="control checkbox-container">
@@ -193,32 +218,6 @@
       <div class="control checkbox-container">
         <input type="checkbox" id="connectSpirals">
         <label for="connectSpirals">Connect Spirals</label>
-      </div>
-    </div>
-    
-    <div class="control-group">
-      <h3>Canvas Settings</h3>
-      <div class="control">
-        <label>Paper Size:</label>
-        <select id="paperSize">
-          <option value="square800">Square (800×800)</option>
-          <option value="landscape800x600" selected>Landscape (800×600)</option>
-          <option value="a4portrait">A4 Portrait</option>
-          <option value="a4landscape">A4 Landscape</option>
-          <option value="letterportrait">Letter Portrait</option>
-          <option value="letterlandscape">Letter Landscape</option>
-        </select>
-      </div>
-      <div class="control">
-        <label>Background Color:</label>
-        <input type="color" id="bgColor" value="#ffffff">
-      </div>
-      <div class="control">
-        <label>Stroke Color:</label>
-        <input type="color" id="strokeColor" value="#000000">
-      </div>
-      <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
       </div>
     </div>
 
@@ -251,7 +250,7 @@
         <label for="smoothPath">Smooth Path</label>
       </div>
     </div>
-    
+
     <div class="control-group">
       <h3>Generation</h3>
       <div class="control">
@@ -266,15 +265,17 @@
       <button onclick="resetAnimation()">Reset Animation</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
-    
+
     <div class="control-group">
       <h3>Export</h3>
       <button onclick="exportSVG()">Export SVG</button>
       <button onclick="exportPNG()">Export PNG</button>
       <button onclick="exportAnimatedSVG()">Export Animated SVG</button>
       <button onclick="exportGIF()">Export GIF</button>
-      <div id="gif-status" style="margin-top: 10px; font-size: 12px; color: #888;"></div>
+      <div id="gif-status"></div>
     </div>
+
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
@@ -311,14 +312,14 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
-    
+
     let spirals = [];
     let svgCanvas;
     let timeOffset = 0;
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
-    
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       svgCanvas = createCanvas(size.width, size.height);
@@ -334,7 +335,7 @@
       resizeCanvas(size.width, size.height);
       regenerate();
     }
-    
+
     function setupControls() {
       // Canvas settings controls
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -379,7 +380,7 @@
           }
         }
       });
-      
+
       // Update seed display
       document.getElementById('seed-display').textContent = params.seed;
 
@@ -400,7 +401,7 @@
       clearTimeout(regenTimer);
       regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
     }
-    
+
     function regenerate() {
       window.randomSeed(params.seed);
       noiseSeed(params.seed);
@@ -412,10 +413,10 @@
         loop();
       }
     }
-    
+
     function generateSpirals() {
       spirals = [];
-      
+
       for (let i = 0; i < params.spiralCount; i++) {
         const spiral = {
           points: [],
@@ -423,7 +424,7 @@
           direction: params.alternateDirection && i % 2 === 1 ? -1 : 1,
           colorOffset: i / params.spiralCount
         };
-        
+
         // Generate points based on spiral type
         const segmentCount = Math.floor(params.segments * params.lineDensity);
         for (let j = 0; j <= segmentCount; j++) {
@@ -431,41 +432,41 @@
           const point = getSpiralPoint(t, spiral.phase, spiral.direction);
           spiral.points.push(point);
         }
-        
+
         spirals.push(spiral);
       }
     }
-    
+
     function getSpiralPoint(t, phase, direction) {
       let r, x, y;
       const adjustedT = t * direction + phase;
-      
+
       switch (params.spiralType) {
         case 'archimedean':
-          // r = a + b * θ
+          // r = a + b * theta
           r = params.startRadius + params.tightness * adjustedT;
           break;
-          
+
         case 'logarithmic':
-          // r = a * e^(b * θ)
+          // r = a * e^(b * theta)
           r = params.startRadius * Math.exp(params.tightness * 0.1 * adjustedT);
           break;
-          
+
         case 'fermat':
-          // r = a * √θ
+          // r = a * sqrt(theta)
           r = params.tightness * 10 * Math.sqrt(Math.abs(adjustedT));
           break;
-          
+
         case 'hyperbolic':
-          // r = a / θ
+          // r = a / theta
           r = params.tightness * 50 / (adjustedT + 0.1);
           break;
-          
+
         case 'lituus':
-          // r = a / √θ
+          // r = a / sqrt(theta)
           r = params.tightness * 30 / Math.sqrt(Math.abs(adjustedT) + 0.1);
           break;
-          
+
         case 'clothoid':
           // Euler spiral - parametric form
           const a = params.tightness * 0.5;
@@ -474,16 +475,16 @@
           y = a * fresnel_s(s);
           return { x, y, t: adjustedT, r: Math.sqrt(x * x + y * y) };
       }
-      
+
       // Convert polar to Cartesian (except for clothoid which is already Cartesian)
       if (params.spiralType !== 'clothoid') {
         x = r * cos(adjustedT);
         y = r * sin(adjustedT);
       }
-      
+
       return { x, y, t: adjustedT, r };
     }
-    
+
     // Fresnel integrals approximation for clothoid spiral
     function fresnel_c(t) {
       let sum = 0;
@@ -492,7 +493,7 @@
       }
       return sum;
     }
-    
+
     function fresnel_s(t) {
       let sum = 0;
       for (let n = 0; n < 10; n++) {
@@ -500,49 +501,49 @@
       }
       return sum;
     }
-    
+
     function factorial(n) {
       if (n <= 1) return 1;
       return n * factorial(n - 1);
     }
-    
+
     function draw() {
       background(params.bgColor);
       translate(width/2, height/2);
-      
+
       if (params.animateNoise) {
         timeOffset += params.timeSpeed;
       }
-      
+
       // Draw each spiral
       spirals.forEach((spiral, spiralIndex) => {
         push();
-        
+
         strokeWeight(params.strokeWeight);
         noFill();
-        
+
         if (params.smoothPath) {
           beginShape();
         }
-        
+
         spiral.points.forEach((point, pointIndex) => {
           if (pointIndex === 0) return;
-          
+
           const prevPoint = spiral.points[pointIndex - 1];
-          
+
           // Apply noise distortion
           const currentDistorted = applyNoiseDistortion(point, pointIndex, spiralIndex);
           const prevDistorted = applyNoiseDistortion(prevPoint, pointIndex - 1, spiralIndex);
-          
+
           // Apply color
           applyColor(pointIndex, spiral.points.length, spiralIndex, spiral.colorOffset);
-          
+
           if (params.smoothPath) {
             vertex(currentDistorted.x, currentDistorted.y);
           } else {
             line(prevDistorted.x, prevDistorted.y, currentDistorted.x, currentDistorted.y);
           }
-          
+
           // Show control points if enabled
           if (params.showPoints && pointIndex % 10 === 0) {
             push();
@@ -552,20 +553,20 @@
             pop();
           }
         });
-        
+
         if (params.smoothPath) {
           endShape();
         }
-        
+
         pop();
       });
-      
+
       // Connect spirals if enabled
       if (params.connectSpirals && params.spiralCount > 1) {
         push();
         strokeWeight(params.strokeWeight * 0.5);
         stroke(100);
-        
+
         for (let i = 0; i < spirals[0].points.length; i += 20) {
           beginShape();
           spirals.forEach(spiral => {
@@ -576,11 +577,11 @@
           });
           endShape();
         }
-        
+
         pop();
       }
     }
-    
+
     function applyNoiseDistortion(point, index, spiralIndex) {
       // Calculate noise values
       const noiseX = noise(
@@ -588,50 +589,50 @@
         point.y * params.noiseScale,
         timeOffset + spiralIndex * 100
       ) * 2 - 1;
-      
+
       const noiseY = noise(
         point.x * params.noiseScale + 1000,
         point.y * params.noiseScale + 1000,
         timeOffset + spiralIndex * 100
       ) * 2 - 1;
-      
+
       // Apply radial and angular noise
       const angle = atan2(point.y, point.x);
       const radius = point.r || sqrt(point.x * point.x + point.y * point.y);
-      
+
       const radialOffset = noiseX * params.noiseAmplitude * params.radialNoise;
       const angularOffset = noiseY * params.angularNoise * 0.1;
-      
+
       const newRadius = radius + radialOffset;
       const newAngle = angle + angularOffset;
-      
+
       return {
         x: cos(newAngle) * newRadius,
         y: sin(newAngle) * newRadius
       };
     }
-    
+
     function applyColor(index, total, spiralIndex, colorOffset) {
       switch (params.colorMode) {
         case 'mono':
           stroke(params.strokeColor);
           break;
-          
+
         case 'gradient':
           const g = map(index, 0, total - 1, 0, 255);
           stroke(g);
           break;
-          
+
         case 'radial':
           const r = map(index, 0, total - 1, 255, 0);
           stroke(r, 0, 255 - r);
           break;
-          
+
         case 'noise':
           const n = noise(index * 0.01, timeOffset * 10, spiralIndex) * 255;
           stroke(n, 255 - n, 128);
           break;
-          
+
         case 'rainbow':
           colorMode(HSB);
           const hue = (map(index, 0, total, 0, 360) + colorOffset * 360) % 360;
@@ -640,18 +641,18 @@
           break;
       }
     }
-    
+
     function randomizeSeed() {
       params.seed = Math.floor(Math.random() * 1000000);
       document.getElementById('seed-display').textContent = params.seed;
       regenerate();
     }
-    
+
     function resetAnimation() {
       timeOffset = 0;
       regenerate();
     }
-    
+
     function saveParams() {
       const json = JSON.stringify(params, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -661,7 +662,7 @@
       a.download = `perlin-spiral-${params.seed}.json`;
       a.click();
     }
-    
+
     function generateSVG() {
       const paths = [];
       const cx = width / 2;
@@ -721,44 +722,44 @@
       a.click();
       URL.revokeObjectURL(url);
     }
-    
+
     function exportPNG() {
       save(`perlin-spiral-${params.spiralType}-${params.seed}.png`);
     }
-    
+
     function exportAnimatedSVG() {
       // Create animated SVG with multiple frames
       const frames = 60;
       const originalTime = timeOffset;
-      
+
       let svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
         <g transform="translate(${width/2}, ${height/2})">`;
-      
+
       // Generate frames
       for (let frame = 0; frame < frames; frame++) {
         timeOffset = frame * params.timeSpeed * 10;
-        
+
         spirals.forEach((spiral, spiralIndex) => {
           svgContent += `<path d="M `;
-          
+
           spiral.points.forEach((point, pointIndex) => {
             const distorted = applyNoiseDistortion(point, pointIndex, spiralIndex);
-            
+
             if (pointIndex === 0) {
               svgContent += `${distorted.x} ${distorted.y} `;
             } else {
               svgContent += `L ${distorted.x} ${distorted.y} `;
             }
           });
-          
+
           svgContent += `" fill="none" stroke="${params.strokeColor}" stroke-width="${params.strokeWeight}" opacity="0">
             <animate attributeName="opacity" values="0;1;0" dur="${frames/30}s" begin="${frame/30}s" repeatCount="indefinite" />
           </path>`;
         });
       }
-      
+
       svgContent += `</g></svg>`;
-      
+
       // Download the animated SVG
       const blob = new Blob([svgContent], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
@@ -766,15 +767,15 @@
       a.href = url;
       a.download = `perlin-spiral-animated-${params.seed}.svg`;
       a.click();
-      
+
       // Restore original time
       timeOffset = originalTime;
     }
-    
+
     function exportGIF() {
       const statusEl = document.getElementById('gif-status');
       statusEl.textContent = 'Preparing GIF export...';
-      
+
       const gif = new GIF({
         workers: 2,
         quality: 10,
@@ -782,49 +783,49 @@
         height: height,
         workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
       });
-      
+
       // Create offscreen canvas for GIF frames
       const offscreenCanvas = document.createElement('canvas');
       offscreenCanvas.width = width;
       offscreenCanvas.height = height;
       const ctx = offscreenCanvas.getContext('2d');
-      
+
       // Store original animation state
       const originalAnimate = params.animateNoise;
       const originalTime = timeOffset;
       params.animateNoise = false;
-      
+
       // Generate frames
       const totalFrames = 60;
       const frameDelay = 50; // milliseconds
-      
+
       for (let frame = 0; frame < totalFrames; frame++) {
         // Update time for animation
         timeOffset = originalTime + frame * params.timeSpeed * 10;
-        
+
         // Clear and draw frame
         clear();
         draw();
-        
+
         // Copy p5 canvas to offscreen canvas
         ctx.fillStyle = params.bgColor;
         ctx.fillRect(0, 0, width, height);
         ctx.drawImage(drawingContext.canvas, 0, 0);
-        
+
         // Add frame to GIF
         gif.addFrame(ctx, {copy: true, delay: frameDelay});
-        
+
         // Update status
         const progress = Math.round((frame + 1) / totalFrames * 100);
         statusEl.textContent = `Generating frames: ${progress}%`;
       }
-      
+
       // Restore original state
       params.animateNoise = originalAnimate;
       timeOffset = originalTime;
-      
+
       statusEl.textContent = 'Rendering GIF...';
-      
+
       gif.on('finished', function(blob) {
         statusEl.textContent = 'GIF ready!';
         const url = URL.createObjectURL(blob);
@@ -832,12 +833,12 @@
         a.href = url;
         a.download = `perlin-spiral-${params.spiralType}-${params.seed}.gif`;
         a.click();
-        
+
         setTimeout(() => {
           statusEl.textContent = '';
         }, 3000);
       });
-      
+
       gif.render();
     }
   </script>

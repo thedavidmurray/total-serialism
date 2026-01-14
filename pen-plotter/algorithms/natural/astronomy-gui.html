@@ -11,269 +11,312 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-        }
-        
-        .controls {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            height: fit-content;
-        }
-        
-        .canvas-container {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        canvas {
-            background-color: #000000;
-            border: 1px solid #333;
-        }
-        
-        .control-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #888;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            margin-bottom: 5px;
-        }
-        
-        input[type="number"], input[type="date"], input[type="time"], select {
-            width: 100%;
-            background-color: #0a0a0a;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background-color: #3a3a3a;
-            border-color: #666;
-        }
-        
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .export-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .value-display {
-            font-size: 11px;
-            color: #666;
-            text-align: right;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: normal;
-            letter-spacing: 2px;
-        }
-        
-        h3 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        .info-display {
-            font-size: 12px;
-            color: #666;
-            margin-top: 10px;
-            padding: 10px;
-            background-color: #0a0a0a;
-            border-radius: 4px;
-        }
-    </style>
+    :root {
+      --ts-bg-deep: #0a0a0f;
+      --ts-bg-base: #12121a;
+      --ts-bg-panel: #1a1a24;
+      --ts-bg-elevated: #24242f;
+      --ts-border-subtle: #2a2a3a;
+      --ts-border-default: #3a3a4a;
+      --ts-text-primary: #e8e8ed;
+      --ts-text-secondary: #a0a0b0;
+      --ts-text-muted: #606070;
+      --ts-text-inverse: #0a0a0f;
+      --ts-accent-primary: #6366f1;
+      --ts-accent-hover: #818cf8;
+      --ts-accent-muted: rgba(99, 102, 241, 0.15);
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      background: var(--ts-bg-base);
+    }
+
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+
+    canvas {
+      background-color: #000000;
+      border: 1px solid var(--ts-border-subtle);
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+    }
+
+    h3 {
+      font-size: 0.85rem;
+      margin: 20px 0 12px 0;
+      color: var(--ts-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .control-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      margin-bottom: 4px;
+      accent-color: var(--ts-accent-primary);
+    }
+
+    input[type="number"], input[type="date"], input[type="time"], select {
+      width: 100%;
+      background: var(--ts-bg-elevated);
+      border: 1px solid var(--ts-border-subtle);
+      color: var(--ts-text-primary);
+      padding: 8px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      box-sizing: border-box;
+    }
+
+    input[type="color"] {
+      background: var(--ts-bg-elevated);
+      border: 1px solid var(--ts-border-subtle);
+      border-radius: 4px;
+      padding: 2px;
+      cursor: pointer;
+    }
+
+    input[type="checkbox"] {
+      accent-color: var(--ts-accent-primary);
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin-top: 8px;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background: var(--ts-accent-hover);
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .value-display {
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+      text-align: right;
+    }
+
+    .info-display {
+      font-size: 0.75rem;
+      color: var(--ts-text-secondary);
+      margin-top: 12px;
+      padding: 12px;
+      background: var(--ts-bg-elevated);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-subtle);
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: var(--ts-text-secondary);
+      text-decoration: none;
+      font-size: 0.85rem;
+    }
+
+    .back-link:hover {
+      color: var(--ts-accent-primary);
+    }
+
+    .preset-container {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid var(--ts-border-subtle);
+    }
+  </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <div id="canvas-container">
+    <canvas id="canvas" width="800" height="800"></canvas>
+  </div>
 
-    <div class="container">
-        <div class="controls">
-            <h3>Canvas Settings</h3>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Astronomy</h2>
 
-            <div class="control-group">
-                <label>Paper Size:
-                    <select id="paperSize">
-                        <option value="square800">Square (800×800)</option>
-                        <option value="landscape800x600">Landscape (800×600)</option>
-                        <option value="a4portrait">A4 Portrait</option>
-                        <option value="a4landscape">A4 Landscape</option>
-                        <option value="letterportrait">Letter Portrait</option>
-                        <option value="letterlandscape">Letter Landscape</option>
-                    </select>
-                </label>
-                <label>Background: <input type="color" id="bgColor" value="#000000"></label>
-                <label>Stroke Color: <input type="color" id="strokeColor" value="#ffffff"></label>
-            </div>
-      <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
-      </div>
-
-            <h3>Visualization Type</h3>
-
-            <div class="control-group">
-                <label for="viewType">View Type</label>
-                <select id="viewType">
-                    <option value="starmap">Star Map</option>
-                    <option value="constellations">Constellations</option>
-                    <option value="solar-system">Solar System</option>
-                    <option value="moon-phases">Moon Phases</option>
-                    <option value="eclipse">Eclipse Diagram</option>
-                </select>
-            </div>
-            
-            <h3>Time & Location</h3>
-            
-            <div class="control-group">
-                <label for="viewDate">Date</label>
-                <input type="date" id="viewDate">
-            </div>
-            
-            <div class="control-group">
-                <label for="viewTime">Time</label>
-                <input type="time" id="viewTime">
-            </div>
-            
-            <div class="control-group">
-                <label for="latitude">Latitude</label>
-                <input type="range" id="latitude" min="-90" max="90" value="40">
-                <div class="value-display" id="latitudeValue">40°</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="longitude">Longitude</label>
-                <input type="range" id="longitude" min="-180" max="180" value="-74">
-                <div class="value-display" id="longitudeValue">-74°</div>
-            </div>
-            
-            <h3>Display Options</h3>
-            
-            <div class="control-group">
-                <label for="projection">Projection Type</label>
-                <select id="projection">
-                    <option value="stereographic">Stereographic</option>
-                    <option value="orthographic">Orthographic</option>
-                    <option value="mercator">Mercator</option>
-                    <option value="azimuthal">Azimuthal</option>
-                </select>
-            </div>
-            
-            <div class="control-group">
-                <label for="magnitude">Star Magnitude Limit</label>
-                <input type="range" id="magnitude" min="1" max="6" step="0.5" value="4">
-                <div class="value-display" id="magnitudeValue">4.0</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="starSize">Star Size</label>
-                <input type="range" id="starSize" min="0.5" max="5" step="0.5" value="2">
-                <div class="value-display" id="starSizeValue">2.0</div>
-            </div>
-            
-            <div class="control-group">
-                <label for="showGrid">Show Grid</label>
-                <input type="checkbox" id="showGrid" checked>
-            </div>
-            
-            <div class="control-group">
-                <label for="showLabels">Show Labels</label>
-                <input type="checkbox" id="showLabels" checked>
-            </div>
-            
-            <div class="control-group">
-                <label for="showConstellationLines">Show Constellation Lines</label>
-                <input type="checkbox" id="showConstellationLines" checked>
-            </div>
-            
-            <div class="control-group">
-                <label for="showPlanets">Show Planets</label>
-                <input type="checkbox" id="showPlanets" checked>
-            </div>
-            
-            <div class="button-group">
-                <button onclick="generateView()">Generate</button>
-                <button onclick="clearCanvas()">Clear</button>
-            </div>
-            
-            <h3>Animation</h3>
-            <div class="control-group">
-                <label for="animationSpeed">Animation Speed</label>
-                <input type="range" id="animationSpeed" min="1" max="100" value="10">
-                <div class="value-display" id="animationSpeedValue">10</div>
-            </div>
-            
-            <button onclick="animateView()">Animate</button>
-            
-            <div class="info-display" id="infoDisplay">
-                Click on objects for information
-            </div>
-            
-            <h3>Export Options</h3>
-            <div class="export-buttons">
-                <button onclick="exportSVG()">SVG</button>
-                <button onclick="exportPNG()">PNG</button>
-                <button onclick="exportGIF()">GIF</button>
-            </div>
-        </div>
-        
-        <div class="canvas-container">
-            <h1>ASTRONOMY</h1>
-            <canvas id="canvas" width="800" height="800"></canvas>
-        </div>
+    <h3>Canvas Settings</h3>
+    <div class="control-group">
+      <label>Paper Size</label>
+      <select id="paperSize">
+        <option value="square800">Square (800x800)</option>
+        <option value="landscape800x600">Landscape (800x600)</option>
+        <option value="a4portrait">A4 Portrait</option>
+        <option value="a4landscape">A4 Landscape</option>
+        <option value="a3portrait">A3 Portrait</option>
+        <option value="a3landscape">A3 Landscape</option>
+        <option value="letterportrait">Letter Portrait</option>
+        <option value="letterlandscape">Letter Landscape</option>
+      </select>
     </div>
+    <div class="control-group">
+      <label>Background</label>
+      <input type="color" id="bgColor" value="#000000">
+    </div>
+    <div class="control-group">
+      <label>Stroke Color</label>
+      <input type="color" id="strokeColor" value="#ffffff">
+    </div>
+    <div class="control-group">
+      <button id="randomizeAll">Randomize Colors</button>
+    </div>
+
+    <h3>Visualization Type</h3>
+    <div class="control-group">
+      <label for="viewType">View Type</label>
+      <select id="viewType">
+        <option value="starmap">Star Map</option>
+        <option value="constellations">Constellations</option>
+        <option value="solar-system">Solar System</option>
+        <option value="moon-phases">Moon Phases</option>
+        <option value="eclipse">Eclipse Diagram</option>
+      </select>
+    </div>
+
+    <h3>Time & Location</h3>
+    <div class="control-group">
+      <label for="viewDate">Date</label>
+      <input type="date" id="viewDate">
+    </div>
+    <div class="control-group">
+      <label for="viewTime">Time</label>
+      <input type="time" id="viewTime">
+    </div>
+    <div class="control-group">
+      <label for="latitude">Latitude</label>
+      <input type="range" id="latitude" min="-90" max="90" value="40">
+      <div class="value-display" id="latitudeValue">40deg</div>
+    </div>
+    <div class="control-group">
+      <label for="longitude">Longitude</label>
+      <input type="range" id="longitude" min="-180" max="180" value="-74">
+      <div class="value-display" id="longitudeValue">-74deg</div>
+    </div>
+
+    <h3>Display Options</h3>
+    <div class="control-group">
+      <label for="projection">Projection Type</label>
+      <select id="projection">
+        <option value="stereographic">Stereographic</option>
+        <option value="orthographic">Orthographic</option>
+        <option value="mercator">Mercator</option>
+        <option value="azimuthal">Azimuthal</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label for="magnitude">Star Magnitude Limit</label>
+      <input type="range" id="magnitude" min="1" max="6" step="0.5" value="4">
+      <div class="value-display" id="magnitudeValue">4.0</div>
+    </div>
+    <div class="control-group">
+      <label for="starSize">Star Size</label>
+      <input type="range" id="starSize" min="0.5" max="5" step="0.5" value="2">
+      <div class="value-display" id="starSizeValue">2.0</div>
+    </div>
+    <div class="control-group">
+      <label for="showGrid">Show Grid</label>
+      <input type="checkbox" id="showGrid" checked>
+    </div>
+    <div class="control-group">
+      <label for="showLabels">Show Labels</label>
+      <input type="checkbox" id="showLabels" checked>
+    </div>
+    <div class="control-group">
+      <label for="showConstellationLines">Show Constellation Lines</label>
+      <input type="checkbox" id="showConstellationLines" checked>
+    </div>
+    <div class="control-group">
+      <label for="showPlanets">Show Planets</label>
+      <input type="checkbox" id="showPlanets" checked>
+    </div>
+
+    <div class="button-group">
+      <button onclick="generateView()">Generate</button>
+      <button onclick="clearCanvas()">Clear</button>
+    </div>
+
+    <h3>Animation</h3>
+    <div class="control-group">
+      <label for="animationSpeed">Animation Speed</label>
+      <input type="range" id="animationSpeed" min="1" max="100" value="10">
+      <div class="value-display" id="animationSpeedValue">10</div>
+    </div>
+    <button onclick="animateView()">Animate</button>
+
+    <div class="info-display" id="infoDisplay">
+      Click on objects for information
+    </div>
+
+    <h3>Export Options</h3>
+    <div class="export-buttons">
+      <button onclick="exportSVG()">SVG</button>
+      <button onclick="exportPNG()">PNG</button>
+      <button onclick="exportGIF()">GIF</button>
+    </div>
+
+    <div class="preset-container">
+      <!-- Preset controls can be added here -->
+    </div>
+  </div>
     
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>

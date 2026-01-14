@@ -8,169 +8,119 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>10PRINT Pattern Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-  <script src="../../../preset-manager.js"></script>
+  <script src="../../preset-manager.js"></script>
   <script src="../../canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
-  <link rel="stylesheet" href="../../../preset-manager.css">
-  
+  <link rel="stylesheet" href="../../preset-manager.css">
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: auto;
-      position: relative;
-    }
-    .paper-size-badge {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(76, 175, 80, 0.9);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
+    /* Algorithm-specific overrides */
+    .value {
       font-weight: 600;
-      z-index: 100;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      color: var(--ts-accent-primary);
     }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
     }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
+
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
     .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
+
     .control {
       margin-bottom: 12px;
     }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
-    #seed-display {
-      font-family: monospace;
-      background: #333;
-      padding: 5px;
-      border-radius: 4px;
-      font-size: 12px;
-    }
+
     .export-btn {
-      background: #FF6B6B;
+      background: var(--ts-accent-secondary) !important;
     }
+
     .export-btn:hover {
-      background: #FF5252;
+      background: color-mix(in srgb, var(--ts-accent-secondary) 85%, white) !important;
     }
+
     #gif-progress {
       display: none;
-      background: #333;
+      background: var(--ts-bg-deep);
       padding: 10px;
-      border-radius: 4px;
+      border-radius: var(--ts-radius-sm);
       margin-top: 10px;
     }
+
     .progress-bar {
       width: 100%;
       height: 20px;
-      background: #555;
-      border-radius: 10px;
+      background: var(--ts-bg-base);
+      border-radius: var(--ts-radius-md);
       overflow: hidden;
     }
+
     .progress-fill {
       height: 100%;
-      background: #4CAF50;
+      background: var(--ts-accent-primary);
       transition: width 0.3s;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: auto;
     }
   </style>
 </head>
 <body>
-  <a href="../../../index.html" class="back-link"
-     style="position: fixed; top: 15px; left: 15px; z-index: 1000;
-            color: #4CAF50; text-decoration: none; font-size: 14px;
-            background: rgba(0,0,0,0.8); padding: 8px 15px; border-radius: 20px;
-            transition: all 0.2s ease;"
-     onmouseover="this.style.background='rgba(76,175,80,0.3)'"
-     onmouseout="this.style.background='rgba(0,0,0,0.8)'">
-    ← Back to Browser
-  </a>
   <div id="canvas-container">
-    <div class="paper-size-badge" id="paper-size-badge">A4 (210×297mm)</div>
+    <div class="paper-size-badge" id="paper-size-badge">A4 (210x297mm)</div>
   </div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
     <h2>10PRINT Pattern Controls</h2>
-
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
       <div class="control">
         <label>Paper Size:</label>
         <select id="paperSize">
-          <option value="a4">A4 (210×297mm)</option>
-          <option value="a3">A3 (297×420mm)</option>
-          <option value="a5">A5 (148×210mm)</option>
-          <option value="letter">US Letter (216×279mm)</option>
-          <option value="square">Square (300×300mm)</option>
-          <option value="custom" selected>Custom (800×600px)</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">US Letter Landscape</option>
+          <option value="letter_portrait">US Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="custom" selected>Custom (800x600px)</option>
         </select>
       </div>
     </div>
@@ -241,7 +191,7 @@
         </select>
       </div>
       <div class="control">
-        <label>Rotation: <span class="value" id="rotation-val">0</span>°</label>
+        <label>Rotation: <span class="value" id="rotation-val">0</span>deg</label>
         <input type="range" id="rotation" min="0" max="90" value="0" step="15">
       </div>
     </div>
@@ -266,7 +216,7 @@
       </div>
       <button onclick="regenerate()">Regenerate</button>
       <button onclick="generateNewSeed()">Random Seed</button>
-      <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       <button onclick="saveParams()">Save Parameters</button>
     </div>
 
@@ -284,17 +234,20 @@
         </div>
       </div>
     </div>
+
+    <!-- Preset Manager Container at bottom -->
+    <div class="preset-manager" id="preset-container"></div>
   </div>
 
   <script>
     // Paper size presets at 150 DPI for print quality
     const PAPER_SIZES = (window.CanvasLayout && CanvasLayout.paperPresets) ? CanvasLayout.paperPresets : {
-      a4: { width: 1240, height: 1754, label: 'A4 (210×297mm)', mm: '210×297' },
-      a3: { width: 1754, height: 2480, label: 'A3 (297×420mm)', mm: '297×420' },
-      a5: { width: 874, height: 1240, label: 'A5 (148×210mm)', mm: '148×210' },
-      letter: { width: 1275, height: 1650, label: 'US Letter (216×279mm)', mm: '216×279' },
-      square: { width: 1772, height: 1772, label: 'Square (300×300mm)', mm: '300×300' },
-      custom: { width: 800, height: 600, label: 'Custom', mm: '800×600px' }
+      a4: { width: 1240, height: 1754, label: 'A4 (210x297mm)', mm: '210x297' },
+      a3: { width: 1754, height: 2480, label: 'A3 (297x420mm)', mm: '297x420' },
+      a5: { width: 874, height: 1240, label: 'A5 (148x210mm)', mm: '148x210' },
+      letter: { width: 1275, height: 1650, label: 'US Letter (216x279mm)', mm: '216x279' },
+      square: { width: 1772, height: 1772, label: 'Square (300x300mm)', mm: '300x300' },
+      custom: { width: 800, height: 600, label: 'Custom', mm: '800x600px' }
     };
 
     let params = {

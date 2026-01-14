@@ -16,147 +16,19 @@
   <script src="../../preset-manager.js"></script>
   <script src="../../upload-helper.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: 'Courier New', monospace;
-      display: flex;
-      background: #0a0a0a;
-      color: #00ff00;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #000;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-    }
-    #controls {
-      width: 360px;
-      padding: 20px;
-      background: #0a0a0a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-      border-left: 2px solid #00ff00;
-    }
-    h2 {
-      margin: 0 0 10px 0;
-      color: #00ff00;
-      font-size: 24px;
-      text-shadow: 0 0 10px #00ff00;
-    }
-    .subtitle {
-      font-size: 12px;
-      color: #00aa00;
-      margin-bottom: 20px;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #003300;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #00ff00;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 13px;
-      color: #00cc00;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    input[type="file"],
-    input[type="checkbox"] {
-      display: none;
-    }
-    select {
-      width: 100%;
-      padding: 8px;
-      background: #001100;
-      color: #00ff00;
-      border: 1px solid #003300;
-      border-radius: 4px;
-      font-family: 'Courier New', monospace;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #003300;
-      color: #00ff00;
-      border: 2px solid #00ff00;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-      font-weight: 500;
-      font-family: 'Courier New', monospace;
-      transition: all 0.3s;
-    }
-    button:hover {
-      background: #00ff00;
-      color: #000;
-      box-shadow: 0 0 20px #00ff00;
-    }
-    button.secondary {
-      background: #001100;
-    }
-    button.secondary:hover {
-      background: #00ff00;
-    }
-    .value {
-      font-weight: 600;
-      color: #00ff00;
-      float: right;
-    }
-    .stats {
-      background: #001100;
-      padding: 15px;
-      border-radius: 4px;
-      font-size: 12px;
-      border: 1px solid #003300;
-    }
-    .stats div {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .stats .value {
-      float: none;
-    }
-    .info-box {
-      background: #001100;
-      padding: 12px;
-      border-radius: 4px;
-      font-size: 11px;
-      line-height: 1.6;
-      color: #00aa00;
-      border: 1px solid #003300;
-    }
+    /* Algorithm-specific overrides */
     .ascii-preview {
-      background: #000;
+      background: var(--ts-bg-deep, #000);
       padding: 10px;
-      border: 1px solid #00ff00;
-      border-radius: 4px;
+      border: 1px solid var(--ts-border-default, #333);
+      border-radius: var(--ts-radius-md, 6px);
       font-size: 6px;
       line-height: 1.2;
-      color: #00ff00;
+      color: var(--ts-accent-primary, #00d4aa);
       overflow: auto;
       max-height: 200px;
       white-space: pre;
@@ -165,11 +37,12 @@
     .char-badge {
       display: inline-block;
       padding: 4px 8px;
-      background: #003300;
-      border: 1px solid #00ff00;
-      border-radius: 3px;
+      background: var(--ts-bg-control, #1a1a24);
+      border: 1px solid var(--ts-border-default, #333);
+      border-radius: var(--ts-radius-sm, 4px);
       font-size: 10px;
       margin: 2px;
+      color: var(--ts-text-secondary, #9898a8);
     }
     label.checkbox {
       display: flex;
@@ -180,19 +53,86 @@
       display: inline-block;
       margin-right: 8px;
     }
+    .upload-area {
+      border: 2px dashed var(--ts-border-default, #333);
+      padding: 12px;
+      border-radius: var(--ts-radius-md, 6px);
+      text-align: center;
+      cursor: pointer;
+      background: var(--ts-bg-control, #1a1a24);
+      color: var(--ts-text-secondary, #9898a8);
+      transition: all var(--ts-transition-fast, 120ms ease-out);
+    }
+    .upload-area:hover, .upload-area:focus {
+      border-color: var(--ts-accent-primary, #00d4aa);
+      outline: none;
+    }
+    .control-group {
+      margin-bottom: var(--ts-space-xl, 24px);
+      padding-bottom: var(--ts-space-lg, 16px);
+      border-bottom: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control {
+      margin-bottom: var(--ts-space-md, 12px);
+    }
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary, #00d4aa);
+      float: right;
+    }
+    .stats {
+      background: var(--ts-bg-control, #1a1a24);
+      padding: 15px;
+      border-radius: var(--ts-radius-md, 6px);
+      font-size: 12px;
+      border: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .stats .value {
+      float: none;
+    }
+    .info-box {
+      background: var(--ts-bg-control, #1a1a24);
+      padding: 12px;
+      border-radius: var(--ts-radius-md, 6px);
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--ts-text-secondary, #9898a8);
+      border: 1px solid var(--ts-border-subtle, rgba(255,255,255,0.06));
+    }
+    h2 {
+      margin: 0 0 10px 0;
+      color: var(--ts-text-primary, #e8e8ec);
+      font-size: 24px;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: var(--ts-text-muted, #5a5a6e);
+      margin-bottom: 20px;
+    }
+    input[type="file"] {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
 
   <div id="controls">
-    <h2>💻 ASCII Art</h2>
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+    <h2>ASCII Art</h2>
     <div class="subtitle">Convert images to terminal-style art</div>
 
     <div class="control-group">
-      <h3>📁 Image Input</h3>
+      <h3>Image Input</h3>
       <div id="uploadArea" class="upload-area" tabindex="0">
         Drop image or click to browse
       </div>
@@ -210,10 +150,14 @@
       <div class="control">
         <label>Paper Size:</label>
         <select id="paperSize">
-          <option value="square800" selected>Square (800×800)</option>
-          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a5portrait">A5 Portrait</option>
+          <option value="a5landscape">A5 Landscape</option>
           <option value="a4portrait">A4 Portrait</option>
           <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
           <option value="letterportrait">Letter Portrait</option>
           <option value="letterlandscape">Letter Landscape</option>
         </select>
@@ -227,12 +171,12 @@
         <input type="color" id="strokeColor" value="#00ff00">
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
       </div>
     </div>
 
     <div class="control-group">
-      <h3>🔧 Character Set</h3>
+      <h3>Character Set</h3>
       <div class="control">
         <label>Character Set:</label>
         <select id="charSet">
@@ -246,13 +190,13 @@
       <div class="info-box">
         <span class="char-badge">detailed</span> @%#*+=-:. <br>
         <span class="char-badge">simple</span> @%*+. <br>
-        <span class="char-badge">blocks</span> █▓▒░ <br>
-        <span class="char-badge">binary</span> █
+        <span class="char-badge">blocks</span> ####. <br>
+        <span class="char-badge">binary</span> #
       </div>
     </div>
 
     <div class="control-group">
-      <h3>⚙️ Parameters</h3>
+      <h3>Parameters</h3>
       <div class="control">
         <label>Cell Width: <span class="value" id="cellWidth-val">8</span>px</label>
         <input type="range" id="cellWidth" min="4" max="20" value="8" step="1">
@@ -270,7 +214,7 @@
     </div>
 
     <div class="control-group">
-      <h3>📤 Export Mode</h3>
+      <h3>Export Mode</h3>
       <div class="control">
         <label>Output Style:</label>
         <select id="exportMode">
@@ -289,14 +233,14 @@
     </div>
 
     <div class="control-group">
-      <h3>📊 ASCII Preview</h3>
+      <h3>ASCII Preview</h3>
       <div id="ascii-preview" class="ascii-preview">
         No image loaded
       </div>
     </div>
 
     <div class="control-group">
-      <h3>📊 Statistics</h3>
+      <h3>Statistics</h3>
       <div id="stats" class="stats">
         <div><span>Lines:</span> <span class="value">-</span></div>
         <div><span>Columns:</span> <span class="value">-</span></div>
@@ -305,25 +249,25 @@
       </div>
     </div>
 
-    <!-- Preset Manager -->
-    <div id="preset-container"></div>
-
     <div class="control-group">
-      <h3>💾 Export</h3>
-      <button onclick="regenerate()">🔄 Generate ASCII</button>
-      <button onclick="exportSVG()">📥 Export SVG</button>
-      <button onclick="exportTXT()">📥 Export TXT</button>
-      <button onclick="exportPNG()">📥 Export PNG</button>
+      <h3>Export</h3>
+      <button onclick="regenerate()">Generate ASCII</button>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportTXT()">Export TXT</button>
+      <button onclick="exportPNG()">Export PNG</button>
     </div>
 
     <div class="info-box">
-      <strong>💡 Tips:</strong><br>
-      • Use 'detailed' for photorealistic results<br>
-      • Use 'blocks' for modern aesthetic<br>
-      • Use 'binary' for high-contrast art<br>
-      • Smaller cells = more detail<br>
-      • Dots mode is best for plotting
+      <strong>Tips:</strong><br>
+      - Use 'detailed' for photorealistic results<br>
+      - Use 'blocks' for modern aesthetic<br>
+      - Use 'binary' for high-contrast art<br>
+      - Smaller cells = more detail<br>
+      - Dots mode is best for plotting
     </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
   </div>
 
   <script>

@@ -22,17 +22,17 @@
   <style>
     body {
       margin: 0;
-      font-family: 'JetBrains Mono', monospace;
+      font-family: var(--ts-font-mono);
       display: flex;
-      background: #1a1a1a;
-      color: #fff;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
     }
     #canvas-container {
       flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
-      background: #2a2a2a;
+      background: var(--ts-bg-base);
       position: sticky;
       top: 0;
       height: 100vh;
@@ -42,139 +42,206 @@
     #controls {
       width: 380px;
       padding: 20px;
-      background: #1a1a1a;
+      background: var(--ts-bg-panel);
       height: 100vh;
       overflow-y: auto;
       box-sizing: border-box;
+      border-left: 1px solid var(--ts-border-subtle);
     }
     h2 {
       margin: 0 0 20px 0;
-      color: #00d4aa;
-      font-family: 'JetBrains Mono', monospace;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+      font-size: 1rem;
+      letter-spacing: 0.05em;
     }
     .control-group {
       margin-bottom: 25px;
       padding-bottom: 20px;
-      border-bottom: 1px solid #333;
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
     .control-group h3 {
       margin: 0 0 15px 0;
-      color: #00d4aa;
-      font-size: 14px;
-      text-transform: uppercase;
+      color: var(--ts-accent-primary);
+      font-size: 0.75rem;
+      font-weight: 600;
       letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
     .control {
       margin-bottom: 12px;
     }
     label {
-      display: block;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 5px;
-      font-size: 13px;
-      color: #ccc;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
     }
     input[type="range"] {
       width: 100%;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-default);
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--ts-text-primary);
+      border-radius: 50%;
+      border: 2px solid var(--ts-accent-primary);
+      cursor: pointer;
     }
     select {
       width: 100%;
-      padding: 8px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-      font-family: 'JetBrains Mono', monospace;
-      border-radius: 4px;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      font-size: 0.85rem;
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
     }
     button {
       width: 100%;
-      padding: 10px;
+      padding: 12px;
       margin: 5px 0;
-      background: #00d4aa;
-      color: #000;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
       border: none;
       cursor: pointer;
-      font-size: 13px;
-      border-radius: 4px;
-      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
       font-weight: 500;
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      transition: all 0.2s ease;
     }
     button:hover {
       background: #00e8bb;
+      box-shadow: 0 0 20px var(--ts-glow-primary);
     }
     button:active {
-      background: #00c49a;
+      transform: scale(0.98);
     }
     .secondary {
-      background: #555;
-      color: #fff;
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
     }
     .secondary:hover {
-      background: #666;
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-accent-primary);
+      box-shadow: none;
     }
     .value {
-      font-weight: bold;
-      color: #00d4aa;
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+      background: var(--ts-bg-deep);
+      padding: 2px 8px;
+      border-radius: 4px;
+      min-width: 48px;
+      text-align: center;
     }
     .checkbox-container {
       display: flex;
       align-items: center;
+      gap: 10px;
     }
     .checkbox-container input {
-      margin-right: 10px;
-      accent-color: #00d4aa;
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-container label {
+      margin-bottom: 0;
     }
     #info-display {
       position: absolute;
       top: 10px;
       left: 10px;
-      background: rgba(0,0,0,0.8);
-      padding: 10px 15px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.85);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      border: 1px solid var(--ts-border-subtle);
+    }
+    #info-display div {
+      margin: 4px 0;
+    }
+    #info-display span {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
     }
     .export-btn {
-      background: #ff6b6b;
-      color: #fff;
+      background: var(--ts-accent-secondary);
     }
     .export-btn:hover {
-      background: #ff5252;
+      background: #ffaa33;
     }
     #gif-progress {
       display: none;
-      background: #333;
-      padding: 10px;
-      border-radius: 4px;
+      background: var(--ts-bg-control);
+      padding: 12px;
+      border-radius: 6px;
       margin-top: 10px;
+      border: 1px solid var(--ts-border-subtle);
     }
     .progress-bar {
       width: 100%;
-      height: 20px;
-      background: #555;
-      border-radius: 10px;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
       overflow: hidden;
+      margin-top: 8px;
     }
     .progress-fill {
       height: 100%;
-      background: #00d4aa;
+      background: linear-gradient(90deg, var(--ts-accent-primary), var(--ts-accent-tertiary));
       transition: width 0.3s;
     }
-    input[type="color"] {
-      width: 60px;
+    .color-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-input-group input[type="color"] {
+      width: 48px;
       height: 36px;
-      border: none;
-      border-radius: 4px;
+      border: 2px solid var(--ts-border-default);
+      border-radius: 6px;
       cursor: pointer;
       background: transparent;
+      padding: 2px;
     }
-    .color-picker-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
     }
-    .color-picker-row label {
-      flex: 1;
-      margin-bottom: 0;
+    .color-input-group input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-group button {
+      margin: 0;
+    }
+    .preset-btn {
+      background: var(--ts-accent-tertiary);
+    }
+    .preset-btn:hover {
+      background: #9b88ff;
     }
     .pole-indicator {
       display: inline-block;
@@ -189,8 +256,6 @@
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container">
     <div id="info-display">
       <div>Poles: <span id="pole-count">2</span></div>
@@ -199,10 +264,8 @@
     </div>
   </div>
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
     <h2>Magnetic Field</h2>
-
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
@@ -212,6 +275,7 @@
           <option value="square">Square (300x300mm)</option>
           <option value="a4">A4 Portrait</option>
           <option value="a3" selected>A3 Portrait</option>
+          <option value="a3-landscape">A3 Landscape</option>
           <option value="letter">US Letter</option>
         </select>
       </div>
@@ -219,8 +283,10 @@
 
     <div class="control-group">
       <h3>Actions</h3>
-      <button id="regenerate">Regenerate</button>
-      <button id="randomize-poles" class="secondary">Randomize Pole Positions</button>
+      <div class="btn-group">
+        <button id="regenerate">Regenerate</button>
+        <button id="randomize-poles" class="secondary">Randomize Poles</button>
+      </div>
     </div>
 
     <div class="control-group">
@@ -330,41 +396,53 @@
     </div>
 
     <div class="control-group">
-      <h3>Colors</h3>
-      <div class="control color-picker-row">
+      <h3>Color Settings</h3>
+      <div class="control">
         <label>Background:</label>
-        <input type="color" id="bgColor" value="#ffffff">
-      </div>
-      <div class="control color-picker-row">
-        <label>Stroke:</label>
-        <input type="color" id="strokeColor" value="#000000">
-      </div>
-      <div class="control color-picker-row">
-        <label><span class="pole-indicator pole-north"></span>North Pole:</label>
-        <input type="color" id="northColor" value="#ff4444">
-      </div>
-      <div class="control color-picker-row">
-        <label><span class="pole-indicator pole-south"></span>South Pole:</label>
-        <input type="color" id="southColor" value="#4444ff">
+        <div class="color-input-group">
+          <input type="color" id="bgColor" value="#ffffff">
+        </div>
       </div>
       <div class="control">
-        <button id="randomizeAll">Randomize Colors</button>
+        <label>Stroke:</label>
+        <div class="color-input-group">
+          <input type="color" id="strokeColor" value="#000000">
+        </div>
+      </div>
+      <div class="control">
+        <label><span class="pole-indicator pole-north"></span>North Pole:</label>
+        <div class="color-input-group">
+          <input type="color" id="northColor" value="#ff4444">
+        </div>
+      </div>
+      <div class="control">
+        <label><span class="pole-indicator pole-south"></span>South Pole:</label>
+        <div class="color-input-group">
+          <input type="color" id="southColor" value="#4444ff">
+        </div>
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
       </div>
     </div>
 
     <div class="control-group">
       <h3>Quick Presets</h3>
-      <button class="secondary" onclick="loadQuickPreset('classic')">Classic Bar Magnet</button>
-      <button class="secondary" onclick="loadQuickPreset('horseshoe')">Horseshoe Magnet</button>
-      <button class="secondary" onclick="loadQuickPreset('quadrupole')">Quadrupole</button>
-      <button class="secondary" onclick="loadQuickPreset('dense')">Dense Field</button>
-      <button class="secondary" onclick="loadQuickPreset('chaotic')">Chaotic Multi-pole</button>
+      <div class="btn-group">
+        <button class="preset-btn" onclick="loadQuickPreset('classic')">Bar Magnet</button>
+        <button class="preset-btn" onclick="loadQuickPreset('horseshoe')">Horseshoe</button>
+        <button class="preset-btn" onclick="loadQuickPreset('quadrupole')">Quadrupole</button>
+        <button class="preset-btn" onclick="loadQuickPreset('dense')">Dense Field</button>
+      </div>
+      <button class="preset-btn" onclick="loadQuickPreset('chaotic')">Chaotic Multi-pole</button>
     </div>
 
     <div class="control-group">
       <h3>Export</h3>
-      <button onclick="exportSVG()">Export SVG</button>
-      <button onclick="exportPNG()">Export PNG</button>
+      <div class="btn-group">
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
       <button class="export-btn" onclick="toggleGifRecording()">
         <span id="gif-record-text">Record GIF</span>
       </button>
@@ -375,6 +453,9 @@
         </div>
       </div>
     </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
   </div>
 
   <script>

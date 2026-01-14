@@ -6,105 +6,49 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>10PRINT Pattern Generator - Fixed</title>
+  <title>10PRINT Pattern Generator - Total Serialism</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #1a1a1a;
-      color: #fff;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #2a2a2a;
-      position: relative;
-    }
-    #controls {
-      width: 320px;
-      padding: 20px;
-      background: #1a1a1a;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #4CAF50;
-    }
-    .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #333;
-    }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #4CAF50;
-      font-size: 16px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    input[type="range"] {
-      width: 100%;
-    }
-    select {
-      width: 100%;
-      padding: 5px;
-      background: #333;
-      color: #fff;
-      border: 1px solid #555;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 5px 0;
-      background: #4CAF50;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-    }
-    button:hover {
-      background: #45a049;
-    }
-    .value {
-      font-weight: bold;
-      color: #4CAF50;
-    }
+    /* Algorithm-specific overrides */
     .paper-size-badge {
       position: absolute;
       top: 10px;
       right: 10px;
-      background: rgba(76, 175, 80, 0.2);
-      color: #4CAF50;
+      background: rgba(0, 212, 170, 0.2);
+      color: var(--ts-accent-primary);
       padding: 5px 10px;
-      border-radius: 4px;
+      border-radius: var(--ts-radius-sm);
       font-size: 12px;
-      border: 1px solid #4CAF50;
+      border: 1px solid var(--ts-accent-primary);
+      font-family: var(--ts-font-mono);
     }
   </style>
 </head>
 <body>
   <div id="canvas-container">
-    <div class="paper-size-badge">800×600px</div>
+    <div class="paper-size-badge" id="size-badge">800x600px</div>
   </div>
   <div id="controls">
-    <h2>10PRINT Pattern Controls</h2>
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>10PRINT Pattern</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="custom" selected>Custom (800x600)</option>
+          <option value="a5">A5 (148x210mm)</option>
+          <option value="a4">A4 (210x297mm)</option>
+          <option value="a3">A3 (297x420mm)</option>
+          <option value="letter">US Letter</option>
+          <option value="square">Square (800x800)</option>
+        </select>
+      </div>
+    </div>
 
     <div class="control-group">
       <h3>Pattern Settings</h3>
@@ -139,51 +83,75 @@
       <button onclick="regenerate()">Regenerate Pattern</button>
       <button onclick="exportCanvas()">Export as PNG</button>
     </div>
+
+    <!-- Preset Container at bottom -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
+    // Paper size definitions
+    const PAPER_SIZES = {
+      custom: { width: 800, height: 600 },
+      a5: { width: 559, height: 794 },
+      a4: { width: 794, height: 1123 },
+      a3: { width: 1123, height: 1587 },
+      letter: { width: 816, height: 1056 },
+      square: { width: 800, height: 800 }
+    };
+
     let params = {
       cellSize: 20,
       probability: 0.5,
       lineType: 'diagonal',
-      strokeWeight: 2
+      strokeWeight: 2,
+      paperSize: 'custom'
     };
-    
+
     let canvas;
 
     function setup() {
       console.log('Setting up canvas...');
-      canvas = createCanvas(800, 600);
+      const size = PAPER_SIZES[params.paperSize];
+      canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
-      
+
       // Set up controls
       setupControls();
-      
+
       // Initial draw
       drawPattern();
     }
-    
+
     function setupControls() {
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = PAPER_SIZES[params.paperSize];
+        resizeCanvas(size.width, size.height);
+        document.getElementById('size-badge').textContent = `${size.width}x${size.height}px`;
+        drawPattern();
+      });
+
       // Cell size
       document.getElementById('cellSize').addEventListener('input', (e) => {
         params.cellSize = parseInt(e.target.value);
         document.getElementById('cellSize-val').textContent = params.cellSize;
         drawPattern();
       });
-      
+
       // Probability
       document.getElementById('probability').addEventListener('input', (e) => {
         params.probability = parseFloat(e.target.value);
         document.getElementById('probability-val').textContent = params.probability;
         drawPattern();
       });
-      
+
       // Line type
       document.getElementById('lineType').addEventListener('change', (e) => {
         params.lineType = e.target.value;
         drawPattern();
       });
-      
+
       // Stroke weight
       document.getElementById('strokeWeight').addEventListener('input', (e) => {
         params.strokeWeight = parseFloat(e.target.value);
@@ -191,12 +159,12 @@
         drawPattern();
       });
     }
-    
+
     function drawPattern() {
       background(255);
       stroke(0);
       strokeWeight(params.strokeWeight);
-      
+
       for (let x = 0; x < width; x += params.cellSize) {
         for (let y = 0; y < height; y += params.cellSize) {
           if (params.lineType === 'diagonal') {
@@ -222,11 +190,11 @@
         }
       }
     }
-    
+
     function regenerate() {
       drawPattern();
     }
-    
+
     function exportCanvas() {
       saveCanvas('10print-pattern', 'png');
     }

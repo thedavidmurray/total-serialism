@@ -18,168 +18,23 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      background: #0c0c12;
-      color: #e8e8ec;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      overflow: hidden;
-      background: #13131b;
-    }
-    #controls {
-      width: 340px;
-      padding: 20px;
-      background: #0c0c12;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-      border-left: 1px solid rgba(255,255,255,0.1);
-    }
-    h2 {
-      margin: 0 0 20px 0;
-      color: #00d4aa;
-      font-size: 18px;
-      font-weight: 600;
-    }
-    .control-group {
-      margin-bottom: 20px;
-      background: #13131b;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 8px;
-      padding: 15px;
-    }
-    .control-group h3 {
-      margin: 0 0 12px 0;
-      color: #00d4aa;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    .control {
-      margin-bottom: 12px;
-    }
-    .control:last-child {
-      margin-bottom: 0;
-    }
-    .control label {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 6px;
-      font-size: 12px;
-      color: #9898a8;
-    }
-    .control label .value {
-      color: #00d4aa;
-      font-weight: 500;
-    }
-    .control input[type="range"] {
-      width: 100%;
-      -webkit-appearance: none;
-      height: 6px;
-      background: #1a1a24;
-      border-radius: 3px;
-      outline: none;
-    }
-    .control input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 14px;
-      height: 14px;
-      background: #00d4aa;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-    .control select {
-      width: 100%;
-      padding: 8px 12px;
-      background: #1a1a24;
-      color: #e8e8ec;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 4px;
-      font-size: 12px;
-      font-family: inherit;
-      cursor: pointer;
-    }
-    .control select:hover {
-      border-color: #00d4aa;
-    }
-    .control input[type="color"] {
-      width: 100%;
-      height: 32px;
-      padding: 2px;
-      background: #1a1a24;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button {
-      width: 100%;
-      padding: 10px 16px;
-      background: #00d4aa;
-      color: #06060a;
-      border: none;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 600;
-      font-family: inherit;
-      cursor: pointer;
-      margin-bottom: 8px;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #00eabb;
-    }
-    button:last-child {
-      margin-bottom: 0;
-    }
-    button.secondary {
-      background: #1a1a24;
-      color: #e8e8ec;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
-    button.secondary:hover {
-      background: #22222e;
-      border-color: #00d4aa;
-    }
-    button.danger {
-      background: #ff4757;
-    }
-    button.danger:hover {
-      background: #ff6b79;
-    }
-    .button-row {
-      display: flex;
-      gap: 8px;
-    }
-    .button-row button {
-      flex: 1;
-    }
+    /* Algorithm-specific overrides */
     #seed-display {
-      font-family: 'JetBrains Mono', monospace;
-      background: #1a1a24;
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: #00d4aa;
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-elevated, #1a1a2e);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--ts-accent-primary, #00d4aa);
       text-align: center;
-      border: 1px solid rgba(255,255,255,0.1);
     }
     .status-display {
-      background: #1a1a24;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 4px;
+      background: var(--ts-bg-elevated, #1a1a2e);
+      border: 1px solid var(--ts-border, #2a2a38);
+      border-radius: 6px;
       padding: 10px 12px;
       font-size: 11px;
-      color: #9898a8;
+      color: var(--ts-text-secondary, #9898a8);
     }
     .status-display .stat {
       display: flex;
@@ -190,33 +45,52 @@
       margin-bottom: 0;
     }
     .status-display .stat .val {
-      color: #00d4aa;
+      color: var(--ts-accent-primary, #00d4aa);
     }
     #gif-status {
       margin-top: 10px;
       font-size: 11px;
-      color: #9898a8;
+      color: var(--ts-text-muted, #5a5a6e);
     }
     .info-text {
       font-size: 11px;
-      color: #5a5a6e;
+      color: var(--ts-text-muted, #5a5a6e);
       font-style: italic;
       margin-top: 8px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+    }
+    .button-row button {
+      flex: 1;
+    }
+    button.secondary {
+      background: var(--ts-bg-elevated, #1a1a2e);
+      color: var(--ts-text-primary, #e8e8ec);
+      border: 1px solid var(--ts-border, #2a2a38);
+    }
+    button.secondary:hover {
+      background: var(--ts-bg-control, #22222e);
+      border-color: var(--ts-accent-primary, #00d4aa);
+    }
+    button.danger {
+      background: var(--ts-accent-danger, #ff4757);
+    }
+    button.danger:hover {
+      background: #ff6b79;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
   <div id="canvas-container"></div>
   <div id="controls">
     <h2>Fluid Dynamics</h2>
-    <p style="font-size: 11px; color: #5a5a6e; margin: 0 0 20px 0;">
+    <p style="font-size: 11px; color: var(--ts-text-muted); margin: 0 0 20px 0;">
       Jos Stam's Stable Fluids - Interactive 2D Navier-Stokes
     </p>
-
-    <!-- Preset Manager Container -->
-    <div id="preset-container"></div>
 
     <div class="control-group">
       <h3>Canvas Settings</h3>
@@ -338,6 +212,9 @@
       <button class="secondary" onclick="exportGIF()">Export GIF</button>
       <div id="gif-status"></div>
     </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
   </div>
 
   <script>

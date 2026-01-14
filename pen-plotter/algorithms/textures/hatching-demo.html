@@ -6,7 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>Hatching & Texture Library Demo - Updated</title>
+  <title>Hatching & Texture Library Demo - Total Serialism</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../../canvas-layout.js"></script>
@@ -22,32 +22,34 @@
   <link rel="stylesheet" href="../../shared/algorithm.css">
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container"></div>
   <div id="controls">
-    <h2>🎨 Advanced Hatching Demo</h2>
-    <p>Showcasing all new utility libraries working together</p>
-    
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Advanced Hatching Demo</h2>
+    <p style="margin-top: 0; color: var(--ts-text-muted); font-size: 14px;">Showcasing all new utility libraries working together</p>
+
     <div class="control-group">
-      <h3>🔲 Shape Configuration</h3>
+      <h3>Shape Configuration</h3>
     </div>
-    
+
     <div class="control-group">
-      <h3>🎭 Pattern Configuration</h3>
+      <h3>Pattern Configuration</h3>
     </div>
-    
+
     <div class="control-group">
-      <h3>⚙️ Advanced Options</h3>
+      <h3>Advanced Options</h3>
     </div>
-    
+
     <div class="control-group">
-      <h3>🎮 Presets</h3>
+      <h3>Presets</h3>
     </div>
-    
+
     <div class="control-group">
-      <h3>💾 Export</h3>
+      <h3>Export</h3>
     </div>
+
+    <!-- Preset Container at bottom -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
@@ -58,25 +60,25 @@
       shapeSize: 200,
       shapeX: 400,
       shapeY: 300,
-      
+
       // Pattern parameters
       patternType: 'parallel',
       spacing: 5,
       angle: 45,
       density: 1.0,
       strokeWeight: 1.0,
-      
+
       // Advanced options
       enableOptimization: true,
       showProgress: true,
       enableASCII: false,
       asciiCols: 60,
-      
+
       // Animation
       animate: false,
       speed: 0.02
     };
-    
+
     let canvas;
     let canvasLayout;
     let presetManager;
@@ -88,16 +90,16 @@
     let animationTime = 0;
     let autoRegenerate = true;
     let regenTimer = null;
-    
+
     function setup() {
       // Initialize canvas
       canvas = createCanvas(800, 600);
       canvas.parent('canvas-container');
-      
+
       // Initialize all utility classes
       hatchingLib = new HatchingLibrary();
       pathOpt = new PathOptimizer();
-      
+
       // Initialize preset manager
       presetManager = new PresetManager('hatching-demo', {
         defaultPresets: {
@@ -143,22 +145,22 @@
       presetManager.onSave = onPresetSave;
 
       setupAdvancedUI();
-      
+
       // Enable auto-regeneration with debouncing
       setupAutoRegenerate();
-      
+
       // Initial generation
       generatePattern();
-      
+
       uiUtils.showStatus('Hatching Demo Ready!', 'success', 2000);
     }
-    
+
     function setupAdvancedUI() {
       const controls = document.getElementById('controls');
-      
+
       // Shape controls using UI utils
       const shapeGroup = controls.querySelector('.control-group:nth-child(2)');
-      
+
       uiUtils.createSelect(shapeGroup, 'Shape Type', 'shapeType', [
         { label: 'Circle', value: 'circle' },
         { label: 'Square', value: 'square' },
@@ -167,64 +169,64 @@
         { label: 'Star', value: 'star' },
         { label: 'Heart', value: 'heart' }
       ], params.shapeType);
-      
+
       uiUtils.createSlider(shapeGroup, 'Shape Size', 'shapeSize', 50, 400, params.shapeSize);
       uiUtils.createSlider(shapeGroup, 'X Position', 'shapeX', 100, 700, params.shapeX);
       uiUtils.createSlider(shapeGroup, 'Y Position', 'shapeY', 100, 500, params.shapeY);
-      
+
       // Pattern controls
       const patternGroup = controls.querySelector('.control-group:nth-child(3)');
-      
-      uiUtils.createSelect(patternGroup, 'Pattern Type', 'patternType', 
+
+      uiUtils.createSelect(patternGroup, 'Pattern Type', 'patternType',
         hatchingLib.getAvailablePatterns().map(p => ({ label: p.charAt(0).toUpperCase() + p.slice(1), value: p })),
         params.patternType
       );
-      
+
       uiUtils.createSlider(patternGroup, 'Spacing', 'spacing', 1, 20, params.spacing, 0.5);
       uiUtils.createSlider(patternGroup, 'Angle', 'angle', 0, 180, params.angle);
       uiUtils.createSlider(patternGroup, 'Density', 'density', 0.1, 3.0, params.density, 0.1);
       uiUtils.createSlider(patternGroup, 'Stroke Weight', 'strokeWeight', 0.1, 3.0, params.strokeWeight, 0.1);
-      
+
       // Advanced options
       const advancedGroup = controls.querySelector('.control-group:nth-child(4)');
-      
+
       uiUtils.createCheckbox(advancedGroup, 'Enable Path Optimization', 'enableOptimization', params.enableOptimization);
       uiUtils.createCheckbox(advancedGroup, 'Show Progress', 'showProgress', params.showProgress);
       uiUtils.createCheckbox(advancedGroup, 'ASCII Art Overlay', 'enableASCII', params.enableASCII);
       uiUtils.createSlider(advancedGroup, 'ASCII Columns', 'asciiCols', 20, 100, params.asciiCols);
       uiUtils.createCheckbox(advancedGroup, 'Animate', 'animate', params.animate);
-      
+
       // Presets
       const presetGroup = controls.querySelector('.control-group:nth-child(5)');
       presetManager.createUI(presetGroup);
-      
+
       // Export buttons using standardized export utils
       const exportGroup = controls.querySelector('.control-group:nth-child(6)');
       exportUtils.addExportButtons(exportGroup, drawForExport, 'hatching-demo', params);
-      
+
       // Add optimization report button
       uiUtils.createButtonGroup(exportGroup, null, [
         {
-          label: '📊 Optimization Report',
+          label: 'Optimization Report',
           callback: showOptimizationReport,
           style: { backgroundColor: '#FF9800' }
         },
         {
-          label: '🔄 Regenerate',
+          label: 'Regenerate',
           callback: () => {
             generatePattern();
             uiUtils.showStatus('Pattern regenerated!', 'success', 1500);
           }
         }
       ]);
-      
+
       // Attach change listeners
       attachChangeListeners();
     }
-    
+
     function attachChangeListeners() {
       const paramKeys = Object.keys(params);
-      
+
       paramKeys.forEach(key => {
         const element = document.getElementById(key);
         if (element) {
@@ -234,12 +236,12 @@
               triggerRegenerate();
             }
           }, 150);
-          
+
           element.addEventListener('input', debouncedUpdate);
           element.addEventListener('change', debouncedUpdate);
         }
       });
-      
+
       // Special handling for animation toggle
       const animateElement = document.getElementById('animate');
       if (animateElement) {
@@ -254,13 +256,13 @@
         });
       }
     }
-    
+
     function updateParams() {
       const paramKeys = Object.keys(params);
       const newValues = uiUtils.getParameterValues(paramKeys);
       Object.assign(params, newValues);
     }
-    
+
     function setupAutoRegenerate() {
       // Auto-regenerate with debouncing
       function triggerRegenerate() {
@@ -269,42 +271,42 @@
           generatePattern();
         }, 200);
       }
-      
+
       window.triggerRegenerate = triggerRegenerate;
     }
-    
+
     function generatePattern() {
       if (params.showProgress) {
         uiUtils.showProgress(0, 4, 'Generating pattern...');
       }
-      
+
       // Step 1: Create shape
       createShape();
       if (params.showProgress) uiUtils.showProgress(1, 4, 'Creating shape...');
-      
+
       // Step 2: Generate hatching pattern
       generateHatchingPaths();
       if (params.showProgress) uiUtils.showProgress(2, 4, 'Generating hatching...');
-      
+
       // Step 3: Optimize paths if enabled
       if (params.enableOptimization) {
         optimizePaths();
         if (params.showProgress) uiUtils.showProgress(3, 4, 'Optimizing paths...');
       }
-      
+
       // Step 4: Complete
       if (params.showProgress) uiUtils.showProgress(4, 4, 'Complete!');
-      
+
       if (!params.animate) {
         redraw();
       }
     }
-    
+
     function createShape() {
       const centerX = params.shapeX;
       const centerY = params.shapeY;
       const size = params.shapeSize;
-      
+
       switch (params.shapeType) {
         case 'circle':
           currentShape = {
@@ -314,7 +316,7 @@
             diameter: size
           };
           break;
-          
+
         case 'square':
           currentShape = {
             type: 'rect',
@@ -324,25 +326,25 @@
             height: size
           };
           break;
-          
+
         case 'triangle':
           currentShape = createPolygonShape(centerX, centerY, size/2, 3);
           break;
-          
+
         case 'hexagon':
           currentShape = createPolygonShape(centerX, centerY, size/2, 6);
           break;
-          
+
         case 'star':
           currentShape = createStarShape(centerX, centerY, size/2, size/4, 5);
           break;
-          
+
         case 'heart':
           currentShape = createHeartShape(centerX, centerY, size/40);
           break;
       }
     }
-    
+
     function createPolygonShape(centerX, centerY, radius, sides) {
       const points = [];
       for (let i = 0; i < sides; i++) {
@@ -354,7 +356,7 @@
       }
       return { type: 'polygon', points };
     }
-    
+
     function createStarShape(centerX, centerY, outerRadius, innerRadius, points) {
       const vertices = [];
       for (let i = 0; i < points * 2; i++) {
@@ -367,7 +369,7 @@
       }
       return { type: 'polygon', points: vertices };
     }
-    
+
     function createHeartShape(centerX, centerY, scale) {
       const points = [];
       for (let t = 0; t <= TWO_PI; t += 0.1) {
@@ -380,19 +382,19 @@
       }
       return { type: 'polygon', points };
     }
-    
+
     function generateHatchingPaths() {
       originalPaths = [];
-      
+
       if (!currentShape) return;
-      
+
       const options = {
         spacing: params.spacing,
         angle: params.angle + (params.animate ? animationTime * 20 : 0),
         density: params.density,
         strokeWeight: params.strokeWeight
       };
-      
+
       // Generate paths based on shape type
       if (currentShape.type === 'circle') {
         // Use circular bounds for hatching
@@ -402,22 +404,22 @@
           width: currentShape.diameter,
           height: currentShape.diameter
         };
-        
+
         const paths = hatchingLib.hatchRegion(
           canvas, bounds.x, bounds.y, bounds.width, bounds.height,
           params.patternType, options
         );
-        
+
         originalPaths = paths || [];
-        
+
       } else if (currentShape.type === 'rect') {
         const paths = hatchingLib.hatchRegion(
           canvas, currentShape.x, currentShape.y, currentShape.width, currentShape.height,
           params.patternType, options
         );
-        
+
         originalPaths = paths || [];
-        
+
       } else if (currentShape.type === 'polygon') {
         // For complex polygons, create a bounding box and clip
         const bounds = getPolygonBounds(currentShape.points);
@@ -425,22 +427,22 @@
           canvas, bounds.x, bounds.y, bounds.width, bounds.height,
           params.patternType, options
         );
-        
+
         originalPaths = paths || [];
       }
     }
-    
+
     function getPolygonBounds(points) {
       let minX = Infinity, minY = Infinity;
       let maxX = -Infinity, maxY = -Infinity;
-      
+
       points.forEach(p => {
         minX = Math.min(minX, p.x);
         minY = Math.min(minY, p.y);
         maxX = Math.max(maxX, p.x);
         maxY = Math.max(maxY, p.y);
       });
-      
+
       return {
         x: minX,
         y: minY,
@@ -448,10 +450,10 @@
         height: maxY - minY
       };
     }
-    
+
     function optimizePaths() {
       if (originalPaths.length === 0) return;
-      
+
       // Convert to path format for optimizer
       const pathsForOptimization = originalPaths.map(path => {
         if (path.start && path.end) {
@@ -462,7 +464,7 @@
         }
         return [];
       }).filter(path => path.length > 0);
-      
+
       optimizedPaths = pathOpt.optimizeAllPaths(pathsForOptimization, {
         removeShortPaths: true,
         simplifyPaths: true,
@@ -471,29 +473,29 @@
         minLength: 2.0
       });
     }
-    
+
     function drawForExport(exportCanvas, mode = 'screen') {
       if (mode === 'plotter') {
         // Plotter-optimized drawing (stroke only, no backgrounds)
         exportCanvas.stroke(0);
         exportCanvas.strokeWeight(params.strokeWeight);
         exportCanvas.noFill();
-        
+
         drawOptimizedPaths(exportCanvas);
       } else {
         // Screen drawing (with backgrounds, fills, etc.)
         exportCanvas.background(255);
         drawPattern(exportCanvas);
-        
+
         if (params.enableASCII) {
           drawASCIIOverlay(exportCanvas);
         }
       }
     }
-    
+
     function draw() {
       background(255);
-      
+
       if (params.animate) {
         animationTime += params.speed;
         generateHatchingPaths();
@@ -501,26 +503,26 @@
           optimizePaths();
         }
       }
-      
+
       drawPattern(canvas);
-      
+
       if (params.enableASCII) {
         drawASCIIOverlay(canvas);
       }
-      
+
       if (!params.animate) {
         noLoop();
       }
     }
-    
+
     function drawPattern(drawCanvas) {
       drawCanvas.push();
-      
+
       // Draw shape outline
       drawCanvas.stroke(100);
       drawCanvas.strokeWeight(1);
       drawCanvas.noFill();
-      
+
       if (currentShape) {
         if (currentShape.type === 'circle') {
           drawCanvas.circle(currentShape.x, currentShape.y, currentShape.diameter);
@@ -532,20 +534,20 @@
           drawCanvas.endShape(CLOSE);
         }
       }
-      
+
       // Draw pattern
       drawCanvas.stroke(0);
       drawCanvas.strokeWeight(params.strokeWeight);
-      
+
       if (params.enableOptimization && optimizedPaths.length > 0) {
         drawOptimizedPaths(drawCanvas);
       } else {
         drawOriginalPaths(drawCanvas);
       }
-      
+
       drawCanvas.pop();
     }
-    
+
     function drawOptimizedPaths(drawCanvas) {
       optimizedPaths.forEach(path => {
         if (path.length >= 2) {
@@ -556,7 +558,7 @@
         }
       });
     }
-    
+
     function drawOriginalPaths(drawCanvas) {
       originalPaths.forEach(element => {
         if (element.type === 'line' && element.start && element.end) {
@@ -566,67 +568,66 @@
         }
       });
     }
-    
+
     function drawASCIIOverlay(drawCanvas) {
       // Create ASCII art overlay
       const tempGraphics = createGraphics(width, height);
       tempGraphics.background(255);
       drawPattern(tempGraphics);
-      
+
       const asciiText = asciiArt.imageToASCII(tempGraphics, params.asciiCols, {
         characterSet: 'simple',
         invert: true,
         contrast: 1.2
       });
-      
+
       drawCanvas.push();
       drawCanvas.fill(0, 100);
       drawCanvas.textFont('monospace');
       drawCanvas.textSize(8);
       drawCanvas.text(asciiText, 10, 20);
       drawCanvas.pop();
-      
+
       tempGraphics.remove();
     }
-    
+
     function showOptimizationReport() {
       if (originalPaths.length === 0 && optimizedPaths.length === 0) {
         uiUtils.showStatus('Generate a pattern first!', 'warning', 2000);
         return;
       }
-      
+
       const report = pathOpt.generateReport(
         originalPaths.map(p => p.start && p.end ? [p.start, p.end] : []).filter(p => p.length > 0),
         optimizedPaths
       );
-      
+
       const reportText = `
 Path Optimization Report:
-━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 Path Count:
+Path Count:
    Original: ${report.originalPathCount}
    Optimized: ${report.optimizedPathCount}
    Reduction: ${report.pathReduction}%
 
-📏 Drawing Length:
+Drawing Length:
    Original: ${report.originalDrawingLength.toFixed(1)}mm
    Optimized: ${report.optimizedDrawingLength.toFixed(1)}mm
    Savings: ${report.lengthReduction}%
 
-✈️ Pen Travel:
+Pen Travel:
    Pen-up distance: ${report.penUpDistance.toFixed(1)}mm
    Total plotting: ${report.totalPlottingDistance.toFixed(1)}mm
 
-💡 Efficiency gained through TSP optimization,
-   path merging, and Douglas-Peucker simplification.
+Efficiency gained through TSP optimization,
+path merging, and Douglas-Peucker simplification.
       `.trim();
-      
+
       alert(reportText);
-      
+
       console.log('Detailed Optimization Report:', report);
     }
-    
+
     // Preset system integration
     function onPresetLoad(presetData) {
       Object.assign(params, presetData);
@@ -634,11 +635,11 @@ Path Optimization Report:
       generatePattern();
       uiUtils.showStatus(`Preset "${presetData.name}" loaded!`, 'success', 2000);
     }
-    
+
     function onPresetSave(presetName) {
       uiUtils.showStatus(`Preset "${presetName}" saved!`, 'success', 2000);
     }
-    
+
     // Wire up preset events - done in setup() after presetManager is created
   </script>
 </body>

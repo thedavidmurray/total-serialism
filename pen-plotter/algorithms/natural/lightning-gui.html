@@ -13,149 +13,192 @@
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #0a0a0a;
-            color: #ffffff;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 20px;
-        }
-        
-        .controls {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            height: fit-content;
-        }
-        
-        .canvas-container {
-            background-color: #1a1a1a;
-            padding: 20px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        canvas {
-            background-color: #000000;
-            border: 1px solid #333;
-            cursor: crosshair;
-        }
-        
-        .control-group {
-            margin-bottom: 20px;
-        }
-        
-        label {
-            display: block;
-            margin-bottom: 5px;
-            color: #888;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            margin-bottom: 5px;
-        }
-        
-        input[type="number"], select {
-            width: 100%;
-            background-color: #0a0a0a;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        
-        button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #2a2a2a;
-            border: 1px solid #444;
-            color: #fff;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        button:hover {
-            background-color: #3a3a3a;
-            border-color: #666;
-        }
-        
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .export-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .value-display {
-            font-size: 11px;
-            color: #666;
-            text-align: right;
-        }
-        
-        h1 {
-            font-size: 24px;
-            margin-bottom: 20px;
-            font-weight: normal;
-            letter-spacing: 2px;
-        }
-        
-        h3 {
-            font-size: 14px;
-            margin-bottom: 15px;
-            color: #888;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-    </style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .button-group button {
+      margin: 0;
+    }
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .export-buttons button {
+      margin: 0;
+    }
+    .value-display, .range-value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    canvas {
+      cursor: crosshair;
+    }
+  </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-    <div class="container">
-        <div class="controls">
-            <h3>Lightning Parameters</h3>
-            <div id="preset-container"></div>
+  <div id="canvas-container">
+    <canvas id="canvas" width="800" height="800"></canvas>
+  </div>
 
-            <div class="control-group">
-                <label>Paper Size:
-                    <select id="paperSize">
-                        <option value="square800">Square (800×800)</option>
-                        <option value="landscape800x600">Landscape (800×600)</option>
-                        <option value="a4portrait">A4 Portrait</option>
-                        <option value="a4landscape">A4 Landscape</option>
-                        <option value="letterportrait">Letter Portrait</option>
-                        <option value="letterlandscape">Letter Landscape</option>
-                    </select>
-                </label>
-                <label>Background: <input type="color" id="bgColor" value="#000000"></label>
-                <label>Stroke Color: <input type="color" id="strokeColor" value="#ffffff"></label>
-            </div>
-      <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
-      </div>
+  <div id="controls">
+    <h2>Lightning Generator</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <label>Paper Size
+        <select id="paperSize">
+          <option value="square800">Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </label>
+      <label>Background <input type="color" id="bgColor" value="#000000"></label>
+      <label>Stroke Color <input type="color" id="strokeColor" value="#ffffff"></label>
+      <button id="randomizeAll" class="secondary">Randomize Colors</button>
+    </div>
 
             <div class="control-group">
                 <label for="lightningType">Lightning Type</label>
@@ -231,19 +274,18 @@
             
             <button onclick="animateLightning()">Animate Strike</button>
             
-            <h3>Export Options</h3>
-            <div class="export-buttons">
-                <button onclick="exportSVG()">SVG</button>
-                <button onclick="exportPNG()">PNG</button>
-                <button onclick="exportGIF()">GIF</button>
-            </div>
-        </div>
-        
-        <div class="canvas-container">
-            <h1>LIGHTNING GENERATOR</h1>
-            <canvas id="canvas" width="800" height="800"></canvas>
-        </div>
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="export-buttons">
+        <button onclick="exportSVG()">SVG</button>
+        <button onclick="exportPNG()">PNG</button>
+        <button onclick="exportGIF()">GIF</button>
+      </div>
     </div>
+
+    <!-- Preset Manager (at bottom) -->
+    <div id="preset-container" style="margin-top: 20px;"></div>
+  </div>
     
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>

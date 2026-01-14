@@ -3,196 +3,142 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moire Patterns - Total Serialism</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>Moiré Patterns - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    #controls {
+    /* Algorithm-specific overrides */
+    .checkbox-container {
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 16px;
-      background: var(--bg-secondary, #1a1a2e);
-      border-radius: 8px;
-      max-width: 320px;
-    }
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .control-group label {
-      display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 12px;
-      color: var(--text-secondary, #888);
-    }
-    .control-group input[type="range"] {
-      width: 100%;
-    }
-    select {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #333);
-      padding: 6px 10px;
-      border-radius: 4px;
-    }
-    .btn-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 8px;
-    }
-    button {
-      flex: 1;
-      padding: 10px 16px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      font-family: inherit;
-      font-size: 13px;
-      transition: all 0.2s ease;
-    }
-    button.primary {
-      background: var(--accent-primary, #4a9eff);
-      color: white;
-    }
-    button.secondary {
-      background: var(--bg-tertiary, #252540);
-      color: var(--text-primary, #fff);
-      border: 1px solid var(--border-color, #444);
-    }
-    button:hover {
-      filter: brightness(1.1);
+      gap: 10px;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-  <div class="algorithm-container">
-    <aside class="controls-panel">
-      <h2>Moiré Patterns</h2>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <div class="ts-header-inline">
+      <span class="ts-logo">Total Serialism</span>
+      <h2>Moire Patterns</h2>
+    </div>
 
-      <div id="controls">
-        <div class="control-group">
-          <label>Canvas Size:
-            <select id="paperSize">
-              <option value="square800">Square 800×800</option>
-              <option value="a4portrait">A4 Portrait</option>
-              <option value="a4landscape">A4 Landscape</option>
-              <option value="letterportrait">Letter Portrait</option>
-              <option value="letterlandscape">Letter Landscape</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Background Color:
-            <input type="color" id="bgColor" value="#ffffff">
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Color:
-            <input type="color" id="strokeColor" value="#000000">
-          </label>
-        </div>
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <label>Canvas Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square 800x800</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
       </div>
-
-        <hr style="border-color: var(--border-color, #333); margin: 12px 0;">
-
-        <div class="control-group">
-          <label>Pattern Type:
-            <select id="patternType">
-              <option value="circles">Concentric Circles</option>
-              <option value="lines">Parallel Lines</option>
-              <option value="radial">Radial Lines</option>
-              <option value="grid">Grid</option>
-              <option value="spiral">Spiral</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>Line Spacing: <span id="spacing-val">8</span></label>
-          <input type="range" id="spacing" min="2" max="20" value="8" step="0.5">
-        </div>
-
-        <div class="control-group">
-          <label>Line Count: <span id="lineCount-val">50</span></label>
-          <input type="range" id="lineCount" min="10" max="150" value="50">
-        </div>
-
-        <div class="control-group">
-          <label>Offset X: <span id="offsetX-val">50</span></label>
-          <input type="range" id="offsetX" min="-200" max="200" value="50">
-        </div>
-
-        <div class="control-group">
-          <label>Offset Y: <span id="offsetY-val">50</span></label>
-          <input type="range" id="offsetY" min="-200" max="200" value="50">
-        </div>
-
-        <div class="control-group">
-          <label>Rotation: <span id="rotation-val">15</span>°</label>
-          <input type="range" id="rotation" min="0" max="90" value="15" step="0.5">
-        </div>
-
-        <div class="control-group">
-          <label>Scale Layer 2: <span id="scale2-val">1.0</span></label>
-          <input type="range" id="scale2" min="0.8" max="1.2" value="1.0" step="0.01">
-        </div>
-
-        <div class="control-group">
-          <label>Stroke Weight: <span id="strokeWeight-val">0.8</span></label>
-          <input type="range" id="strokeWeight" min="0.2" max="2" value="0.8" step="0.1">
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="showLayer1" checked> Show Layer 1
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="showLayer2" checked> Show Layer 2
-          </label>
-        </div>
-
-        <div class="control-group">
-          <label>
-            <input type="checkbox" id="animate"> Animate
-          </label>
-        </div>
-
-        <div class="btn-row">
-          <button class="primary" id="regenerate">Regenerate</button>
-        </div>
-
-        <div class="btn-row">
-          <button class="secondary" id="exportSVG">Export SVG</button>
-          <button class="secondary" id="exportPNG">Export PNG</button>
-        </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
       </div>
-    </aside>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
 
-    <main class="canvas-area">
-      <div id="canvas-container"></div>
-    </main>
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Pattern Type:</label>
+        <select id="patternType">
+          <option value="circles">Concentric Circles</option>
+          <option value="lines">Parallel Lines</option>
+          <option value="radial">Radial Lines</option>
+          <option value="grid">Grid</option>
+          <option value="spiral">Spiral</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Spacing: <span class="value" id="spacing-val">8</span></label>
+        <input type="range" id="spacing" min="2" max="20" value="8" step="0.5">
+      </div>
+      <div class="control">
+        <label>Line Count: <span class="value" id="lineCount-val">50</span></label>
+        <input type="range" id="lineCount" min="10" max="150" value="50">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Layer 2 Offset</h3>
+      <div class="control">
+        <label>Offset X: <span class="value" id="offsetX-val">50</span></label>
+        <input type="range" id="offsetX" min="-200" max="200" value="50">
+      </div>
+      <div class="control">
+        <label>Offset Y: <span class="value" id="offsetY-val">50</span></label>
+        <input type="range" id="offsetY" min="-200" max="200" value="50">
+      </div>
+      <div class="control">
+        <label>Rotation: <span class="value" id="rotation-val">15</span>deg</label>
+        <input type="range" id="rotation" min="0" max="90" value="15" step="0.5">
+      </div>
+      <div class="control">
+        <label>Scale Layer 2: <span class="value" id="scale2-val">1.0</span></label>
+        <input type="range" id="scale2" min="0.8" max="1.2" value="1.0" step="0.01">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">0.8</span></label>
+        <input type="range" id="strokeWeight" min="0.2" max="2" value="0.8" step="0.1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showLayer1" checked>
+        <label for="showLayer1">Show Layer 1</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showLayer2" checked>
+        <label for="showLayer2">Show Layer 2</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animate">
+        <label for="animate">Animate</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button class="ts-btn-primary" id="regenerate">Regenerate</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button class="ts-btn" id="exportSVG">Export SVG</button>
+      <button class="ts-btn" id="exportPNG">Export PNG</button>
+    </div>
+
+    <div class="control-group preset-container">
+      <h3>Presets</h3>
+      <p style="font-size: 11px; color: var(--ts-text-muted, #666);">Adjust rotation and offset to create different moire interference patterns</p>
+    </div>
   </div>
 
-  <script src="../../shared/export-utils.js"></script>
   <script>
     // Parameters
     const params = {

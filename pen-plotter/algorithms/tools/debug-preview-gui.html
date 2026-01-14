@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,224 +11,230 @@
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../../../../path-optimizer.js"></script>
   <script src="../../shared/debug-preview.js"></script>
-  
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      display: flex;
-      background: #f5f5f5;
-    }
-    #canvas-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      position: relative;
-    }
-    #controls {
-      width: 350px;
-      padding: 20px;
-      background: white;
-      height: 100vh;
-      overflow-y: auto;
-      box-sizing: border-box;
-      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-    }
+    /* Algorithm-specific overrides */
     .control-group {
-      margin-bottom: 25px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #eee;
+      margin-bottom: var(--ts-space-lg);
+      padding-bottom: var(--ts-space-lg);
+      border-bottom: 1px solid var(--ts-border-subtle);
     }
     .control-group:last-child {
       border-bottom: none;
     }
-    .control-group h3 {
-      margin: 0 0 15px 0;
-      color: #333;
-      font-size: 16px;
-    }
     .control {
-      margin-bottom: 15px;
+      margin-bottom: var(--ts-space-md);
     }
     .control label {
-      display: block;
-      margin-bottom: 5px;
-      font-size: 14px;
-      color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: var(--ts-space-sm);
     }
-    .control input[type="file"] {
-      width: 100%;
-      padding: 8px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
+    .value {
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
     }
     .checkbox-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: var(--ts-space-sm);
     }
     .checkbox-group label {
       display: flex;
       align-items: center;
       cursor: pointer;
-      font-size: 14px;
+      font-size: 0.8rem;
+      margin-bottom: 0;
+      justify-content: flex-start;
+      gap: var(--ts-space-sm);
     }
     .checkbox-group input[type="checkbox"] {
-      margin-right: 8px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      margin: 5px 0;
-      background: #4a90e2;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 14px;
-      border-radius: 4px;
-      transition: background 0.2s;
-    }
-    button:hover {
-      background: #357abd;
-    }
-    button:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .button-group {
-      display: flex;
-      gap: 10px;
-    }
-    .button-group button {
-      flex: 1;
-    }
-    #processing-status {
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 4px;
-      font-size: 14px;
-      text-align: center;
-      display: none;
-    }
-    #processing-status.success {
-      background: #d4edda;
-      color: #155724;
-      border: 1px solid #c3e6cb;
-    }
-    #processing-status.error {
-      background: #f8d7da;
-      color: #721c24;
-      border: 1px solid #f5c6cb;
-    }
-    #processing-status.processing {
-      background: #d1ecf1;
-      color: #0c5460;
-      border: 1px solid #bee5eb;
-    }
-    .stats {
-      font-size: 12px;
-      color: #666;
-      margin-top: 10px;
-      padding: 10px;
-      background: #f8f9fa;
-      border-radius: 4px;
-    }
-    .stats div {
-      margin: 5px 0;
-    }
-    .stats strong {
-      color: #333;
-    }
-    #canvas-wrapper {
-      background: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      border-radius: 8px;
-      padding: 20px;
+      margin-right: var(--ts-space-sm);
     }
     .drop-zone {
-      border: 2px dashed #ccc;
-      border-radius: 8px;
-      padding: 40px;
+      border: 2px dashed var(--ts-border-default);
+      border-radius: var(--ts-radius-lg);
+      padding: var(--ts-space-xl);
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s;
-      margin-bottom: 20px;
+      transition: all var(--ts-transition-fast);
+      margin-bottom: var(--ts-space-md);
+      background: var(--ts-bg-deep);
     }
-    .drop-zone.dragover {
-      border-color: #4a90e2;
-      background: #f0f7ff;
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--ts-accent-primary);
+      background: var(--ts-bg-control);
     }
     .drop-zone p {
       margin: 0;
-      color: #666;
+      color: var(--ts-text-muted);
+      font-size: 0.8rem;
     }
     .color-control {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--ts-space-sm);
     }
     .color-control input[type="color"] {
-      width: 50px;
-      height: 30px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      width: 40px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-sm);
       cursor: pointer;
+      background: transparent;
+      padding: 0;
     }
-    .animation-controls {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
+    .color-control input[type="range"] {
+      flex: 1;
     }
-    .animation-controls button {
-      padding: 8px 12px;
-      font-size: 13px;
+    .color-control span {
+      min-width: 40px;
+      text-align: right;
+      font-size: 0.75rem;
+      color: var(--ts-text-muted);
     }
     .preview-tabs {
       display: flex;
-      gap: 5px;
-      margin-bottom: 15px;
+      gap: var(--ts-space-xs);
+      margin-bottom: var(--ts-space-md);
     }
     .preview-tabs button {
       flex: 1;
-      padding: 8px;
-      background: #f0f0f0;
-      color: #666;
-      border: 1px solid #ddd;
+      padding: var(--ts-space-sm);
+      background: var(--ts-bg-control);
+      color: var(--ts-text-secondary);
+      border: 1px solid var(--ts-border-default);
+      font-size: 0.75rem;
     }
     .preview-tabs button.active {
-      background: #4a90e2;
-      color: white;
-      border-color: #4a90e2;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border-color: var(--ts-accent-primary);
+    }
+    .animation-controls {
+      display: flex;
+      gap: var(--ts-space-sm);
+      margin-top: var(--ts-space-sm);
+    }
+    .animation-controls button {
+      flex: 1;
+      padding: var(--ts-space-sm);
+      font-size: 0.75rem;
+    }
+    #processing-status {
+      padding: var(--ts-space-sm) var(--ts-space-md);
+      margin-top: var(--ts-space-sm);
+      border-radius: var(--ts-radius-sm);
+      font-size: 0.75rem;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--ts-accent-primary);
+      border: 1px solid var(--ts-accent-primary);
+      display: block;
+    }
+    #processing-status.error {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--ts-accent-danger);
+      border: 1px solid var(--ts-accent-danger);
+      display: block;
+    }
+    #processing-status.processing {
+      background: rgba(255, 149, 0, 0.15);
+      color: var(--ts-accent-secondary);
+      border: 1px solid var(--ts-accent-secondary);
+      display: block;
+    }
+    .stats {
+      font-size: 0.75rem;
+      color: var(--ts-text-secondary);
+      padding: var(--ts-space-md);
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .stats div {
+      margin: var(--ts-space-xs) 0;
+      display: flex;
+      justify-content: space-between;
+    }
+    .stats strong {
+      color: var(--ts-accent-primary);
+    }
+    .stats h4 {
+      margin: 0 0 var(--ts-space-sm) 0;
+      color: var(--ts-text-primary);
+      font-size: 0.8rem;
+    }
+    button.secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    button.secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+    }
+    button.export-btn {
+      background: var(--ts-accent-danger);
+    }
+    button.export-btn:hover {
+      background: #ff6b79;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 0 0 1px var(--ts-border-subtle), 0 20px 60px rgba(0, 0, 0, 0.5);
+      border-radius: var(--ts-radius-md);
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
-
   <div id="canvas-container">
     <div id="canvas-wrapper"></div>
   </div>
-  
+
   <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
     <h2>Debug Preview Mode</h2>
-    <p style="margin-top: 0; color: #666; font-size: 14px;">Visualize pen plotter movements and optimize paths</p>
-    
+    <p style="font-size: 11px; color: var(--ts-text-muted); margin: 0 0 20px 0;">
+      Visualize pen plotter movements and optimize paths
+    </p>
+
     <div class="control-group">
-      <h3>📁 Load Paths</h3>
+      <h3>Load Paths</h3>
       <div class="drop-zone" id="dropZone">
         <p>Drop SVG/JSON file here or click to browse</p>
         <input type="file" id="fileInput" accept=".svg,.json" style="display: none;">
       </div>
       <button onclick="loadTestPattern()">Load Test Pattern</button>
     </div>
-    
+
     <div class="control-group">
-      <h3>👁️ Visualization Options</h3>
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square_medium" selected>Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Visualization Options</h3>
       <div class="checkbox-group">
         <label>
           <input type="checkbox" id="showTravelPaths" checked> Show Travel Paths (pen up)
@@ -247,9 +253,9 @@
         </label>
       </div>
     </div>
-    
+
     <div class="control-group">
-      <h3>🎨 Colors</h3>
+      <h3>Colors</h3>
       <div class="control">
         <label>Drawing Color:</label>
         <div class="color-control">
@@ -267,49 +273,49 @@
         </div>
       </div>
     </div>
-    
+
     <div class="control-group">
-      <h3>🎭 Preview Mode</h3>
+      <h3>Preview Mode</h3>
       <div class="preview-tabs">
         <button class="active" onclick="setPreviewMode('static')">Static</button>
         <button onclick="setPreviewMode('animated')">Animated</button>
       </div>
       <div id="animationControls" style="display: none;">
         <div class="animation-controls">
-          <button onclick="playAnimation()">▶ Play</button>
-          <button onclick="pauseAnimation()">⏸ Pause</button>
-          <button onclick="resetAnimation()">⏹ Reset</button>
+          <button onclick="playAnimation()">Play</button>
+          <button onclick="pauseAnimation()">Pause</button>
+          <button onclick="resetAnimation()">Reset</button>
         </div>
         <div class="control">
-          <label>Animation Speed: <span id="animSpeedValue">1x</span></label>
+          <label>Animation Speed: <span class="value" id="animSpeedValue">1x</span></label>
           <input type="range" id="animSpeed" min="0.1" max="5" step="0.1" value="1">
         </div>
       </div>
     </div>
-    
+
     <div class="control-group">
-      <h3>⚡ Path Optimization</h3>
+      <h3>Path Optimization</h3>
       <button onclick="optimizePaths()" id="optimizeBtn" disabled>Optimize Path Order</button>
       <div class="control">
-        <label>Join Threshold: <span id="joinThresholdValue">5</span>px</label>
+        <label>Join Threshold: <span class="value" id="joinThresholdValue">5</span>px</label>
         <input type="range" id="joinThreshold" min="0" max="20" step="1" value="5">
       </div>
       <div class="control">
-        <label>Simplify Tolerance: <span id="simplifyToleranceValue">1</span>px</label>
+        <label>Simplify Tolerance: <span class="value" id="simplifyToleranceValue">1</span>px</label>
         <input type="range" id="simplifyTolerance" min="0" max="5" step="0.1" value="1">
       </div>
     </div>
-    
+
     <div class="control-group">
-      <h3>💾 Export</h3>
-      <button onclick="exportDebugImage()" id="exportImageBtn" disabled>Export Debug Image</button>
-      <button onclick="exportOptimizedSVG()" id="exportSVGBtn" disabled>Export Optimized SVG</button>
-      <button onclick="exportStats()" id="exportStatsBtn" disabled>Export Statistics</button>
+      <h3>Export</h3>
+      <button onclick="exportDebugImage()" id="exportImageBtn" class="export-btn" disabled>Export Debug Image</button>
+      <button onclick="exportOptimizedSVG()" id="exportSVGBtn" class="secondary" disabled>Export Optimized SVG</button>
+      <button onclick="exportStats()" id="exportStatsBtn" class="secondary" disabled>Export Statistics</button>
       <div id="processing-status"></div>
     </div>
-    
+
     <div class="stats" id="stats" style="display: none;">
-      <h4 style="margin-top: 0;">Path Statistics</h4>
+      <h4>Path Statistics</h4>
       <div>Paths: <strong id="pathCount">0</strong></div>
       <div>Points: <strong id="pointCount">0</strong></div>
       <div>Pen Lifts: <strong id="penLifts">0</strong></div>
@@ -319,6 +325,9 @@
       <div>Efficiency: <strong id="efficiency">0</strong>%</div>
       <div>Est. Time: <strong id="estimatedTime">0s</strong></div>
     </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
   </div>
 
   <script>
@@ -337,12 +346,12 @@
       const canvasSize = 600;
       canvas = createCanvas(canvasSize, canvasSize);
       canvas.parent('canvas-wrapper');
-      
+
       debugPreview = new DebugPreview();
       pathOptimizer = new PathOptimizer();
-      
+
       background(255);
-      
+
       setupEventListeners();
     }
 
@@ -350,7 +359,7 @@
       // File drop zone
       const dropZone = document.getElementById('dropZone');
       const fileInput = document.getElementById('fileInput');
-      
+
       dropZone.addEventListener('click', () => fileInput.click());
       dropZone.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -364,16 +373,16 @@
         dropZone.classList.remove('dragover');
         handleFileUpload(e.dataTransfer.files[0]);
       });
-      
+
       fileInput.addEventListener('change', (e) => {
         handleFileUpload(e.target.files[0]);
       });
-      
+
       // Visualization options
       ['showTravelPaths', 'showStartEnd', 'showDirection', 'showPenLifts', 'showStats'].forEach(id => {
         document.getElementById(id).addEventListener('change', updatePreview);
       });
-      
+
       // Color controls
       ['drawColor', 'drawOpacity', 'travelColor', 'travelOpacity'].forEach(id => {
         document.getElementById(id).addEventListener('input', (e) => {
@@ -381,11 +390,11 @@
           updatePreview();
         });
       });
-      
+
       // Sliders
       ['joinThreshold', 'simplifyTolerance', 'animSpeed'].forEach(id => {
         document.getElementById(id).addEventListener('input', (e) => {
-          document.getElementById(id + 'Value').textContent = e.target.value + 
+          document.getElementById(id + 'Value').textContent = e.target.value +
             (id === 'animSpeed' ? 'x' : 'px');
         });
       });
@@ -393,7 +402,7 @@
 
     function handleFileUpload(file) {
       if (!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
@@ -402,7 +411,7 @@
           } else if (file.name.endsWith('.svg')) {
             currentPaths = parseSVG(e.target.result);
           }
-          
+
           optimizedPaths = [];
           updatePreview();
           enableControls();
@@ -524,7 +533,7 @@
           closed: false
         }
       ];
-      
+
       optimizedPaths = [];
       updatePreview();
       enableControls();
@@ -534,7 +543,7 @@
     function generateSpiral(cx, cy, radius, turns) {
       const points = [];
       const steps = turns * 50;
-      
+
       for (let i = 0; i <= steps; i++) {
         const t = i / steps;
         const angle = t * turns * TWO_PI;
@@ -544,7 +553,7 @@
           y: cy + sin(angle) * r
         });
       }
-      
+
       return points;
     }
 
@@ -703,17 +712,17 @@
 
     function setPreviewMode(mode) {
       previewMode = mode;
-      
+
       // Update tab buttons
       document.querySelectorAll('.preview-tabs button').forEach(btn => {
         btn.classList.remove('active');
       });
       event.target.classList.add('active');
-      
+
       // Show/hide animation controls
-      document.getElementById('animationControls').style.display = 
+      document.getElementById('animationControls').style.display =
         mode === 'animated' ? 'block' : 'none';
-      
+
       if (mode === 'static') {
         pauseAnimation();
         updatePreview();
@@ -722,12 +731,12 @@
 
     function playAnimation() {
       if (currentPaths.length === 0) return;
-      
+
       const paths = optimizedPaths.length > 0 ? optimizedPaths : currentPaths;
       const speed = parseFloat(document.getElementById('animSpeed').value);
-      
+
       isAnimating = true;
-      
+
       // Create animated preview
       animationCanvas = debugPreview.createAnimatedPreview(
         paths,
@@ -737,11 +746,11 @@
           // Update p5 canvas with animation frame
           clear();
           background(255);
-          
+
           const img = createImg(canvas.toDataURL());
           img.hide();
           image(img, 0, 0);
-          
+
           // Update progress
           const progress = Math.floor(state.progress * 100);
           showStatus(`Animation: ${progress}% complete`, 'processing');
@@ -760,26 +769,26 @@
 
     function optimizePaths() {
       if (currentPaths.length === 0) return;
-      
+
       showStatus('Optimizing paths...', 'processing');
-      
+
       try {
         // Get optimization parameters
         const joinThreshold = parseFloat(document.getElementById('joinThreshold').value);
         const simplifyTolerance = parseFloat(document.getElementById('simplifyTolerance').value);
-        
+
         // Join nearby paths
         let paths = pathOptimizer.joinPaths(currentPaths, joinThreshold);
-        
+
         // Simplify paths
         paths = paths.map(path => ({
           ...path,
           points: pathOptimizer.simplifyPath(path.points, simplifyTolerance)
         }));
-        
+
         // Optimize order (TSP)
         optimizedPaths = pathOptimizer.optimizeOrder(paths);
-        
+
         updatePreview();
         showStatus('Paths optimized successfully', 'success');
       } catch (error) {
@@ -790,36 +799,36 @@
     function exportDebugImage() {
       const paths = optimizedPaths.length > 0 ? optimizedPaths : currentPaths;
       if (paths.length === 0) return;
-      
+
       // Create high-res preview
       const preview = debugPreview.createPreview(paths, 1200, 1200);
-      
+
       // Download image
       const link = document.createElement('a');
       link.download = 'debug-preview.png';
       link.href = preview.imageData;
       link.click();
-      
+
       showStatus('Debug image exported', 'success');
     }
 
     function exportOptimizedSVG() {
       const paths = optimizedPaths.length > 0 ? optimizedPaths : currentPaths;
       if (paths.length === 0) return;
-      
+
       // Convert to SVG
       const svg = pathOptimizer.cleanSVG(pathOptimizer.toSVGPath(paths));
-      
+
       // Create full SVG document
       const svgDoc = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke="black" stroke-width="1">
-    ${paths.map(path => 
+    ${paths.map(path =>
       `<path d="${pathOptimizer.toSVGPath([path])}" />`
     ).join('\n    ')}
   </g>
 </svg>`;
-      
+
       // Download SVG
       const blob = new Blob([svgDoc], { type: 'image/svg+xml' });
       const url = URL.createObjectURL(blob);
@@ -828,13 +837,13 @@
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
-      
+
       showStatus('SVG exported', 'success');
     }
 
     function exportStats() {
       const stats = document.getElementById('stats').innerText;
-      
+
       const blob = new Blob([stats], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -842,7 +851,7 @@
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
-      
+
       showStatus('Statistics exported', 'success');
     }
 
@@ -874,7 +883,7 @@
       status.textContent = message;
       status.className = type;
       status.style.display = 'block';
-      
+
       if (type !== 'processing') {
         setTimeout(() => {
           status.style.display = 'none';
