@@ -6,411 +6,395 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <title>Circle Packing Generator</title>
+  <title>Circle Packing Generator - Pen Plotter</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
-  
+
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      min-height: 100vh;
-      padding: 20px;
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
     }
-
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 350px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .panel {
-      background: white;
-      border-radius: 12px;
-      padding: 24px;
-      max-height: 90vh;
-      overflow-y: auto;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    }
-
-    h1 {
-      color: white;
-      margin-bottom: 20px;
-      font-size: 2.5em;
-      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-    }
-
-    .subtitle {
-      color: rgba(255, 255, 255, 0.9);
-      margin-bottom: 30px;
-      font-size: 1.1em;
-    }
-
-    .control-group {
-      margin-bottom: 24px;
-    }
-
-    .control-group h3 {
-      margin-bottom: 12px;
-      color: #333;
-      font-size: 0.9em;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 8px;
-      color: #555;
-      font-size: 0.9em;
-      font-weight: 500;
-    }
-
-    input[type="range"],
-    input[type="number"],
-    select,
-    input[type="file"] {
-      width: 100%;
-      padding: 8px;
-      margin-bottom: 12px;
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      font-size: 0.9em;
-    }
-
-    input[type="range"] {
-      padding: 0;
-    }
-
-    .range-value {
-      float: right;
-      color: #f5576c;
-      font-weight: 600;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button.secondary {
-      background: #6c757d;
-    }
-
-    button.secondary:hover {
-      box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
-    }
-
-    .canvas-container {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    #canvas-container {
+      flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
     }
-
-    .stats {
-      margin-top: 16px;
-      padding: 16px;
-      background: #f8f9fa;
-      border-radius: 8px;
-      font-size: 0.85em;
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
     }
-
-    .stats div {
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 8px;
-      color: #555;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
     }
-
-    .stats div:last-child {
-      margin-bottom: 0;
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
     }
-
-    .stats .value {
-      font-weight: 600;
-      color: #f5576c;
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
     }
-
-    .algorithm-info {
-      background: #ffe5f0;
-      padding: 12px;
-      border-radius: 8px;
-      font-size: 0.85em;
-      color: #721c24;
-      margin-bottom: 16px;
-      line-height: 1.5;
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
     }
-
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
     .button-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin-bottom: 8px;
     }
-
-    .checkbox-group {
+    .checkbox-container {
       display: flex;
       align-items: center;
-      margin-bottom: 12px;
+      gap: 8px;
     }
-
-    .checkbox-group input[type="checkbox"] {
-      width: auto;
-      margin-right: 8px;
+    .checkbox-container input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
     }
-
-    .checkbox-group label {
+    .checkbox-container label {
       margin-bottom: 0;
     }
-
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stats .stat-value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .progress-info {
+      background: var(--ts-bg-deep);
+      padding: 8px 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-accent-primary);
+      margin-bottom: 12px;
+      display: none;
+    }
     #imagePreview {
       max-width: 100%;
       margin-bottom: 12px;
-      border-radius: 6px;
+      border-radius: var(--ts-radius-md);
       display: none;
     }
-
-    .progress-info {
-      background: #e7f3ff;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.85em;
-      color: #004085;
-      margin-bottom: 12px;
-      display: none;
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <a href="../../index.html" class="back-link">Back to Index</a>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
 
-  <h1>⭕ Circle Packing</h1>
-  <p class="subtitle">Generate organic patterns by packing circles without overlapping</p>
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
 
-  <div class="container">
-    <!-- Controls Panel -->
-    <div class="panel">
-      <div class="algorithm-info">
-        <strong>Circle Packing:</strong> Creates beautiful organic patterns by placing circles that never overlap. Perfect for pen plotters!
-      </div>
+  <div id="controls">
+    <h2>Circle Packing</h2>
 
-      <!-- Preset Manager Container -->
-      <div id="preset-container"></div>
+    <div class="algorithm-info">
+      <strong>Circle Packing:</strong> Creates beautiful organic patterns by placing circles that never overlap. Perfect for pen plotters!
+    </div>
 
-      <!-- Canvas Settings -->
-      <div class="control-group">
-        <h3>📐 Canvas Settings</h3>
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
 
-        <label>
-          Paper Size
-          <select id="paperSize">
-            <option value="square800" selected>Square (800×800)</option>
-            <option value="landscape800x600">Landscape (800×600)</option>
-            <option value="a4portrait">A4 Portrait</option>
-            <option value="a4landscape">A4 Landscape</option>
-            <option value="letterportrait">Letter Portrait</option>
-            <option value="letterlandscape">Letter Landscape</option>
-          </select>
-        </label>
-
-        <label>
-          Background Color
-          <input type="color" id="bgColor" value="#ffffff">
-        </label>
-
-        <label>
-          Stroke Color
-          <input type="color" id="strokeColor" value="#000000">
-        </label>
+    <!-- Canvas Settings -->
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
       </div>
       <div class="control">
-        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+        <label>Background Color <input type="color" id="bgColor" value="#ffffff"></label>
       </div>
-
-      <!-- Packing Mode -->
-      <div class="control-group">
-        <h3>📦 Packing Mode</h3>
-
-        <label>
-          Algorithm
-          <select id="packingMode">
-            <option value="random">Random Placement</option>
-            <option value="front">Front Placement (Ordered)</option>
-            <option value="image">Image-Based Size</option>
-            <option value="growing">Growing Circles</option>
-          </select>
-        </label>
-
-        <label>
-          Max Attempts: <span class="range-value" id="maxAttemptsValue">1000</span>
-          <input type="range" id="maxAttempts" min="100" max="5000" value="1000" step="100">
-        </label>
-
-        <label>
-          Seed
-          <input type="number" id="seed" value="42" min="1" max="99999">
-        </label>
+      <div class="control">
+        <label>Stroke Color <input type="color" id="strokeColor" value="#000000"></label>
       </div>
-
-      <!-- Circle Size -->
-      <div class="control-group">
-        <h3>📏 Circle Size</h3>
-
-        <label>
-          Min Radius: <span class="range-value" id="minRadiusValue">2</span>
-          <input type="range" id="minRadius" min="1" max="50" value="2" step="1">
-        </label>
-
-        <label>
-          Max Radius: <span class="range-value" id="maxRadiusValue">50</span>
-          <input type="range" id="maxRadius" min="5" max="200" value="50" step="5">
-        </label>
-
-        <label>
-          Size Distribution
-          <select id="sizeDistribution">
-            <option value="uniform">Uniform</option>
-            <option value="powerlaw">Power Law (More Small)</option>
-            <option value="gaussian">Gaussian (Medium Bias)</option>
-            <option value="inverse">Inverse (More Large)</option>
-          </select>
-        </label>
-      </div>
-
-      <!-- Image Upload (for image mode) -->
-      <div class="control-group" id="imageControls" style="display: none;">
-        <h3>🖼️ Source Image</h3>
-
-        <label>
-          Upload Image
-          <input type="file" id="imageUpload" accept="image/*">
-        </label>
-
-        <img id="imagePreview" alt="Preview">
-
-        <label>
-          Size Influence: <span class="range-value" id="sizeInfluenceValue">2.0</span>
-          <input type="range" id="sizeInfluence" min="0.5" max="5" value="2.0" step="0.1">
-        </label>
-      </div>
-
-      <!-- Display Options -->
-      <div class="control-group">
-        <h3>🎨 Display Options</h3>
-
-        <label>
-          Style
-          <select id="displayStyle">
-            <option value="outline">Outline Only</option>
-            <option value="filled">Filled</option>
-            <option value="concentric">Concentric Rings</option>
-            <option value="radial">Radial Lines</option>
-            <option value="tangent">Tangent Lines</option>
-          </select>
-        </label>
-
-        <label>
-          Line Weight: <span class="range-value" id="lineWeightValue">1.5</span>
-          <input type="range" id="lineWeight" min="0.5" max="5" value="1.5" step="0.1">
-        </label>
-
-        <label>
-          Detail Level: <span class="range-value" id="detailLevelValue">5</span>
-          <input type="range" id="detailLevel" min="1" max="20" value="5" step="1">
-        </label>
-
-        <div class="checkbox-group">
-          <input type="checkbox" id="showSourceImage">
-          <label for="showSourceImage">Show Source Image</label>
-        </div>
-
-        <div class="checkbox-group">
-          <input type="checkbox" id="animateGrowth">
-          <label for="animateGrowth">Animate Growth</label>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="control-group">
-        <h3>⚡ Actions</h3>
-
-        <button onclick="startPacking()">Start Packing</button>
-        <button onclick="stopPacking()">Stop</button>
-
-        <div class="button-group">
-          <button class="secondary" onclick="randomizeSeed()">Random Seed</button>
-          <button class="secondary" onclick="clearCanvas()">Clear</button>
-        </div>
-
-        <button onclick="exportSVG()">Export SVG</button>
-        <button onclick="exportPNG()">Export PNG</button>
-
-        <div class="progress-info" id="progressInfo">
-          Packing... <span id="progressText">0 circles</span>
-        </div>
-      </div>
-
-      <!-- Statistics -->
-      <div class="stats">
-        <div>
-          <span>Circles:</span>
-          <span class="value" id="statCircles">0</span>
-        </div>
-        <div>
-          <span>Coverage:</span>
-          <span class="value" id="statCoverage">0%</span>
-        </div>
-        <div>
-          <span>Attempts:</span>
-          <span class="value" id="statAttempts">0</span>
-        </div>
-        <div>
-          <span>Status:</span>
-          <span class="value" id="statStatus">Ready</span>
-        </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
       </div>
     </div>
 
-    <!-- Canvas -->
-    <div class="canvas-container">
-      <div id="canvas"></div>
+    <!-- Packing Mode -->
+    <div class="control-group">
+      <h3>Packing Mode</h3>
+      <div class="control">
+        <label>Algorithm</label>
+        <select id="packingMode">
+          <option value="random">Random Placement</option>
+          <option value="front">Front Placement (Ordered)</option>
+          <option value="image">Image-Based Size</option>
+          <option value="growing">Growing Circles</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Max Attempts <span class="value" id="maxAttemptsValue">1000</span></label>
+        <input type="range" id="maxAttempts" min="100" max="5000" value="1000" step="100">
+      </div>
+      <div class="control">
+        <label>Seed</label>
+        <input type="number" id="seed" value="42" min="1" max="99999">
+      </div>
+    </div>
+
+    <!-- Circle Size -->
+    <div class="control-group">
+      <h3>Circle Size</h3>
+      <div class="control">
+        <label>Min Radius <span class="value" id="minRadiusValue">2</span></label>
+        <input type="range" id="minRadius" min="1" max="50" value="2" step="1">
+      </div>
+      <div class="control">
+        <label>Max Radius <span class="value" id="maxRadiusValue">50</span></label>
+        <input type="range" id="maxRadius" min="5" max="200" value="50" step="5">
+      </div>
+      <div class="control">
+        <label>Size Distribution</label>
+        <select id="sizeDistribution">
+          <option value="uniform">Uniform</option>
+          <option value="powerlaw">Power Law (More Small)</option>
+          <option value="gaussian">Gaussian (Medium Bias)</option>
+          <option value="inverse">Inverse (More Large)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Image Upload (for image mode) -->
+    <div class="control-group" id="imageControls" style="display: none;">
+      <h3>Source Image</h3>
+      <div class="control">
+        <label>Upload Image</label>
+        <input type="file" id="imageUpload" accept="image/*">
+      </div>
+      <img id="imagePreview" alt="Preview">
+      <div class="control">
+        <label>Size Influence <span class="value" id="sizeInfluenceValue">2.0</span></label>
+        <input type="range" id="sizeInfluence" min="0.5" max="5" value="2.0" step="0.1">
+      </div>
+    </div>
+
+    <!-- Display Options -->
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Style</label>
+        <select id="displayStyle">
+          <option value="outline">Outline Only</option>
+          <option value="filled">Filled</option>
+          <option value="concentric">Concentric Rings</option>
+          <option value="radial">Radial Lines</option>
+          <option value="tangent">Tangent Lines</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Weight <span class="value" id="lineWeightValue">1.5</span></label>
+        <input type="range" id="lineWeight" min="0.5" max="5" value="1.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Detail Level <span class="value" id="detailLevelValue">5</span></label>
+        <input type="range" id="detailLevel" min="1" max="20" value="5" step="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showSourceImage">
+        <label for="showSourceImage">Show Source Image</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animateGrowth">
+        <label for="animateGrowth">Animate Growth</label>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button onclick="startPacking()">Start Packing</button>
+      <button onclick="stopPacking()" class="secondary">Stop</button>
+      <div class="button-group">
+        <button class="secondary" onclick="randomizeSeed()">Random Seed</button>
+        <button class="secondary" onclick="clearCanvas()">Clear</button>
+      </div>
+      <div class="progress-info" id="progressInfo">
+        Packing... <span id="progressText">0 circles</span>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()" class="secondary">Export PNG</button>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats">
+      <div>
+        <span>Circles:</span>
+        <span class="stat-value" id="statCircles">0</span>
+      </div>
+      <div>
+        <span>Coverage:</span>
+        <span class="stat-value" id="statCoverage">0%</span>
+      </div>
+      <div>
+        <span>Attempts:</span>
+        <span class="stat-value" id="statAttempts">0</span>
+      </div>
+      <div>
+        <span>Status:</span>
+        <span class="stat-value" id="statStatus">Ready</span>
+      </div>
     </div>
   </div>
 
@@ -444,7 +428,6 @@
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
-        canvasControls.setupRandomizeButton();
 
     // p5.js setup
     function setup() {
@@ -452,6 +435,8 @@
       const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas');
       background(params.bgColor);
+
+      canvasControls.setupRandomizeButton();
 
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
