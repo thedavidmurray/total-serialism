@@ -3,6 +3,7 @@
  * Works without build tooling; attach to window as CanvasLayout.
  */
 (function () {
+  // Base paper presets (portrait orientation by default)
   const paperPresets = {
     a5:   { width: 874,  height: 1240, label: 'A5 (148×210mm)', mm: '148×210' },
     a4:   { width: 1240, height: 1754, label: 'A4 (210×297mm)', mm: '210×297' },
@@ -12,7 +13,43 @@
     custom: { width: 800, height: 600, label: 'Custom', mm: '800×600px' }
   };
 
+  // Extended presets with orientation and common sizes
+  const extendedPresets = {
+    // Square sizes
+    square800: { width: 800, height: 800, label: 'Square (800×800)', mm: '800×800px' },
+    square1200: { width: 1200, height: 1200, label: 'Square (1200×1200)', mm: '1200×1200px' },
+    square_medium: { width: 800, height: 800, label: 'Square (800×800)', mm: '800×800px' },
+    square_large: { width: 1200, height: 1200, label: 'Square (1200×1200)', mm: '1200×1200px' },
+    // Landscape generic
+    landscape800x600: { width: 800, height: 600, label: 'Landscape (800×600)', mm: '800×600px' },
+    // A5 variants
+    a5portrait: { width: 874, height: 1240, label: 'A5 Portrait', mm: '148×210' },
+    a5landscape: { width: 1240, height: 874, label: 'A5 Landscape', mm: '210×148' },
+    A5_portrait: { width: 874, height: 1240, label: 'A5 Portrait', mm: '148×210' },
+    A5_landscape: { width: 1240, height: 874, label: 'A5 Landscape', mm: '210×148' },
+    // A4 variants
+    a4portrait: { width: 1240, height: 1754, label: 'A4 Portrait', mm: '210×297' },
+    a4landscape: { width: 1754, height: 1240, label: 'A4 Landscape', mm: '297×210' },
+    A4_portrait: { width: 1240, height: 1754, label: 'A4 Portrait', mm: '210×297' },
+    A4_landscape: { width: 1754, height: 1240, label: 'A4 Landscape', mm: '297×210' },
+    // A3 variants
+    a3portrait: { width: 1754, height: 2480, label: 'A3 Portrait', mm: '297×420' },
+    a3landscape: { width: 2480, height: 1754, label: 'A3 Landscape', mm: '420×297' },
+    A3_portrait: { width: 1754, height: 2480, label: 'A3 Portrait', mm: '297×420' },
+    A3_landscape: { width: 2480, height: 1754, label: 'A3 Landscape', mm: '420×297' },
+    // Letter variants
+    letterportrait: { width: 1275, height: 1650, label: 'Letter Portrait', mm: '216×279' },
+    letterlandscape: { width: 1650, height: 1275, label: 'Letter Landscape', mm: '279×216' },
+    letter_portrait: { width: 1275, height: 1650, label: 'Letter Portrait', mm: '216×279' },
+    letter_landscape: { width: 1650, height: 1275, label: 'Letter Landscape', mm: '279×216' }
+  };
+
   function getSize(preset = 'custom') {
+    // Check extended presets first (handles orientation variants)
+    if (extendedPresets[preset]) {
+      return extendedPresets[preset];
+    }
+    // Fall back to base presets
     return paperPresets[preset] || paperPresets.custom;
   }
 
@@ -106,5 +143,5 @@
     };
   }
 
-  window.CanvasLayout = { paperPresets, getSize, fitToPaper, drawFrame, attachFitZoom };
+  window.CanvasLayout = { paperPresets, extendedPresets, getSize, fitToPaper, drawFrame, attachFitZoom };
 })();
