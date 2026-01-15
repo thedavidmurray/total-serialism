@@ -243,6 +243,7 @@
     let presetManager;
 
     let params = {
+      paperSize: 'square_medium',
       rule: 30,
       cellWidth: 200,
       cellHeight: 200,
@@ -262,8 +263,12 @@
     };
 
     function setup() {
-      let canvas = createCanvas(800, 600);
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
 
       // Initialize
       setupControls();
@@ -367,7 +372,18 @@
       history.push([...cells]);
     }
 
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generate();
+    }
+
     function setupControls() {
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
       // Rule slider
       document.getElementById('rule').addEventListener('input', (e) => {
         rule = parseInt(e.target.value);
@@ -492,6 +508,23 @@
       for (let g = 0; g < cellHeight - 1; g++) {
         stepGeneration();
       }
+
+      // Update stats
+      if (window.statsDisplay) {
+        const activeCells = history.flat().filter(c => c === 1).length;
+        const totalCells = history.length * cellWidth;
+        const density = ((activeCells / totalCells) * 100).toFixed(1);
+
+        window.statsDisplay.update({
+          'Rule': rule,
+          'Generations': history.length,
+          'Grid': `${cellWidth} × ${cellHeight}`,
+          'Cell Size': `${cellSize}px`,
+          'Pattern': params.startPattern,
+          'Active Cells': activeCells.toLocaleString(),
+          'Density': `${density}%`
+        });
+      }
     }
 
     function stepGeneration() {
@@ -518,10 +551,28 @@
     function reset() {
       initializeCells();
       generation = 0;
+
+      // Update stats
+      if (window.statsDisplay) {
+        const activeCells = history.flat().filter(c => c === 1).length;
+        const totalCells = history.length * cellWidth;
+        const density = ((activeCells / totalCells) * 100).toFixed(1);
+
+        window.statsDisplay.update({
+          'Rule': rule,
+          'Generations': history.length,
+          'Grid': `${cellWidth} × ${cellHeight}`,
+          'Cell Size': `${cellSize}px`,
+          'Pattern': params.startPattern,
+          'Active Cells': activeCells.toLocaleString(),
+          'Density': `${density}%`
+        });
+      }
     }
 
     function setRule(r) {
       rule = r;
+      params.rule = r;
       document.getElementById('rule').value = r;
       document.getElementById('rule-val').textContent = r;
       document.getElementById('ruleInput').value = r;
@@ -661,5 +712,9 @@
       gif.render();
     }
   </script>
+
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>
