@@ -701,9 +701,8 @@ describe('TSStatsDisplay', () => {
         expect(length).toBeCloseTo(26.46, 1);
       });
 
-      test.skip('should handle zero coordinates correctly (KNOWN BUG)', () => {
-        // BUG: Implementation uses (p2.x || p2[0]) which fails when x=0
-        // This test documents the expected behavior - currently fails
+      test('should handle zero coordinates correctly', () => {
+        // Fixed: Now uses !== undefined instead of || to handle x=0 or y=0
         const paths = [[{ x: 0, y: 0 }, { x: 100, y: 0 }]];
         const length = TSStatsDisplay.calculatePathLength(paths);
         // Should calculate correctly even when x=0 or y=0

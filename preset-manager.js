@@ -59,9 +59,9 @@ class PresetManager {
 
     const data = this.onSave();
     const preset = {
-      id: Date.now().toString(),
+      id: Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9),
       name: name.trim(),
-      data: data,
+      data: JSON.parse(JSON.stringify(data)), // Deep clone to prevent mutation
       timestamp: new Date().toISOString(),
       algorithmId: this.algorithmId
     };
@@ -423,9 +423,13 @@ class PresetManager {
   }
 
   escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+    // String-based escaping - more reliable across environments
+    return String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }
 

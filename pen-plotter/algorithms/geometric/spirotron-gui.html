@@ -338,12 +338,7 @@
       });
 
       // Initialize UX components
-      panelController = new TSPanelController({
-        onToggle: (collapsed) => {
-          // Resize canvas when panel toggles
-          windowResized();
-        }
-      }).attach();
+      panelController = new TSPanelController().attach();
 
       statsDisplay = new TSStatsDisplay().attach();
 

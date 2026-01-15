@@ -175,9 +175,7 @@
       canvas.parent('canvas-container');
 
       // Initialize panel controller and stats display
-      panelController = new TSPanelController({
-        onToggle: (collapsed) => { windowResized(); }
-      }).attach();
+      panelController = new TSPanelController().attach();
       statsDisplay = new TSStatsDisplay().attach();
 
       // Setup controls

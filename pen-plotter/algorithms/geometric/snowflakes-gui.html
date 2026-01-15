@@ -268,9 +268,7 @@
       svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
 
-      panelController = new TSPanelController({
-        onToggle: (collapsed) => { windowResized(); }
-      }).attach();
+      panelController = new TSPanelController().attach();
       statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();

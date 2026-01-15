@@ -1641,6 +1641,11 @@ body:has(.ts-stats-bar:not(.hidden)) #controls {
   letter-spacing: 0.05em;
 }
 
+.ts-stats-label::after {
+  content: ':';
+  margin-right: 0.25em;
+}
+
 .ts-stats-value {
   color: var(--ts-accent-primary);
   font-weight: 500;

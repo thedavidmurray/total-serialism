@@ -201,24 +201,30 @@ describe('PresetManager', () => {
     test('should export preset as JSON', () => {
       const preset = presetManager.save('Export Test');
 
-      // Mock document and URL APIs
-      global.document = {
-        createElement: jest.fn(() => ({
-          click: jest.fn(),
-          href: '',
-          download: ''
-        }))
+      // Mock document.createElement
+      const mockLink = {
+        click: jest.fn(),
+        href: '',
+        download: ''
       };
+      const createElementSpy = jest.spyOn(document, 'createElement').mockReturnValue(mockLink);
 
+      // Mock URL APIs (jsdom doesn't have these, so define them)
+      const originalURL = global.URL;
       global.URL = {
+        ...originalURL,
         createObjectURL: jest.fn(() => 'blob:test'),
         revokeObjectURL: jest.fn()
       };
 
       presetManager.exportPreset(preset.id);
 
-      expect(document.createElement).toHaveBeenCalledWith('a');
-      expect(URL.createObjectURL).toHaveBeenCalled();
+      expect(createElementSpy).toHaveBeenCalledWith('a');
+      expect(global.URL.createObjectURL).toHaveBeenCalled();
+
+      // Cleanup
+      createElementSpy.mockRestore();
+      global.URL = originalURL;
     });
   });
 

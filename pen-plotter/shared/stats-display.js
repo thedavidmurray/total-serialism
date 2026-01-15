@@ -448,11 +448,16 @@
       const points = path.points || path;
       if (!Array.isArray(points) || points.length < 2) return;
 
+      // Helper to get coordinate (handles both {x,y} objects and [x,y] arrays)
+      // Uses !== undefined to correctly handle zero values
+      const getX = (p) => p.x !== undefined ? p.x : p[0];
+      const getY = (p) => p.y !== undefined ? p.y : p[1];
+
       for (let i = 1; i < points.length; i++) {
         const p1 = points[i - 1];
         const p2 = points[i];
-        const dx = (p2.x || p2[0]) - (p1.x || p1[0]);
-        const dy = (p2.y || p2[1]) - (p1.y || p1[1]);
+        const dx = getX(p2) - getX(p1);
+        const dy = getY(p2) - getY(p1);
         totalLength += Math.sqrt(dx * dx + dy * dy);
       }
     });

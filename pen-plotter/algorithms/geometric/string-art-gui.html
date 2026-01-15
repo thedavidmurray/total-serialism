@@ -194,9 +194,7 @@
     function setup() {
       canvas = createCanvas(SIZE, SIZE);
       canvas.parent('canvas-container');
-      panelController = new TSPanelController({
-        onToggle: (collapsed) => { windowResized(); }
-      }).attach();
+      panelController = new TSPanelController().attach();
       statsDisplay = new TSStatsDisplay().attach();
       setupControls();
       canvasControls.setupRandomizeButton();

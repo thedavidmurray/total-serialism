@@ -708,11 +708,7 @@
       });
 
       // Initialize panel controller
-      panelController = new TSPanelController({
-        onToggle: (collapsed) => {
-          windowResized();
-        }
-      }).attach();
+      panelController = new TSPanelController().attach();
 
       // Initialize stats display
       statsDisplay = new TSStatsDisplay().attach();
