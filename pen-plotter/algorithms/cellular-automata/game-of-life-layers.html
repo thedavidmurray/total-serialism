@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>Game of Life - Multi-Layer Edition</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
 
   <!-- Total Serialism Design System -->
@@ -793,72 +794,99 @@
       updateDrawLayerSelect();
     }
 
-    // Export functions
+    // Export functions - using manual SVG generation for compatibility
+    function buildSVGString(w, h, content) {
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <rect width="100%" height="100%" fill="white"/>
+${content}
+</svg>`;
+    }
+
+    function buildRegistrationMarks(w, h) {
+      const marks = [];
+      const size = 10;
+      // Corner marks
+      [[0, 0], [w - size, 0], [0, h - size], [w - size, h - size]].forEach(([x, y]) => {
+        marks.push(`  <rect x="${x}" y="${y}" width="${size}" height="${size}" fill="none" stroke="black" stroke-width="0.5"/>`);
+        marks.push(`  <line x1="${x}" y1="${y}" x2="${x + size}" y2="${y + size}" stroke="black" stroke-width="0.5"/>`);
+        marks.push(`  <line x1="${x + size}" y1="${y}" x2="${x}" y2="${y + size}" stroke="black" stroke-width="0.5"/>`);
+      });
+      return marks.join('\n');
+    }
+
+    function downloadSVG(svgString, filename) {
+      const blob = new Blob([svgString], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
     function exportLayersSeparately() {
+      const w = gridSize * 10 + 40;
+      const h = gridSize * 10 + 40;
+      const includeReg = document.getElementById('includeRegistration').checked;
+
       layers.forEach(layer => {
         if (!layer.visible) return;
 
-        let svg = createGraphics(gridSize * 10 + 40, gridSize * 10 + 40, SVG);
-        svg.background(255);
-
-        // Registration marks
-        if (document.getElementById('includeRegistration').checked) {
-          drawRegistrationMarks(svg);
-        }
+        const rects = [];
 
         // Draw cells
-        svg.fill(0);
-        svg.noStroke();
         for (let i = 0; i < gridSize; i++) {
           for (let j = 0; j < gridSize; j++) {
             if (layer.grid[i][j] === 1) {
-              svg.rect(20 + i * 10, 20 + j * 10, 10, 10);
+              rects.push(`  <rect x="${20 + i * 10}" y="${20 + j * 10}" width="10" height="10" fill="black"/>`);
             }
           }
         }
 
-        // Add metadata
-        svg.push();
-        svg.stroke(0);
-        svg.strokeWeight(0.5);
-        svg.textSize(8);
-        svg.text(`Layer: ${layer.name}`, 20, svg.height - 5);
-        svg.text(`Color: ${layer.color}`, 100, svg.height - 5);
-        svg.text(`Gen: ${generation}`, 200, svg.height - 5);
-        svg.pop();
+        let content = '';
+        if (includeReg) {
+          content += buildRegistrationMarks(w, h) + '\n';
+        }
+        content += rects.join('\n');
 
-        save(svg, `game-of-life-${layer.name.replace(/\s+/g, '-')}-gen${generation}.svg`);
-        svg.remove();
+        // Add metadata text
+        content += `\n  <text x="20" y="${h - 5}" font-size="8" fill="black">Layer: ${layer.name}</text>`;
+        content += `\n  <text x="100" y="${h - 5}" font-size="8" fill="black">Color: ${layer.color}</text>`;
+        content += `\n  <text x="200" y="${h - 5}" font-size="8" fill="black">Gen: ${generation}</text>`;
+
+        const svgString = buildSVGString(w, h, content);
+        downloadSVG(svgString, `game-of-life-${layer.name.replace(/\s+/g, '-')}-gen${generation}.svg`);
       });
     }
 
     function exportCombined() {
-      let svg = createGraphics(gridSize * 10 + 40, gridSize * 10 + 40, SVG);
-      svg.background(255);
+      const w = gridSize * 10 + 40;
+      const h = gridSize * 10 + 40;
+      const includeReg = document.getElementById('includeRegistration').checked;
 
-      // Registration marks
-      if (document.getElementById('includeRegistration').checked) {
-        drawRegistrationMarks(svg);
+      let content = '';
+      if (includeReg) {
+        content += buildRegistrationMarks(w, h) + '\n';
       }
 
-      // Draw each layer with transparency
+      // Draw each layer with its color
       layers.forEach(layer => {
         if (!layer.visible) return;
-
-        svg.fill(layer.color);
-        svg.noStroke();
 
         for (let i = 0; i < gridSize; i++) {
           for (let j = 0; j < gridSize; j++) {
             if (layer.grid[i][j] === 1) {
-              svg.rect(20 + i * 10, 20 + j * 10, 10, 10);
+              content += `  <rect x="${20 + i * 10}" y="${20 + j * 10}" width="10" height="10" fill="${layer.color}"/>\n`;
             }
           }
         }
       });
 
-      save(svg, `game-of-life-combined-gen${generation}.svg`);
-      svg.remove();
+      const svgString = buildSVGString(w, h, content);
+      downloadSVG(svgString, `game-of-life-combined-gen${generation}.svg`);
     }
 
     function exportAllLayers() {
