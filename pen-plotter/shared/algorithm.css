@@ -1517,3 +1517,271 @@ body.ts-fullscreen-mode .ts-zoom-toolbar {
   content: '←';
   font-size: 0.85rem;
 }
+
+/* ============================================
+   PANEL CONTROLLER
+   Toggle button and collapsed state styles
+   ============================================ */
+
+/* Panel toggle button */
+.ts-panel-toggle {
+  position: absolute;
+  top: var(--ts-space-lg);
+  right: var(--ts-space-lg);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--ts-space-sm);
+  padding: var(--ts-space-sm) var(--ts-space-md);
+  background: var(--ts-bg-control);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  color: var(--ts-text-secondary);
+  font-family: var(--ts-font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all var(--ts-transition-base);
+}
+
+.ts-panel-toggle:hover {
+  background: var(--ts-bg-hover);
+  color: var(--ts-text-primary);
+  border-color: var(--ts-border-strong);
+}
+
+.ts-panel-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--ts-glow-primary);
+}
+
+.ts-panel-toggle-icon {
+  display: flex;
+  align-items: center;
+  transition: transform var(--ts-transition-base);
+}
+
+.ts-panel-toggle.collapsed .ts-panel-toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Panel collapsed state */
+body.ts-panel-collapsed #controls,
+body.ts-panel-collapsed .ts-control-panel {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+body.ts-panel-collapsed #canvas-container,
+body.ts-panel-collapsed .ts-canvas-area {
+  flex: 1;
+  max-width: 100%;
+}
+
+#controls.ts-collapsed {
+  transform: translateX(100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Smooth transition for panel collapse */
+#controls {
+  transition: transform var(--ts-transition-slow),
+              opacity var(--ts-transition-slow);
+}
+
+/* ============================================
+   STATS DISPLAY
+   Dan Catt-style header bar at top of viewport
+   ============================================ */
+
+.ts-stats-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ts-space-xl);
+  background: var(--ts-bg-panel);
+  border-bottom: 1px solid var(--ts-border-default);
+  z-index: 100;
+  font-family: var(--ts-font-mono);
+  font-size: 0.75rem;
+}
+
+/* Offset body content when stats bar is present */
+body:has(.ts-stats-bar:not(.hidden)) {
+  padding-top: 32px;
+}
+
+body:has(.ts-stats-bar:not(.hidden)) #canvas-container,
+body:has(.ts-stats-bar:not(.hidden)) #controls {
+  height: calc(100vh - 32px);
+}
+
+.ts-stats-bar.hidden {
+  display: none;
+}
+
+.ts-stats-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ts-space-sm);
+}
+
+.ts-stats-label {
+  color: var(--ts-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ts-stats-value {
+  color: var(--ts-accent-primary);
+  font-weight: 500;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .ts-panel-toggle,
+  .ts-panel-toggle-icon,
+  #controls {
+    transition: none;
+  }
+}
+
+/* ============================================
+   DAT.GUI FLOATING MODE
+   When using TSGui/dat.gui instead of sidebar
+   ============================================ */
+
+/* Full-canvas mode (no sidebar) */
+body.ts-datgui-mode {
+  display: block;
+}
+
+body.ts-datgui-mode #controls {
+  display: none;
+}
+
+body.ts-datgui-mode #canvas-container {
+  width: 100vw;
+  height: 100vh;
+  padding: 60px;
+}
+
+/* Paper-like canvas appearance */
+body.ts-datgui-mode #canvas-container canvas,
+.ts-paper-canvas {
+  background: white;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.1);
+  border-radius: 2px;
+}
+
+/* Canvas container for floating GUI mode */
+.ts-canvas-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(0, 212, 170, 0.03) 0%, transparent 60%),
+    var(--ts-bg-deep);
+  padding: 60px;
+}
+
+.ts-canvas-fullscreen canvas {
+  max-width: calc(100vw - 120px);
+  max-height: calc(100vh - 120px);
+  background: white;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    0 16px 48px rgba(0, 0, 0, 0.1);
+}
+
+/* Stats bar offset for dat.gui mode */
+body.ts-datgui-mode:has(.ts-stats-bar:not(.hidden)) #canvas-container {
+  height: calc(100vh - 32px);
+  padding-top: 44px;
+}
+
+/* Info bar (Dan Catt style warning/info text) */
+.ts-info-bar {
+  position: fixed;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--ts-text-secondary);
+  font-family: var(--ts-font-mono);
+  font-size: 11px;
+  border-radius: var(--ts-radius-md);
+  z-index: 50;
+  max-width: 400px;
+  text-align: center;
+}
+
+/* Paper size indicator */
+.ts-paper-indicator {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 8px 12px;
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  font-family: var(--ts-font-mono);
+  font-size: 11px;
+  color: var(--ts-text-muted);
+  z-index: 50;
+}
+
+.ts-paper-indicator .ts-paper-size {
+  color: var(--ts-accent-primary);
+  font-weight: 500;
+}
+
+/* Keyboard shortcut hints */
+.ts-shortcuts-hint {
+  position: fixed;
+  bottom: 20px;
+  right: 320px;
+  padding: 8px 12px;
+  background: var(--ts-bg-panel);
+  border: 1px solid var(--ts-border-default);
+  border-radius: var(--ts-radius-md);
+  font-family: var(--ts-font-mono);
+  font-size: 10px;
+  color: var(--ts-text-muted);
+  z-index: 50;
+  opacity: 0.7;
+  transition: opacity var(--ts-transition-base);
+}
+
+.ts-shortcuts-hint:hover {
+  opacity: 1;
+}
+
+.ts-shortcuts-hint kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: var(--ts-bg-deep);
+  border: 1px solid var(--ts-border-default);
+  border-radius: 3px;
+  font-size: 10px;
+  margin: 0 2px;
+}
