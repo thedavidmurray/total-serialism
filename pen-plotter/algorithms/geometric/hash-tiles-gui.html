@@ -13,6 +13,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -225,6 +227,9 @@
       svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       setupControls();
       canvasControls.setupRandomizeButton();
       regenerate();
@@ -290,8 +295,32 @@
       document.getElementById('seed-display').textContent = params.seed;
 
       generateTiles();
+      updateStats();
       redraw();
       noLoop();
+    }
+
+    function updateStats() {
+      if (!window.statsDisplay) return;
+
+      // Count total pattern elements
+      const totalPatternElements = tiles.reduce((sum, tile) => sum + tile.pattern.length, 0);
+
+      window.statsDisplay.update({
+        'Tiles': tiles.length,
+        'Grid': `${params.gridSize}×${params.gridSize}`,
+        'Hash Method': params.hashMethod,
+        'Pattern': params.patternStyle,
+        'Pattern Elements': totalPatternElements,
+        'Tile Size': `${params.tileSize}px`,
+        'Gap': `${params.gapSize}px`,
+        'Line Density': params.lineDensity,
+        'Stroke Weight': params.strokeWeight,
+        'Rotation Var': `${params.rotationVariance}°`,
+        'Density Var': params.densityVariance.toFixed(1),
+        'Color Mode': params.colorMode,
+        'Seed': params.seed
+      });
     }
 
     function generateTiles() {

@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
     <title>Lightning Generator - Pen Plotter Art</title>
     <script src="../../preset-manager.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
     
   <!-- Total Serialism Design System -->
@@ -297,6 +299,8 @@
         let currentPaths = [];
         let animationFrames = [];
         let presetManager;
+        let panelController;
+        let statsDisplay;
 
         // Lightning parameters
         let params = {
@@ -597,6 +601,19 @@
                 bolt.draw(ctx);
                 currentPaths.push(bolt);
             }
+
+            // Update stats display
+            if (statsDisplay) {
+                const totalBranches = currentPaths.reduce((sum, bolt) => sum + bolt.paths.length, 0);
+                const totalSegments = currentPaths.reduce((sum, bolt) =>
+                    sum + bolt.paths.reduce((pathSum, {path}) => pathSum + path.length, 0), 0);
+
+                statsDisplay.update({
+                    strikes: strikeCount,
+                    branches: totalBranches,
+                    segments: totalSegments
+                });
+            }
         }
         
         function animateLightning() {
@@ -731,6 +748,14 @@
 
         // Initialize preset manager
         window.addEventListener('DOMContentLoaded', () => {
+            panelController = new TSPanelController({
+                onToggle: (collapsed) => {
+                    // Trigger resize handling if needed
+                }
+            }).attach();
+
+            statsDisplay = new TSStatsDisplay().attach();
+
             presetManager = new PresetManager('lightning', {
                 onSave: () => {
                     syncParamsFromUI();

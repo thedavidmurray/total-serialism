@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harmonograph (dat.gui) - Total Serialism</title>
+
+  <!-- Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.7.9/dat.gui.min.js"></script>
+
+  <!-- Total Serialism shared -->
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/ts-gui.js"></script>
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+
+  <style>
+    /* Full-screen canvas mode for dat.gui */
+    body {
+      margin: 0;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+    }
+
+    /* Paper-like canvas appearance */
+    #canvas-container canvas {
+      background: white;
+      box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.05),
+        0 8px 32px rgba(0, 0, 0, 0.15),
+        0 16px 48px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Paper size indicator */
+    .paper-indicator {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 8px 12px;
+      background: rgba(19, 19, 27, 0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #9898a8;
+      z-index: 50;
+    }
+
+    .paper-indicator .size {
+      color: #00d4aa;
+      font-weight: 500;
+    }
+
+    /* Seed display */
+    .seed-display {
+      position: fixed;
+      bottom: 20px;
+      left: 150px;
+      padding: 8px 12px;
+      background: rgba(19, 19, 27, 0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #9898a8;
+      z-index: 50;
+    }
+
+    .seed-display .value {
+      color: #00d4aa;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- UI overlays -->
+  <div class="paper-indicator">
+    Paper: <span class="size" id="paper-size-label">Square 800×800</span>
+  </div>
+  <div class="seed-display">
+    Seed: <span class="value" id="seed-label">-</span>
+  </div>
+
+  <script>
+    // ============================================
+    // PARAMETERS
+    // ============================================
+    const params = {
+      // Canvas
+      paperSize: 'square_medium',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      strokeWeight: 0.5,
+
+      // Pendulum 1 (X)
+      freq1: 2, phase1: 0, amp1: 1, damp1: 0.001,
+
+      // Pendulum 2 (X)
+      freq2: 3, phase2: 0, amp2: 1, damp2: 0.001,
+
+      // Pendulum 3 (Y)
+      freq3: 2, phase3: Math.PI / 2, amp3: 1, damp3: 0.001,
+
+      // Pendulum 4 (Y)
+      freq4: 3, phase4: 0, amp4: 1, damp4: 0.001,
+
+      // Pattern
+      duration: 60,
+      timeStep: 0.01,
+      mode: 'rotary',
+
+      // System
+      seed: Math.floor(Math.random() * 1000000)
+    };
+
+    let paths = [];
+    let gui;
+    let statsDisplay;
+
+    // ============================================
+    // P5.JS SETUP
+    // ============================================
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height, SVG);
+      canvas.parent('canvas-container');
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
+
+      // Initialize dat.gui controls
+      setupGUI();
+
+      // Restore saved state
+      const saved = localStorage.getItem('ts-harmonograph-datgui');
+      if (saved) {
+        try {
+          const savedParams = JSON.parse(saved);
+          Object.assign(params, savedParams);
+          updatePaperSizeLabel();
+        } catch (e) {}
+      }
+
+      // Initial render
+      regenerate();
+    }
+
+    // ============================================
+    // DAT.GUI SETUP
+    // ============================================
+    function setupGUI() {
+      gui = new dat.GUI({ width: 280 });
+
+      // Settings folder
+      const settings = gui.addFolder('Settings');
+      settings.add(params, 'paperSize', TSGui.PAPER_SIZES)
+        .name('Paper Size')
+        .onFinishChange(resizePaper);
+      settings.addColor(params, 'bgColor').name('Background').onFinishChange(regenerate);
+      settings.addColor(params, 'strokeColor').name('Stroke').onFinishChange(regenerate);
+      settings.add(params, 'strokeWeight', 0.1, 3, 0.1).name('Weight').onFinishChange(regenerate);
+
+      // Mode
+      settings.add(params, 'mode', { 'Lateral (2 pend)': 'lateral', 'Rotary (4 pend)': 'rotary' })
+        .name('Mode')
+        .onFinishChange(regenerate);
+
+      // Pendulum 1
+      const p1 = gui.addFolder('Pendulum 1 (X)');
+      p1.add(params, 'freq1', 1, 10, 0.01).name('Frequency').onFinishChange(regenerate);
+      p1.add(params, 'phase1', 0, 6.28, 0.01).name('Phase').onFinishChange(regenerate);
+      p1.add(params, 'amp1', 0.1, 2, 0.01).name('Amplitude').onFinishChange(regenerate);
+      p1.add(params, 'damp1', 0, 0.01, 0.0001).name('Damping').onFinishChange(regenerate);
+      p1.open();
+
+      // Pendulum 2
+      const p2 = gui.addFolder('Pendulum 2 (X)');
+      p2.add(params, 'freq2', 1, 10, 0.01).name('Frequency').onFinishChange(regenerate);
+      p2.add(params, 'phase2', 0, 6.28, 0.01).name('Phase').onFinishChange(regenerate);
+      p2.add(params, 'amp2', 0.1, 2, 0.01).name('Amplitude').onFinishChange(regenerate);
+      p2.add(params, 'damp2', 0, 0.01, 0.0001).name('Damping').onFinishChange(regenerate);
+
+      // Pendulum 3
+      const p3 = gui.addFolder('Pendulum 3 (Y)');
+      p3.add(params, 'freq3', 1, 10, 0.01).name('Frequency').onFinishChange(regenerate);
+      p3.add(params, 'phase3', 0, 6.28, 0.01).name('Phase').onFinishChange(regenerate);
+      p3.add(params, 'amp3', 0.1, 2, 0.01).name('Amplitude').onFinishChange(regenerate);
+      p3.add(params, 'damp3', 0, 0.01, 0.0001).name('Damping').onFinishChange(regenerate);
+
+      // Pendulum 4
+      const p4 = gui.addFolder('Pendulum 4 (Y)');
+      p4.add(params, 'freq4', 1, 10, 0.01).name('Frequency').onFinishChange(regenerate);
+      p4.add(params, 'phase4', 0, 6.28, 0.01).name('Phase').onFinishChange(regenerate);
+      p4.add(params, 'amp4', 0.1, 2, 0.01).name('Amplitude').onFinishChange(regenerate);
+      p4.add(params, 'damp4', 0, 0.01, 0.0001).name('Damping').onFinishChange(regenerate);
+
+      // Pattern
+      const pattern = gui.addFolder('Pattern');
+      pattern.add(params, 'duration', 10, 300, 1).name('Duration').onFinishChange(regenerate);
+      pattern.add(params, 'timeStep', 0.001, 0.05, 0.001).name('Time Step').onFinishChange(regenerate);
+      pattern.open();
+
+      // Actions
+      const actions = {
+        randomize: randomize,
+        regenerate: regenerate,
+        saveSVG: () => TSExport.downloadSVG('harmonograph-' + params.seed),
+        savePNG: () => TSExport.downloadPNG('harmonograph-' + params.seed),
+        saveDXF: exportDXF,
+        saveHPGL: exportHPGL,
+        saveGCODE: exportGCODE
+      };
+
+      gui.add(actions, 'randomize').name('🎲 Randomize');
+      gui.add(actions, 'regenerate').name('🔄 Regenerate');
+
+      // Export folder
+      const exp = gui.addFolder('Export');
+      exp.add(actions, 'saveSVG').name('Save SVG');
+      exp.add(actions, 'savePNG').name('Save PNG');
+      exp.add(actions, 'saveDXF').name('Save DXF');
+      exp.add(actions, 'saveHPGL').name('Save HPGL');
+      exp.add(actions, 'saveGCODE').name('Save G-code');
+
+      // Presets
+      const presets = gui.addFolder('Presets');
+      presets.add({ classic: () => applyPreset('classic') }, 'classic').name('🎯 Classic');
+      presets.add({ flower: () => applyPreset('flower') }, 'flower').name('🌸 Flower');
+      presets.add({ spiral: () => applyPreset('spiral') }, 'spiral').name('🌀 Spiral');
+      presets.add({ star: () => applyPreset('star') }, 'star').name('⭐ Star');
+      presets.add({ heart: () => applyPreset('heart') }, 'heart').name('💕 Heart');
+      presets.add({ chaos: () => applyPreset('chaos') }, 'chaos').name('🎭 Chaos');
+    }
+
+    // ============================================
+    // PRESETS
+    // ============================================
+    const presetData = {
+      classic: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.002,
+        freq2: 3, phase2: 0, amp2: 0.5, damp2: 0.002,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.002,
+        freq4: 3, phase4: 0, amp4: 0.5, damp4: 0.002,
+        duration: 80, mode: 'rotary'
+      },
+      flower: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.001,
+        freq2: 6, phase2: 1.57, amp2: 0.3, damp2: 0.001,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.001,
+        freq4: 6, phase4: 0, amp4: 0.3, damp4: 0.001,
+        duration: 100, mode: 'rotary'
+      },
+      spiral: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.005,
+        freq2: 2.01, phase2: 0, amp2: 1, damp2: 0.005,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.005,
+        freq4: 2.01, phase4: 1.57, amp4: 1, damp4: 0.005,
+        duration: 120, mode: 'rotary'
+      },
+      star: {
+        freq1: 5, phase1: 0, amp1: 1, damp1: 0.001,
+        freq2: 4, phase2: 0, amp2: 0.5, damp2: 0.001,
+        freq3: 5, phase3: 1.57, amp3: 1, damp3: 0.001,
+        freq4: 4, phase4: 1.57, amp4: 0.5, damp4: 0.001,
+        duration: 80, mode: 'rotary'
+      },
+      heart: {
+        freq1: 1, phase1: 0, amp1: 1, damp1: 0.002,
+        freq2: 2, phase2: 0, amp2: 0.5, damp2: 0.002,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.002,
+        freq4: 1, phase4: 0, amp4: 0.5, damp4: 0.002,
+        duration: 60, mode: 'lateral'
+      },
+      chaos: {
+        freq1: 2.31, phase1: 0.5, amp1: 1, damp1: 0.0005,
+        freq2: 3.47, phase2: 2.1, amp2: 0.8, damp2: 0.0008,
+        freq3: 2.17, phase3: 1.2, amp3: 1, damp3: 0.0006,
+        freq4: 3.89, phase4: 0.8, amp4: 0.7, damp4: 0.0007,
+        duration: 200, mode: 'rotary'
+      }
+    };
+
+    function applyPreset(name) {
+      const preset = presetData[name];
+      if (!preset) return;
+
+      Object.assign(params, preset);
+      updateGUIDisplay();
+      regenerate();
+    }
+
+    function updateGUIDisplay() {
+      // Update all dat.gui controllers to reflect current params
+      for (const folder of Object.values(gui.__folders)) {
+        for (const controller of folder.__controllers) {
+          controller.updateDisplay();
+        }
+      }
+      for (const controller of gui.__controllers) {
+        controller.updateDisplay();
+      }
+    }
+
+    // ============================================
+    // CORE FUNCTIONS
+    // ============================================
+    function resizePaper() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      updatePaperSizeLabel();
+      regenerate();
+    }
+
+    function updatePaperSizeLabel() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      document.getElementById('paper-size-label').textContent =
+        `${size.width}×${size.height}`;
+    }
+
+    function regenerate() {
+      paths = [];
+      calculateHarmonograph();
+      drawPattern();
+      updateStats();
+      saveState();
+    }
+
+    function randomize() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      randomSeed(params.seed);
+
+      params.freq1 = random(1, 10);
+      params.freq2 = random(1, 10);
+      params.freq3 = random(1, 10);
+      params.freq4 = random(1, 10);
+      params.phase1 = random(0, TWO_PI);
+      params.phase2 = random(0, TWO_PI);
+      params.phase3 = random(0, TWO_PI);
+      params.phase4 = random(0, TWO_PI);
+      params.amp1 = random(0.5, 1.5);
+      params.amp2 = random(0.3, 1);
+      params.amp3 = random(0.5, 1.5);
+      params.amp4 = random(0.3, 1);
+      params.damp1 = random(0.0001, 0.005);
+      params.damp2 = random(0.0001, 0.005);
+      params.damp3 = random(0.0001, 0.005);
+      params.damp4 = random(0.0001, 0.005);
+      params.duration = random(40, 150);
+
+      updateGUIDisplay();
+      regenerate();
+    }
+
+    function calculateHarmonograph() {
+      const scale = min(width, height) * 0.4;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      let path = [];
+      const steps = params.duration / params.timeStep;
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i * params.timeStep;
+        let x, y;
+
+        if (params.mode === 'lateral') {
+          x = params.amp1 * sin(params.freq1 * t + params.phase1) * exp(-params.damp1 * t);
+          y = params.amp3 * sin(params.freq3 * t + params.phase3) * exp(-params.damp3 * t);
+        } else {
+          x = params.amp1 * sin(params.freq1 * t + params.phase1) * exp(-params.damp1 * t) +
+              params.amp2 * sin(params.freq2 * t + params.phase2) * exp(-params.damp2 * t);
+          y = params.amp3 * sin(params.freq3 * t + params.phase3) * exp(-params.damp3 * t) +
+              params.amp4 * sin(params.freq4 * t + params.phase4) * exp(-params.damp4 * t);
+        }
+
+        path.push({
+          x: centerX + x * scale,
+          y: centerY + y * scale
+        });
+      }
+
+      paths.push(path);
+    }
+
+    function drawPattern() {
+      clear();  // Required for SVG mode
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      for (const path of paths) {
+        beginShape();
+        for (const pt of path) {
+          vertex(pt.x, pt.y);
+        }
+        endShape();
+      }
+    }
+
+    function updateStats() {
+      if (statsDisplay && paths.length > 0) {
+        const totalVertices = paths.reduce((sum, p) => sum + p.length, 0);
+        const pathsForStats = paths.map(p => ({ points: p }));
+        const plotterStats = TSStatsDisplay.getPlotterStats(pathsForStats, {
+          drawSpeed: 30, travelSpeed: 80, pxToMm: 0.264583
+        });
+
+        statsDisplay.update({
+          lines: paths.length,
+          vertices: totalVertices
+        });
+        statsDisplay.setPathLength(plotterStats.pathLength);
+        statsDisplay.setPlotTime(plotterStats.plotTime);
+      }
+
+      document.getElementById('seed-label').textContent = params.seed;
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem('ts-harmonograph-datgui', JSON.stringify(params));
+      } catch (e) {}
+    }
+
+    // ============================================
+    // EXPORT FUNCTIONS
+    // ============================================
+    function exportDXF() {
+      const pathsForExport = paths.map(p => ({ points: p, color: params.strokeColor }));
+      TSExport.downloadDXF(pathsForExport, 'harmonograph-' + params.seed);
+    }
+
+    function exportHPGL() {
+      const pathsForExport = paths.map(p => ({ points: p, color: params.strokeColor }));
+      TSExport.downloadHPGL(pathsForExport, 'harmonograph-' + params.seed);
+    }
+
+    function exportGCODE() {
+      const pathsForExport = paths.map(p => ({ points: p }));
+      TSExport.downloadGCODE(pathsForExport, 'harmonograph-' + params.seed);
+    }
+
+    // ============================================
+    // KEYBOARD SHORTCUTS
+    // ============================================
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+
+      switch (e.key.toLowerCase()) {
+        case 'r':
+          randomize();
+          break;
+        case 's':
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            TSExport.downloadSVG('harmonograph-' + params.seed);
+          }
+          break;
+        case 'h':
+          gui.closed ? gui.open() : gui.close();
+          break;
+      }
+    });
+
+    function windowResized() {
+      // Canvas stays fixed size (paper size), only viewport changes
+    }
+  </script>
+</body>
+</html>

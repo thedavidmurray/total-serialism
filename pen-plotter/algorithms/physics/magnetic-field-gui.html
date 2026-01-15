@@ -544,6 +544,9 @@
       let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Initialize poles and generate field
       initializePoles();
       generateField();
@@ -675,6 +678,7 @@
       }
 
       document.getElementById('pole-count').textContent = poles.length;
+      updateStats();
     }
 
     function getTotalField(point) {
@@ -841,6 +845,26 @@
         generateIronFilings();
       }
       needsRedraw = true;
+      updateStats();
+    }
+
+    function updateStats() {
+      if (window.statsDisplay) {
+        const northPoles = poles.filter(p => p.isNorth).length;
+        const southPoles = poles.filter(p => !p.isNorth).length;
+
+        window.statsDisplay.update({
+          'Poles': poles.length,
+          'North': northPoles,
+          'South': southPoles,
+          'Field Lines': fieldLines.length,
+          'Strength': params.poleStrength,
+          'Lines/Pole': params.linesPerPole,
+          'Mode': params.vizMode,
+          'Integration': params.integrationMethod,
+          'Arrangement': params.poleArrangement
+        });
+      }
     }
 
     function updateUIFromParams() {
@@ -1289,5 +1313,7 @@
       }
     }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

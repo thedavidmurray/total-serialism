@@ -322,6 +322,8 @@
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
     <script>
         const params = {
             paperSize: 'square800',
@@ -346,6 +348,10 @@
             canvas.height = size.height;
         }
         initCanvasSize();
+
+        // Initialize panel controller and stats display
+        window.panelController = new TSPanelController().attach();
+        window.statsDisplay = new TSStatsDisplay().attach();
 
         // Canvas settings event handlers
         document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -845,7 +851,7 @@
         function generateView() {
             const viewType = document.getElementById('viewType').value;
             currentView = new AstronomyView(viewType);
-            
+
             switch (viewType) {
                 case 'starmap':
                 case 'constellations':
@@ -858,8 +864,42 @@
                     currentView.generateMoonPhases();
                     break;
             }
-            
+
             currentView.draw(ctx);
+
+            // Update stats display
+            if (window.statsDisplay) {
+                const stats = {};
+
+                switch (viewType) {
+                    case 'starmap':
+                    case 'constellations':
+                        const starCount = currentView.objects.filter(o => o.type === 'star').length;
+                        const catalogStarCount = currentView.objects.filter(o => o.type === 'catalogStar').length;
+                        stats['Stars'] = starCount;
+                        stats['Named Stars'] = catalogStarCount;
+                        stats['Magnitude Limit'] = parseFloat(document.getElementById('magnitude').value).toFixed(1);
+                        stats['Projection'] = document.getElementById('projection').value;
+                        stats['Latitude'] = document.getElementById('latitude').value + '°';
+                        stats['Longitude'] = document.getElementById('longitude').value + '°';
+                        break;
+                    case 'solar-system':
+                        const planetCount = currentView.objects.filter(o => o.type === 'planet').length;
+                        stats['Planets'] = planetCount;
+                        stats['Bodies'] = currentView.objects.length;
+                        stats['Date'] = document.getElementById('viewDate').value;
+                        break;
+                    case 'moon-phases':
+                        stats['Phases'] = currentView.objects.length;
+                        stats['Days'] = currentView.objects.length;
+                        break;
+                    case 'eclipse':
+                        stats['Type'] = 'Solar Eclipse';
+                        break;
+                }
+
+                window.statsDisplay.update(stats);
+            }
         }
         
         function animateView() {

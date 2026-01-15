@@ -148,6 +148,9 @@
             const canvas = createCanvas(size.width, size.height);
             canvas.parent('canvas-container');
 
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             // Canvas settings handlers
             document.getElementById('paperSize').addEventListener('change', (e) => {
                 params.paperSize = e.target.value;
@@ -231,6 +234,7 @@
             document.getElementById('projectionType').addEventListener('change', (e) => {
                 params.projectionType = e.target.value;
                 projectSurface();
+                updateStats();
             });
 
             // Resolution
@@ -245,6 +249,7 @@
                 params.scale = parseInt(e.target.value);
                 document.getElementById('scaleValue').textContent = e.target.value;
                 projectSurface();
+                updateStats();
             });
 
             // Rotations
@@ -253,17 +258,20 @@
                     params[axis] = parseInt(e.target.value);
                     document.getElementById(axis + 'Value').textContent = e.target.value;
                     projectSurface();
+                    updateStats();
                 });
             });
 
             // Hidden lines
             document.getElementById('hiddenLines').addEventListener('change', (e) => {
                 params.hiddenLines = e.target.checked;
+                updateStats();
             });
 
             // Auto rotate
             document.getElementById('autoRotate').addEventListener('change', (e) => {
                 params.autoRotate = e.target.checked;
+                updateStats();
             });
         }
 
@@ -290,6 +298,7 @@
             }
 
             projectSurface();
+            updateStats();
         }
 
         function generateKleinBottle() {
@@ -482,6 +491,36 @@
             }
         }
 
+        function updateStats() {
+            if (window.statsDisplay) {
+                const surfaceNames = {
+                    'klein': 'Klein Bottle',
+                    'mobius': 'Möbius Strip',
+                    'torus': 'Torus',
+                    'sphere': 'Sphere',
+                    'boy': "Boy's Surface"
+                };
+
+                const projectionNames = {
+                    'orthographic': 'Orthographic',
+                    'perspective': 'Perspective',
+                    'stereographic': 'Stereographic'
+                };
+
+                window.statsDisplay.update({
+                    'Surface': surfaceNames[params.surfaceType] || params.surfaceType,
+                    'Projection': projectionNames[params.projectionType] || params.projectionType,
+                    'Vertices': surface.length,
+                    'Edges': edges.length,
+                    'Resolution': params.resolution,
+                    'Scale': params.scale + '%',
+                    'Rotation': `X:${params.rotX}° Y:${params.rotY}° Z:${params.rotZ}°`,
+                    'Hidden Lines': params.hiddenLines ? 'On' : 'Off',
+                    'Auto-Rotate': params.autoRotate ? 'On' : 'Off'
+                });
+            }
+        }
+
         function draw() {
             background(params.bgColor);
             translate(width / 2, height / 2);
@@ -491,6 +530,7 @@
                 document.getElementById('rotY').value = params.rotY;
                 document.getElementById('rotYValue').textContent = params.rotY;
                 projectSurface();
+                updateStats();
             }
 
             stroke(params.strokeColor);
@@ -596,5 +636,7 @@
             resizeCanvasForPaperSize();
         }
     </script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

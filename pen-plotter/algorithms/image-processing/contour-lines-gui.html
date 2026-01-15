@@ -401,6 +401,10 @@
       let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
+      // Initialize UX components
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       pixelDensity(1);
 
       setupControls();
@@ -1082,9 +1086,18 @@
     function updateStats() {
       let totalSegments = 0;
       let totalLength = 0;
+      let majorLines = 0;
+      let minorLines = 0;
+      let totalVertices = 0;
 
       contours.forEach(contour => {
         totalSegments += contour.points.length - 1;
+        totalVertices += contour.points.length;
+        if (contour.isMajor) {
+          majorLines++;
+        } else {
+          minorLines++;
+        }
         for (let i = 1; i < contour.points.length; i++) {
           totalLength += dist(
             contour.points[i - 1].x, contour.points[i - 1].y,
@@ -1100,6 +1113,18 @@
       document.getElementById('segmentCountStat').textContent = totalSegments;
       document.getElementById('pathLengthStat').textContent = lengthMM;
       document.getElementById('stats').style.display = 'block';
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          'Contour Lines': contours.length,
+          'Major Lines': majorLines,
+          'Minor Lines': minorLines,
+          'Levels': params.contourLevels,
+          'Vertices': totalVertices,
+          'Path Length': lengthMM + 'mm'
+        });
+      }
     }
 
     function updateUIFromParams() {
@@ -1312,5 +1337,7 @@ ${svgPaths}</svg>`;
       });
     }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

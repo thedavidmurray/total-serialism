@@ -16,6 +16,8 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -604,6 +606,8 @@
     let isPaused = false;
     let gifExporter;
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     let params = {
@@ -702,6 +706,16 @@
           initializeBoids();
         }
       });
+
+      // Initialize panel controller
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          windowResized();
+        }
+      }).attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();
       canvasControls.setupRandomizeButton();
@@ -867,6 +881,15 @@
       // Update info display
       document.getElementById('boid-count').textContent = boids.length;
       document.getElementById('fps').textContent = Math.round(frameRate());
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          boids: boids.length,
+          frame: frameCount,
+          fps: Math.round(frameRate())
+        });
+      }
 
       // Capture GIF frame if recording
       if (gifExporter && gifExporter.isRecording()) {

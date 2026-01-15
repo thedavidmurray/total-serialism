@@ -12,6 +12,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -405,6 +407,8 @@
     let isPacking = false;
     let attempts = 0;
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     const params = {
@@ -437,6 +441,16 @@
       background(params.bgColor);
 
       canvasControls.setupRandomizeButton();
+
+      // Initialize panel controller
+      panelController = new TSPanelController('controls', {
+        onToggle: (isVisible) => {
+          console.log(`Panel ${isVisible ? 'shown' : 'hidden'}`);
+        }
+      });
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
 
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -772,6 +786,16 @@
       }
       const coverage = (totalArea / (width * height) * 100).toFixed(1);
       document.getElementById('statCoverage').textContent = coverage + '%';
+
+      // Update TSStatsDisplay if initialized
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Circles': circles.length,
+          'Coverage': coverage + '%',
+          'Attempts': attempts,
+          'Status': isPacking ? 'Packing...' : (circles.length > 0 ? 'Complete' : 'Ready')
+        });
+      }
     }
 
     // UI event listeners

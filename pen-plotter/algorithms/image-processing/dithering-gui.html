@@ -15,6 +15,8 @@
   <script src="../shared/dithering.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../upload-helper.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -243,6 +245,8 @@
     let ditheredImage = null;
     let canvas;
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     let params = {
       paperSize: 'square800',
@@ -268,6 +272,23 @@
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
       background(params.bgColor);
+
+      // Initialize UX components
+      panelController = new TSPanelController({
+        panelSelector: '#controls',
+        onToggle: (isVisible) => {
+          console.log(`Controls panel ${isVisible ? 'shown' : 'hidden'}`);
+        }
+      });
+
+      statsDisplay = new TSStatsDisplay({
+        containerId: 'canvas-container',
+        style: {
+          position: 'absolute',
+          top: '10px',
+          right: '10px'
+        }
+      });
 
       // Canvas settings event handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -466,6 +487,18 @@
         <div><span>Coverage:</span> <span class="value">${stats.blackPercent}%</span></div>
         <div><span>Estimated Plot Time:</span> <span class="value">${estimatedTime}min</span></div>
       `;
+
+      // Update TSStatsDisplay with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Algorithm': params.algorithm.charAt(0).toUpperCase() + params.algorithm.slice(1),
+          'Threshold': params.threshold,
+          'Resolution': `${ditheredImage.width}×${ditheredImage.height}`,
+          'Coverage': `${stats.blackPercent}%`,
+          'Black Dots': stats.blackPixels.toLocaleString(),
+          'Plot Time': `${estimatedTime}min`
+        });
+      }
     }
 
     function updateUIFromParams() {

@@ -11,6 +11,8 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -296,6 +298,8 @@
     let animationProgress = 0;
     let isAnimating = false;
     let presetManager;
+    let panelController;
+    let statsDisplay;
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
@@ -332,6 +336,16 @@
           regenerate();
         }
       });
+
+      // Initialize UX components
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          // Resize canvas when panel toggles
+          windowResized();
+        }
+      }).attach();
+
+      statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();
       canvasControls.setupRandomizeButton();
@@ -420,6 +434,15 @@
       document.getElementById('seed-display').textContent = params.seed;
 
       generateSpirograph();
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          vertices: points.length,
+          seed: params.seed,
+          pattern: { value: params.patternType, format: 'raw' }
+        });
+      }
 
       if (!isAnimating) {
         redraw();

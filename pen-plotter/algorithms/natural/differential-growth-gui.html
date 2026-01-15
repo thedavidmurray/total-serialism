@@ -428,6 +428,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script>
     // Parameters
     const params = {
@@ -459,6 +461,10 @@
       const size = CanvasLayout.getSize(params.paperSize);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      // Initialize panel controller and stats display
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
 
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -750,6 +756,24 @@
     function updateStats() {
       document.getElementById('stats').textContent =
         `Points: ${nodes.length} | Iterations: ${iterations}`;
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        const growthRate = nodes.length > params.startPoints ?
+          ((nodes.length - params.startPoints) / iterations).toFixed(2) : '0.00';
+
+        window.statsDisplay.update({
+          'Nodes': nodes.length,
+          'Iterations': iterations,
+          'Growth Rate': growthRate,
+          'Max Nodes': MAX_NODES,
+          'Start Points': params.startPoints,
+          'Status': growing ? 'Growing' : 'Paused',
+          'Shape': params.startShape,
+          'Repulsion': params.repulsion.toFixed(2),
+          'Attraction': params.attraction.toFixed(2)
+        });
+      }
     }
 
     function drawCurve() {

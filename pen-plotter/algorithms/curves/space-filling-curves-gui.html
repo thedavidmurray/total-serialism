@@ -11,6 +11,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -187,6 +189,9 @@
       const size = PAPER_SIZES[params.paperSize];
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
 
       // Canvas settings event handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -474,6 +479,27 @@
       noFill();
 
       if (points.length < 2) return;
+
+      // Update stats display
+      if (window.statsDisplay) {
+        let segments = points.length - 1;
+        let totalLength = 0;
+        for (let i = 0; i < points.length - 1; i++) {
+          const dx = points[i + 1].x - points[i].x;
+          const dy = points[i + 1].y - points[i].y;
+          totalLength += Math.sqrt(dx * dx + dy * dy);
+        }
+
+        window.statsDisplay.update({
+          'Curve Type': params.curveType.charAt(0).toUpperCase() + params.curveType.slice(1),
+          'Iterations': params.iterations,
+          'Vertices': points.length.toLocaleString(),
+          'Segments': segments.toLocaleString(),
+          'Path Length': `${totalLength.toFixed(1)}px`,
+          'Stroke Weight': params.strokeWeight.toFixed(1),
+          'Rotation': `${params.rotation}°`
+        });
+      }
 
       if (params.smoothCurve) {
         beginShape();

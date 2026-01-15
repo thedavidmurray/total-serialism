@@ -11,6 +11,8 @@
   <script src="../../preset-manager.js"></script>
   <script src="../../canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -279,6 +281,8 @@
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
     let fitZoom;
+    let panelController;
+    let statsDisplay;
 
     function setup() {
       updateCanvasSize();
@@ -297,6 +301,12 @@
           zoomInput
         });
       }
+
+      // Initialize panel controller and stats display
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => { windowResized(); }
+      }).attach();
+      statsDisplay = new TSStatsDisplay().attach();
 
       // Initialize preset manager with error handling
       try {
@@ -430,6 +440,28 @@
       randomSeed(params.seed);
       generatePattern();
       redraw();
+
+      // Update stats display with pattern metrics
+      if (statsDisplay) {
+        const cols = Math.floor(width / params.cellSize);
+        const rows = Math.floor(height / params.cellSize);
+        const totalCells = cols * rows;
+        const filledCells = grid.reduce((sum, row) => sum + row.reduce((s, val) => s + val, 0), 0);
+
+        statsDisplay.update({
+          'Canvas': `${canvasWidth}×${canvasHeight}px`,
+          'Grid': `${cols}×${rows} (${totalCells} cells)`,
+          'Pattern': params.variation,
+          'Line Type': params.lineType,
+          'Probability': params.probability.toFixed(2),
+          'Fill Ratio': `${(filledCells/totalCells*100).toFixed(1)}%`,
+          'Cell Size': `${params.cellSize}px`,
+          'Stroke': `${params.strokeWeight}px ${params.lineCap}`,
+          'Color Mode': params.colorMode,
+          'Rotation': `${params.rotation}°`,
+          'Seed': params.seed
+        });
+      }
     }
 
     function queueRegenerate() {

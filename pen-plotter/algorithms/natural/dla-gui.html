@@ -20,6 +20,8 @@
     <script src="../../shared/canvas-layout.js"></script>
     <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 
     <style>
         /* Algorithm-specific styles */
@@ -584,6 +586,10 @@
             canvas = createCanvas(size.width, size.height);
             canvas.parent('canvas-container');
 
+            // Initialize panel controller and stats display
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             dlaSystem = new DLASystem(width, height);
 
             // Initial draw
@@ -668,6 +674,19 @@
             document.getElementById('particleCount').textContent = stats.particles;
             document.getElementById('attemptCount').textContent = stats.attempts.toLocaleString();
             document.getElementById('connectionCount').textContent = stats.connections;
+
+            // Update TSStatsDisplay
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    'Particles': stats.particles,
+                    'Attempts': stats.attempts.toLocaleString(),
+                    'Connections': stats.connections,
+                    'Max Particles': params.maxParticles,
+                    'Seed Type': params.seedType,
+                    'Stickiness': params.stickiness.toFixed(2),
+                    'Growth Speed': params.growthSpeed
+                });
+            }
         }
 
         // ============================================
@@ -769,6 +788,56 @@
                     updateUIFromParams();
                     resetSimulation();
                     startSimulation();
+                }
+            });
+
+            // Add built-in DLA presets
+            const builtInPresets = {
+                '🌿 Classic Tree': {
+                    maxParticles: 2000, stickiness: 1, particleSize: 3, branchProbability: 0,
+                    seedType: 'single', seedCount: 1, growthSpeed: 20, walkerSteps: 50, spawnRadius: 1.2
+                },
+                '❄️ Snowflake': {
+                    maxParticles: 3000, stickiness: 0.8, particleSize: 2, branchProbability: 0.1,
+                    seedType: 'circle', seedCount: 6, growthSpeed: 30, walkerSteps: 100, spawnRadius: 1.3
+                },
+                '🪸 Coral Reef': {
+                    maxParticles: 2500, stickiness: 0.6, particleSize: 4, branchProbability: 0.3,
+                    seedType: 'line', seedCount: 1, growthSpeed: 15, walkerSteps: 80, spawnRadius: 1.4
+                },
+                '⚡ Lightning': {
+                    maxParticles: 1500, stickiness: 0.95, particleSize: 2, branchProbability: 0.05,
+                    seedType: 'single', seedCount: 1, growthSpeed: 50, walkerSteps: 200, spawnRadius: 1.1
+                },
+                '🌳 Forest': {
+                    maxParticles: 4000, stickiness: 0.9, particleSize: 3, branchProbability: 0.15,
+                    seedType: 'multiple', seedCount: 5, growthSpeed: 25, walkerSteps: 60, spawnRadius: 1.25
+                },
+                '🕸️ Web': {
+                    maxParticles: 1800, stickiness: 0.7, particleSize: 2, branchProbability: 0.2,
+                    seedType: 'circle', seedCount: 12, growthSpeed: 40, walkerSteps: 80, spawnRadius: 1.15
+                },
+                '🔬 Bacterial Colony': {
+                    maxParticles: 3500, stickiness: 0.5, particleSize: 5, branchProbability: 0.4,
+                    seedType: 'random', seedCount: 8, growthSpeed: 10, walkerSteps: 40, spawnRadius: 1.5
+                },
+                '🌊 River Delta': {
+                    maxParticles: 2200, stickiness: 0.85, particleSize: 3, branchProbability: 0.08,
+                    seedType: 'line', seedCount: 1, growthSpeed: 20, walkerSteps: 70, spawnRadius: 1.3
+                },
+                '🎄 Pine Tree': {
+                    maxParticles: 1200, stickiness: 1, particleSize: 2.5, branchProbability: 0.02,
+                    seedType: 'single', seedCount: 1, growthSpeed: 35, walkerSteps: 120, spawnRadius: 1.15
+                },
+                '🦠 Spore Cloud': {
+                    maxParticles: 5000, stickiness: 0.4, particleSize: 1.5, branchProbability: 0.5,
+                    seedType: 'random', seedCount: 15, growthSpeed: 50, walkerSteps: 30, spawnRadius: 1.6
+                }
+            };
+
+            Object.entries(builtInPresets).forEach(([name, presetParams]) => {
+                if (!presetManager.presets[name]) {
+                    presetManager.savePreset(name, presetParams);
                 }
             });
 

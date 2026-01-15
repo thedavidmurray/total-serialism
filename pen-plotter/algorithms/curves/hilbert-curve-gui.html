@@ -12,6 +12,8 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script src="../../ui-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
@@ -436,6 +438,8 @@
     // Global variables
     let curvePath = [];
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     const params = {
@@ -513,6 +517,15 @@
         }
       });
 
+      // Initialize panel controller and stats display
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          windowResized();
+        }
+      }).attach();
+
+      statsDisplay = new TSStatsDisplay().attach();
+
       // Setup param sync with auto-regenerate
       UIUtils.setupParamSync(params, () => generateCurve());
 
@@ -565,6 +578,17 @@
       }
 
       updateStats();
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Curve Type': params.curveType.charAt(0).toUpperCase() + params.curveType.slice(1),
+          'Iteration': params.iteration,
+          'Segments': curvePath.length - 1,
+          'Complexity': pow(2, params.iteration) + 'x' + pow(2, params.iteration)
+        });
+      }
+
       redraw();
     }
 

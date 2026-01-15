@@ -215,6 +215,10 @@
       svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
 
+      // Initialize UX components
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Canvas settings event handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
         params.paperSize = e.target.value;
@@ -384,13 +388,20 @@
       randomSeed(params.seed);
       noiseSeed(params.seed);
       document.getElementById('seed-display').textContent = params.seed;
-      
+
       crystal = [];
       growthFront = [];
       generation = 0;
       growing = true;
-      
+
       initializeCrystal();
+
+      // Update stats display
+      if (window.statsDisplay) {
+        statsDisplay.setSeed(params.seed);
+        statsDisplay.setCustomStat('Crystal Type', params.crystalType);
+        statsDisplay.setCustomStat('Symmetry', params.symmetry);
+      }
     }
     
     function initializeCrystal() {
@@ -618,10 +629,18 @@
     
     function draw() {
       update();
-      
+
       background(params.bgColor);
-      
+
       const cellSize = width / params.detailLevel;
+
+      // Update stats display
+      if (window.statsDisplay && frameCount % 10 === 0) {
+        statsDisplay.setCustomStat('Crystals', crystal.length);
+        statsDisplay.setCustomStat('Growth Front', growthFront.length);
+        statsDisplay.setCustomStat('Generation', generation);
+        statsDisplay.setCustomStat('Status', growing ? 'Growing' : 'Complete');
+      }
       
       // Draw crystal
       noStroke();
@@ -792,6 +811,16 @@
         addSeed(x, y);
       }
     }
+
+    // Window resize handler
+    function windowResized() {
+      if (window.panelController) {
+        const size = CanvasLayout.getSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+      }
+    }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

@@ -325,6 +325,9 @@
       svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       setupControls();
       canvasControls.setupRandomizeButton();
       regenerate();
@@ -513,6 +516,21 @@
 
       if (params.animateNoise) {
         timeOffset += params.timeSpeed;
+      }
+
+      // Update stats display
+      if (window.statsDisplay) {
+        const totalPoints = spirals.reduce((sum, s) => sum + s.points.length, 0);
+        window.statsDisplay.update({
+          'Spirals': params.spiralCount,
+          'Points': totalPoints,
+          'Type': params.spiralType,
+          'Turns': params.turns.toFixed(1),
+          'Noise Scale': params.noiseScale.toFixed(3),
+          'Noise Amp': params.noiseAmplitude,
+          'Seed': params.seed,
+          'Animated': params.animateNoise ? 'Yes' : 'No'
+        });
       }
 
       // Draw each spiral
@@ -842,5 +860,7 @@
       gif.render();
     }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

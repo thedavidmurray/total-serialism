@@ -278,6 +278,8 @@
 
   <!-- Hybrid Engine for layer-based composition -->
   <script src="../../shared/hybrid-engine.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script>
     // Global parameters
     const params = {
@@ -290,6 +292,10 @@
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
     canvasControls.setupRandomizeButton();
+
+    // Initialize panel controller and stats display
+    window.panelController = new TSPanelController().attach();
+    window.statsDisplay = new TSStatsDisplay().attach();
 
     // Initialize the hybrid engine
     const engine = new HybridEngine();
@@ -851,6 +857,22 @@
         renderPaths(result.paths);
 
         status.textContent = `Generated ${result.paths.length} paths`;
+
+        // Update stats display with composition metrics
+        if (window.statsDisplay) {
+          const activeLayers = engine.layers.filter(l => l.enabled);
+          const algorithms = activeLayers.map(l => algorithms[l.algorithm].name).join(', ');
+          const blendModes = [...new Set(activeLayers.map(l => l.blendMode))].join(', ');
+
+          window.statsDisplay.update({
+            'Layers': activeLayers.length,
+            'Total Paths': result.paths.length,
+            'Algorithms': algorithms,
+            'Blend Modes': blendModes,
+            'Canvas': `${canvas.width}x${canvas.height}`,
+            'Paper Size': params.paperSize
+          });
+        }
       } catch (error) {
         console.error('Generation error:', error);
         status.textContent = 'Error: ' + error.message;

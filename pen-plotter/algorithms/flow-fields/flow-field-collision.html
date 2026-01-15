@@ -388,6 +388,9 @@
       const canvas = createCanvas(800, 800);
       canvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Initialize SVG canvas for export
       svgCanvas = createGraphics(800, 800, SVG);
 
@@ -673,12 +676,28 @@
     }
 
     function updateStats() {
-      document.getElementById('activeParticles').textContent = particles.length;
-      document.getElementById('totalPaths').textContent = particles.filter(p => p.trail.length > 1).length;
-      document.getElementById('collisionsAvoided').textContent = totalCollisionsAvoided;
-
+      const activeCount = particles.length;
+      const pathsCount = particles.filter(p => p.trail.length > 1).length;
       const usedCells = collisionGrid.filter(cell => cell > 0).length;
+
+      document.getElementById('activeParticles').textContent = activeCount;
+      document.getElementById('totalPaths').textContent = pathsCount;
+      document.getElementById('collisionsAvoided').textContent = totalCollisionsAvoided;
       document.getElementById('gridCells').textContent = `${usedCells}/${collisionGrid.length}`;
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          'particles': activeCount,
+          'paths': pathsCount,
+          'collisions': totalCollisionsAvoided,
+          'grid cells': `${usedCells}/${collisionGrid.length}`,
+          'field': document.getElementById('fieldType').value,
+          'noise scale': noiseScale.toFixed(4),
+          'speed': parseFloat(document.getElementById('particleSpeed').value).toFixed(1),
+          'fps': Math.round(frameRate())
+        });
+      }
     }
 
     function showStatus(message, type) {
@@ -712,5 +731,8 @@
       document.getElementById('fieldType').addEventListener('change', generateFlowField);
     }
   </script>
+
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

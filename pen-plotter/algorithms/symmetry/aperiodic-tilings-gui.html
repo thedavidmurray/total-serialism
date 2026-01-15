@@ -269,6 +269,9 @@
       const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Initialize preset manager
       presetManager = new PresetManager({
         algorithmId: 'aperiodic-tilings',
@@ -1030,6 +1033,21 @@
       document.getElementById('statType').textContent = typeNames[params.tilingType] || 'Unknown';
       document.getElementById('statTiles').textContent = tiles.length;
       document.getElementById('statDepth').textContent = params.depth;
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          'Tiling Type': typeNames[params.tilingType] || 'Unknown',
+          'Tiles': tiles.length,
+          'Depth': params.depth,
+          'Seed': params.seed,
+          'Scale': params.scale.toFixed(2),
+          'Rotation': `${params.rotation}°`,
+          'Line Weight': params.lineWeight.toFixed(2),
+          'Gap': params.gap.toFixed(1),
+          'Color Mode': params.colorMode
+        });
+      }
     }
 
     function updateUIFromParams() {
@@ -1233,5 +1251,7 @@
       }
     }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

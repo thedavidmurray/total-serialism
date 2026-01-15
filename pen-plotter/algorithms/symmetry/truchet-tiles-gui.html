@@ -450,6 +450,9 @@
       canvas.parent('canvas');
       background(params.bgColor);
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
         params.paperSize = e.target.value;
@@ -682,6 +685,20 @@
       document.getElementById('statGrid').textContent = `${params.gridSize}x${params.gridSize}`;
       document.getElementById('statTiles').textContent = params.gridSize * params.gridSize;
       document.getElementById('statType').textContent = params.tileType.charAt(0).toUpperCase() + params.tileType.slice(1).replace('-', ' ');
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          'Grid': `${params.gridSize}×${params.gridSize}`,
+          'Total Tiles': params.gridSize * params.gridSize,
+          'Tile Type': params.tileType.charAt(0).toUpperCase() + params.tileType.slice(1).replace('-', ' '),
+          'Rotation': params.rotationMode.charAt(0).toUpperCase() + params.rotationMode.slice(1),
+          'Seed': params.seed,
+          'Line Weight': params.lineWeight.toFixed(1),
+          'Detail Level': params.detailLevel,
+          'Probability': params.probability.toFixed(2)
+        });
+      }
     }
 
     // UI event listeners
@@ -878,5 +895,7 @@
       saveCanvas(`truchet-tiles-${Date.now()}`, 'png');
     }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

@@ -13,6 +13,8 @@
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -408,6 +410,10 @@
             const canvas = createCanvas(size.width, size.height);
             canvas.parent('canvas-container');
 
+            // Initialize panel controller and stats display
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             // Canvas settings handlers
             document.getElementById('paperSize').addEventListener('change', (e) => {
                 params.paperSize = e.target.value;
@@ -589,6 +595,35 @@
 
                 // Update particles
                 updateParticles();
+            }
+
+            // Update stats display
+            if (window.statsDisplay) {
+                // Calculate vortex count
+                let vortexCount = 0;
+                for (let i = 0; i < fluid.res; i++) {
+                    for (let j = 0; j < fluid.res; j++) {
+                        if (abs(fluid.vort[i][j]) > 0.1) {
+                            vortexCount++;
+                        }
+                    }
+                }
+
+                // Calculate Strouhal number
+                const D = params.obstacleSize;
+                const U = params.flowSpeed;
+                const f = params.shedding * U / D;
+                const St = f * D / U;
+
+                window.statsDisplay.update({
+                    'Reynolds': params.reynolds.toFixed(0),
+                    'Flow Speed': params.flowSpeed.toFixed(2) + ' m/s',
+                    'Vortices': vortexCount,
+                    'Strouhal': St.toFixed(3),
+                    'Resolution': params.resolution + '²',
+                    'Viz Mode': params.vizMode,
+                    'Particles': particles.length
+                });
             }
 
             // Draw based on visualization mode

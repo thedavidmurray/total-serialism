@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rose Curves (Rhodonea) - Mathematical Flower Patterns</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+
+    .preset-btn {
+      background: var(--ts-accent-tertiary) !important;
+      margin: 2px 0;
+    }
+
+    .preset-btn:hover {
+      background: #6a5acd !important;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    .formula {
+      background: var(--ts-bg-deep);
+      padding: 10px;
+      border-radius: var(--ts-radius-md);
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      color: var(--ts-accent-primary);
+      margin-bottom: 15px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+    <h2>Rose Curves Controls</h2>
+
+    <div class="formula">r = cos(k &middot; &theta;)</div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square_medium" selected>Square (800x800)</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_large">Square (1200x1200)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">0.5</span></label>
+        <input type="range" id="strokeWeight" min="0.1" max="3" step="0.1" value="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Rose Parameters</h3>
+      <div class="control">
+        <label>Numerator (n): <span class="value" id="numerator-val">3</span></label>
+        <input type="range" id="numerator" min="1" max="12" step="1" value="3">
+      </div>
+      <div class="control">
+        <label>Denominator (d): <span class="value" id="denominator-val">1</span></label>
+        <input type="range" id="denominator" min="1" max="12" step="1" value="1">
+      </div>
+      <div class="control">
+        <label>k = n/d = <span class="value" id="k-val">3</span></label>
+      </div>
+      <div class="control">
+        <label>Scale: <span class="value" id="scale-val">0.8</span></label>
+        <input type="range" id="scale" min="0.3" max="0.95" step="0.01" value="0.8">
+      </div>
+      <div class="control">
+        <label>Resolution: <span class="value" id="resolution-val">1000</span></label>
+        <input type="range" id="resolution" min="100" max="5000" step="100" value="1000">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Variations</h3>
+      <div class="control">
+        <label>Mode:</label>
+        <select id="mode">
+          <option value="single" selected>Single Rose</option>
+          <option value="nested">Nested Roses</option>
+          <option value="rotated">Rotated Copies</option>
+          <option value="maurer">Maurer Rose</option>
+        </select>
+      </div>
+      <div class="control" id="nestedControl">
+        <label>Layers: <span class="value" id="layers-val">5</span></label>
+        <input type="range" id="layers" min="2" max="20" step="1" value="5">
+      </div>
+      <div class="control" id="maurerControl" style="display:none">
+        <label>Maurer d: <span class="value" id="maurerD-val">71</span></label>
+        <input type="range" id="maurerD" min="1" max="360" step="1" value="71">
+      </div>
+      <div class="control" id="rotatedControl" style="display:none">
+        <label>Copies: <span class="value" id="copies-val">6</span></label>
+        <input type="range" id="copies" min="2" max="24" step="1" value="6">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Presets</h3>
+      <button class="preset-btn" onclick="applyPreset('trifolium')">Trifolium (3/1)</button>
+      <button class="preset-btn" onclick="applyPreset('quadrifolium')">Quadrifolium (2/1)</button>
+      <button class="preset-btn" onclick="applyPreset('pentafolium')">Pentafolium (5/1)</button>
+      <button class="preset-btn" onclick="applyPreset('octafolium')">Octafolium (4/1)</button>
+      <button class="preset-btn" onclick="applyPreset('star6')">6-Point Star (6/1)</button>
+      <button class="preset-btn" onclick="applyPreset('complex')">Complex (7/3)</button>
+      <button class="preset-btn" onclick="applyPreset('maurer71')">Maurer d=71</button>
+      <button class="preset-btn" onclick="applyPreset('maurer29')">Maurer d=29</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="regenerate">Regenerate</button>
+      <button id="randomize">Randomize</button>
+      <div class="control">
+        <label>Seed: <span id="seed-display">-</span></label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button id="export-svg">Download SVG</button>
+      <button id="export-png">Download PNG</button>
+      <button id="export-gif">Record GIF</button>
+      <div id="gif-status"></div>
+    </div>
+
+    <div id="preset-container"></div>
+  </div>
+
+  <script>
+    let params = {
+      paperSize: 'square_medium',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      strokeWeight: 0.5,
+      numerator: 3,
+      denominator: 1,
+      scale: 0.8,
+      resolution: 1000,
+      mode: 'single',
+      layers: 5,
+      maurerD: 71,
+      copies: 6,
+      seed: Math.floor(Math.random() * 1000000)
+    };
+
+    let paths = [];
+    let presetManager;
+    let panelController;
+    let statsDisplay;
+    let canvasControls;
+
+    const presets = {
+      trifolium: { numerator: 3, denominator: 1, mode: 'single', scale: 0.85 },
+      quadrifolium: { numerator: 2, denominator: 1, mode: 'single', scale: 0.85 },
+      pentafolium: { numerator: 5, denominator: 1, mode: 'single', scale: 0.85 },
+      octafolium: { numerator: 4, denominator: 1, mode: 'single', scale: 0.85 },
+      star6: { numerator: 6, denominator: 1, mode: 'nested', layers: 8, scale: 0.8 },
+      complex: { numerator: 7, denominator: 3, mode: 'single', scale: 0.8, resolution: 3000 },
+      maurer71: { numerator: 6, denominator: 1, mode: 'maurer', maurerD: 71, scale: 0.8 },
+      maurer29: { numerator: 4, denominator: 1, mode: 'maurer', maurerD: 29, scale: 0.8 }
+    };
+
+    function applyPreset(name) {
+      const preset = presets[name];
+      if (preset) {
+        Object.assign(params, preset);
+        updateUIFromParams();
+        updateModeControls();
+        regenerate();
+      }
+    }
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height, SVG);
+      canvas.parent('canvas-container');
+
+      canvasControls = new TSCanvasControls({
+        bgColor: params.bgColor,
+        strokeColor: params.strokeColor
+      });
+      canvasControls.bind(params);
+
+      panelController = new TSPanelController({
+        panelSelector: '#controls',
+        onToggle: (collapsed) => {
+          setTimeout(() => windowResized(), 350);
+        }
+      });
+      panelController.attach();
+
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
+
+      presetManager = new PresetManager({
+        algorithmId: 'rose-curves',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          updateModeControls();
+          regenerate();
+        },
+        onRandomize: randomize
+      });
+
+      // Add built-in rose curve presets
+      const builtInPresets = {
+        '🌹 Classic Rose (3 petals)': {
+          mode: 'single', numerator: 3, denominator: 1, scale: 200, resolution: 360, layers: 1, copies: 1
+        },
+        '🌸 Four Petals': {
+          mode: 'single', numerator: 2, denominator: 1, scale: 200, resolution: 360, layers: 1, copies: 1
+        },
+        '✨ Seven Petals': {
+          mode: 'single', numerator: 7, denominator: 1, scale: 200, resolution: 360, layers: 1, copies: 1
+        },
+        '🔮 Nested 5/2': {
+          mode: 'nested', numerator: 5, denominator: 2, scale: 200, resolution: 500, layers: 5, copies: 1
+        },
+        '🌊 Rotated 7/3': {
+          mode: 'rotated', numerator: 7, denominator: 3, scale: 180, resolution: 600, layers: 1, copies: 8
+        },
+        '💫 Maurer Star': {
+          mode: 'maurer', numerator: 4, denominator: 1, scale: 200, resolution: 360, layers: 1, maurerD: 71
+        },
+        '🕸️ Maurer Web': {
+          mode: 'maurer', numerator: 5, denominator: 1, scale: 200, resolution: 360, layers: 1, maurerD: 97
+        },
+        '🎪 Maurer Chaos': {
+          mode: 'maurer', numerator: 6, denominator: 1, scale: 200, resolution: 360, layers: 1, maurerD: 137
+        },
+        '🌺 Nested Bloom': {
+          mode: 'nested', numerator: 4, denominator: 1, scale: 220, resolution: 400, layers: 8, copies: 1
+        },
+        '☀️ Sun Burst': {
+          mode: 'rotated', numerator: 8, denominator: 5, scale: 200, resolution: 720, layers: 1, copies: 12
+        }
+      };
+
+      Object.entries(builtInPresets).forEach(([name, presetParams]) => {
+        if (!presetManager.presets[name]) {
+          presetManager.savePreset(name, presetParams);
+        }
+      });
+
+      setupControls();
+      regenerate();
+    }
+
+    function setupControls() {
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = CanvasLayout.getSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+        regenerate();
+      });
+
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        regenerate();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        regenerate();
+      });
+
+      const rangeInputs = ['strokeWeight', 'numerator', 'denominator', 'scale', 'resolution', 'layers', 'maurerD', 'copies'];
+      rangeInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', (e) => {
+            params[id] = parseFloat(e.target.value);
+            document.getElementById(id + '-val').textContent = e.target.value;
+            if (id === 'numerator' || id === 'denominator') {
+              updateKValue();
+            }
+            regenerate();
+          });
+        }
+      });
+
+      document.getElementById('mode').addEventListener('change', (e) => {
+        params.mode = e.target.value;
+        updateModeControls();
+        regenerate();
+      });
+
+      document.getElementById('regenerate').addEventListener('click', regenerate);
+      document.getElementById('randomize').addEventListener('click', randomize);
+
+      document.getElementById('export-svg').addEventListener('click', exportSVG);
+      document.getElementById('export-png').addEventListener('click', exportPNG);
+      document.getElementById('export-gif').addEventListener('click', exportGIF);
+
+      updateModeControls();
+    }
+
+    function updateModeControls() {
+      document.getElementById('nestedControl').style.display = params.mode === 'nested' ? 'block' : 'none';
+      document.getElementById('maurerControl').style.display = params.mode === 'maurer' ? 'block' : 'none';
+      document.getElementById('rotatedControl').style.display = params.mode === 'rotated' ? 'block' : 'none';
+    }
+
+    function updateKValue() {
+      const k = params.numerator / params.denominator;
+      document.getElementById('k-val').textContent = k % 1 === 0 ? k : k.toFixed(3);
+    }
+
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) {
+          if (el.type === 'range' || el.type === 'color') {
+            el.value = params[key];
+          } else if (el.tagName === 'SELECT') {
+            el.value = params[key];
+          }
+          const valEl = document.getElementById(key + '-val');
+          if (valEl) {
+            valEl.textContent = params[key];
+          }
+        }
+      });
+      updateKValue();
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function regenerate() {
+      paths = [];
+      calculateRose();
+      drawPattern();
+      updateStats();
+    }
+
+    function randomize() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      randomSeed(params.seed);
+
+      params.numerator = Math.floor(random(1, 12));
+      params.denominator = Math.floor(random(1, 8));
+      params.scale = random(0.5, 0.9);
+      params.mode = ['single', 'nested', 'rotated', 'maurer'][Math.floor(random(4))];
+      params.layers = Math.floor(random(3, 15));
+      params.maurerD = Math.floor(random(1, 360));
+      params.copies = Math.floor(random(3, 12));
+
+      updateUIFromParams();
+      updateModeControls();
+      regenerate();
+    }
+
+    function calculateRose() {
+      const k = params.numerator / params.denominator;
+      const radius = min(width, height) * params.scale / 2;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      // Calculate number of petals and required theta range
+      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+      const n = params.numerator;
+      const d = params.denominator;
+      const g = gcd(n, d);
+      const thetaMax = (d % 2 === 0 && n % 2 === 0) ? 2 * PI * d / g : PI * d / g;
+
+      if (params.mode === 'maurer') {
+        // Maurer rose - connect points at degree intervals
+        let path = [];
+        const maurerRad = params.maurerD * PI / 180;
+        for (let i = 0; i <= 360; i++) {
+          const theta = i * maurerRad;
+          const r = cos(k * theta) * radius;
+          path.push({
+            x: centerX + r * cos(theta),
+            y: centerY + r * sin(theta)
+          });
+        }
+        paths.push(path);
+      } else if (params.mode === 'nested') {
+        // Multiple concentric roses
+        for (let layer = 1; layer <= params.layers; layer++) {
+          let path = [];
+          const layerRadius = radius * (layer / params.layers);
+          for (let i = 0; i <= params.resolution; i++) {
+            const theta = map(i, 0, params.resolution, 0, thetaMax);
+            const r = cos(k * theta) * layerRadius;
+            path.push({
+              x: centerX + r * cos(theta),
+              y: centerY + r * sin(theta)
+            });
+          }
+          paths.push(path);
+        }
+      } else if (params.mode === 'rotated') {
+        // Multiple rotated copies
+        for (let c = 0; c < params.copies; c++) {
+          let path = [];
+          const rotation = TWO_PI * c / params.copies;
+          for (let i = 0; i <= params.resolution; i++) {
+            const theta = map(i, 0, params.resolution, 0, thetaMax);
+            const r = cos(k * theta) * radius;
+            path.push({
+              x: centerX + r * cos(theta + rotation),
+              y: centerY + r * sin(theta + rotation)
+            });
+          }
+          paths.push(path);
+        }
+      } else {
+        // Single rose
+        let path = [];
+        for (let i = 0; i <= params.resolution; i++) {
+          const theta = map(i, 0, params.resolution, 0, thetaMax);
+          const r = cos(k * theta) * radius;
+          path.push({
+            x: centerX + r * cos(theta),
+            y: centerY + r * sin(theta)
+          });
+        }
+        paths.push(path);
+      }
+    }
+
+    function drawPattern() {
+      clear();  // Required for SVG mode - removes existing elements
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      for (const path of paths) {
+        beginShape();
+        for (const pt of path) {
+          vertex(pt.x, pt.y);
+        }
+        endShape();
+      }
+    }
+
+    function updateStats() {
+      if (statsDisplay && paths.length > 0) {
+        const totalVertices = paths.reduce((sum, p) => sum + p.length, 0);
+        statsDisplay.update({
+          lines: paths.length,
+          vertices: totalVertices,
+          'k': (params.numerator / params.denominator).toFixed(3)
+        });
+      }
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function exportSVG() {
+      save('rose-curve-' + params.seed + '.svg');
+    }
+
+    function exportPNG() {
+      const pngCanvas = createGraphics(width, height);
+      pngCanvas.background(params.bgColor);
+      pngCanvas.stroke(params.strokeColor);
+      pngCanvas.strokeWeight(params.strokeWeight);
+      pngCanvas.noFill();
+
+      for (const path of paths) {
+        pngCanvas.beginShape();
+        for (const pt of path) {
+          pngCanvas.vertex(pt.x, pt.y);
+        }
+        pngCanvas.endShape();
+      }
+
+      saveCanvas(pngCanvas, 'rose-curve-' + params.seed, 'png');
+    }
+
+    function exportGIF() {
+      const status = document.getElementById('gif-status');
+      status.textContent = 'Recording GIF...';
+
+      const gif = new GIF({
+        workers: 4,
+        quality: 10,
+        width: width,
+        height: height
+      });
+
+      const frames = 60;
+      const mainPath = paths[0];
+      const pointsPerFrame = Math.ceil(mainPath.length / frames);
+
+      for (let f = 0; f < frames; f++) {
+        const tempCanvas = createGraphics(width, height);
+        tempCanvas.background(params.bgColor);
+        tempCanvas.stroke(params.strokeColor);
+        tempCanvas.strokeWeight(params.strokeWeight);
+        tempCanvas.noFill();
+
+        const endIdx = Math.min((f + 1) * pointsPerFrame, mainPath.length);
+        tempCanvas.beginShape();
+        for (let i = 0; i < endIdx; i++) {
+          tempCanvas.vertex(mainPath[i].x, mainPath[i].y);
+        }
+        tempCanvas.endShape();
+
+        gif.addFrame(tempCanvas.canvas, { delay: 50 });
+        tempCanvas.remove();
+      }
+
+      gif.on('finished', (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'rose-curve-' + params.seed + '.gif';
+        a.click();
+        URL.revokeObjectURL(url);
+        status.textContent = 'GIF saved!';
+        setTimeout(() => status.textContent = '', 3000);
+      });
+
+      gif.render();
+    }
+
+    function windowResized() {
+      // Handled by CanvasLayout
+    }
+  </script>
+</body>
+</html>

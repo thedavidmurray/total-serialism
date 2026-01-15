@@ -13,6 +13,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -252,6 +254,8 @@
     });
     canvasControls.bind(params);
 
+    let panelController;
+    let statsDisplay;
     let svgCanvas;
     let autoRegenerate = true;
     let regenTimer;
@@ -263,6 +267,11 @@
 
       svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
+
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => { windowResized(); }
+      }).attach();
+      statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();
       canvasControls.setupRandomizeButton();
@@ -320,6 +329,47 @@
     function regenerate() {
       window.randomSeed(params.seed);
       redraw();
+
+      // Update stats display with snowflake metrics
+      if (statsDisplay) {
+        const totalBranches = calculateTotalBranches();
+        statsDisplay.update({
+          'Seed': params.seed,
+          'Branch Levels': params.branchLevels,
+          'Total Branches': totalBranches,
+          'Branch Angle': `${params.branchAngle}°`,
+          'Branch Points': params.branchPoints,
+          'Complexity': params.complexity,
+          'Symmetry': params.symmetricBranches ? '6-fold' : 'Asymmetric',
+          'Decorations': getActiveDecorations()
+        });
+      }
+    }
+
+    function calculateTotalBranches() {
+      // Calculate approximate number of branches based on recursive structure
+      // Each arm has 6 main branches (hexagonal symmetry)
+      let total = 6; // 6 main arms
+      let branchesPerLevel = 6;
+
+      for (let level = 1; level < params.branchLevels; level++) {
+        const multiplier = params.symmetricBranches ?
+          params.branchesPerPoint * 2 :
+          params.branchesPerPoint;
+        branchesPerLevel *= (multiplier * params.branchPoints);
+        total += branchesPerLevel;
+      }
+
+      return total;
+    }
+
+    function getActiveDecorations() {
+      const decorations = [];
+      if (params.addCrystals) decorations.push('Crystals');
+      if (params.addDendritic) decorations.push('Dendritic');
+      if (params.addPlates) decorations.push('Plates');
+      if (params.centerStyle !== 'none') decorations.push(params.centerStyle);
+      return decorations.length > 0 ? decorations.join(', ') : 'None';
     }
 
     function queueRegenerate() {

@@ -507,6 +507,10 @@
       canvas = createCanvas(simWidth, simHeight);
       canvas.parent('canvas-container');
 
+      // Initialize panel controller and stats display
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Initialize trail maps
       trailMap = new Float32Array(simWidth * simHeight);
       nextTrailMap = new Float32Array(simWidth * simHeight);
@@ -902,6 +906,19 @@
       }
       const density = (activePixels / trailMap.length * 100).toFixed(1);
       document.getElementById('trail-density').textContent = density + '%';
+
+      // Update stats display
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          agents: agents.length,
+          trails: activePixels,
+          iterations: frameNum,
+          density: density + '%',
+          fps: Math.round(frameRate()),
+          decay: params.decayRate.toFixed(3),
+          diffusion: params.diffusionRate.toFixed(1)
+        });
+      }
     }
 
     // Preset configurations
@@ -1160,5 +1177,8 @@
       }
     }
   </script>
+
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

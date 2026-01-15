@@ -203,6 +203,9 @@
     </div>
   </div>
 
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+
   <script>
     let params = {
       seed: Math.floor(Math.random() * 1000000),
@@ -247,6 +250,10 @@
       // Create regular canvas (SVG export handled separately)
       svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
+
+      // Initialize panel controller and stats display
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();
       canvasControls.setupRandomizeButton();
@@ -312,6 +319,7 @@
       generateRays();
       generateCircles();
       redraw();
+      updateStats();
     }
 
     function generateRays() {
@@ -624,6 +632,51 @@
         default:
           stroke(150);
       }
+    }
+
+    function updateStats() {
+      if (!window.statsDisplay) return;
+
+      // Calculate total vertices
+      let totalVertices = 0;
+
+      // Count vertices from rays based on pattern
+      rays.forEach(ray => {
+        switch (params.rayPattern) {
+          case 'straight':
+            totalVertices += 2; // Start and end
+            break;
+          case 'curved':
+            totalVertices += 21; // 21 points for bezier curve
+            break;
+          case 'zigzag':
+            totalVertices += params.raySegments * 3 + 1;
+            break;
+          case 'spiral':
+            totalVertices += 51; // 51 points for spiral
+            break;
+          case 'branching':
+            totalVertices += 2 + (params.raySegments * 4); // Main ray + branches
+            break;
+          case 'wavy':
+            totalVertices += 51; // 51 points for wavy
+            break;
+        }
+      });
+
+      // Add vertices from circles (approximate)
+      circles.forEach(() => {
+        totalVertices += 60; // Approximate vertices per circle
+      });
+
+      window.statsDisplay.update({
+        rays: rays.length,
+        circles: circles.length,
+        vertices: totalVertices,
+        pattern: params.rayPattern,
+        density: params.densityPattern,
+        seed: params.seed
+      });
     }
 
     function randomizeSeed() {

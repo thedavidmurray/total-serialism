@@ -10,6 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -129,6 +131,10 @@
   </div>
 
   <script>
+    // Global variables for panel and stats
+    let panelController;
+    let statsDisplay;
+
     let params = {
       paperSize: 'custom',
       iterations: 5,
@@ -179,11 +185,30 @@
 
     let canvasWidth = 800;
     let canvasHeight = 600;
+    let branchCount = 0;
+    let currentSeed = Date.now();
 
     function setup() {
       updateCanvasSize();
       let canvas = createCanvas(canvasWidth, canvasHeight);
       canvas.parent('canvas-container');
+
+      // Initialize panel controller with onToggle callback
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          // Resize canvas when panel toggles
+          setTimeout(() => {
+            updateCanvasSize();
+            resizeCanvas(canvasWidth, canvasHeight);
+            redraw();
+          }, 50);
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
 
       // Setup paper size
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -233,6 +258,7 @@
       background(255);
 
       const system = generateLSystem();
+      branchCount = 0; // Reset branch count
 
       push();
       // Start from bottom center
@@ -242,6 +268,17 @@
 
       drawLSystem(system);
       pop();
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          iterations: params.iterations,
+          branches: branchCount,
+          seed: currentSeed,
+          angle: { value: params.angle + '°', label: 'Angle' },
+          decay: { value: params.decay.toFixed(2), label: 'Decay' }
+        });
+      }
     }
 
     function drawLSystem(system) {
@@ -258,6 +295,7 @@
           case 'F':
             line(0, 0, 0, -len);
             translate(0, -len);
+            branchCount++; // Count each branch segment
             break;
           case '+':
             rotate((params.angle + randAngle) * PI / 180 + windEffect);
@@ -298,6 +336,8 @@
     }
 
     function regenerate() {
+      currentSeed = Date.now(); // Generate new seed
+      randomSeed(currentSeed);
       redraw();
     }
 

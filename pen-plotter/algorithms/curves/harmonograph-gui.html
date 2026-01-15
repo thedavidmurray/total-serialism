@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harmonograph - Pendulum Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+
+    .preset-btn {
+      background: var(--ts-accent-tertiary) !important;
+      margin: 2px 0;
+    }
+
+    .preset-btn:hover {
+      background: #6a5acd !important;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    .preset-manager {
+      margin-top: 20px;
+    }
+
+    .preset-manager .control-group {
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+    <h2>Harmonograph Controls</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square_medium" selected>Square (800x800)</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_large">Square (1200x1200)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">0.5</span></label>
+        <input type="range" id="strokeWeight" min="0.1" max="3" step="0.1" value="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pendulum 1 (X-axis)</h3>
+      <div class="control">
+        <label>Frequency 1: <span class="value" id="freq1-val">2</span></label>
+        <input type="range" id="freq1" min="1" max="10" step="0.01" value="2">
+      </div>
+      <div class="control">
+        <label>Phase 1: <span class="value" id="phase1-val">0</span></label>
+        <input type="range" id="phase1" min="0" max="6.28" step="0.01" value="0">
+      </div>
+      <div class="control">
+        <label>Amplitude 1: <span class="value" id="amp1-val">1</span></label>
+        <input type="range" id="amp1" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div class="control">
+        <label>Damping 1: <span class="value" id="damp1-val">0.001</span></label>
+        <input type="range" id="damp1" min="0" max="0.01" step="0.0001" value="0.001">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pendulum 2 (X-axis)</h3>
+      <div class="control">
+        <label>Frequency 2: <span class="value" id="freq2-val">3</span></label>
+        <input type="range" id="freq2" min="1" max="10" step="0.01" value="3">
+      </div>
+      <div class="control">
+        <label>Phase 2: <span class="value" id="phase2-val">0</span></label>
+        <input type="range" id="phase2" min="0" max="6.28" step="0.01" value="0">
+      </div>
+      <div class="control">
+        <label>Amplitude 2: <span class="value" id="amp2-val">1</span></label>
+        <input type="range" id="amp2" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div class="control">
+        <label>Damping 2: <span class="value" id="damp2-val">0.001</span></label>
+        <input type="range" id="damp2" min="0" max="0.01" step="0.0001" value="0.001">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pendulum 3 (Y-axis)</h3>
+      <div class="control">
+        <label>Frequency 3: <span class="value" id="freq3-val">2</span></label>
+        <input type="range" id="freq3" min="1" max="10" step="0.01" value="2">
+      </div>
+      <div class="control">
+        <label>Phase 3: <span class="value" id="phase3-val">1.57</span></label>
+        <input type="range" id="phase3" min="0" max="6.28" step="0.01" value="1.57">
+      </div>
+      <div class="control">
+        <label>Amplitude 3: <span class="value" id="amp3-val">1</span></label>
+        <input type="range" id="amp3" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div class="control">
+        <label>Damping 3: <span class="value" id="damp3-val">0.001</span></label>
+        <input type="range" id="damp3" min="0" max="0.01" step="0.0001" value="0.001">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pendulum 4 (Y-axis)</h3>
+      <div class="control">
+        <label>Frequency 4: <span class="value" id="freq4-val">3</span></label>
+        <input type="range" id="freq4" min="1" max="10" step="0.01" value="3">
+      </div>
+      <div class="control">
+        <label>Phase 4: <span class="value" id="phase4-val">0</span></label>
+        <input type="range" id="phase4" min="0" max="6.28" step="0.01" value="0">
+      </div>
+      <div class="control">
+        <label>Amplitude 4: <span class="value" id="amp4-val">1</span></label>
+        <input type="range" id="amp4" min="0.1" max="2" step="0.01" value="1">
+      </div>
+      <div class="control">
+        <label>Damping 4: <span class="value" id="damp4-val">0.001</span></label>
+        <input type="range" id="damp4" min="0" max="0.01" step="0.0001" value="0.001">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Duration (seconds): <span class="value" id="duration-val">60</span></label>
+        <input type="range" id="duration" min="10" max="300" step="1" value="60">
+      </div>
+      <div class="control">
+        <label>Time Step: <span class="value" id="timeStep-val">0.01</span></label>
+        <input type="range" id="timeStep" min="0.001" max="0.05" step="0.001" value="0.01">
+      </div>
+      <div class="control">
+        <label>Mode:</label>
+        <select id="mode">
+          <option value="lateral" selected>Lateral (2 pendulums)</option>
+          <option value="rotary">Rotary (4 pendulums)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Presets</h3>
+      <button class="preset-btn" onclick="applyPreset('classic')">Classic</button>
+      <button class="preset-btn" onclick="applyPreset('flower')">Flower</button>
+      <button class="preset-btn" onclick="applyPreset('spiral')">Spiral</button>
+      <button class="preset-btn" onclick="applyPreset('star')">Star</button>
+      <button class="preset-btn" onclick="applyPreset('heart')">Heart</button>
+      <button class="preset-btn" onclick="applyPreset('chaos')">Chaos</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="regenerate">Regenerate</button>
+      <button id="randomize">Randomize</button>
+      <div class="control">
+        <label>Seed: <span id="seed-display">-</span></label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button id="export-svg">Download SVG</button>
+      <button id="export-png">Download PNG</button>
+      <button id="export-gif">Record GIF</button>
+      <div id="gif-status"></div>
+      <h4 style="margin-top: 12px; font-size: 11px; color: var(--ts-text-muted);">Plotter Formats</h4>
+      <button id="export-dxf">Download DXF</button>
+      <button id="export-hpgl">Download HPGL</button>
+      <button id="export-gcode">Download G-code</button>
+    </div>
+
+    <div id="preset-container"></div>
+  </div>
+
+  <script>
+    // Harmonograph parameters
+    let params = {
+      paperSize: 'square_medium',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      strokeWeight: 0.5,
+      freq1: 2, phase1: 0, amp1: 1, damp1: 0.001,
+      freq2: 3, phase2: 0, amp2: 1, damp2: 0.001,
+      freq3: 2, phase3: Math.PI/2, amp3: 1, damp3: 0.001,
+      freq4: 3, phase4: 0, amp4: 1, damp4: 0.001,
+      duration: 60,
+      timeStep: 0.01,
+      mode: 'lateral',
+      seed: Math.floor(Math.random() * 1000000)
+    };
+
+    let paths = [];
+    let presetManager;
+    let panelController;
+    let statsDisplay;
+    let canvasControls;
+
+    // Presets for beautiful patterns
+    const presets = {
+      classic: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.002,
+        freq2: 3, phase2: 0, amp2: 0.5, damp2: 0.002,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.002,
+        freq4: 3, phase4: 0, amp4: 0.5, damp4: 0.002,
+        duration: 80, mode: 'rotary'
+      },
+      flower: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.001,
+        freq2: 6, phase2: 1.57, amp2: 0.3, damp2: 0.001,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.001,
+        freq4: 6, phase4: 0, amp4: 0.3, damp4: 0.001,
+        duration: 100, mode: 'rotary'
+      },
+      spiral: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.005,
+        freq2: 2.01, phase2: 0, amp2: 1, damp2: 0.005,
+        freq3: 2, phase3: 1.57, amp3: 1, damp3: 0.005,
+        freq4: 2.01, phase4: 1.57, amp4: 1, damp4: 0.005,
+        duration: 120, mode: 'rotary'
+      },
+      star: {
+        freq1: 5, phase1: 0, amp1: 1, damp1: 0.001,
+        freq2: 4, phase2: 0, amp2: 0.5, damp2: 0.001,
+        freq3: 5, phase3: 1.57, amp3: 1, damp3: 0.001,
+        freq4: 4, phase4: 1.57, amp4: 0.5, damp4: 0.001,
+        duration: 80, mode: 'rotary'
+      },
+      heart: {
+        freq1: 2, phase1: 0, amp1: 1, damp1: 0.002,
+        freq2: 3, phase2: 1.57, amp2: 0.7, damp2: 0.002,
+        freq3: 2, phase3: 0, amp3: 0.8, damp3: 0.002,
+        freq4: 3, phase4: 0, amp4: 0.5, damp4: 0.002,
+        duration: 100, mode: 'rotary'
+      },
+      chaos: {
+        freq1: 2.31, phase1: 0.5, amp1: 1, damp1: 0.0005,
+        freq2: 3.47, phase2: 2.1, amp2: 0.8, damp2: 0.0008,
+        freq3: 2.17, phase3: 1.2, amp3: 1, damp3: 0.0006,
+        freq4: 3.89, phase4: 0.8, amp4: 0.7, damp4: 0.0007,
+        duration: 200, mode: 'rotary'
+      }
+    };
+
+    function applyPreset(name) {
+      const preset = presets[name];
+      if (preset) {
+        Object.assign(params, preset);
+        updateUIFromParams();
+        regenerate();
+      }
+    }
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height, SVG);
+      canvas.parent('canvas-container');
+
+      // Initialize canvas controls
+      canvasControls = new TSCanvasControls({
+        bgColor: params.bgColor,
+        strokeColor: params.strokeColor
+      });
+      canvasControls.bind(params);
+
+      // Initialize panel controller
+      panelController = new TSPanelController({
+        panelSelector: '#controls',
+        onToggle: (collapsed) => {
+          setTimeout(() => windowResized(), 350);
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'harmonograph',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: randomize
+      });
+
+      // Add built-in harmonograph presets
+      const builtInPresets = {
+        '🌸 Classic Flower': {
+          mode: 'rotary', freq1: 2, phase1: 0, amp1: 150, damp1: 0.002,
+          freq2: 3, phase2: 1.57, amp2: 150, damp2: 0.002,
+          freq3: 2, phase3: 0.78, amp3: 50, damp3: 0.001,
+          freq4: 3, phase4: 2.35, amp4: 50, damp4: 0.001,
+          duration: 100, timeStep: 0.01
+        },
+        '🌀 Spiral Dance': {
+          mode: 'lateral', freq1: 4, phase1: 0, amp1: 180, damp1: 0.003,
+          freq2: 5, phase2: 0.5, amp2: 180, damp2: 0.003,
+          freq3: 0, phase3: 0, amp3: 0, damp3: 0,
+          freq4: 0, phase4: 0, amp4: 0, damp4: 0,
+          duration: 80, timeStep: 0.01
+        },
+        '⭐ Star Pattern': {
+          mode: 'rotary', freq1: 5, phase1: 0, amp1: 160, damp1: 0.001,
+          freq2: 4, phase2: 0, amp2: 160, damp2: 0.001,
+          freq3: 5, phase3: 1.57, amp3: 40, damp3: 0.001,
+          freq4: 4, phase4: 1.57, amp4: 40, damp4: 0.001,
+          duration: 120, timeStep: 0.01
+        },
+        '💕 Heart Shape': {
+          mode: 'lateral', freq1: 1, phase1: 0, amp1: 150, damp1: 0.002,
+          freq2: 2, phase2: 1.57, amp2: 150, damp2: 0.002,
+          freq3: 0, phase3: 0, amp3: 0, damp3: 0,
+          freq4: 0, phase4: 0, amp4: 0, damp4: 0,
+          duration: 100, timeStep: 0.01
+        },
+        '🎭 Chaos Theory': {
+          mode: 'rotary', freq1: 2.01, phase1: 0.3, amp1: 170, damp1: 0.0015,
+          freq2: 3.03, phase2: 1.2, amp2: 170, damp2: 0.0015,
+          freq3: 2.05, phase3: 2.1, amp3: 60, damp3: 0.001,
+          freq4: 3.07, phase4: 0.9, amp4: 60, damp4: 0.001,
+          duration: 200, timeStep: 0.008
+        },
+        '🦋 Butterfly': {
+          mode: 'rotary', freq1: 3, phase1: 0, amp1: 180, damp1: 0.001,
+          freq2: 2, phase2: 1.57, amp2: 140, damp2: 0.001,
+          freq3: 3, phase3: 0.78, amp3: 50, damp3: 0.0005,
+          freq4: 2, phase4: 2.35, amp4: 50, damp4: 0.0005,
+          duration: 150, timeStep: 0.01
+        }
+      };
+
+      Object.entries(builtInPresets).forEach(([name, presetParams]) => {
+        if (!presetManager.presets[name]) {
+          presetManager.savePreset(name, presetParams);
+        }
+      });
+
+      setupControls();
+      regenerate();
+    }
+
+    function setupControls() {
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = CanvasLayout.getSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+        regenerate();
+      });
+
+      // Colors
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        regenerate();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        regenerate();
+      });
+
+      // Range sliders
+      const rangeInputs = ['strokeWeight', 'freq1', 'phase1', 'amp1', 'damp1',
+        'freq2', 'phase2', 'amp2', 'damp2', 'freq3', 'phase3', 'amp3', 'damp3',
+        'freq4', 'phase4', 'amp4', 'damp4', 'duration', 'timeStep'];
+
+      rangeInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('input', (e) => {
+            params[id] = parseFloat(e.target.value);
+            document.getElementById(id + '-val').textContent = e.target.value;
+            regenerate();
+          });
+        }
+      });
+
+      // Mode select
+      document.getElementById('mode').addEventListener('change', (e) => {
+        params.mode = e.target.value;
+        regenerate();
+      });
+
+      // Buttons
+      document.getElementById('regenerate').addEventListener('click', regenerate);
+      document.getElementById('randomize').addEventListener('click', randomize);
+
+      // Export
+      document.getElementById('export-svg').addEventListener('click', exportSVG);
+      document.getElementById('export-png').addEventListener('click', exportPNG);
+      document.getElementById('export-gif').addEventListener('click', exportGIF);
+
+      // Plotter format exports
+      document.getElementById('export-dxf').addEventListener('click', exportDXF);
+      document.getElementById('export-hpgl').addEventListener('click', exportHPGL);
+      document.getElementById('export-gcode').addEventListener('click', exportGCODE);
+    }
+
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const el = document.getElementById(key);
+        if (el) {
+          if (el.type === 'range' || el.type === 'color') {
+            el.value = params[key];
+          } else if (el.tagName === 'SELECT') {
+            el.value = params[key];
+          }
+          const valEl = document.getElementById(key + '-val');
+          if (valEl) {
+            valEl.textContent = params[key];
+          }
+        }
+      });
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function regenerate() {
+      paths = [];
+      calculateHarmonograph();
+      drawPattern();
+      updateStats();
+    }
+
+    function randomize() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      randomSeed(params.seed);
+
+      params.freq1 = random(1, 10);
+      params.freq2 = random(1, 10);
+      params.freq3 = random(1, 10);
+      params.freq4 = random(1, 10);
+      params.phase1 = random(0, TWO_PI);
+      params.phase2 = random(0, TWO_PI);
+      params.phase3 = random(0, TWO_PI);
+      params.phase4 = random(0, TWO_PI);
+      params.amp1 = random(0.5, 1.5);
+      params.amp2 = random(0.3, 1);
+      params.amp3 = random(0.5, 1.5);
+      params.amp4 = random(0.3, 1);
+      params.damp1 = random(0.0001, 0.005);
+      params.damp2 = random(0.0001, 0.005);
+      params.damp3 = random(0.0001, 0.005);
+      params.damp4 = random(0.0001, 0.005);
+      params.duration = random(40, 150);
+
+      updateUIFromParams();
+      regenerate();
+    }
+
+    function calculateHarmonograph() {
+      const scale = min(width, height) * 0.4;
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      let path = [];
+      const steps = params.duration / params.timeStep;
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i * params.timeStep;
+        let x, y;
+
+        if (params.mode === 'lateral') {
+          // Two-pendulum lateral harmonograph
+          x = params.amp1 * sin(params.freq1 * t + params.phase1) * exp(-params.damp1 * t);
+          y = params.amp3 * sin(params.freq3 * t + params.phase3) * exp(-params.damp3 * t);
+        } else {
+          // Four-pendulum rotary harmonograph
+          x = params.amp1 * sin(params.freq1 * t + params.phase1) * exp(-params.damp1 * t) +
+              params.amp2 * sin(params.freq2 * t + params.phase2) * exp(-params.damp2 * t);
+          y = params.amp3 * sin(params.freq3 * t + params.phase3) * exp(-params.damp3 * t) +
+              params.amp4 * sin(params.freq4 * t + params.phase4) * exp(-params.damp4 * t);
+        }
+
+        path.push({
+          x: centerX + x * scale,
+          y: centerY + y * scale
+        });
+      }
+
+      paths.push(path);
+    }
+
+    function drawPattern() {
+      clear();  // Required for SVG mode - removes existing elements
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      for (const path of paths) {
+        beginShape();
+        for (const pt of path) {
+          vertex(pt.x, pt.y);
+        }
+        endShape();
+      }
+    }
+
+    function updateStats() {
+      if (statsDisplay && paths.length > 0) {
+        const totalVertices = paths.reduce((sum, p) => sum + p.length, 0);
+
+        // Convert paths to format for plotter stats calculation
+        const pathsForStats = paths.map(p => ({ points: p }));
+
+        // Calculate plotter-specific stats
+        const plotterStats = TSStatsDisplay.getPlotterStats(pathsForStats, {
+          drawSpeed: 30,      // mm/s - typical pen plotter speed
+          travelSpeed: 80,    // mm/s
+          pxToMm: 0.264583    // 96dpi
+        });
+
+        // Update display with all stats
+        statsDisplay.update({
+          lines: paths.length,
+          vertices: totalVertices,
+          seed: params.seed
+        });
+
+        // Add plotter stats separately
+        statsDisplay.setPathLength(plotterStats.pathLength);
+        statsDisplay.setPlotTime(plotterStats.plotTime);
+        statsDisplay.setPenLifts(plotterStats.penLifts);
+      }
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function exportSVG() {
+      save('harmonograph-' + params.seed + '.svg');
+    }
+
+    function exportPNG() {
+      const pngCanvas = createGraphics(width, height);
+      pngCanvas.background(params.bgColor);
+      pngCanvas.stroke(params.strokeColor);
+      pngCanvas.strokeWeight(params.strokeWeight);
+      pngCanvas.noFill();
+
+      for (const path of paths) {
+        pngCanvas.beginShape();
+        for (const pt of path) {
+          pngCanvas.vertex(pt.x, pt.y);
+        }
+        pngCanvas.endShape();
+      }
+
+      saveCanvas(pngCanvas, 'harmonograph-' + params.seed, 'png');
+    }
+
+    function exportGIF() {
+      const status = document.getElementById('gif-status');
+      status.textContent = 'Recording GIF...';
+
+      const gif = new GIF({
+        workers: 4,
+        quality: 10,
+        width: width,
+        height: height
+      });
+
+      const frames = 60;
+      const pathsPerFrame = Math.ceil(paths[0].length / frames);
+
+      for (let f = 0; f < frames; f++) {
+        const tempCanvas = createGraphics(width, height);
+        tempCanvas.background(params.bgColor);
+        tempCanvas.stroke(params.strokeColor);
+        tempCanvas.strokeWeight(params.strokeWeight);
+        tempCanvas.noFill();
+
+        const endIdx = Math.min((f + 1) * pathsPerFrame, paths[0].length);
+        tempCanvas.beginShape();
+        for (let i = 0; i < endIdx; i++) {
+          tempCanvas.vertex(paths[0][i].x, paths[0][i].y);
+        }
+        tempCanvas.endShape();
+
+        gif.addFrame(tempCanvas.canvas, { delay: 50 });
+        tempCanvas.remove();
+      }
+
+      gif.on('finished', (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'harmonograph-' + params.seed + '.gif';
+        a.click();
+        URL.revokeObjectURL(url);
+        status.textContent = 'GIF saved!';
+        setTimeout(() => status.textContent = '', 3000);
+      });
+
+      gif.render();
+    }
+
+    function exportDXF() {
+      const pathsForExport = paths.map(p => ({ points: p, color: params.strokeColor }));
+      TSExport.downloadDXF(pathsForExport, 'harmonograph-' + params.seed);
+    }
+
+    function exportHPGL() {
+      const pathsForExport = paths.map(p => ({ points: p, color: params.strokeColor }));
+      TSExport.downloadHPGL(pathsForExport, 'harmonograph-' + params.seed);
+    }
+
+    function exportGCODE() {
+      const pathsForExport = paths.map(p => ({ points: p }));
+      TSExport.downloadGCODE(pathsForExport, 'harmonograph-' + params.seed);
+    }
+
+    function windowResized() {
+      // Handled by CanvasLayout
+    }
+  </script>
+</body>
+</html>

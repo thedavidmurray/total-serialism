@@ -369,7 +369,10 @@
       svgCanvas = createCanvas(size, size);
       svgCanvas.parent('canvas-container');
       pixelDensity(2);
-      
+
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       setupControls();
       canvasControls.setupRandomizeButton();
       setupCanvasLayout();
@@ -410,7 +413,7 @@
       } else {
         drawBurst();
       }
-      
+
       // Draw paper frame if enabled
       if (showFrame) {
         const paperSize = CanvasLayout.getSize(currentPaperSize);
@@ -420,6 +423,35 @@
           margin: 20,
           color: [0, 200, 0],
           weight: 2
+        });
+      }
+
+      updateStats();
+    }
+
+    function updateStats() {
+      if (!window.statsDisplay) return;
+
+      if (currentMode === "spiral") {
+        const totalDots = params.numArms * params.dotsPerArm;
+        window.statsDisplay.update({
+          'Mode': 'Spiral Dots',
+          'Arms': params.numArms,
+          'Dots/Arm': params.dotsPerArm,
+          'Total Dots': totalDots,
+          'Turns': params.maxTheta.toFixed(1),
+          'Hole Radius': params.holeRadius + 'px',
+          'Seed': seed
+        });
+      } else {
+        window.statsDisplay.update({
+          'Mode': 'Radial Burst',
+          'Rays': params.numRays,
+          'Min Length': params.minRayLength + 'px',
+          'Max Length': params.maxRayLength + 'px',
+          'Noise Scale': params.noiseScale.toFixed(1),
+          'Fuzz Chance': (params.innerFuzzChance * 100).toFixed(0) + '%',
+          'Seed': seed
         });
       }
     }
@@ -1055,5 +1087,7 @@
       }
     }
   </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

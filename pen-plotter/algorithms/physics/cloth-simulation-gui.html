@@ -16,6 +16,8 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -849,6 +851,10 @@
       let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
+      // Initialize TS Panel Controller and Stats Display
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Initialize cloth
       cloth = new ClothSimulation();
       initializeCloth();
@@ -986,6 +992,22 @@
 
       // Update info display
       updateInfoDisplay();
+
+      // Update stats display
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          particles: cloth.particles.length,
+          constraints: cloth.constraints.filter(c => c.active).length,
+          torn: cloth.constraints.filter(c => !c.active).length,
+          iterations: params.stiffness,
+          gravity: params.gravity.toFixed(2),
+          wind: params.windStrength.toFixed(2),
+          damping: params.damping.toFixed(3),
+          mode: params.simMode,
+          pinMode: params.pinMode,
+          fps: Math.round(frameRate())
+        });
+      }
 
       // Capture GIF frame if recording
       if (gifExporter && gifExporter.isRecording()) {

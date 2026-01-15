@@ -11,6 +11,8 @@
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -457,6 +459,8 @@
         let coralSystem = null;
         let animationFrames = [];
         let presetManager;
+        let panelController;
+        let statsDisplay;
 
         // Parameters object
         let params = {
@@ -485,8 +489,20 @@
     canvasControls.bind(params);
         canvasControls.setupRandomizeButton();
 
-        // Initialize preset manager
+        // Initialize preset manager, panel controller, and stats display
         document.addEventListener('DOMContentLoaded', () => {
+            // Initialize panel controller
+            panelController = new TSPanelController({
+                onToggle: (collapsed) => {
+                    console.log('Panel collapsed:', collapsed);
+                }
+            });
+            panelController.attach();
+
+            // Initialize stats display
+            statsDisplay = new TSStatsDisplay();
+            statsDisplay.attach();
+
             presetManager = new PresetManager({
                 algorithmId: 'coral-growth',
                 container: '#preset-container',
@@ -728,6 +744,31 @@
                 this.bounds = {minX: canvas.width, maxX: 0, minY: canvas.height, maxY: 0};
             }
 
+            // Calculate statistics about the coral system
+            getStats() {
+                let totalBranches = 0;
+                let totalSegments = 0;
+                let maxDepth = 0;
+
+                function countBranches(branch, depth = 0) {
+                    totalBranches++;
+                    totalSegments += branch.segments.length;
+                    maxDepth = Math.max(maxDepth, depth);
+                    branch.children.forEach(child => countBranches(child, depth + 1));
+                }
+
+                this.colonies.forEach(colony => countBranches(colony));
+
+                return {
+                    colonies: this.colonies.length,
+                    branches: totalBranches,
+                    segments: totalSegments,
+                    maxDepth: maxDepth,
+                    generations: params.generations,
+                    type: params.coralType
+                };
+            }
+
             initialize() {
                 const coralType = params.coralType;
                 const multiSpecies = params.multiSpecies;
@@ -806,6 +847,19 @@
             coralSystem.initialize();
             coralSystem.grow();
             coralSystem.draw(ctx);
+
+            // Update stats display
+            if (statsDisplay) {
+                const stats = coralSystem.getStats();
+                statsDisplay.update({
+                    colonies: { value: stats.colonies, label: 'Colonies' },
+                    branches: { value: stats.branches, label: 'Branches' },
+                    segments: { value: stats.segments, label: 'Segments' },
+                    maxDepth: { value: stats.maxDepth, label: 'Max Depth' },
+                    generations: { value: stats.generations, label: 'Gens' },
+                    type: { value: stats.type, label: 'Type' }
+                });
+            }
         }
 
         function animateGrowth() {
@@ -849,6 +903,11 @@
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             coralSystem = null;
             animationFrames = [];
+
+            // Clear stats display
+            if (statsDisplay) {
+                statsDisplay.clear();
+            }
         }
 
         function exportSVG() {
@@ -949,6 +1008,19 @@
             });
 
             coralSystem.draw(ctx);
+
+            // Update stats display
+            if (statsDisplay) {
+                const stats = coralSystem.getStats();
+                statsDisplay.update({
+                    colonies: { value: stats.colonies, label: 'Colonies' },
+                    branches: { value: stats.branches, label: 'Branches' },
+                    segments: { value: stats.segments, label: 'Segments' },
+                    maxDepth: { value: stats.maxDepth, label: 'Max Depth' },
+                    generations: { value: stats.generations, label: 'Gens' },
+                    type: { value: stats.type, label: 'Type' }
+                });
+            }
         });
 
         // Initialize

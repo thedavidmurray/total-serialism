@@ -20,6 +20,8 @@
     <script src="../../shared/canvas-layout.js"></script>
     <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 
     <style>
         /* Algorithm-specific styles */
@@ -806,6 +808,9 @@
             canvas = createCanvas(size.width, size.height);
             canvas.parent('canvas-container');
 
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             colonizationSystem = new SpaceColonizationSystem(width, height);
 
             // Initial draw
@@ -904,6 +909,21 @@
             document.getElementById('attractorCount').textContent = stats.attractors;
             document.getElementById('segmentCount').textContent = stats.segments;
             document.getElementById('iterationCount').textContent = stats.iteration;
+
+            // Update TSStatsDisplay
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    'Branch Nodes': stats.branches,
+                    'Attractors': stats.attractors,
+                    'Segments': stats.segments,
+                    'Iteration': stats.iteration,
+                    'Seeds': params.seedCount,
+                    'Distribution': params.distribution,
+                    'Segment Length': params.segmentLength,
+                    'Kill Distance': params.killDistance,
+                    'Influence Radius': params.influenceRadius
+                });
+            }
         }
 
         // ============================================

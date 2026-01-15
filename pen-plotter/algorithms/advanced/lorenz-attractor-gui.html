@@ -120,6 +120,8 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script>
     const params = {
       attractorType: 'lorenz',
@@ -164,6 +166,11 @@
     function setup() {
       canvas = createCanvas(SIZE, SIZE);
       canvas.parent('canvas-container');
+
+      // Initialize UX components
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       setupControls();
       canvasControls.setupRandomizeButton();
       generateAttractor();
@@ -247,6 +254,43 @@
       for (const start of startPoints) {
         const path = computePath(start.x, start.y, start.z);
         paths.push(path);
+      }
+
+      // Update stats display
+      const totalPoints = paths.reduce((sum, path) => sum + path.length, 0);
+      const p = attractorParams[params.attractorType];
+
+      if (window.statsDisplay) {
+        window.statsDisplay.clear();
+        window.statsDisplay.add('Attractor', params.attractorType);
+        window.statsDisplay.add('Paths', startPoints.length);
+        window.statsDisplay.add('Points', totalPoints);
+        window.statsDisplay.add('Iterations', params.iterations);
+        window.statsDisplay.add('Time Step', params.dt);
+
+        // Add attractor-specific parameters
+        if (params.attractorType === 'lorenz') {
+          window.statsDisplay.add('σ (sigma)', p.sigma);
+          window.statsDisplay.add('ρ (rho)', p.rho);
+          window.statsDisplay.add('β (beta)', p.beta.toFixed(3));
+        } else if (params.attractorType === 'rossler') {
+          window.statsDisplay.add('a', p.a);
+          window.statsDisplay.add('b', p.b);
+          window.statsDisplay.add('c', p.c);
+        } else if (params.attractorType === 'thomas') {
+          window.statsDisplay.add('b', p.b);
+        } else if (params.attractorType === 'aizawa') {
+          window.statsDisplay.add('a', p.a);
+          window.statsDisplay.add('b', p.b);
+          window.statsDisplay.add('c', p.c);
+          window.statsDisplay.add('d', p.d);
+        } else if (params.attractorType === 'halvorsen') {
+          window.statsDisplay.add('a', p.a);
+        }
+
+        window.statsDisplay.add('Rotation X', `${params.rotX}°`);
+        window.statsDisplay.add('Rotation Z', `${params.rotZ}°`);
+        window.statsDisplay.add('Scale', params.scale);
       }
 
       drawAttractor();

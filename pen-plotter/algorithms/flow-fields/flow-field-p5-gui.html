@@ -16,6 +16,8 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../layer-export.js"></script>
   <script src="../../layer-export-ui.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -188,6 +190,8 @@
     let particles = [];
     let presetManager;
     let layerExportUI;
+    let panelController;
+    let statsDisplay;
 
     // Paper sizes in mm
     const paperSizes = {
@@ -229,6 +233,10 @@
       // Initialize layer export UI
       layerExportUI = new LayerExportUI(canvas, '#layer-export-controls');
       layerExportUI.render();
+
+      // Initialize panel controller and stats display
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
 
       // Initial generation
       regenerate();
@@ -423,6 +431,22 @@
       // Update layer export UI
       if (layerExportUI) {
         layerExportUI.updateInfo();
+      }
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        const totalLines = particles.reduce((sum, p) => sum + (p.path.length > 1 ? 1 : 0), 0);
+        const avgPathLength = particles.reduce((sum, p) => sum + p.path.length, 0) / particles.length;
+
+        statsDisplay.update({
+          'Particles': params.particleCount,
+          'Lines Drawn': totalLines,
+          'Avg Path Length': avgPathLength.toFixed(1),
+          'Seed': params.seed,
+          'Field Type': params.fieldType,
+          'Noise Scale': params.noiseScale.toFixed(4),
+          'Steps': params.steps
+        });
       }
     }
 

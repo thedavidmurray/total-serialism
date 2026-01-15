@@ -13,6 +13,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -422,6 +424,8 @@
     let tspPath = [];
     let sourceImage = null;
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     const params = {
@@ -453,6 +457,15 @@
       const canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas');
       background(params.bgColor);
+
+      // Initialize Total Serialism components
+      if (typeof TSPanelController !== 'undefined') {
+        panelController = new TSPanelController().attach();
+      }
+
+      if (typeof TSStatsDisplay !== 'undefined') {
+        statsDisplay = new TSStatsDisplay().attach();
+      }
 
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -817,6 +830,26 @@
 
       if (algorithm) {
         document.getElementById('statAlgorithm').textContent = algorithm;
+      }
+
+      // Update TSStatsDisplay
+      if (statsDisplay) {
+        const statsData = {
+          'Points': points.length,
+          'Seed': params.seed,
+          'Path Length': finalLength !== undefined ? finalLength.toFixed(1) : '—'
+        };
+
+        if (initialLength !== undefined && initialLength !== finalLength) {
+          const improvement = ((initialLength - finalLength) / initialLength * 100).toFixed(1);
+          statsData['Improvement'] = improvement + '%';
+        }
+
+        if (algorithm) {
+          statsData['Algorithm'] = algorithm;
+        }
+
+        statsDisplay.update(statsData);
       }
     }
 

@@ -13,6 +13,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -416,6 +418,8 @@
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
     let fitZoomCtl;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     let params = {
@@ -487,6 +491,28 @@
         }
       });
 
+      // Add built-in famous presets if not already saved
+      const builtInPresets = {
+        '🧬 Mitosis': { feedRate: 0.0367, killRate: 0.0649, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🪸 Coral Growth': { feedRate: 0.0545, killRate: 0.062, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '👆 Fingerprints': { feedRate: 0.055, killRate: 0.062, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'contour' },
+        '🌀 Spirals': { feedRate: 0.018, killRate: 0.051, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🐛 Worms': { feedRate: 0.078, killRate: 0.061, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🫧 Bubbles': { feedRate: 0.098, killRate: 0.057, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🔬 Bacteria': { feedRate: 0.026, killRate: 0.052, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'threshold' },
+        '🌊 Waves': { feedRate: 0.014, killRate: 0.054, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'heatmap' },
+        '🕸️ Solitons': { feedRate: 0.03, killRate: 0.06, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🌿 Turing Spots': { feedRate: 0.025, killRate: 0.06, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.6, renderMode: 'threshold' },
+        '🦓 Stripes': { feedRate: 0.022, killRate: 0.051, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'duotone' },
+        '🌐 Labyrinth': { feedRate: 0.029, killRate: 0.057, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.4, renderMode: 'contour' }
+      };
+
+      Object.entries(builtInPresets).forEach(([name, presetParams]) => {
+        if (!presetManager.presets[name]) {
+          presetManager.savePreset(name, presetParams);
+        }
+      });
+
       const zoomInput = document.getElementById('zoom');
       const fitBtn = document.getElementById('fitViewBtn');
       if (window.CanvasLayout) {
@@ -497,6 +523,24 @@
           zoomInput
         });
       }
+
+      // Initialize TSPanelController
+      panelController = new TSPanelController({
+        panelSelector: '#controls',
+        onToggle: (isVisible) => {
+          console.log(`Controls panel ${isVisible ? 'shown' : 'hidden'}`);
+        }
+      });
+
+      // Initialize TSStatsDisplay
+      statsDisplay = new TSStatsDisplay({
+        containerId: 'canvas-container',
+        style: {
+          position: 'absolute',
+          top: '10px',
+          right: '10px'
+        }
+      });
     }
 
     // Helper function to update UI from params
@@ -657,10 +701,25 @@
       // Update info display
       document.getElementById('iteration-count').textContent = iteration;
       document.getElementById('fps').textContent = Math.round(frameRate());
-      
+
       if (document.getElementById('showConcentration').checked) {
         document.getElementById('a-concentration').textContent = (avgA / count).toFixed(3);
         document.getElementById('b-concentration').textContent = (avgB / count).toFixed(3);
+      }
+
+      // Update TSStatsDisplay with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Iteration': iteration,
+          'FPS': Math.round(frameRate()),
+          'Grid Size': `${gridSize}x${gridSize}`,
+          'Cell Size': `${cellSize}px`,
+          'Feed Rate': params.feedRate.toFixed(3),
+          'Kill Rate': params.killRate.toFixed(3),
+          'Avg A': (avgA / count).toFixed(3),
+          'Avg B': (avgB / count).toFixed(3),
+          'Status': isPaused ? 'Paused' : 'Running'
+        });
       }
     }
     

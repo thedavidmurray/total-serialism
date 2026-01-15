@@ -128,6 +128,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
     <script>
         // Canvas settings
         const params = {
@@ -154,6 +156,10 @@
             height = canvas.height;
         }
         initCanvasSize();
+
+        // Initialize UX components
+        window.panelController = new TSPanelController().attach();
+        window.statsDisplay = new TSStatsDisplay().attach();
 
         let components = [
             {name: 'Component A', Rf: 0.3, color: '#FF6B6B', k: 2.0},
@@ -272,6 +278,17 @@
             const L = parseInt(columnLength.value);
             const v = parseFloat(flowRate.value);
             const t0 = L / v; // void time
+
+            // Update stats display
+            if (window.statsDisplay) {
+                statsDisplay.set('Components', components.length);
+                statsDisplay.set('Type', chromType.value.toUpperCase());
+                statsDisplay.set('Plates (N)', N);
+                statsDisplay.set('Length', `${L} cm`);
+                statsDisplay.set('Flow', `${v} mL/min`);
+                statsDisplay.set('Temp', `${temperature.value}°C`);
+                statsDisplay.set('Mobile Phase', mobilePhase.value);
+            }
 
             if (chromType.value === 'tlc' || chromType.value === '2d') {
                 // TLC or 2D visualization

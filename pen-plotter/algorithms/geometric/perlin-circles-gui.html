@@ -10,6 +10,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
@@ -300,6 +302,8 @@
     let autoRegenerate = true;
     let regenTimer;
     const REGEN_DEBOUNCE = 150;
+    let panelController;
+    let statsDisplay;
 
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
@@ -310,6 +314,16 @@
 
       setupControls();
       canvasControls.setupRandomizeButton();
+
+      // Initialize panel controller
+      panelController = new TSPanelController({
+        onToggle: (isVisible) => {
+          console.log('Panel visibility:', isVisible);
+        }
+      });
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
 
       // Initialize preset manager
       presetManager = new PresetManager({
@@ -428,6 +442,25 @@
       window.randomSeed(params.seed);
       noiseSeed(params.seed);
       generateCircles();
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        const totalPoints = params.circleCount * params.pointsPerCircle;
+        const maxRadius = params.baseRadius + (params.circleCount - 1) * params.radiusSpacing;
+        statsDisplay.update({
+          'Pattern': params.patternType,
+          'Noise Type': params.noiseType,
+          'Circles': params.circleCount,
+          'Points/Circle': params.pointsPerCircle,
+          'Total Points': totalPoints,
+          'Max Radius': `${Math.round(maxRadius)}px`,
+          'Noise Scale': params.noiseScale.toFixed(3),
+          'Amplitude': params.noiseAmplitude.toFixed(2),
+          'Octaves': params.octaves,
+          'Animated': params.animateNoise ? 'Yes' : 'No'
+        });
+      }
+
       if (!params.animateNoise) {
         redraw();
         noLoop();

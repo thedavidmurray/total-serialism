@@ -11,6 +11,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script src="../../export-utils.js"></script>
   <script src="../../ui-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
@@ -444,6 +446,8 @@
     // Global variables
     let patterns = [];
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     const params = {
@@ -808,6 +812,15 @@
         }
       });
 
+      // Initialize panel controller and stats display
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          windowResized();
+        }
+      }).attach();
+
+      statsDisplay = new TSStatsDisplay().attach();
+
       // Setup param sync
       UIUtils.setupParamSync(params, () => queueRegenerate());
 
@@ -945,6 +958,16 @@
             patterns.push({ x, y, shapes });
           }
         }
+      }
+
+      // Update stats display
+      if (statsDisplay) {
+        const totalShapes = patterns.reduce((sum, pattern) => sum + pattern.shapes.length, 0);
+        statsDisplay.update({
+          tiles: patterns.length,
+          shapes: totalShapes,
+          grid: params.gridDivisions
+        });
       }
     }
 

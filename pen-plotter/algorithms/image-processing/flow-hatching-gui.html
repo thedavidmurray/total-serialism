@@ -499,6 +499,8 @@
   </div>
 
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script>
     // Global variables
     let img = null;
@@ -520,6 +522,10 @@
       updateCanvasSize();
       canvas = createCanvas(canvasWidth, canvasHeight);
       canvas.parent('canvas-wrapper');
+
+      // Initialize UX components
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
 
       // Initialize SVG canvas for export
       svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
@@ -1060,6 +1066,29 @@
 
       // Update stats
       updateStats();
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        const totalLength = hatchLines.reduce((sum, line) => {
+          let lineLength = 0;
+          if (line.points && line.points.length > 1) {
+            for (let i = 1; i < line.points.length; i++) {
+              const dx = line.points[i].x - line.points[i-1].x;
+              const dy = line.points[i].y - line.points[i-1].y;
+              lineLength += Math.sqrt(dx * dx + dy * dy);
+            }
+          }
+          return sum + lineLength;
+        }, 0);
+        const totalPoints = hatchLines.reduce((sum, line) => sum + (line.points ? line.points.length : 0), 0);
+
+        window.statsDisplay.updateStats({
+          lines: hatchLines.length,
+          strokes: totalPoints,
+          pathLength: (totalLength * 25.4 / 96).toFixed(1),
+          seed: currentSeed
+        });
+      }
 
       processing = false;
       showStatus('Flow hatching generated!', 'success');

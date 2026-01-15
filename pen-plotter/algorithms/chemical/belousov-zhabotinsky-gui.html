@@ -15,6 +15,8 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -204,11 +206,30 @@
     let next;
     let svgCanvas;
     let presetManager;
+    let panelController;
+    let statsDisplay;
+    let iterationCount = 0;
 
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
+
+      // Initialize UX components
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          console.log('Panel toggled:', collapsed ? 'collapsed' : 'expanded');
+          resizeCanvasForPaperSize();
+        }
+      });
+      panelController.attach();
+
+      statsDisplay = new TSStatsDisplay({
+        containerSelector: '#canvas-container',
+        visible: true,
+        debounceMs: 100
+      });
+      statsDisplay.attach();
 
       // Canvas settings event handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -335,7 +356,17 @@
       randomSeed(params.seed);
       noiseSeed(params.seed);
       document.getElementById('seed-display').textContent = params.seed;
-      
+
+      iterationCount = 0;
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.setSeed(params.seed);
+        statsDisplay.set('gridSize', params.gridSize, 'Grid Size');
+        statsDisplay.set('pattern', params.patternType, 'Pattern');
+        statsDisplay.set('iterations', iterationCount, 'Iterations');
+      }
+
       initializeGrid();
     }
     
@@ -467,9 +498,15 @@
       if (params.running) {
         for (let i = 0; i < params.timeSteps; i++) {
           update();
+          iterationCount++;
+        }
+
+        // Update iteration count in stats display
+        if (statsDisplay && iterationCount % 10 === 0) {
+          statsDisplay.set('iterations', iterationCount, 'Iterations');
         }
       }
-      
+
       // Draw visualization
       background(params.bgColor);
       

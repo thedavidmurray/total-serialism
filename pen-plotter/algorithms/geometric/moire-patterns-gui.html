@@ -11,6 +11,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -164,11 +166,19 @@
 
     let canvas;
     let animationAngle = 0;
+    let panelController;
+    let statsDisplay;
 
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      // Initialize panel controller and stats display
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => { windowResized(); }
+      }).attach();
+      statsDisplay = new TSStatsDisplay().attach();
 
       // Setup controls
       setupControls();
@@ -269,12 +279,18 @@
       const cx = width / 2;
       const cy = height / 2;
 
+      // Count layers and lines for stats
+      let totalLines = 0;
+      let layersDrawn = 0;
+
       // Draw Layer 1
       if (params.showLayer1) {
         push();
         translate(cx, cy);
         drawPattern(0, 0, 0, 1);
         pop();
+        totalLines += params.lineCount;
+        layersDrawn++;
       }
 
       // Draw Layer 2 with offset and rotation
@@ -285,6 +301,21 @@
         scale(params.scale2);
         drawPattern(0, 0, 0, 1);
         pop();
+        totalLines += params.lineCount;
+        layersDrawn++;
+      }
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Pattern': params.patternType,
+          'Layers': layersDrawn,
+          'Lines': totalLines,
+          'Spacing': params.spacing.toFixed(1),
+          'Rotation': params.rotation.toFixed(1) + '°',
+          'Offset': `(${params.offsetX}, ${params.offsetY})`,
+          'Animated': params.animate ? 'Yes' : 'No'
+        });
       }
     }
 

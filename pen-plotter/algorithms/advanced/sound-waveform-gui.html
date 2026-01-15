@@ -165,6 +165,9 @@
             const canvas = createCanvas(size.width, size.height);
             canvas.parent('canvas-container');
 
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             // Canvas settings handlers
             document.getElementById('paperSize').addEventListener('change', (e) => {
                 params.paperSize = e.target.value;
@@ -387,6 +390,31 @@
                 // Record paths if in recording mode
                 if (isRecording) {
                     recordPath();
+                }
+
+                // Update stats display
+                if (window.statsDisplay) {
+                    const nyquist = 22050;
+                    let maxAmp = 0;
+                    let dominantFreq = 0;
+                    for (let i = 0; i < spectrum.length; i++) {
+                        if (spectrum[i] > maxAmp) {
+                            maxAmp = spectrum[i];
+                            dominantFreq = map(i, 0, spectrum.length, 0, nyquist);
+                        }
+                    }
+                    const peakDb = (20 * log(maxAmp / 255) / log(10)).toFixed(1);
+
+                    window.statsDisplay.update({
+                        'Style': params.vizStyle,
+                        'Frequency': `${dominantFreq.toFixed(0)} Hz`,
+                        'Peak': `${peakDb} dB`,
+                        'FFT Bins': params.fftBins,
+                        'Smoothing': params.smoothing.toFixed(2),
+                        'Samples': waveform.length,
+                        'Trails': params.trails ? 'On' : 'Off',
+                        'Recording': isRecording ? 'On' : 'Off'
+                    });
                 }
             }
         }
@@ -635,5 +663,8 @@
             resizeCanvasForPaperSize();
         }
     </script>
+
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

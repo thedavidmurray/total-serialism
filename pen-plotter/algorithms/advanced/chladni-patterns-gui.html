@@ -167,6 +167,10 @@
             const canvas = createCanvas(size.width, size.height);
             canvas.parent('canvas-container');
 
+            // Initialize UX components
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             // Canvas settings handlers
             document.getElementById('paperSize').addEventListener('change', (e) => {
                 params.paperSize = e.target.value;
@@ -503,6 +507,18 @@
                     }
                 }
             }
+
+            // Update stats display
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    'Mode': `m=${params.modeM}, n=${params.modeN}`,
+                    'Frequency': `${params.fundamental} Hz`,
+                    'Shape': params.plateShape,
+                    'Nodes': nodalLines.length,
+                    'Sand': sandParticles.length,
+                    'Resolution': params.resolution
+                });
+            }
         }
 
         function draw() {
@@ -665,5 +681,7 @@
             resizeCanvasForPaperSize();
         }
     </script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

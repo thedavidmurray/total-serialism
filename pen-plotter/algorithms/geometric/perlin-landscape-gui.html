@@ -10,6 +10,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
@@ -334,6 +336,9 @@
       svgCanvas.parent('canvas-container');
       noLoop(); // We'll use redraw() for updates
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       setupControls();
       canvasControls.setupRandomizeButton();
       regenerate();
@@ -581,6 +586,24 @@
       }
 
       pop();
+
+      // Update stats display
+      if (window.statsDisplay) {
+        const totalLines = contours.reduce((sum, c) => sum + c.lines.length, 0);
+        const totalVertices = totalLines * 2;
+
+        window.statsDisplay.update({
+          'Contour Lines': contours.length,
+          'Line Segments': totalLines,
+          'Vertices': totalVertices,
+          'Grid Res': `${gridResolution}×${gridResolution}`,
+          'Noise Scale': params.noiseScale.toFixed(3),
+          'Amplitude': Math.round(params.amplitude),
+          'Octaves': params.octaves,
+          'Seed': params.seed,
+          'View': params.viewMode
+        });
+      }
     }
 
     function drawTopView() {

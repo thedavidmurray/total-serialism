@@ -13,6 +13,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -241,6 +243,8 @@
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
 
+    let panelController;
+    let statsDisplay;
     let layers = [];
     let svgCanvas;
     let animationTime = 0;
@@ -254,6 +258,11 @@
 
       svgCanvas = createCanvas(size.width * scale, size.height * scale);
       svgCanvas.parent('canvas-container');
+
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => { windowResized(); }
+      }).attach();
+      statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();
       canvasControls.setupRandomizeButton();
@@ -326,6 +335,25 @@
       window.randomSeed(params.seed);
       noiseSeed(params.seed);
       generateLayers();
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        const totalPoints = layers.reduce((sum, layer) => sum + layer.points.length, 0);
+        const maxRadius = layers.length > 0 ? layers[layers.length - 1].radius : 0;
+
+        statsDisplay.update({
+          'Layers': layers.length,
+          'Points/Circle': params.pointsPerCircle,
+          'Total Points': totalPoints,
+          'Pattern': params.patternType,
+          'Twist': `${params.twistAmount}°`,
+          'Distribution': params.twistDistribution,
+          'Max Radius': `${Math.round(maxRadius)}px`,
+          'Color Mode': params.colorMode,
+          'Seed': params.seed
+        });
+      }
+
       if (!params.animateTwist) {
         redraw();
         noLoop();

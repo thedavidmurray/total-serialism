@@ -13,6 +13,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -224,6 +226,8 @@
     let lastUpdate = 0;
     let trailGrid = [];
     let presetManager;
+    let panelController;
+    let statsDisplay;
 
     // Parameters
     let params = {
@@ -333,6 +337,15 @@
           initializeGrid();
         }
       });
+
+      // Initialize UX components
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          windowResized();
+        }
+      }).attach();
+
+      statsDisplay = new TSStatsDisplay().attach();
 
       // Start with a glider
       loadPattern('glider');
@@ -549,6 +562,21 @@
 
       generation++;
       updateGenerationDisplay();
+
+      // Update stats display
+      if (statsDisplay) {
+        let liveCells = 0;
+        for (let i = 0; i < params.gridSize; i++) {
+          for (let j = 0; j < params.gridSize; j++) {
+            if (grid[i][j] === 1) liveCells++;
+          }
+        }
+        statsDisplay.update({
+          generation: generation,
+          cells: liveCells,
+          boundary: { value: params.boundary, format: 'raw' }
+        });
+      }
     }
 
     function countNeighbors(x, y) {
@@ -599,6 +627,21 @@
             }
           }
         }
+      }
+
+      // Update stats display after loading pattern
+      if (statsDisplay) {
+        let liveCells = 0;
+        for (let i = 0; i < params.gridSize; i++) {
+          for (let j = 0; j < params.gridSize; j++) {
+            if (grid[i][j] === 1) liveCells++;
+          }
+        }
+        statsDisplay.update({
+          generation: generation,
+          cells: liveCells,
+          boundary: { value: params.boundary, format: 'raw' }
+        });
       }
     }
 

@@ -10,6 +10,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <link rel="stylesheet" href="../../shared/algorithm.css">
   <style>
@@ -313,6 +315,10 @@
       strokeColor: '#000000'
     };
 
+    // Global instances
+    let panelController;
+    let statsDisplay;
+
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
@@ -333,6 +339,20 @@
     function setup() {
       canvas = createCanvas(SIZE, SIZE);
       canvas.parent('canvas-container');
+
+      // Initialize panel controller with onToggle callback
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          // p5.js will auto-resize canvas when window resize event fires
+          console.log(`Panel ${collapsed ? 'collapsed' : 'expanded'}`);
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
+
       setupControls();
       canvasControls.setupRandomizeButton();
       generateWaves();
@@ -505,6 +525,17 @@
         const threshold = minVal + t * (maxVal - minVal);
         const levelContours = marchingSquares(grid, threshold);
         contours.push(...levelContours);
+      }
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          pattern: { value: params.patternType, label: 'Pattern' },
+          sources: { value: params.sources, label: 'Sources' },
+          wavelength: { value: params.wavelength, label: 'Wavelength' },
+          contours: { value: contours.length, label: 'Contour Lines' },
+          resolution: { value: `${RESOLUTION}×${RESOLUTION}`, label: 'Grid' }
+        });
       }
 
       drawWaves();

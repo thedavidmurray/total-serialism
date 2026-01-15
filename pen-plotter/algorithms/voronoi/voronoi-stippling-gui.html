@@ -14,6 +14,8 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../../upload-helper.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -236,12 +238,29 @@
     let regenTimer;
     const REGEN_DEBOUNCE = 500;
 
+    // Total Serialism UI components
+    let panelController;
+    let statsDisplay;
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
       const canvas = createCanvas(size.width * scale, size.height * scale);
       canvas.parent('canvas-container');
       background(params.bgColor);
+
+      // Initialize Total Serialism components
+      if (typeof TSPanelController !== 'undefined') {
+        panelController = new TSPanelController('controls', {
+          onToggle: (isVisible) => {
+            console.log('Panel visibility:', isVisible);
+          }
+        });
+      }
+
+      if (typeof TSStatsDisplay !== 'undefined') {
+        statsDisplay = new TSStatsDisplay('controls');
+      }
 
       // Setup UI event listeners
       setupUIListeners();
@@ -265,6 +284,18 @@
         relaxStep();
         currentIteration++;
         drawStipples();
+
+        // Update stats display during auto-relax
+        if (statsDisplay && currentIteration % 5 === 0) {
+          statsDisplay.update({
+            'Points': params.pointCount,
+            'Point Size': params.pointSize + 'px',
+            'Iterations': `${currentIteration}/${params.iterations}`,
+            'Mode': params.mode,
+            'Density Bias': params.densityBias.toFixed(1),
+            'Image': sourceImage ? `${sourceImage.width}x${sourceImage.height}` : 'None'
+          });
+        }
 
         if (currentIteration >= params.iterations) {
           isRelaxing = false;
@@ -661,6 +692,18 @@
       initializePoints();
       currentIteration = 0;
       drawStipples();
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Points': params.pointCount,
+          'Point Size': params.pointSize + 'px',
+          'Iterations': `${currentIteration}/${params.iterations}`,
+          'Mode': params.mode,
+          'Density Bias': params.densityBias.toFixed(1),
+          'Image': sourceImage ? `${sourceImage.width}x${sourceImage.height}` : 'None'
+        });
+      }
     }
 
     function step() {
@@ -668,6 +711,18 @@
         relaxStep();
         currentIteration++;
         drawStipples();
+
+        // Update stats display
+        if (statsDisplay) {
+          statsDisplay.update({
+            'Points': params.pointCount,
+            'Point Size': params.pointSize + 'px',
+            'Iterations': `${currentIteration}/${params.iterations}`,
+            'Mode': params.mode,
+            'Density Bias': params.densityBias.toFixed(1),
+            'Image': sourceImage ? `${sourceImage.width}x${sourceImage.height}` : 'None'
+          });
+        }
       }
     }
 

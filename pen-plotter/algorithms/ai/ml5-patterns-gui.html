@@ -14,6 +14,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -357,6 +359,9 @@
       svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
         params.paperSize = e.target.value;
@@ -484,6 +489,14 @@
 
         function modelReady() {
           updateStatus('SketchRNN model loaded: ' + modelName);
+          if (window.statsDisplay) {
+            window.statsDisplay.update({
+              model: `SketchRNN (${modelName})`,
+              status: 'Ready',
+              temperature: params.temperature,
+              strokes: 0
+            });
+          }
           patterns = []; // Clear existing patterns
           generateSketch();
         }
@@ -534,10 +547,29 @@
 
         function modelLoaded() {
           updateStatus('PoseNet model loaded - move in front of camera');
+          if (window.statsDisplay) {
+            window.statsDisplay.update({
+              model: 'PoseNet',
+              status: 'Ready',
+              pattern: params.posePattern,
+              poses: 0
+            });
+          }
         }
 
         poseNet.on('pose', (results) => {
           poses = results;
+          if (window.statsDisplay && results.length > 0) {
+            const avgConfidence = results[0].pose.keypoints
+              .reduce((sum, kp) => sum + kp.score, 0) / results[0].pose.keypoints.length;
+            window.statsDisplay.update({
+              model: 'PoseNet',
+              status: 'Tracking',
+              pattern: params.posePattern,
+              poses: results.length,
+              confidence: (avgConfidence * 100).toFixed(1) + '%'
+            });
+          }
         });
       } catch (error) {
         updateStatus('PoseNet error: ' + error.message + ' (webcam may be unavailable)');
@@ -607,6 +639,15 @@
       }
 
       updateStatus('Style applied - ' + patterns.length + ' strokes generated');
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          model: 'Style Transfer',
+          status: 'Applied',
+          effect: params.styleModel,
+          strokes: patterns.length,
+          resolution: `${imgWidth}x${imgHeight}`
+        });
+      }
     }
 
     let classifierImage = null;
@@ -616,6 +657,13 @@
       try {
         classifier = ml5.imageClassifier('MobileNet', () => {
           updateStatus('Image Classifier loaded - upload an image to classify');
+          if (window.statsDisplay) {
+            window.statsDisplay.update({
+              model: 'MobileNet',
+              status: 'Ready',
+              type: 'Image Classifier'
+            });
+          }
         });
       } catch (error) {
         updateStatus('Image Classifier error: ' + error.message);
@@ -641,6 +689,13 @@
 
         bodyPix = ml5.bodyPix(video, () => {
           updateStatus('BodyPix model loaded');
+          if (window.statsDisplay) {
+            window.statsDisplay.update({
+              model: 'BodyPix',
+              status: 'Ready',
+              threshold: params.segThreshold
+            });
+          }
           // Start segmentation loop
           segmentBody();
         });
@@ -690,6 +745,15 @@
         drawing: true
       };
 
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          model: `SketchRNN (${params.sketchModel})`,
+          status: 'Generating',
+          temperature: params.temperature,
+          strokes: 0
+        });
+      }
+
       // Generate strokes
       generateNextStroke();
     }
@@ -697,6 +761,15 @@
     function generateNextStroke() {
       if (!currentStroke.drawing || currentStroke.points.length > params.strokeLength) {
         patterns.push(currentStroke);
+        if (window.statsDisplay) {
+          window.statsDisplay.update({
+            model: `SketchRNN (${params.sketchModel})`,
+            status: 'Complete',
+            temperature: params.temperature,
+            strokes: patterns.length,
+            points: patterns.reduce((sum, s) => sum + s.points.length, 0)
+          });
+        }
         return;
       }
 
@@ -720,6 +793,15 @@
             points: [[newX, newY]],
             drawing: true
           };
+          if (window.statsDisplay) {
+            window.statsDisplay.update({
+              model: `SketchRNN (${params.sketchModel})`,
+              status: 'Drawing',
+              temperature: params.temperature,
+              strokes: patterns.length,
+              points: patterns.reduce((sum, s) => sum + s.points.length, 0)
+            });
+          }
         }
 
         // Continue generating
@@ -937,6 +1019,15 @@
                 }
                 classificationResults = results;
                 updateStatus('Classification complete');
+                if (window.statsDisplay && results.length > 0) {
+                  window.statsDisplay.update({
+                    model: 'MobileNet',
+                    status: 'Classified',
+                    topLabel: results[0].label,
+                    confidence: (results[0].confidence * 100).toFixed(1) + '%',
+                    predictions: results.length
+                  });
+                }
               });
             }
           }, () => {

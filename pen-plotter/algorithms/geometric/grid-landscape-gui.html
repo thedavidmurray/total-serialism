@@ -12,6 +12,8 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -351,6 +353,9 @@
       svgCanvas = createCanvas(size.width, size.height);
       svgCanvas.parent('canvas-container');
 
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
       // Initialize GIF exporter
       gifExporter = new GifExporter({
         fps: 30,
@@ -457,7 +462,48 @@
       if (params.addRivers) {
         generateRivers();
       }
+      updateStats();
       redraw();
+    }
+
+    function updateStats() {
+      if (!window.statsDisplay) return;
+
+      // Calculate vertices
+      const totalVertices = params.gridSize * params.gridSize;
+
+      // Calculate lines based on connection type
+      let totalLines = 0;
+      if (params.connectionType === 'all') {
+        // Horizontal + vertical + diagonal connections
+        totalLines = (params.gridSize - 1) * params.gridSize * 2 + // horizontal + vertical
+                     (params.gridSize - 1) * (params.gridSize - 1); // diagonal
+      } else if (params.connectionType === 'orthogonal') {
+        totalLines = (params.gridSize - 1) * params.gridSize * 2; // horizontal + vertical only
+      } else if (params.connectionType === 'diagonal') {
+        totalLines = (params.gridSize - 1) * (params.gridSize - 1); // diagonal only
+      } else if (params.connectionType === 'delaunay') {
+        // Approximate delaunay triangulation
+        totalLines = totalVertices * 3;
+      }
+
+      // Add river lines
+      let riverLines = 0;
+      if (params.addRivers && riverPaths.length > 0) {
+        riverPaths.forEach(path => {
+          riverLines += path.length - 1;
+        });
+      }
+
+      window.statsDisplay.update({
+        'Grid': `${params.gridSize}×${params.gridSize}`,
+        'Vertices': totalVertices.toLocaleString(),
+        'Lines': (totalLines + riverLines).toLocaleString(),
+        'Height Source': params.heightSource.charAt(0).toUpperCase() + params.heightSource.slice(1),
+        'View Style': params.viewStyle.charAt(0).toUpperCase() + params.viewStyle.slice(1),
+        'Terrain': params.terrainType.charAt(0).toUpperCase() + params.terrainType.slice(1),
+        'Seed': params.seed
+      });
     }
 
     function queueRegenerate() {

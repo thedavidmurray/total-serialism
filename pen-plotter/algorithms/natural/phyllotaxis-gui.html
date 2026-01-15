@@ -444,6 +444,9 @@
             svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
             svgCanvas.parent('canvas-wrapper');
 
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
             setupControls();
             setupPresetManager();
             regenerate();
@@ -742,6 +745,7 @@
         }
 
         function draw() {
+            clear();  // Required for SVG mode - removes existing elements
             background(params.bgColor);
 
             const centerX = canvasWidth / 2;
@@ -841,6 +845,20 @@
                 }
 
                 pop();
+            }
+
+            // Update stats display
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    'Points': numToDraw,
+                    'Total': points.length,
+                    'Angle': params.angleDivergence.toFixed(1) + '°',
+                    'Scale': params.scaleFactor.toFixed(1),
+                    'Element': params.elementType,
+                    'Size Mode': params.sizeMode,
+                    'Connection': params.connectionMode,
+                    'Seed': params.seed
+                });
             }
 
             // Handle animation
@@ -1102,5 +1120,7 @@
             document.getElementById('seed-display').textContent = params.seed;
         });
     </script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
 </body>
 </html>

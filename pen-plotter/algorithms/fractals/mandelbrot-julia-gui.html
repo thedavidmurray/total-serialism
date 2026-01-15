@@ -11,6 +11,8 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -220,11 +222,27 @@
     let SIZE = 800;
     let RESOLUTION = 400; // Grid resolution for marching squares
 
+    // Global instances for panel and stats
+    let panelController;
+    let statsDisplay;
+
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       SIZE = Math.min(size.width, size.height);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
+
+      // Initialize panel controller with onToggle callback
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          console.log('Panel toggled:', collapsed ? 'collapsed' : 'expanded');
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
 
       // Canvas settings handlers
       document.getElementById('paperSize').addEventListener('change', (e) => {
@@ -381,6 +399,8 @@
     }
 
     function generateFractal() {
+      const startTime = performance.now();
+
       // Compute iteration grid
       const grid = [];
       const scale = 3 / params.zoom;
@@ -406,6 +426,29 @@
         const threshold = (level / (levels + 1)) * params.maxIter;
         const levelContours = marchingSquares(grid, threshold);
         contours.push(...levelContours);
+      }
+
+      const endTime = performance.now();
+      const genTime = (endTime - startTime) / 1000;
+
+      // Update stats display
+      if (statsDisplay) {
+        const stats = {
+          type: { value: params.fractalType === 'mandelbrot' ? 'Mandelbrot' : 'Julia', label: 'Type' },
+          contours: { value: contours.length, label: 'Segments' },
+          levels: { value: params.contourLevels, label: 'Levels' },
+          iterations: { value: params.maxIter, label: 'Max Iter' },
+          zoom: { value: params.zoom.toFixed(1), label: 'Zoom' },
+          center: { value: `(${params.centerX.toFixed(2)}, ${params.centerY.toFixed(2)})`, label: 'Center' },
+          genTime: { value: genTime, label: 'Gen Time', format: 'time' }
+        };
+
+        // Add Julia-specific parameter display
+        if (params.fractalType === 'julia') {
+          stats.juliaC = { value: `${params.juliaReal.toFixed(2)} + ${params.juliaImag.toFixed(2)}i`, label: 'Julia C' };
+        }
+
+        statsDisplay.update(stats);
       }
 
       drawFractal();
