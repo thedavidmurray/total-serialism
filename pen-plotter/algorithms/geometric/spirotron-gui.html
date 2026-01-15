@@ -13,6 +13,7 @@
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -260,6 +261,8 @@
       <button onclick="exportPNG()">Export PNG</button>
       <button onclick="exportGIF()">Export GIF</button>
       <div id="gif-status"></div>
+      <button onclick="copyShareUrl()" style="margin-top: 8px;">📋 Copy Share URL</button>
+      <div id="share-status" style="font-size: 12px; color: #888;"></div>
     </div>
 
     <div class="preset-manager" id="preset-container"></div>
@@ -292,6 +295,31 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
+
+    // URL State - compact shareable URLs
+    const urlState = new TSUrlState({
+      algorithmId: 'spirotron',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'outerRadius', type: 'int', bytes: 2, default: 200 },
+        { key: 'innerRadius', type: 'int', bytes: 1, default: 65 },
+        { key: 'penDistance', type: 'int', bytes: 1, default: 43 },
+        { key: 'rotations', type: 'int', bytes: 1, default: 50 },
+        { key: 'strokeWeight', type: 'float', min: 0.1, max: 5, bytes: 1, default: 1 },
+        { key: 'bgColor', type: 'color', default: '#ffffff' },
+        { key: 'strokeColor', type: 'color', default: '#000000' },
+        { key: 'patternType', type: 'enum', options: ['hypotrochoid', 'epitrochoid', 'rose'], default: 'hypotrochoid' },
+        { key: 'multiWheel', type: 'bool', default: false },
+        { key: 'secondaryRadius', type: 'int', bytes: 1, default: 30 },
+        { key: 'secondaryPen', type: 'int', bytes: 1, default: 15 }
+      ]
+    });
+
+    // Load params from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     let points = [];
     let svgCanvas;
@@ -438,6 +466,9 @@
           pattern: { value: params.patternType, format: 'raw' }
         });
       }
+
+      // Update URL with current params (replace to avoid cluttering history)
+      urlState.replaceState(params);
 
       if (!isAnimating) {
         redraw();
@@ -704,6 +735,26 @@
 
     function exportPNG() {
       save(`spirotron-${params.patternType}-${params.seed}.png`);
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = 'URL copied to clipboard!';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+      }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        statusEl.textContent = 'URL copied!';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+      });
     }
 
     function exportGIF() {
