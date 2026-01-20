@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Truchet Tiles Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+  
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .range-value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stats .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+
+    .tile-preview {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .tile-preview canvas {
+      border: 1px solid var(--ts-border-default);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .tile-preview canvas:hover {
+      border-color: var(--ts-accent-primary);
+    }
+
+    .tile-preview canvas.selected {
+      border-color: var(--ts-accent-primary);
+      border-width: 2px;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
+
+  <div id="controls">
+    <h2>Truchet Tiles</h2>
+
+    <div class="algorithm-info">
+      <strong>Truchet Tiles:</strong> Named after Sébastien Truchet (1704), these tiles create complex patterns through simple rotation of basic geometric shapes. Perfect for pen plotting!
+    </div>
+
+    <!-- Canvas Settings -->
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+
+      <div class="control">
+        <label>Background Color <input type="color" id="bgColor" value="#ffffff"></label>
+      </div>
+
+      <div class="control">
+        <label>Stroke Color <input type="color" id="strokeColor" value="#000000"></label>
+      </div>
+      <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+    </div>
+
+      <!-- Tile Type -->
+      <div class="control-group">
+        <h3>🎨 Tile Style</h3>
+
+        <label>
+          Tile Type
+          <select id="tileType">
+            <option value="diagonal">Diagonal Lines</option>
+            <option value="quarter-circle">Quarter Circles (Smith)</option>
+            <option value="maze">Maze Tiles</option>
+            <option value="cross">Cross</option>
+            <option value="triangle">Triangles</option>
+            <option value="dots">Dots & Lines</option>
+            <option value="waves">Waves</option>
+          </select>
+        </label>
+
+        <label>
+          Rotation Mode
+          <select id="rotationMode">
+            <option value="random">Random</option>
+            <option value="flow">Flow Field</option>
+            <option value="alternating">Alternating</option>
+            <option value="mirrored">Mirrored</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Grid Settings -->
+      <div class="control-group">
+        <h3>📏 Grid Settings</h3>
+
+        <label>
+          Grid Size: <span class="range-value" id="gridSizeValue">20</span>
+          <input type="range" id="gridSize" min="5" max="50" value="20" step="1">
+        </label>
+
+        <label>
+          Tile Size: <span class="range-value" id="tileSizeValue">40</span>
+          <input type="range" id="tileSize" min="10" max="100" value="40" step="5">
+        </label>
+
+        <label>
+          Seed
+          <input type="number" id="seed" value="42" min="1" max="99999">
+        </label>
+      </div>
+
+      <!-- Style Options -->
+      <div class="control-group">
+        <h3>🎨 Style Options</h3>
+
+        <label>
+          Line Weight: <span class="range-value" id="lineWeightValue">2</span>
+          <input type="range" id="lineWeight" min="0.5" max="10" value="2" step="0.5">
+        </label>
+
+        <label>
+          Detail Level: <span class="range-value" id="detailLevelValue">1</span>
+          <input type="range" id="detailLevel" min="1" max="5" value="1" step="1">
+        </label>
+
+        <label>
+          Probability Bias: <span class="range-value" id="probabilityValue">0.5</span>
+          <input type="range" id="probability" min="0" max="1" value="0.5" step="0.1">
+        </label>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showGrid">
+          <label for="showGrid">Show Grid</label>
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="invertColors">
+          <label for="invertColors">Invert Colors</label>
+        </div>
+      </div>
+
+      <!-- Flow Field (for flow rotation mode) -->
+      <div class="control-group" id="flowControls" style="display: none;">
+        <h3>🌊 Flow Field</h3>
+
+        <label>
+          Flow Scale: <span class="range-value" id="flowScaleValue">0.05</span>
+          <input type="range" id="flowScale" min="0.01" max="0.2" value="0.05" step="0.01">
+        </label>
+
+        <label>
+          Flow Strength: <span class="range-value" id="flowStrengthValue">1.0</span>
+          <input type="range" id="flowStrength" min="0.1" max="2" value="1.0" step="0.1">
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="control-group">
+        <h3>⚡ Actions</h3>
+
+        <button onclick="generateTiles()">Generate Tiles</button>
+
+        <div class="button-group">
+          <button class="secondary" onclick="randomizeSeed()">Random Seed</button>
+          <button class="secondary" onclick="clearCanvas()">Clear</button>
+        </div>
+
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats">
+        <div>
+          <span>Grid:</span>
+          <span class="value" id="statGrid">20x20</span>
+        </div>
+        <div>
+          <span>Total Tiles:</span>
+          <span class="value" id="statTiles">400</span>
+        </div>
+        <div>
+          <span>Tile Type:</span>
+          <span class="value" id="statType">Diagonal</span>
+        </div>
+      </div>
+
+      <!-- Preset Manager (at bottom) -->
+      <div id="preset-container" style="margin-top: 20px;"></div>
+    </div>
+
+  <script>
+    // Global variables
+    let tiles = [];
+    let presetManager;
+
+    // Parameters
+    const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      tileType: 'diagonal',
+      rotationMode: 'random',
+      gridSize: 20,
+      tileSize: 40,
+      seed: 42,
+      lineWeight: 2,
+      detailLevel: 1,
+      probability: 0.5,
+      showGrid: false,
+      invertColors: false,
+      flowScale: 0.05,
+      flowStrength: 1.0
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+        canvasControls.setupRandomizeButton();
+
+    // p5.js setup
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas');
+      background(params.bgColor);
+
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
+      // Canvas settings handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        generateTiles();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        generateTiles();
+      });
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'truchet-tiles',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          generateTiles();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 99999);
+          params.gridSize = Math.floor(Math.random() * 40) + 10;
+          params.probability = Math.random();
+          params.lineWeight = Math.random() * 8 + 1;
+          params.detailLevel = Math.floor(Math.random() * 4) + 1;
+          updateUIFromParams();
+          generateTiles();
+        }
+      });
+
+      generateTiles();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generateTiles();
+    }
+
+    // p5.js draw
+    function draw() {
+      // Static rendering, no animation needed
+      noLoop();
+    }
+
+    // Generate tiles
+    function generateTiles() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
+      // Use bgColor if not inverted, otherwise invert
+      const bgCol = params.invertColors ? params.strokeColor : params.bgColor;
+      background(bgCol);
+
+      const tileSize = width / params.gridSize;
+
+      // Generate tile grid
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          const x = i * tileSize;
+          const y = j * tileSize;
+
+          // Determine rotation
+          let rotation = 0;
+          switch (params.rotationMode) {
+            case 'random':
+              rotation = floor(random(4)) * HALF_PI;
+              break;
+
+            case 'flow':
+              const angle = noise(i * params.flowScale, j * params.flowScale) * TWO_PI * params.flowStrength;
+              rotation = floor((angle / HALF_PI) % 4) * HALF_PI;
+              break;
+
+            case 'alternating':
+              rotation = ((i + j) % 2) * PI;
+              break;
+
+            case 'mirrored':
+              rotation = (i % 2) * PI;
+              break;
+          }
+
+          // Apply probability bias for some randomness
+          if (random() > params.probability) {
+            rotation += PI;
+          }
+
+          // Draw tile
+          push();
+          translate(x + tileSize / 2, y + tileSize / 2);
+          rotate(rotation);
+          drawTile(tileSize, params.tileType);
+          pop();
+        }
+      }
+
+      // Draw grid if requested
+      if (params.showGrid) {
+        const gridCol = params.invertColors ? params.bgColor : params.strokeColor;
+        stroke(color(gridCol).levels[0], color(gridCol).levels[1], color(gridCol).levels[2], 50);
+        strokeWeight(0.5);
+        for (let i = 0; i <= params.gridSize; i++) {
+          line(i * tileSize, 0, i * tileSize, height);
+          line(0, i * tileSize, width, i * tileSize);
+        }
+      }
+
+      updateStats();
+    }
+
+    // Draw a single tile
+    function drawTile(size, type) {
+      const half = size / 2;
+      const strokeCol = params.invertColors ? params.bgColor : params.strokeColor;
+      stroke(strokeCol);
+      strokeWeight(params.lineWeight);
+      noFill();
+
+      switch (type) {
+        case 'diagonal':
+          // Classic truchet: diagonal line
+          line(-half, -half, half, half);
+          for (let i = 1; i < params.detailLevel; i++) {
+            const offset = (i / params.detailLevel) * size * 0.1;
+            line(-half + offset, -half, half, half - offset);
+            line(-half, -half + offset, half - offset, half);
+          }
+          break;
+
+        case 'quarter-circle':
+          // Smith truchet: quarter circles
+          arc(-half, -half, size, size, 0, HALF_PI);
+          arc(half, half, size, size, PI, PI + HALF_PI);
+          for (let i = 1; i <= params.detailLevel; i++) {
+            const r = size * (1 - i / (params.detailLevel + 1));
+            arc(-half, -half, r, r, 0, HALF_PI);
+            arc(half, half, r, r, PI, PI + HALF_PI);
+          }
+          break;
+
+        case 'maze':
+          // Maze tiles: connected lines
+          line(-half, 0, 0, 0);
+          line(0, 0, 0, -half);
+          if (params.detailLevel > 1) {
+            line(0, half, half, half);
+            line(half, half, half, 0);
+          }
+          break;
+
+        case 'cross':
+          // Cross pattern
+          line(-half, 0, half, 0);
+          line(0, -half, 0, half);
+          for (let i = 1; i <= params.detailLevel; i++) {
+            const r = (half / (params.detailLevel + 1)) * i;
+            circle(0, 0, r * 2);
+          }
+          break;
+
+        case 'triangle':
+          // Triangle tiles
+          triangle(-half, half, 0, -half, half, half);
+          for (let i = 1; i < params.detailLevel; i++) {
+            const scale = 1 - i / (params.detailLevel + 1);
+            push();
+            scale(scale);
+            triangle(-half, half, 0, -half, half, half);
+            pop();
+          }
+          break;
+
+        case 'dots':
+          // Dots and lines
+          circle(-half / 2, -half / 2, size / 8);
+          circle(half / 2, half / 2, size / 8);
+          line(-half / 2, -half / 2, half / 2, half / 2);
+          for (let i = 1; i <= params.detailLevel; i++) {
+            const r = (size / 8) * (1 + i * 0.5);
+            noFill();
+            circle(-half / 2, -half / 2, r);
+            circle(half / 2, half / 2, r);
+          }
+          break;
+
+        case 'waves':
+          // Wave pattern
+          beginShape();
+          for (let i = 0; i <= 10; i++) {
+            const x = map(i, 0, 10, -half, half);
+            const y = sin(map(i, 0, 10, 0, PI)) * (half / 2);
+            vertex(x, y);
+          }
+          endShape();
+          for (let j = 1; j <= params.detailLevel; j++) {
+            beginShape();
+            for (let i = 0; i <= 10; i++) {
+              const x = map(i, 0, 10, -half, half);
+              const y = sin(map(i, 0, 10, 0, PI)) * (half / 2) + (j * size / (params.detailLevel + 2));
+              vertex(x, y);
+            }
+            endShape();
+          }
+          break;
+      }
+    }
+
+    // Clear canvas
+    function clearCanvas() {
+      const bgCol = params.invertColors ? params.strokeColor : params.bgColor;
+      background(bgCol);
+      updateStats();
+    }
+
+    // Randomize seed
+    function randomizeSeed() {
+      params.seed = Math.floor(Math.random() * 99999);
+      document.getElementById('seed').value = params.seed;
+      generateTiles();
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statGrid').textContent = `${params.gridSize}x${params.gridSize}`;
+      document.getElementById('statTiles').textContent = params.gridSize * params.gridSize;
+      document.getElementById('statType').textContent = params.tileType.charAt(0).toUpperCase() + params.tileType.slice(1).replace('-', ' ');
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          'Grid': `${params.gridSize}×${params.gridSize}`,
+          'Total Tiles': params.gridSize * params.gridSize,
+          'Tile Type': params.tileType.charAt(0).toUpperCase() + params.tileType.slice(1).replace('-', ' '),
+          'Rotation': params.rotationMode.charAt(0).toUpperCase() + params.rotationMode.slice(1),
+          'Seed': params.seed,
+          'Line Weight': params.lineWeight.toFixed(1),
+          'Detail Level': params.detailLevel,
+          'Probability': params.probability.toFixed(2)
+        });
+      }
+    }
+
+    // UI event listeners
+    document.getElementById('tileType').addEventListener('change', (e) => {
+      params.tileType = e.target.value;
+      generateTiles();
+    });
+
+    document.getElementById('rotationMode').addEventListener('change', (e) => {
+      params.rotationMode = e.target.value;
+      document.getElementById('flowControls').style.display = params.rotationMode === 'flow' ? 'block' : 'none';
+      generateTiles();
+    });
+
+    document.getElementById('gridSize').addEventListener('input', (e) => {
+      params.gridSize = parseInt(e.target.value);
+      document.getElementById('gridSizeValue').textContent = params.gridSize;
+      generateTiles();
+    });
+
+    document.getElementById('tileSize').addEventListener('input', (e) => {
+      params.tileSize = parseInt(e.target.value);
+      document.getElementById('tileSizeValue').textContent = params.tileSize;
+    });
+
+    document.getElementById('seed').addEventListener('input', (e) => {
+      params.seed = parseInt(e.target.value);
+      generateTiles();
+    });
+
+    document.getElementById('lineWeight').addEventListener('input', (e) => {
+      params.lineWeight = parseFloat(e.target.value);
+      document.getElementById('lineWeightValue').textContent = params.lineWeight;
+      generateTiles();
+    });
+
+    document.getElementById('detailLevel').addEventListener('input', (e) => {
+      params.detailLevel = parseInt(e.target.value);
+      document.getElementById('detailLevelValue').textContent = params.detailLevel;
+      generateTiles();
+    });
+
+    document.getElementById('probability').addEventListener('input', (e) => {
+      params.probability = parseFloat(e.target.value);
+      document.getElementById('probabilityValue').textContent = params.probability.toFixed(1);
+      generateTiles();
+    });
+
+    document.getElementById('showGrid').addEventListener('change', (e) => {
+      params.showGrid = e.target.checked;
+      generateTiles();
+    });
+
+    document.getElementById('invertColors').addEventListener('change', (e) => {
+      params.invertColors = e.target.checked;
+      generateTiles();
+    });
+
+    document.getElementById('flowScale').addEventListener('input', (e) => {
+      params.flowScale = parseFloat(e.target.value);
+      document.getElementById('flowScaleValue').textContent = params.flowScale.toFixed(2);
+      generateTiles();
+    });
+
+    document.getElementById('flowStrength').addEventListener('input', (e) => {
+      params.flowStrength = parseFloat(e.target.value);
+      document.getElementById('flowStrengthValue').textContent = params.flowStrength.toFixed(1);
+      generateTiles();
+    });
+
+    // Update UI from params
+    function updateUIFromParams() {
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+      document.getElementById('tileType').value = params.tileType;
+      document.getElementById('rotationMode').value = params.rotationMode;
+      document.getElementById('gridSize').value = params.gridSize;
+      document.getElementById('tileSize').value = params.tileSize;
+      document.getElementById('seed').value = params.seed;
+      document.getElementById('lineWeight').value = params.lineWeight;
+      document.getElementById('detailLevel').value = params.detailLevel;
+      document.getElementById('probability').value = params.probability;
+      document.getElementById('showGrid').checked = params.showGrid;
+      document.getElementById('invertColors').checked = params.invertColors;
+      document.getElementById('flowScale').value = params.flowScale;
+      document.getElementById('flowStrength').value = params.flowStrength;
+
+      document.getElementById('gridSizeValue').textContent = params.gridSize;
+      document.getElementById('tileSizeValue').textContent = params.tileSize;
+      document.getElementById('lineWeightValue').textContent = params.lineWeight;
+      document.getElementById('detailLevelValue').textContent = params.detailLevel;
+      document.getElementById('probabilityValue').textContent = params.probability.toFixed(1);
+      document.getElementById('flowScaleValue').textContent = params.flowScale.toFixed(2);
+      document.getElementById('flowStrengthValue').textContent = params.flowStrength.toFixed(1);
+
+      document.getElementById('flowControls').style.display = params.rotationMode === 'flow' ? 'block' : 'none';
+    }
+
+    // Export SVG
+    function exportSVG() {
+      const bgCol = params.invertColors ? params.strokeColor : params.bgColor;
+      const strokeCol = params.invertColors ? params.bgColor : params.strokeColor;
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="${bgCol}"/>
+  <g stroke="${strokeCol}" stroke-width="${params.lineWeight}" fill="none">
+`;
+
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
+      const tileSize = width / params.gridSize;
+
+      for (let i = 0; i < params.gridSize; i++) {
+        for (let j = 0; j < params.gridSize; j++) {
+          const x = i * tileSize + tileSize / 2;
+          const y = j * tileSize + tileSize / 2;
+
+          let rotation = 0;
+          switch (params.rotationMode) {
+            case 'random':
+              rotation = floor(random(4)) * 90;
+              break;
+            case 'flow':
+              const angle = noise(i * params.flowScale, j * params.flowScale) * 360 * params.flowStrength;
+              rotation = floor((angle / 90) % 4) * 90;
+              break;
+            case 'alternating':
+              rotation = ((i + j) % 2) * 180;
+              break;
+            case 'mirrored':
+              rotation = (i % 2) * 180;
+              break;
+          }
+
+          if (random() > params.probability) {
+            rotation += 180;
+          }
+
+          svg += `    <g transform="translate(${x},${y}) rotate(${rotation})">\n`;
+          svg += getTileSVG(tileSize, params.tileType);
+          svg += `    </g>\n`;
+        }
+      }
+
+      svg += `  </g>
+</svg>`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `truchet-tiles-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Get SVG path for a tile type
+    function getTileSVG(size, type) {
+      const half = size / 2;
+      let svg = '';
+
+      switch (type) {
+        case 'diagonal':
+          svg += `      <line x1="${-half}" y1="${-half}" x2="${half}" y2="${half}"/>\n`;
+          break;
+
+        case 'quarter-circle':
+          svg += `      <path d="M ${-half} 0 A ${half} ${half} 0 0 1 0 ${-half}"/>\n`;
+          svg += `      <path d="M ${half} 0 A ${half} ${half} 0 0 1 0 ${half}"/>\n`;
+          break;
+
+        case 'maze':
+          svg += `      <line x1="${-half}" y1="0" x2="0" y2="0"/>\n`;
+          svg += `      <line x1="0" y1="0" x2="0" y2="${-half}"/>\n`;
+          break;
+
+        case 'cross':
+          svg += `      <line x1="${-half}" y1="0" x2="${half}" y2="0"/>\n`;
+          svg += `      <line x1="0" y1="${-half}" x2="0" y2="${half}"/>\n`;
+          break;
+
+        case 'triangle':
+          svg += `      <polygon points="${-half},${half} 0,${-half} ${half},${half}"/>\n`;
+          break;
+      }
+
+      return svg;
+    }
+
+    // Export PNG
+    function exportPNG() {
+      saveCanvas(`truchet-tiles-${Date.now()}`, 'png');
+    }
+  </script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+</body>
+</html>

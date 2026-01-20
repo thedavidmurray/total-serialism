@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Plot Simulator - Pen Plotter Tool</title>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .control-group {
+      margin-bottom: var(--ts-space-lg);
+      padding-bottom: var(--ts-space-lg);
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .canvas-wrapper {
+      position: relative;
+      background: white;
+      border-radius: var(--ts-radius-md);
+      box-shadow: 0 0 0 1px var(--ts-border-subtle), 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+    canvas {
+      display: block;
+      border-radius: var(--ts-radius-md);
+    }
+    .canvas-label {
+      position: absolute;
+      bottom: var(--ts-space-sm);
+      right: var(--ts-space-sm);
+      background: rgba(0, 0, 0, 0.7);
+      color: var(--ts-accent-primary);
+      padding: var(--ts-space-xs) var(--ts-space-sm);
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+    }
+    .button-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--ts-space-sm);
+    }
+    button.active {
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+    }
+    button.secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    button.secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+    }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--ts-space-sm);
+    }
+    .stat-box {
+      background: var(--ts-bg-deep);
+      padding: var(--ts-space-md);
+      border-radius: var(--ts-radius-md);
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      margin-bottom: var(--ts-space-xs);
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--ts-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .progress-bar {
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-full);
+      overflow: hidden;
+      margin-bottom: var(--ts-space-sm);
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--ts-accent-primary), var(--ts-accent-tertiary));
+      transition: width 0.1s linear;
+    }
+    .progress-time {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--ts-text-muted);
+      margin-bottom: var(--ts-space-md);
+    }
+    .playback-controls {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      gap: var(--ts-space-sm);
+      margin-bottom: var(--ts-space-md);
+    }
+    .playback-controls button {
+      font-size: 1rem;
+    }
+    button.play {
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+    }
+    .range-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: var(--ts-space-sm);
+    }
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--ts-space-sm) 0;
+    }
+    .checkbox-container label {
+      margin: 0;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+    }
+    .toggle {
+      width: 44px;
+      height: 24px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-full);
+      position: relative;
+      transition: background var(--ts-transition-base);
+      border: 2px solid var(--ts-border-strong);
+      cursor: pointer;
+    }
+    .toggle.active {
+      background: var(--ts-accent-primary);
+      border-color: var(--ts-accent-primary);
+    }
+    .toggle-knob {
+      width: 16px;
+      height: 16px;
+      background: var(--ts-text-muted);
+      border-radius: 50%;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: all var(--ts-transition-base);
+    }
+    .toggle.active .toggle-knob {
+      background: var(--ts-text-inverse);
+      left: 22px;
+    }
+    input[type="file"] {
+      display: none;
+    }
+    .info-box {
+      background: var(--ts-bg-deep);
+      padding: var(--ts-space-md);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.75rem;
+      line-height: 1.6;
+      color: var(--ts-text-muted);
+      border: 1px solid var(--ts-border-subtle);
+      margin-top: var(--ts-space-sm);
+    }
+    .legend {
+      margin-top: var(--ts-space-lg);
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+      background: var(--ts-bg-deep);
+      padding: var(--ts-space-sm);
+      border-radius: var(--ts-radius-md);
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .legend-item {
+      display: inline-block;
+      margin: 0 var(--ts-space-sm);
+    }
+    .legend-item .dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: var(--ts-space-xs);
+    }
+    .legend-item .dot.red {
+      background: var(--ts-accent-danger);
+    }
+    .legend-item .dot.black {
+      background: #000;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div class="canvas-wrapper">
+      <canvas id="plotCanvas" width="600" height="600"></canvas>
+      <div class="canvas-label">600 x 600 px</div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Plot Simulator</h2>
+    <p style="font-size: 11px; color: var(--ts-text-muted); margin: 0 0 20px 0;">
+      Visualize pen plotter movements
+    </p>
+
+    <div class="control-group">
+      <h3>Sample Patterns</h3>
+      <div class="button-grid">
+        <button onclick="loadSample('spiral')" id="btn-spiral" class="active">Spiral</button>
+        <button onclick="loadSample('grid')" id="btn-grid">Grid</button>
+        <button onclick="loadSample('circles')" id="btn-circles">Circles</button>
+        <button onclick="loadSample('star')" id="btn-star">Star</button>
+      </div>
+      <input type="file" id="svgUpload" accept=".svg">
+      <button class="secondary" onclick="document.getElementById('svgUpload').click()" style="margin-top: var(--ts-space-sm);">
+        Upload SVG
+      </button>
+      <div class="info-box">
+        Upload your own SVG files or use built-in sample patterns to preview plotting.
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label style="display: block; font-size: 0.8rem; color: var(--ts-text-secondary); margin-bottom: var(--ts-space-sm);">Paper Size:</label>
+        <select id="paperSize">
+          <option value="square_medium" selected>Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Statistics</h3>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-value" id="stat-paths">0</div>
+          <div class="stat-label">Paths</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-time">0:00</div>
+          <div class="stat-label">Est. Time</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-pendown">0</div>
+          <div class="stat-label">Pen Down (px)</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-value" id="stat-penup">0</div>
+          <div class="stat-label">Pen Up (px)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Playback</h3>
+
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress" style="width: 0%"></div>
+      </div>
+      <div class="progress-time">
+        <span id="time-current">0:00</span>
+        <span id="time-total">0:00</span>
+      </div>
+
+      <div class="playback-controls">
+        <button onclick="reset()">|&lt;</button>
+        <button class="play" onclick="togglePlay()" id="playBtn">Play</button>
+        <button onclick="skipToEnd()">&gt;|</button>
+      </div>
+
+      <div class="range-label">
+        <span>Speed</span>
+        <span class="value" id="speed-val">1.0x</span>
+      </div>
+      <input type="range" id="speed" min="0.5" max="10" step="0.5" value="1" oninput="updateSpeed(this.value)">
+    </div>
+
+    <div class="control-group">
+      <h3>Options</h3>
+      <div class="checkbox-container">
+        <label>Show Pen-Up Travel</label>
+        <div class="toggle active" id="toggle-penup" onclick="togglePenUp()">
+          <div class="toggle-knob"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><span class="dot red"></span> Red dashed = pen-up travel</div>
+      <div class="legend-item"><span class="dot black"></span> Black solid = pen-down drawing</div>
+    </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('plotCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let paths = [];
+    let isPlaying = false;
+    let progress = 0;
+    let speed = 1.0;
+    let showPenUp = true;
+    let animationId = null;
+    let startTime = 0;
+    let totalTime = 10;
+    let currentSample = 'spiral';
+
+    // Generate sample patterns
+    function generatePaths(type) {
+      const generated = [];
+      const centerX = 300, centerY = 300;
+
+      if (type === 'spiral') {
+        const points = [];
+        for (let i = 0; i < 720; i++) {
+          const angle = (i / 180) * Math.PI;
+          const radius = 20 + i * 0.35;
+          points.push({
+            x: centerX + Math.cos(angle) * radius,
+            y: centerY + Math.sin(angle) * radius
+          });
+        }
+        generated.push(points);
+      } else if (type === 'grid') {
+        const step = 40;
+        const margin = 50;
+        for (let y = margin; y <= 550; y += step) {
+          generated.push([
+            { x: margin, y },
+            { x: 550, y }
+          ]);
+        }
+        for (let x = margin; x <= 550; x += step) {
+          generated.push([
+            { x, y: margin },
+            { x, y: 550 }
+          ]);
+        }
+      } else if (type === 'circles') {
+        for (let r = 30; r <= 250; r += 30) {
+          const points = [];
+          for (let a = 0; a <= Math.PI * 2; a += Math.PI / 32) {
+            points.push({
+              x: centerX + Math.cos(a) * r,
+              y: centerY + Math.sin(a) * r
+            });
+          }
+          generated.push(points);
+        }
+      } else if (type === 'star') {
+        for (let i = 0; i < 5; i++) {
+          const angle1 = (i * 72 - 90) * Math.PI / 180;
+          const angle2 = ((i * 72 + 144) - 90) * Math.PI / 180;
+          generated.push([
+            { x: centerX + Math.cos(angle1) * 200, y: centerY + Math.sin(angle1) * 200 },
+            { x: centerX + Math.cos(angle2) * 200, y: centerY + Math.sin(angle2) * 200 }
+          ]);
+        }
+      }
+
+      return generated;
+    }
+
+    // Calculate statistics
+    function calculateStats(pathList) {
+      let penDown = 0, penUp = 0;
+      let lastPoint = null;
+
+      pathList.forEach(path => {
+        if (lastPoint && path.length > 0) {
+          penUp += Math.hypot(path[0].x - lastPoint.x, path[0].y - lastPoint.y);
+        }
+        for (let i = 1; i < path.length; i++) {
+          penDown += Math.hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y);
+        }
+        if (path.length > 0) lastPoint = path[path.length - 1];
+      });
+
+      const time = (penDown / 30) + (penUp / 100) + (pathList.length * 0.3);
+      totalTime = time;
+
+      return {
+        paths: pathList.length,
+        time: Math.round(time),
+        penDown: Math.round(penDown),
+        penUp: Math.round(penUp)
+      };
+    }
+
+    // Update UI with stats
+    function updateStats(stats) {
+      document.getElementById('stat-paths').textContent = stats.paths;
+      document.getElementById('stat-time').textContent = formatTime(stats.time);
+      document.getElementById('stat-pendown').textContent = stats.penDown;
+      document.getElementById('stat-penup').textContent = stats.penUp;
+      document.getElementById('time-total').textContent = formatTime(stats.time);
+    }
+
+    // Format time
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      return `${m}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // Load sample
+    function loadSample(type) {
+      currentSample = type;
+      paths = generatePaths(type);
+      const stats = calculateStats(paths);
+      updateStats(stats);
+      reset();
+
+      // Update button states
+      ['spiral', 'grid', 'circles', 'star'].forEach(t => {
+        document.getElementById(`btn-${t}`).classList.toggle('active', t === type);
+      });
+
+      // Draw initial state
+      clearCanvas();
+    }
+
+    // Clear canvas
+    function clearCanvas() {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Animation loop
+    function animate(timestamp) {
+      if (!startTime) startTime = timestamp;
+
+      const elapsed = ((timestamp - startTime) / 1000) * speed;
+      const progressRatio = Math.min(elapsed / totalTime, 1);
+      progress = progressRatio * 100;
+
+      // Update UI
+      document.getElementById('progress').style.width = `${progress}%`;
+      document.getElementById('time-current').textContent = formatTime(elapsed);
+
+      // Clear and redraw
+      clearCanvas();
+
+      let accumulatedTime = 0;
+      let lastPoint = null;
+
+      for (let pathIdx = 0; pathIdx < paths.length; pathIdx++) {
+        const path = paths[pathIdx];
+        if (path.length === 0) continue;
+
+        // Pen up travel
+        if (lastPoint) {
+          const travelDist = Math.hypot(path[0].x - lastPoint.x, path[0].y - lastPoint.y);
+          const travelTime = travelDist / 100 + 0.3;
+
+          if (accumulatedTime + travelTime > elapsed) {
+            // Partial travel
+            if (showPenUp) {
+              const ratio = (elapsed - accumulatedTime) / travelTime;
+              ctx.beginPath();
+              ctx.strokeStyle = '#ef4444';
+              ctx.setLineDash([5, 5]);
+              ctx.lineWidth = 1.5;
+              ctx.moveTo(lastPoint.x, lastPoint.y);
+              ctx.lineTo(
+                lastPoint.x + (path[0].x - lastPoint.x) * ratio,
+                lastPoint.y + (path[0].y - lastPoint.y) * ratio
+              );
+              ctx.stroke();
+            }
+            break;
+          }
+
+          if (showPenUp) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#ef4444';
+            ctx.setLineDash([5, 5]);
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(lastPoint.x, lastPoint.y);
+            ctx.lineTo(path[0].x, path[0].y);
+            ctx.stroke();
+          }
+          accumulatedTime += travelTime;
+        }
+
+        // Draw path
+        ctx.beginPath();
+        ctx.strokeStyle = '#000000';
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2;
+        ctx.moveTo(path[0].x, path[0].y);
+
+        let pathComplete = true;
+        for (let i = 1; i < path.length; i++) {
+          const segDist = Math.hypot(path[i].x - path[i-1].x, path[i].y - path[i-1].y);
+          const segTime = segDist / 30;
+
+          if (accumulatedTime + segTime > elapsed) {
+            // Partial segment
+            const ratio = (elapsed - accumulatedTime) / segTime;
+            ctx.lineTo(
+              path[i-1].x + (path[i].x - path[i-1].x) * ratio,
+              path[i-1].y + (path[i].y - path[i-1].y) * ratio
+            );
+            pathComplete = false;
+            break;
+          }
+
+          ctx.lineTo(path[i].x, path[i].y);
+          accumulatedTime += segTime;
+        }
+        ctx.stroke();
+
+        if (!pathComplete) break;
+        lastPoint = path[path.length - 1];
+      }
+
+      if (progressRatio < 1) {
+        animationId = requestAnimationFrame(animate);
+      } else {
+        isPlaying = false;
+        document.getElementById('playBtn').innerHTML = 'Play';
+      }
+    }
+
+    // Toggle play/pause
+    function togglePlay() {
+      if (isPlaying) {
+        cancelAnimationFrame(animationId);
+        isPlaying = false;
+        document.getElementById('playBtn').innerHTML = 'Play';
+      } else {
+        if (progress >= 100) {
+          reset();
+        }
+        startTime = 0;
+        isPlaying = true;
+        document.getElementById('playBtn').innerHTML = 'Pause';
+        animationId = requestAnimationFrame(animate);
+      }
+    }
+
+    // Reset
+    function reset() {
+      cancelAnimationFrame(animationId);
+      isPlaying = false;
+      progress = 0;
+      startTime = 0;
+      document.getElementById('progress').style.width = '0%';
+      document.getElementById('time-current').textContent = '0:00';
+      document.getElementById('playBtn').innerHTML = 'Play';
+      clearCanvas();
+    }
+
+    // Skip to end
+    function skipToEnd() {
+      cancelAnimationFrame(animationId);
+      isPlaying = false;
+      progress = 100;
+      document.getElementById('progress').style.width = '100%';
+      document.getElementById('time-current').textContent = document.getElementById('time-total').textContent;
+      document.getElementById('playBtn').innerHTML = 'Play';
+
+      clearCanvas();
+
+      let lastPoint = null;
+      paths.forEach(path => {
+        if (showPenUp && lastPoint && path.length > 0) {
+          ctx.beginPath();
+          ctx.strokeStyle = '#ef4444';
+          ctx.setLineDash([5, 5]);
+          ctx.lineWidth = 1.5;
+          ctx.moveTo(lastPoint.x, lastPoint.y);
+          ctx.lineTo(path[0].x, path[0].y);
+          ctx.stroke();
+        }
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#000000';
+        ctx.setLineDash([]);
+        ctx.lineWidth = 2;
+        path.forEach((p, i) => {
+          if (i === 0) ctx.moveTo(p.x, p.y);
+          else ctx.lineTo(p.x, p.y);
+        });
+        ctx.stroke();
+
+        if (path.length > 0) lastPoint = path[path.length - 1];
+      });
+    }
+
+    // Update speed
+    function updateSpeed(value) {
+      speed = parseFloat(value);
+      document.getElementById('speed-val').textContent = `${speed.toFixed(1)}x`;
+    }
+
+    // Toggle pen-up visibility
+    function togglePenUp() {
+      showPenUp = !showPenUp;
+      document.getElementById('toggle-penup').classList.toggle('active', showPenUp);
+      if (progress === 100) {
+        skipToEnd();
+      }
+    }
+
+    // SVG upload handler
+    document.getElementById('svgUpload').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        parseSVG(event.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    // Parse SVG file
+    function parseSVG(svgText) {
+      const parser = new DOMParser();
+      const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+      const svgElement = svgDoc.querySelector('svg');
+
+      if (!svgElement) {
+        alert('Invalid SVG file');
+        return;
+      }
+
+      const extractedPaths = [];
+
+      // Extract path elements
+      svgElement.querySelectorAll('path, line, polyline, polygon').forEach(element => {
+        const points = [];
+
+        if (element.tagName === 'path') {
+          const d = element.getAttribute('d');
+          if (d) {
+            const pathPoints = parsePathData(d);
+            if (pathPoints.length > 0) extractedPaths.push(pathPoints);
+          }
+        } else if (element.tagName === 'line') {
+          const x1 = parseFloat(element.getAttribute('x1') || 0);
+          const y1 = parseFloat(element.getAttribute('y1') || 0);
+          const x2 = parseFloat(element.getAttribute('x2') || 0);
+          const y2 = parseFloat(element.getAttribute('y2') || 0);
+          extractedPaths.push([{x: x1, y: y1}, {x: x2, y: y2}]);
+        } else if (element.tagName === 'polyline' || element.tagName === 'polygon') {
+          const pointsAttr = element.getAttribute('points');
+          if (pointsAttr) {
+            const coords = pointsAttr.trim().split(/[\s,]+/).map(parseFloat);
+            for (let i = 0; i < coords.length; i += 2) {
+              points.push({x: coords[i], y: coords[i+1]});
+            }
+            if (points.length > 0) extractedPaths.push(points);
+          }
+        }
+      });
+
+      if (extractedPaths.length > 0) {
+        paths = extractedPaths;
+        const stats = calculateStats(paths);
+        updateStats(stats);
+        reset();
+        currentSample = 'custom';
+        ['spiral', 'grid', 'circles', 'star'].forEach(t => {
+          document.getElementById(`btn-${t}`).classList.remove('active');
+        });
+      } else {
+        alert('No paths found in SVG');
+      }
+    }
+
+    // Simple SVG path parser (M, L commands only)
+    function parsePathData(d) {
+      const points = [];
+      const commands = d.match(/[MLHVCSQTAZmlhvcsqtaz][^MLHVCSQTAZmlhvcsqtaz]*/g);
+
+      let currentX = 0, currentY = 0;
+
+      if (!commands) return points;
+
+      commands.forEach(cmd => {
+        const type = cmd[0];
+        const coords = cmd.slice(1).trim().split(/[\s,]+/).map(parseFloat).filter(n => !isNaN(n));
+
+        if (type === 'M' || type === 'm') {
+          for (let i = 0; i < coords.length; i += 2) {
+            currentX = type === 'M' ? coords[i] : currentX + coords[i];
+            currentY = type === 'M' ? coords[i+1] : currentY + coords[i+1];
+            points.push({x: currentX, y: currentY});
+          }
+        } else if (type === 'L' || type === 'l') {
+          for (let i = 0; i < coords.length; i += 2) {
+            currentX = type === 'L' ? coords[i] : currentX + coords[i];
+            currentY = type === 'L' ? coords[i+1] : currentY + coords[i+1];
+            points.push({x: currentX, y: currentY});
+          }
+        } else if (type === 'H' || type === 'h') {
+          coords.forEach(x => {
+            currentX = type === 'H' ? x : currentX + x;
+            points.push({x: currentX, y: currentY});
+          });
+        } else if (type === 'V' || type === 'v') {
+          coords.forEach(y => {
+            currentY = type === 'V' ? y : currentY + y;
+            points.push({x: currentX, y: currentY});
+          });
+        }
+      });
+
+      return points;
+    }
+
+    // Initialize
+    loadSample('spiral');
+  </script>
+</body>
+</html>

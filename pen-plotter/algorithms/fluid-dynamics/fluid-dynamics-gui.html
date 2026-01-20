@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Fluid Dynamics - Stable Fluids Simulation</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-elevated, #1a1a2e);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--ts-accent-primary, #00d4aa);
+      text-align: center;
+    }
+    .status-display {
+      background: var(--ts-bg-elevated, #1a1a2e);
+      border: 1px solid var(--ts-border, #2a2a38);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 11px;
+      color: var(--ts-text-secondary, #9898a8);
+    }
+    .status-display .stat {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .status-display .stat:last-child {
+      margin-bottom: 0;
+    }
+    .status-display .stat .val {
+      color: var(--ts-accent-primary, #00d4aa);
+    }
+    #gif-status {
+      margin-top: 10px;
+      font-size: 11px;
+      color: var(--ts-text-muted, #5a5a6e);
+    }
+    .info-text {
+      font-size: 11px;
+      color: var(--ts-text-muted, #5a5a6e);
+      font-style: italic;
+      margin-top: 8px;
+    }
+    .button-row {
+      display: flex;
+      gap: 8px;
+    }
+    .button-row button {
+      flex: 1;
+    }
+    button.secondary {
+      background: var(--ts-bg-elevated, #1a1a2e);
+      color: var(--ts-text-primary, #e8e8ec);
+      border: 1px solid var(--ts-border, #2a2a38);
+    }
+    button.secondary:hover {
+      background: var(--ts-bg-control, #22222e);
+      border-color: var(--ts-accent-primary, #00d4aa);
+    }
+    button.danger {
+      background: var(--ts-accent-danger, #ff4757);
+    }
+    button.danger:hover {
+      background: #ff6b79;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <h2>Fluid Dynamics</h2>
+    <p style="font-size: 11px; color: var(--ts-text-muted); margin: 0 0 20px 0;">
+      Jos Stam's Stable Fluids - Interactive 2D Navier-Stokes
+    </p>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square">Square (800x800)</option>
+          <option value="a4" selected>A4 Portrait</option>
+          <option value="a4-landscape">A4 Landscape</option>
+          <option value="a3">A3 Portrait</option>
+          <option value="a3-landscape">A3 Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <div class="control">
+        <label>Grid Resolution: <span class="value" id="resolution-value">64</span></label>
+        <select id="resolution">
+          <option value="32">32x32 (Fast)</option>
+          <option value="64" selected>64x64 (Balanced)</option>
+          <option value="128">128x128 (Detailed)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Viscosity: <span class="value" id="viscosity-value">0.0001</span></label>
+        <input type="range" id="viscosity" min="0" max="0.001" step="0.00001" value="0.0001">
+      </div>
+      <div class="control">
+        <label>Diffusion: <span class="value" id="diffusion-value">0.0001</span></label>
+        <input type="range" id="diffusion" min="0" max="0.001" step="0.00001" value="0.0001">
+      </div>
+      <div class="control">
+        <label>Time Step: <span class="value" id="dt-value">0.2</span></label>
+        <input type="range" id="dt" min="0.01" max="1.0" step="0.01" value="0.2">
+      </div>
+      <div class="control">
+        <label>Force Strength: <span class="value" id="forceStrength-value">5000</span></label>
+        <input type="range" id="forceStrength" min="100" max="20000" step="100" value="5000">
+      </div>
+      <div class="control">
+        <label>Solver Iterations: <span class="value" id="iterations-value">20</span></label>
+        <input type="range" id="iterations" min="4" max="50" step="2" value="20">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Visualization</h3>
+      <div class="control">
+        <label>Mode:</label>
+        <select id="vizMode">
+          <option value="streamlines" selected>Streamlines (Plotter)</option>
+          <option value="arrows">Velocity Arrows</option>
+          <option value="density">Density Field</option>
+          <option value="particles">Particle Traces</option>
+          <option value="combined">Combined View</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Streamline Density: <span class="value" id="streamlineDensity-value">20</span></label>
+        <input type="range" id="streamlineDensity" min="5" max="50" step="1" value="20">
+      </div>
+      <div class="control">
+        <label>Streamline Length: <span class="value" id="streamlineLength-value">100</span></label>
+        <input type="range" id="streamlineLength" min="20" max="300" step="10" value="100">
+      </div>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="lineWeight-value">1.0</span></label>
+        <input type="range" id="lineWeight" min="0.2" max="3.0" step="0.1" value="1.0">
+      </div>
+      <div class="control">
+        <label>Particle Count: <span class="value" id="particleCount-value">500</span></label>
+        <input type="range" id="particleCount" min="50" max="2000" step="50" value="500">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Controls</h3>
+      <div class="button-row">
+        <button id="playPauseBtn" onclick="togglePlayPause()">Pause</button>
+        <button class="secondary" onclick="stepSimulation()">Step</button>
+      </div>
+      <button class="danger" onclick="resetSimulation()">Reset Simulation</button>
+      <button class="secondary" onclick="addRandomForces()">Add Random Forces</button>
+      <p class="info-text">Click and drag on canvas to add velocity and density</p>
+    </div>
+
+    <div class="control-group">
+      <h3>Status</h3>
+      <div class="status-display">
+        <div class="stat"><span>Frame:</span><span class="val" id="frameCount">0</span></div>
+        <div class="stat"><span>FPS:</span><span class="val" id="fpsDisplay">0</span></div>
+        <div class="stat"><span>Avg Velocity:</span><span class="val" id="avgVelocity">0.00</span></div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed:</label>
+        <div id="seed-display">-</div>
+      </div>
+      <button class="secondary" onclick="randomizeSeed()">New Seed</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button class="secondary" onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status"></div>
+    </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+  </div>
+
+  <script>
+    // =========================================
+    // PARAMETERS
+    // =========================================
+    let params = {
+      paperSize: 'a4',
+      seed: Math.floor(Math.random() * 1000000),
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      resolution: 64,
+      viscosity: 0.0001,
+      diffusion: 0.0001,
+      dt: 0.2,
+      forceStrength: 5000,
+      iterations: 20,
+      vizMode: 'streamlines',
+      streamlineDensity: 20,
+      streamlineLength: 100,
+      lineWeight: 1.0,
+      particleCount: 500
+    };
+
+    // =========================================
+    // FLUID SIMULATION - Jos Stam Stable Fluids
+    // =========================================
+    class FluidSimulation {
+      constructor(N) {
+        this.N = N;
+        this.size = (N + 2) * (N + 2);
+
+        // Velocity fields
+        this.u = new Float32Array(this.size);      // x-velocity
+        this.v = new Float32Array(this.size);      // y-velocity
+        this.u_prev = new Float32Array(this.size);
+        this.v_prev = new Float32Array(this.size);
+
+        // Density field (for dye/visualization)
+        this.dens = new Float32Array(this.size);
+        this.dens_prev = new Float32Array(this.size);
+      }
+
+      // Get array index from grid coordinates
+      IX(i, j) {
+        return i + (this.N + 2) * j;
+      }
+
+      // Swap arrays
+      swap(a, b) {
+        const temp = a.slice();
+        a.set(b);
+        b.set(temp);
+      }
+
+      // Add source to field
+      addSource(x, s, dt) {
+        for (let i = 0; i < this.size; i++) {
+          x[i] += dt * s[i];
+        }
+      }
+
+      // Set boundary conditions
+      setBnd(b, x) {
+        const N = this.N;
+
+        // Handle edges
+        for (let i = 1; i <= N; i++) {
+          x[this.IX(0, i)] = b === 1 ? -x[this.IX(1, i)] : x[this.IX(1, i)];
+          x[this.IX(N + 1, i)] = b === 1 ? -x[this.IX(N, i)] : x[this.IX(N, i)];
+          x[this.IX(i, 0)] = b === 2 ? -x[this.IX(i, 1)] : x[this.IX(i, 1)];
+          x[this.IX(i, N + 1)] = b === 2 ? -x[this.IX(i, N)] : x[this.IX(i, N)];
+        }
+
+        // Handle corners
+        x[this.IX(0, 0)] = 0.5 * (x[this.IX(1, 0)] + x[this.IX(0, 1)]);
+        x[this.IX(0, N + 1)] = 0.5 * (x[this.IX(1, N + 1)] + x[this.IX(0, N)]);
+        x[this.IX(N + 1, 0)] = 0.5 * (x[this.IX(N, 0)] + x[this.IX(N + 1, 1)]);
+        x[this.IX(N + 1, N + 1)] = 0.5 * (x[this.IX(N, N + 1)] + x[this.IX(N + 1, N)]);
+      }
+
+      // Diffusion step using Gauss-Seidel relaxation
+      diffuse(b, x, x0, diff, dt) {
+        const N = this.N;
+        const a = dt * diff * N * N;
+        const iterations = params.iterations;
+
+        for (let k = 0; k < iterations; k++) {
+          for (let j = 1; j <= N; j++) {
+            for (let i = 1; i <= N; i++) {
+              x[this.IX(i, j)] = (x0[this.IX(i, j)] + a * (
+                x[this.IX(i - 1, j)] + x[this.IX(i + 1, j)] +
+                x[this.IX(i, j - 1)] + x[this.IX(i, j + 1)]
+              )) / (1 + 4 * a);
+            }
+          }
+          this.setBnd(b, x);
+        }
+      }
+
+      // Advection step - semi-Lagrangian method
+      advect(b, d, d0, u, v, dt) {
+        const N = this.N;
+        const dt0 = dt * N;
+
+        for (let j = 1; j <= N; j++) {
+          for (let i = 1; i <= N; i++) {
+            // Trace particle back in time
+            let x = i - dt0 * u[this.IX(i, j)];
+            let y = j - dt0 * v[this.IX(i, j)];
+
+            // Clamp to grid boundaries
+            x = Math.max(0.5, Math.min(N + 0.5, x));
+            y = Math.max(0.5, Math.min(N + 0.5, y));
+
+            // Bilinear interpolation
+            const i0 = Math.floor(x);
+            const i1 = i0 + 1;
+            const j0 = Math.floor(y);
+            const j1 = j0 + 1;
+
+            const s1 = x - i0;
+            const s0 = 1 - s1;
+            const t1 = y - j0;
+            const t0 = 1 - t1;
+
+            d[this.IX(i, j)] =
+              s0 * (t0 * d0[this.IX(i0, j0)] + t1 * d0[this.IX(i0, j1)]) +
+              s1 * (t0 * d0[this.IX(i1, j0)] + t1 * d0[this.IX(i1, j1)]);
+          }
+        }
+        this.setBnd(b, d);
+      }
+
+      // Pressure projection - make velocity field divergence-free
+      project(u, v, p, div) {
+        const N = this.N;
+        const h = 1.0 / N;
+        const iterations = params.iterations;
+
+        // Compute divergence
+        for (let j = 1; j <= N; j++) {
+          for (let i = 1; i <= N; i++) {
+            div[this.IX(i, j)] = -0.5 * h * (
+              u[this.IX(i + 1, j)] - u[this.IX(i - 1, j)] +
+              v[this.IX(i, j + 1)] - v[this.IX(i, j - 1)]
+            );
+            p[this.IX(i, j)] = 0;
+          }
+        }
+        this.setBnd(0, div);
+        this.setBnd(0, p);
+
+        // Solve pressure Poisson equation
+        for (let k = 0; k < iterations; k++) {
+          for (let j = 1; j <= N; j++) {
+            for (let i = 1; i <= N; i++) {
+              p[this.IX(i, j)] = (div[this.IX(i, j)] +
+                p[this.IX(i - 1, j)] + p[this.IX(i + 1, j)] +
+                p[this.IX(i, j - 1)] + p[this.IX(i, j + 1)]
+              ) / 4;
+            }
+          }
+          this.setBnd(0, p);
+        }
+
+        // Subtract pressure gradient from velocity
+        for (let j = 1; j <= N; j++) {
+          for (let i = 1; i <= N; i++) {
+            u[this.IX(i, j)] -= 0.5 * (p[this.IX(i + 1, j)] - p[this.IX(i - 1, j)]) / h;
+            v[this.IX(i, j)] -= 0.5 * (p[this.IX(i, j + 1)] - p[this.IX(i, j - 1)]) / h;
+          }
+        }
+        this.setBnd(1, u);
+        this.setBnd(2, v);
+      }
+
+      // Density step
+      densStep(dt, diff) {
+        this.addSource(this.dens, this.dens_prev, dt);
+
+        // Swap and diffuse
+        const temp = this.dens_prev;
+        this.dens_prev = this.dens;
+        this.dens = temp;
+        this.diffuse(0, this.dens, this.dens_prev, diff, dt);
+
+        // Swap and advect
+        const temp2 = this.dens_prev;
+        this.dens_prev = this.dens;
+        this.dens = temp2;
+        this.advect(0, this.dens, this.dens_prev, this.u, this.v, dt);
+      }
+
+      // Velocity step
+      velStep(dt, visc) {
+        this.addSource(this.u, this.u_prev, dt);
+        this.addSource(this.v, this.v_prev, dt);
+
+        // Swap and diffuse u
+        let temp = this.u_prev;
+        this.u_prev = this.u;
+        this.u = temp;
+        this.diffuse(1, this.u, this.u_prev, visc, dt);
+
+        // Swap and diffuse v
+        temp = this.v_prev;
+        this.v_prev = this.v;
+        this.v = temp;
+        this.diffuse(2, this.v, this.v_prev, visc, dt);
+
+        // Make divergence-free
+        this.project(this.u, this.v, this.u_prev, this.v_prev);
+
+        // Swap and advect
+        temp = this.u_prev;
+        this.u_prev = this.u;
+        this.u = temp;
+
+        temp = this.v_prev;
+        this.v_prev = this.v;
+        this.v = temp;
+
+        this.advect(1, this.u, this.u_prev, this.u_prev, this.v_prev, dt);
+        this.advect(2, this.v, this.v_prev, this.u_prev, this.v_prev, dt);
+
+        // Make divergence-free again
+        this.project(this.u, this.v, this.u_prev, this.v_prev);
+      }
+
+      // Full simulation step
+      step(dt, visc, diff) {
+        this.velStep(dt, visc);
+        this.densStep(dt, diff);
+
+        // Clear previous sources
+        this.u_prev.fill(0);
+        this.v_prev.fill(0);
+        this.dens_prev.fill(0);
+      }
+
+      // Add velocity at position
+      addVelocity(x, y, amtX, amtY) {
+        const i = Math.floor(x * this.N);
+        const j = Math.floor(y * this.N);
+        if (i >= 1 && i <= this.N && j >= 1 && j <= this.N) {
+          this.u_prev[this.IX(i, j)] += amtX;
+          this.v_prev[this.IX(i, j)] += amtY;
+        }
+      }
+
+      // Add density at position
+      addDensity(x, y, amount) {
+        const i = Math.floor(x * this.N);
+        const j = Math.floor(y * this.N);
+        if (i >= 1 && i <= this.N && j >= 1 && j <= this.N) {
+          this.dens_prev[this.IX(i, j)] += amount;
+        }
+      }
+
+      // Get velocity at position (normalized coordinates 0-1)
+      getVelocity(x, y) {
+        const i = Math.floor(x * this.N) + 1;
+        const j = Math.floor(y * this.N) + 1;
+        const idx = this.IX(
+          Math.max(1, Math.min(this.N, i)),
+          Math.max(1, Math.min(this.N, j))
+        );
+        return { u: this.u[idx], v: this.v[idx] };
+      }
+
+      // Get density at position
+      getDensity(x, y) {
+        const i = Math.floor(x * this.N) + 1;
+        const j = Math.floor(y * this.N) + 1;
+        const idx = this.IX(
+          Math.max(1, Math.min(this.N, i)),
+          Math.max(1, Math.min(this.N, j))
+        );
+        return this.dens[idx];
+      }
+
+      // Get average velocity magnitude
+      getAvgVelocity() {
+        let sum = 0;
+        for (let j = 1; j <= this.N; j++) {
+          for (let i = 1; i <= this.N; i++) {
+            const idx = this.IX(i, j);
+            sum += Math.sqrt(this.u[idx] * this.u[idx] + this.v[idx] * this.v[idx]);
+          }
+        }
+        return sum / (this.N * this.N);
+      }
+
+      // Reset simulation
+      reset() {
+        this.u.fill(0);
+        this.v.fill(0);
+        this.u_prev.fill(0);
+        this.v_prev.fill(0);
+        this.dens.fill(0);
+        this.dens_prev.fill(0);
+      }
+    }
+
+    // =========================================
+    // PARTICLE SYSTEM
+    // =========================================
+    class Particle {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.history = [];
+        this.maxHistory = 50;
+      }
+
+      update(fluid, dt) {
+        const vel = fluid.getVelocity(this.x, this.y);
+        this.history.push({ x: this.x, y: this.y });
+        if (this.history.length > this.maxHistory) {
+          this.history.shift();
+        }
+
+        this.x += vel.u * dt * 0.01;
+        this.y += vel.v * dt * 0.01;
+
+        // Wrap around boundaries
+        if (this.x < 0) this.x = 1;
+        if (this.x > 1) this.x = 0;
+        if (this.y < 0) this.y = 1;
+        if (this.y > 1) this.y = 0;
+      }
+    }
+
+    // =========================================
+    // GLOBAL VARIABLES
+    // =========================================
+    let fluid;
+    let particles = [];
+    let isPlaying = true;
+    let frameCounter = 0;
+    let lastFrameTime = 0;
+    let fps = 0;
+    let prevMouseX, prevMouseY;
+    let presetManager;
+    let canvasControls;
+    let panelController;
+    let statsDisplay;
+
+    // =========================================
+    // P5.JS SETUP
+    // =========================================
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      let canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      // Initialize canvas controls
+      canvasControls = new TSCanvasControls({
+        bgColor: params.bgColor,
+        strokeColor: params.strokeColor
+      });
+      canvasControls.bind(params);
+
+      // Initialize fluid simulation
+      initializeFluid();
+
+      // Setup UI controls
+      setupControls();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'fluid-dynamics',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          initializeFluid();
+        }
+      });
+
+      // Initialize panel controller
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          // Dispatch resize event to handle canvas resizing if needed
+          if (typeof windowResized === 'function') {
+            windowResized();
+          }
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay({
+        containerSelector: '#canvas-container',
+        debounceMs: 100
+      });
+      statsDisplay.attach();
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function initializeFluid() {
+      fluid = new FluidSimulation(params.resolution);
+      initializeParticles();
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      frameCounter = 0;
+    }
+
+    function initializeParticles() {
+      particles = [];
+      for (let i = 0; i < params.particleCount; i++) {
+        particles.push(new Particle(random(), random()));
+      }
+    }
+
+    // =========================================
+    // CONTROL SETUP
+    // =========================================
+    function setupControls() {
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = CanvasLayout.getSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+        initializeFluid();
+      });
+
+      // Color controls
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
+
+      // Resolution (requires reinit)
+      document.getElementById('resolution').addEventListener('change', (e) => {
+        params.resolution = parseInt(e.target.value);
+        document.getElementById('resolution-value').textContent = params.resolution;
+        initializeFluid();
+      });
+
+      // Range controls
+      const rangeControls = [
+        'viscosity', 'diffusion', 'dt', 'forceStrength', 'iterations',
+        'streamlineDensity', 'streamlineLength', 'lineWeight', 'particleCount'
+      ];
+
+      rangeControls.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            params[id] = val;
+            document.getElementById(id + '-value').textContent =
+              val < 0.01 ? val.toFixed(5) : val.toFixed(val < 1 ? 2 : 0);
+
+            if (id === 'particleCount') {
+              initializeParticles();
+            }
+          });
+        }
+      });
+
+      // Visualization mode
+      document.getElementById('vizMode').addEventListener('change', (e) => {
+        params.vizMode = e.target.value;
+      });
+    }
+
+    // =========================================
+    // MOUSE INTERACTION
+    // =========================================
+    function mouseDragged() {
+      if (mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height) {
+        const x = mouseX / width;
+        const y = mouseY / height;
+
+        if (prevMouseX !== undefined) {
+          const dx = (mouseX - prevMouseX) * params.forceStrength;
+          const dy = (mouseY - prevMouseY) * params.forceStrength;
+
+          // Add velocity in a radius around mouse
+          const radius = 3;
+          for (let di = -radius; di <= radius; di++) {
+            for (let dj = -radius; dj <= radius; dj++) {
+              const dist = Math.sqrt(di * di + dj * dj);
+              if (dist <= radius) {
+                const factor = 1 - dist / radius;
+                const nx = x + di / params.resolution;
+                const ny = y + dj / params.resolution;
+                fluid.addVelocity(nx, ny, dx * factor, dy * factor);
+                fluid.addDensity(nx, ny, 500 * factor);
+              }
+            }
+          }
+        }
+
+        prevMouseX = mouseX;
+        prevMouseY = mouseY;
+      }
+    }
+
+    function mouseReleased() {
+      prevMouseX = undefined;
+      prevMouseY = undefined;
+    }
+
+    // =========================================
+    // SIMULATION CONTROL
+    // =========================================
+    function togglePlayPause() {
+      isPlaying = !isPlaying;
+      document.getElementById('playPauseBtn').textContent = isPlaying ? 'Pause' : 'Play';
+      if (isPlaying) loop();
+    }
+
+    function stepSimulation() {
+      if (!isPlaying) {
+        fluid.step(params.dt, params.viscosity, params.diffusion);
+        particles.forEach(p => p.update(fluid, params.dt));
+        frameCounter++;
+        redraw();
+      }
+    }
+
+    function resetSimulation() {
+      fluid.reset();
+      initializeParticles();
+      frameCounter = 0;
+    }
+
+    function addRandomForces() {
+      const numForces = 5;
+      for (let i = 0; i < numForces; i++) {
+        const x = random();
+        const y = random();
+        const angle = random(TWO_PI);
+        const strength = random(1000, 5000);
+        fluid.addVelocity(x, y, cos(angle) * strength, sin(angle) * strength);
+        fluid.addDensity(x, y, random(200, 500));
+      }
+    }
+
+    function randomizeSeed() {
+      params.seed = Math.floor(random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+    }
+
+    // =========================================
+    // DRAWING
+    // =========================================
+    function draw() {
+      background(params.bgColor);
+
+      // Update simulation
+      if (isPlaying) {
+        fluid.step(params.dt, params.viscosity, params.diffusion);
+        particles.forEach(p => p.update(fluid, params.dt));
+        frameCounter++;
+      }
+
+      // Draw based on visualization mode
+      stroke(params.strokeColor);
+      strokeWeight(params.lineWeight);
+      noFill();
+
+      switch (params.vizMode) {
+        case 'streamlines':
+          drawStreamlines();
+          break;
+        case 'arrows':
+          drawVelocityArrows();
+          break;
+        case 'density':
+          drawDensityField();
+          break;
+        case 'particles':
+          drawParticles();
+          break;
+        case 'combined':
+          drawDensityField();
+          drawStreamlines();
+          break;
+      }
+
+      // Update status display
+      updateStatus();
+    }
+
+    function drawStreamlines() {
+      const spacing = height / params.streamlineDensity;
+      const stepSize = 2;
+      const maxSteps = params.streamlineLength;
+
+      for (let startY = spacing / 2; startY < height; startY += spacing) {
+        for (let startX = spacing / 2; startX < width; startX += spacing) {
+          // Forward integration
+          drawStreamlineFrom(startX, startY, stepSize, maxSteps, 1);
+          // Backward integration
+          drawStreamlineFrom(startX, startY, stepSize, maxSteps, -1);
+        }
+      }
+    }
+
+    function drawStreamlineFrom(startX, startY, stepSize, maxSteps, direction) {
+      let x = startX;
+      let y = startY;
+
+      beginShape();
+      vertex(x, y);
+
+      for (let step = 0; step < maxSteps; step++) {
+        const vel = fluid.getVelocity(x / width, y / height);
+        const mag = Math.sqrt(vel.u * vel.u + vel.v * vel.v);
+
+        if (mag < 0.001) break;
+
+        // Normalize and step
+        const nx = direction * vel.u / mag * stepSize;
+        const ny = direction * vel.v / mag * stepSize;
+
+        x += nx;
+        y += ny;
+
+        // Check bounds
+        if (x < 0 || x > width || y < 0 || y > height) break;
+
+        vertex(x, y);
+      }
+
+      endShape();
+    }
+
+    function drawVelocityArrows() {
+      const spacing = width / 20;
+      const arrowScale = 5;
+
+      for (let x = spacing / 2; x < width; x += spacing) {
+        for (let y = spacing / 2; y < height; y += spacing) {
+          const vel = fluid.getVelocity(x / width, y / height);
+          const mag = Math.sqrt(vel.u * vel.u + vel.v * vel.v);
+
+          if (mag > 0.001) {
+            const len = Math.min(mag * arrowScale, spacing * 0.8);
+            const angle = Math.atan2(vel.v, vel.u);
+
+            push();
+            translate(x, y);
+            rotate(angle);
+
+            // Arrow body
+            line(0, 0, len, 0);
+
+            // Arrow head
+            const headSize = len * 0.3;
+            line(len, 0, len - headSize, -headSize * 0.5);
+            line(len, 0, len - headSize, headSize * 0.5);
+
+            pop();
+          }
+        }
+      }
+    }
+
+    function drawDensityField() {
+      const N = fluid.N;
+      const cellW = width / N;
+      const cellH = height / N;
+
+      noStroke();
+
+      for (let j = 1; j <= N; j++) {
+        for (let i = 1; i <= N; i++) {
+          const d = fluid.getDensity((i - 0.5) / N, (j - 0.5) / N);
+          if (d > 0.1) {
+            const alpha = Math.min(255, d * 2);
+            const col = color(params.strokeColor);
+            fill(red(col), green(col), blue(col), alpha);
+            rect((i - 1) * cellW, (j - 1) * cellH, cellW, cellH);
+          }
+        }
+      }
+
+      stroke(params.strokeColor);
+      noFill();
+    }
+
+    function drawParticles() {
+      particles.forEach(p => {
+        // Draw trail
+        if (p.history.length > 1) {
+          beginShape();
+          p.history.forEach(pos => {
+            vertex(pos.x * width, pos.y * height);
+          });
+          vertex(p.x * width, p.y * height);
+          endShape();
+        }
+
+        // Draw particle
+        const px = p.x * width;
+        const py = p.y * height;
+        ellipse(px, py, 3, 3);
+      });
+    }
+
+    function updateStatus() {
+      // Calculate FPS
+      const now = millis();
+      if (now - lastFrameTime > 500) {
+        fps = Math.round(frameRate());
+        lastFrameTime = now;
+      }
+
+      document.getElementById('frameCount').textContent = frameCounter;
+      document.getElementById('fpsDisplay').textContent = fps;
+      document.getElementById('avgVelocity').textContent = fluid.getAvgVelocity().toFixed(4);
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          frame: { value: frameCounter, label: 'Frame' },
+          fps: { value: fps, label: 'FPS' },
+          avgVel: { value: fluid.getAvgVelocity().toFixed(4), label: 'Avg Velocity' },
+          particles: { value: particles.length, label: 'Particles' },
+          resolution: { value: `${params.resolution}×${params.resolution}`, label: 'Grid' }
+        });
+      }
+    }
+
+    // =========================================
+    // UI UPDATES
+    // =========================================
+    function updateUIFromParams() {
+      // Update all UI elements from params
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const valueDisplay = document.getElementById(key + '-value');
+            if (valueDisplay) {
+              const val = params[key];
+              valueDisplay.textContent = val < 0.01 ? val.toFixed(5) : val.toFixed(val < 1 ? 2 : 0);
+            }
+          } else if (element.tagName === 'SELECT') {
+            element.value = params[key];
+          } else if (element.type === 'color') {
+            element.value = params[key];
+          }
+        }
+      });
+
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    // =========================================
+    // EXPORT FUNCTIONS
+    // =========================================
+    function exportSVG() {
+      // Generate SVG from current visualization
+      const svgWidth = width;
+      const svgHeight = height;
+
+      let paths = [];
+
+      // Generate streamlines as paths
+      const spacing = height / params.streamlineDensity;
+      const stepSize = 2;
+      const maxSteps = params.streamlineLength;
+
+      for (let startY = spacing / 2; startY < height; startY += spacing) {
+        for (let startX = spacing / 2; startX < width; startX += spacing) {
+          // Forward
+          const fwdPath = generateStreamlinePath(startX, startY, stepSize, maxSteps, 1);
+          if (fwdPath) paths.push(fwdPath);
+
+          // Backward
+          const bwdPath = generateStreamlinePath(startX, startY, stepSize, maxSteps, -1);
+          if (bwdPath) paths.push(bwdPath);
+        }
+      }
+
+      // Create SVG content
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+  <rect width="100%" height="100%" fill="${params.bgColor}"/>
+  <g stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none" stroke-linecap="round" stroke-linejoin="round">
+`;
+
+      paths.forEach(pathData => {
+        svg += `    <path d="${pathData}"/>\n`;
+      });
+
+      svg += `  </g>\n</svg>`;
+
+      // Download
+      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `fluid-dynamics-${params.seed}-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function generateStreamlinePath(startX, startY, stepSize, maxSteps, direction) {
+      let x = startX;
+      let y = startY;
+      let pathData = `M ${x.toFixed(2)} ${y.toFixed(2)}`;
+      let hasPoints = false;
+
+      for (let step = 0; step < maxSteps; step++) {
+        const vel = fluid.getVelocity(x / width, y / height);
+        const mag = Math.sqrt(vel.u * vel.u + vel.v * vel.v);
+
+        if (mag < 0.001) break;
+
+        const nx = direction * vel.u / mag * stepSize;
+        const ny = direction * vel.v / mag * stepSize;
+
+        x += nx;
+        y += ny;
+
+        if (x < 0 || x > width || y < 0 || y > height) break;
+
+        pathData += ` L ${x.toFixed(2)} ${y.toFixed(2)}`;
+        hasPoints = true;
+      }
+
+      return hasPoints ? pathData : null;
+    }
+
+    function exportPNG() {
+      saveCanvas(`fluid-dynamics-${params.seed}-${Date.now()}`, 'png');
+    }
+
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF...';
+
+      const gif = new GIF({
+        workers: 4,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+
+      // Create offscreen canvas
+      const offscreen = document.createElement('canvas');
+      offscreen.width = width;
+      offscreen.height = height;
+      const ctx = offscreen.getContext('2d');
+
+      const totalFrames = 60;
+      const wasPlaying = isPlaying;
+      isPlaying = false;
+
+      // Store current state
+      const savedFluid = {
+        u: fluid.u.slice(),
+        v: fluid.v.slice(),
+        dens: fluid.dens.slice()
+      };
+
+      // Reset for clean animation
+      fluid.reset();
+      addRandomForces();
+
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+
+        // Step simulation
+        fluid.step(params.dt, params.viscosity, params.diffusion);
+
+        // Draw frame
+        ctx.fillStyle = params.bgColor;
+        ctx.fillRect(0, 0, width, height);
+        ctx.strokeStyle = params.strokeColor;
+        ctx.lineWidth = params.lineWeight;
+
+        // Draw streamlines
+        const spacing = height / params.streamlineDensity;
+        for (let startY = spacing / 2; startY < height; startY += spacing) {
+          for (let startX = spacing / 2; startX < width; startX += spacing) {
+            drawStreamlineToContext(ctx, startX, startY, 2, params.streamlineLength, 1);
+            drawStreamlineToContext(ctx, startX, startY, 2, params.streamlineLength, -1);
+          }
+        }
+
+        gif.addFrame(ctx, { delay: 50, copy: true });
+      }
+
+      // Restore state
+      fluid.u.set(savedFluid.u);
+      fluid.v.set(savedFluid.v);
+      fluid.dens.set(savedFluid.dens);
+      isPlaying = wasPlaying;
+
+      statusEl.textContent = 'Encoding GIF...';
+
+      gif.on('finished', (blob) => {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fluid-dynamics-${params.seed}-${Date.now()}.gif`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        setTimeout(() => statusEl.textContent = '', 3000);
+      });
+
+      gif.render();
+    }
+
+    function drawStreamlineToContext(ctx, startX, startY, stepSize, maxSteps, direction) {
+      let x = startX;
+      let y = startY;
+
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+
+      for (let step = 0; step < maxSteps; step++) {
+        const vel = fluid.getVelocity(x / width, y / height);
+        const mag = Math.sqrt(vel.u * vel.u + vel.v * vel.v);
+
+        if (mag < 0.001) break;
+
+        const nx = direction * vel.u / mag * stepSize;
+        const ny = direction * vel.v / mag * stepSize;
+
+        x += nx;
+        y += ny;
+
+        if (x < 0 || x > width || y < 0 || y > height) break;
+
+        ctx.lineTo(x, y);
+      }
+
+      ctx.stroke();
+    }
+  </script>
+</body>
+</html>

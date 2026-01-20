@@ -1,0 +1,129 @@
+{
+  "presets": [
+    {
+      "id": "preset-mountains",
+      "name": "🏔️ Mountain Range",
+      "algorithmId": "perlin-landscape",
+      "description": "High peaks with dramatic elevation changes",
+      "timestamp": "2024-11-10T00:00:00.000Z",
+      "data": {
+        "seed": 42,
+        "noiseScale": 0.008,
+        "amplitude": 300,
+        "octaves": 6,
+        "persistence": 0.6,
+        "contourCount": 30,
+        "smoothing": 8,
+        "contourStyle": "weighted",
+        "showLabels": false,
+        "viewMode": "top",
+        "rotation": 0,
+        "zoom": 1,
+        "strokeWeight": 1.5,
+        "colorScheme": "mono",
+        "showGrid": false,
+        "showWaterLevel": false
+      }
+    },
+    {
+      "id": "preset-rolling-hills",
+      "name": "🌄 Rolling Hills",
+      "algorithmId": "perlin-landscape",
+      "description": "Gentle, smooth terrain with soft contours",
+      "timestamp": "2024-11-10T00:00:00.000Z",
+      "data": {
+        "seed": 12345,
+        "noiseScale": 0.015,
+        "amplitude": 150,
+        "octaves": 3,
+        "persistence": 0.4,
+        "contourCount": 15,
+        "smoothing": 12,
+        "contourStyle": "lines",
+        "showLabels": false,
+        "viewMode": "top",
+        "rotation": 0,
+        "zoom": 1,
+        "strokeWeight": 1,
+        "colorScheme": "mono",
+        "showGrid": false,
+        "showWaterLevel": false
+      }
+    },
+    {
+      "id": "preset-dense-topography",
+      "name": "🗺️ Dense Topo Map",
+      "algorithmId": "perlin-landscape",
+      "description": "High detail topographical map style",
+      "timestamp": "2024-11-10T00:00:00.000Z",
+      "data": {
+        "seed": 7890,
+        "noiseScale": 0.012,
+        "amplitude": 250,
+        "octaves": 5,
+        "persistence": 0.55,
+        "contourCount": 45,
+        "smoothing": 3,
+        "contourStyle": "lines",
+        "showLabels": true,
+        "viewMode": "top",
+        "rotation": 0,
+        "zoom": 1.2,
+        "strokeWeight": 0.8,
+        "colorScheme": "mono",
+        "showGrid": false,
+        "showWaterLevel": false
+      }
+    },
+    {
+      "id": "preset-minimal-zen",
+      "name": "☯️ Minimal Zen",
+      "algorithmId": "perlin-landscape",
+      "description": "Sparse, meditative landscape",
+      "timestamp": "2024-11-10T00:00:00.000Z",
+      "data": {
+        "seed": 1111,
+        "noiseScale": 0.02,
+        "amplitude": 180,
+        "octaves": 2,
+        "persistence": 0.3,
+        "contourCount": 8,
+        "smoothing": 15,
+        "contourStyle": "lines",
+        "showLabels": false,
+        "viewMode": "top",
+        "rotation": 0,
+        "zoom": 1,
+        "strokeWeight": 2,
+        "colorScheme": "mono",
+        "showGrid": false,
+        "showWaterLevel": false
+      }
+    },
+    {
+      "id": "preset-rugged-terrain",
+      "name": "⛰️ Rugged Terrain",
+      "algorithmId": "perlin-landscape",
+      "description": "Sharp, jagged mountainous terrain",
+      "timestamp": "2024-11-10T00:00:00.000Z",
+      "data": {
+        "seed": 9999,
+        "noiseScale": 0.005,
+        "amplitude": 350,
+        "octaves": 7,
+        "persistence": 0.7,
+        "contourCount": 35,
+        "smoothing": 2,
+        "contourStyle": "weighted",
+        "showLabels": false,
+        "viewMode": "top",
+        "rotation": 45,
+        "zoom": 1.5,
+        "strokeWeight": 1,
+        "colorScheme": "mono",
+        "showGrid": false,
+        "showWaterLevel": false
+      }
+    }
+  ]
+}

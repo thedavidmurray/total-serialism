@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Simple L-System Trees</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    h3 {
+      margin: var(--ts-space-lg) 0 var(--ts-space-md) 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+      padding-bottom: var(--ts-space-sm);
+    }
+
+    h3:first-of-type {
+      margin-top: 0;
+    }
+
+    .control {
+      margin-bottom: var(--ts-space-md);
+    }
+
+    .preset {
+      background: var(--ts-bg-control) !important;
+      border: 1px solid var(--ts-border-default) !important;
+      color: var(--ts-text-secondary) !important;
+    }
+
+    .preset:hover {
+      background: var(--ts-bg-hover) !important;
+      border-color: var(--ts-accent-primary) !important;
+      color: var(--ts-text-primary) !important;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
+    }
+
+    /* Preset container at bottom */
+    .preset-container {
+      margin-top: var(--ts-space-lg);
+      padding-top: var(--ts-space-lg);
+      border-top: 1px solid var(--ts-border-subtle);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+    <h2>L-System Trees</h2>
+
+    <h3>Canvas Settings</h3>
+    <div class="control">
+      <label>Paper Size:</label>
+      <select id="paperSize">
+        <option value="custom" selected>Custom (800x600)</option>
+        <option value="a5">A5 Portrait</option>
+        <option value="a4">A4 Portrait</option>
+        <option value="a3">A3 Portrait</option>
+        <option value="letter">US Letter</option>
+        <option value="square">Square</option>
+      </select>
+    </div>
+
+    <h3>Structure</h3>
+    <div class="control">
+      <label>Iterations: <span class="value" id="iterations-val">5</span></label>
+      <input type="range" id="iterations" min="1" max="8" value="5">
+    </div>
+    <div class="control">
+      <label>Branch Length: <span class="value" id="length-val">10</span></label>
+      <input type="range" id="length" min="5" max="30" value="10">
+    </div>
+    <div class="control">
+      <label>Branch Angle: <span class="value" id="angle-val">25</span>deg</label>
+      <input type="range" id="angle" min="10" max="45" value="25">
+    </div>
+    <div class="control">
+      <label>Length Decay: <span class="value" id="decay-val">0.8</span></label>
+      <input type="range" id="decay" min="0.5" max="0.95" step="0.05" value="0.8">
+    </div>
+
+    <h3>Variation</h3>
+    <div class="control">
+      <label>Randomness: <span class="value" id="randomness-val">0</span>%</label>
+      <input type="range" id="randomness" min="0" max="30" value="0">
+    </div>
+    <div class="control">
+      <label>Wind: <span class="value" id="wind-val">0</span></label>
+      <input type="range" id="wind" min="0" max="20" value="0">
+    </div>
+
+    <h3>Actions</h3>
+    <button onclick="regenerate()">Regenerate</button>
+    <button onclick="exportSVG()">Export SVG</button>
+    <button onclick="exportGIF()">Export GIF</button>
+    <div id="gif-status"></div>
+
+    <!-- Preset container at bottom -->
+    <div class="preset-container">
+      <h3>Quick Presets</h3>
+      <button class="preset" onclick="loadPreset('simple')">Simple Tree</button>
+      <button class="preset" onclick="loadPreset('organic')">Organic</button>
+      <button class="preset" onclick="loadPreset('willow')">Willow</button>
+      <button class="preset" onclick="loadPreset('fern')">Fern</button>
+    </div>
+  </div>
+
+  <script>
+    // Global variables for panel and stats
+    let panelController;
+    let statsDisplay;
+
+    let params = {
+      paperSize: 'custom',
+      iterations: 5,
+      length: 10,
+      angle: 25,
+      decay: 0.8,
+      randomness: 0,
+      wind: 0,
+      axiom: 'F',
+      rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
+    };
+
+    const presets = {
+      simple: {
+        iterations: 5,
+        angle: 25,
+        decay: 0.8,
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
+      },
+      organic: {
+        iterations: 4,
+        angle: 30,
+        decay: 0.75,
+        randomness: 15,
+        axiom: 'F',
+        rules: { 'F': 'F[+F]F[-F][F]' }
+      },
+      willow: {
+        iterations: 5,
+        angle: 35,
+        decay: 0.85,
+        wind: 10,
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-FF-F]-[-F+FF+F]' }
+      },
+      fern: {
+        iterations: 6,
+        angle: 22,
+        decay: 0.9,
+        axiom: 'X',
+        rules: {
+          'X': 'F+[[X]-X]-F[-FX]+X',
+          'F': 'FF'
+        }
+      }
+    };
+
+    let canvasWidth = 800;
+    let canvasHeight = 600;
+    let branchCount = 0;
+    let currentSeed = Date.now();
+
+    function setup() {
+      updateCanvasSize();
+      let canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-container');
+
+      // Initialize panel controller with onToggle callback
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          // Resize canvas when panel toggles
+          setTimeout(() => {
+            updateCanvasSize();
+            resizeCanvas(canvasWidth, canvasHeight);
+            redraw();
+          }, 50);
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
+
+      // Setup paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        updateCanvasSize();
+        resizeCanvas(canvasWidth, canvasHeight);
+        redraw();
+      });
+
+      // Setup controls
+      ['iterations', 'length', 'angle', 'decay', 'randomness', 'wind'].forEach(param => {
+        document.getElementById(param).addEventListener('input', (e) => {
+          params[param] = parseFloat(e.target.value);
+          document.getElementById(param + '-val').textContent = e.target.value;
+          redraw();
+        });
+      });
+
+      noLoop();
+    }
+
+    function updateCanvasSize() {
+      if (window.CanvasLayout) {
+        const size = CanvasLayout.getSize(params.paperSize);
+        canvasWidth = size.width;
+        canvasHeight = size.height;
+      }
+    }
+
+    function draw() {
+      generate();
+    }
+
+    function generateLSystem() {
+      let current = params.axiom;
+      for (let i = 0; i < params.iterations; i++) {
+        let next = '';
+        for (let char of current) {
+          next += params.rules[char] || char;
+        }
+        current = next;
+      }
+      return current;
+    }
+
+    function generate() {
+      background(255);
+
+      const system = generateLSystem();
+      branchCount = 0; // Reset branch count
+
+      push();
+      // Start from bottom center
+      translate(width / 2, height - 50);
+      stroke(0);
+      strokeWeight(1);
+
+      drawLSystem(system);
+      pop();
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          iterations: params.iterations,
+          branches: branchCount,
+          seed: currentSeed,
+          angle: { value: params.angle + '°', label: 'Angle' },
+          decay: { value: params.decay.toFixed(2), label: 'Decay' }
+        });
+      }
+    }
+
+    function drawLSystem(system) {
+      const stack = [];
+      let len = params.length;
+
+      for (let char of system) {
+        // Add randomness
+        const randAngle = params.randomness ?
+          random(-params.randomness, params.randomness) * PI / 180 : 0;
+        const windEffect = params.wind * sin(frameCount * 0.01) * 0.01;
+
+        switch (char) {
+          case 'F':
+            line(0, 0, 0, -len);
+            translate(0, -len);
+            branchCount++; // Count each branch segment
+            break;
+          case '+':
+            rotate((params.angle + randAngle) * PI / 180 + windEffect);
+            break;
+          case '-':
+            rotate((-params.angle + randAngle) * PI / 180 - windEffect);
+            break;
+          case '[':
+            push();
+            stack.push(len);
+            len *= params.decay;
+            break;
+          case ']':
+            pop();
+            len = stack.pop() || len;
+            break;
+        }
+      }
+    }
+
+    function loadPreset(name) {
+      const preset = presets[name];
+      if (preset) {
+        Object.assign(params, preset);
+
+        // Update UI
+        Object.keys(preset).forEach(key => {
+          const element = document.getElementById(key);
+          if (element) {
+            element.value = preset[key];
+            const valElement = document.getElementById(key + '-val');
+            if (valElement) valElement.textContent = preset[key];
+          }
+        });
+
+        generate();
+      }
+    }
+
+    function regenerate() {
+      currentSeed = Date.now(); // Generate new seed
+      randomSeed(currentSeed);
+      redraw();
+    }
+
+    function exportSVG() {
+      // Create SVG canvas temporarily
+      let svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
+      svgCanvas.parent('canvas-container');
+      generate();
+      save('lsystem-tree.svg');
+
+      // Switch back to regular canvas
+      svgCanvas.remove();
+      let canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-container');
+      noLoop();
+      redraw();
+    }
+
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+
+      // Store original parameters
+      const originalIterations = params.iterations;
+      const originalWind = params.wind;
+
+      // Generate frames by growing the tree
+      const totalFrames = 15;
+      for (let frame = 0; frame < totalFrames; frame++) {
+        statusEl.textContent = `Rendering frame ${frame + 1}/${totalFrames}...`;
+
+        // Vary iterations for growth animation
+        params.iterations = Math.floor((frame + 1) / totalFrames * originalIterations) + 1;
+
+        // Also vary wind slightly for more organic motion
+        params.wind = originalWind * sin(frame * 0.2) * 0.5;
+
+        // Create offscreen canvas
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const ctx = offscreenCanvas.getContext('2d');
+
+        // Draw background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw the tree at current state
+        const tree = new Tree(
+          params.iterations,
+          params.angle,
+          params.angleVariation,
+          params.lengthFactor,
+          params.branchProbability,
+          params.wind
+        );
+
+        ctx.save();
+        ctx.translate(width/2, height - 50);
+
+        // Draw tree to offscreen canvas
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = 2;
+
+        // Render tree (simplified version of Tree.show())
+        function drawBranch(len, depth) {
+          if (depth <= 0) return;
+
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(0, -len);
+          ctx.stroke();
+
+          ctx.translate(0, -len);
+
+          // Right branch
+          if (Math.random() < params.branchProbability || depth === params.iterations) {
+            ctx.save();
+            ctx.rotate((params.angle + random(-params.angleVariation, params.angleVariation) + params.wind * (params.iterations - depth) * 0.1) * Math.PI / 180);
+            drawBranch(len * params.lengthFactor, depth - 1);
+            ctx.restore();
+          }
+
+          // Left branch
+          if (Math.random() < params.branchProbability || depth === params.iterations) {
+            ctx.save();
+            ctx.rotate(-(params.angle + random(-params.angleVariation, params.angleVariation) - params.wind * (params.iterations - depth) * 0.1) * Math.PI / 180);
+            drawBranch(len * params.lengthFactor, depth - 1);
+            ctx.restore();
+          }
+        }
+
+        drawBranch(100, params.iterations);
+        ctx.restore();
+
+        // Add frame
+        gif.addFrame(ctx, {delay: 150});
+      }
+
+      // Restore original parameters
+      params.iterations = originalIterations;
+      params.wind = originalWind;
+      regenerate();
+
+      statusEl.textContent = 'Encoding GIF...';
+
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF export complete!';
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `lsystem-tree.gif`;
+        link.click();
+
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+
+      gif.render();
+    }
+  </script>
+</body>
+</html>

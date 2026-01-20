@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Strange Attractors - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <link rel="stylesheet" href="../../preset-manager.css">
+  <style>
+    .attractor-info {
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+      margin-top: var(--ts-space-xs);
+      padding: var(--ts-space-sm);
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-sm);
+      line-height: 1.4;
+    }
+    .param-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--ts-space-sm);
+    }
+    .param-grid .control-group {
+      margin-bottom: 0;
+    }
+    .param-grid label {
+      font-size: 0.75rem;
+    }
+    .projection-btns {
+      display: flex;
+      gap: var(--ts-space-xs);
+      flex-wrap: wrap;
+    }
+    .projection-btns button {
+      flex: 1;
+      min-width: 50px;
+      padding: var(--ts-space-sm);
+      font-size: 0.7rem;
+    }
+    .projection-btns button.active {
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+    }
+    .separator {
+      border-top: 1px solid var(--ts-border-subtle);
+      margin: var(--ts-space-lg) 0;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div class="ts-layout">
+    <main class="ts-canvas-area">
+      <div id="canvas-container"></div>
+    </main>
+
+    <aside class="ts-control-panel">
+      <div class="ts-controls">
+        <h2 style="margin: 0 0 var(--ts-space-lg) 0; font-size: 1.1rem; color: var(--ts-text-primary);">Strange Attractors</h2>
+
+        <!-- Preset Manager Container -->
+        <div id="preset-container"></div>
+
+        <!-- Attractor Selection -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Attractor Type</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="control-group">
+              <select id="attractorType" class="ts-select">
+                <option value="rossler">Rossler Attractor</option>
+                <option value="henon">Henon Map</option>
+                <option value="clifford">Clifford Attractor</option>
+                <option value="aizawa">Aizawa Attractor</option>
+                <option value="thomas">Thomas Attractor</option>
+                <option value="chua">Chua's Circuit</option>
+                <option value="dejong">De Jong Attractor</option>
+              </select>
+              <p class="attractor-info" id="attractor-info">Spiral chaos with simpler dynamics than Lorenz (1976)</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Attractor Parameters -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Attractor Parameters</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="param-grid" id="param-grid">
+              <div class="control-group">
+                <label>a: <span id="param-a-val">0.2</span></label>
+                <input type="range" id="param-a" min="-5" max="5" value="0.2" step="0.01" class="ts-slider">
+              </div>
+              <div class="control-group">
+                <label>b: <span id="param-b-val">0.2</span></label>
+                <input type="range" id="param-b" min="-5" max="5" value="0.2" step="0.01" class="ts-slider">
+              </div>
+              <div class="control-group">
+                <label>c: <span id="param-c-val">5.7</span></label>
+                <input type="range" id="param-c" min="-10" max="10" value="5.7" step="0.01" class="ts-slider">
+              </div>
+              <div class="control-group">
+                <label>d: <span id="param-d-val">0</span></label>
+                <input type="range" id="param-d" min="-5" max="5" value="0" step="0.01" class="ts-slider">
+              </div>
+              <div class="control-group">
+                <label>e: <span id="param-e-val">0</span></label>
+                <input type="range" id="param-e" min="-5" max="5" value="0" step="0.01" class="ts-slider">
+              </div>
+              <div class="control-group">
+                <label>f: <span id="param-f-val">0</span></label>
+                <input type="range" id="param-f" min="-5" max="5" value="0" step="0.01" class="ts-slider">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Iteration Settings -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Iteration Settings</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="control-group">
+              <label>Iterations: <span id="iterations-val">50000</span></label>
+              <input type="range" id="iterations" min="1000" max="500000" value="50000" step="1000" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Time Step (dt): <span id="dt-val">0.01</span></label>
+              <input type="range" id="dt" min="0.001" max="0.05" value="0.01" step="0.001" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Skip Initial: <span id="skip-val">100</span></label>
+              <input type="range" id="skip" min="0" max="1000" value="100" step="10" class="ts-slider">
+            </div>
+          </div>
+        </div>
+
+        <!-- Rendering Options -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Rendering</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="control-group">
+              <label>Draw Mode:</label>
+              <select id="drawMode" class="ts-select">
+                <option value="lines">Connected Lines</option>
+                <option value="points">Points</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Point Size / Stroke: <span id="strokeWeight-val">0.5</span></label>
+              <input type="range" id="strokeWeight" min="0.1" max="3" value="0.5" step="0.1" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Line Opacity: <span id="opacity-val">100</span>%</label>
+              <input type="range" id="opacity" min="5" max="100" value="100" step="5" class="ts-slider">
+            </div>
+          </div>
+        </div>
+
+        <!-- Transform Settings -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Transform</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="control-group">
+              <label>Scale: <span id="scale-val">15</span></label>
+              <input type="range" id="scale" min="1" max="100" value="15" step="1" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Offset X: <span id="offsetX-val">0</span></label>
+              <input type="range" id="offsetX" min="-500" max="500" value="0" step="5" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Offset Y: <span id="offsetY-val">0</span></label>
+              <input type="range" id="offsetY" min="-500" max="500" value="0" step="5" class="ts-slider">
+            </div>
+
+            <div class="separator"></div>
+            <label style="margin-bottom: var(--ts-space-sm); display: block;">3D Projection (for 3D attractors):</label>
+            <div class="projection-btns">
+              <button id="proj-xy" class="ts-btn ts-btn-secondary active">XY</button>
+              <button id="proj-xz" class="ts-btn ts-btn-secondary">XZ</button>
+              <button id="proj-yz" class="ts-btn ts-btn-secondary">YZ</button>
+              <button id="proj-iso" class="ts-btn ts-btn-secondary">ISO</button>
+            </div>
+
+            <div class="control-group" style="margin-top: var(--ts-space-md);">
+              <label>Rotation (ISO): <span id="rotation-val">45</span>deg</label>
+              <input type="range" id="rotation" min="0" max="360" value="45" step="5" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Tilt (ISO): <span id="tilt-val">30</span>deg</label>
+              <input type="range" id="tilt" min="-90" max="90" value="30" step="5" class="ts-slider">
+            </div>
+          </div>
+        </div>
+
+        <!-- Canvas Settings -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Canvas</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <div class="control-group">
+              <label>Paper Size:</label>
+              <select id="paperSize" class="ts-select">
+                <option value="square">Square (800x800)</option>
+                <option value="a5">A5 Portrait</option>
+                <option value="a4">A4 Portrait</option>
+                <option value="a3" selected>A3 Portrait</option>
+                <option value="a4-landscape">A4 Landscape</option>
+                <option value="a3-landscape">A3 Landscape</option>
+                <option value="letter">US Letter</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Background:</label>
+              <input type="color" id="bgColor" value="#ffffff" style="width: 100%; height: 36px;">
+            </div>
+            <div class="control-group">
+              <label>Stroke Color:</label>
+              <input type="color" id="strokeColor" value="#000000" style="width: 100%; height: 36px;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="ts-control-group">
+          <div class="ts-control-group-header">
+            <h3 class="ts-control-group-title">Actions</h3>
+          </div>
+          <div class="ts-control-group-content">
+            <button id="regenerateBtn" class="ts-btn ts-btn-primary ts-btn-block">Regenerate</button>
+            <button id="randomizeAll" class="ts-btn ts-btn-secondary ts-btn-block">Randomize Colors</button>
+            <button id="randomizeParams" class="ts-btn ts-btn-secondary ts-btn-block">Randomize Parameters</button>
+
+            <div class="separator"></div>
+
+            <div class="ts-export-group">
+              <button id="exportSVG" class="ts-export-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M12 18v-6"/><path d="M9 15l3 3 3-3"/></svg>
+                SVG
+              </button>
+              <button id="exportPNG" class="ts-export-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+                PNG
+              </button>
+              <button id="exportGIF" class="ts-export-btn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><path d="M7 2v20"/><path d="M17 2v20"/><path d="M2 12h20"/><path d="M2 7h5"/><path d="M2 17h5"/><path d="M17 17h5"/><path d="M17 7h5"/></svg>
+                GIF
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+  </div>
+
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <script>
+    // ============================================
+    // STRANGE ATTRACTORS - Multi-Attractor System
+    // ============================================
+
+    // Parameters
+    const params = {
+      attractorType: 'rossler',
+      // Attractor-specific parameters
+      a: 0.2, b: 0.2, c: 5.7, d: 0, e: 0, f: 0,
+      // Iteration settings
+      iterations: 50000,
+      dt: 0.01,
+      skip: 100,
+      // Rendering
+      drawMode: 'lines',
+      strokeWeight: 0.5,
+      opacity: 100,
+      // Transform
+      scale: 15,
+      offsetX: 0,
+      offsetY: 0,
+      projection: 'xy',
+      rotation: 45,
+      tilt: 30,
+      // Canvas
+      paperSize: 'a3',
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    // Attractor metadata
+    const attractorInfo = {
+      rossler: {
+        name: 'Rossler Attractor',
+        description: 'Spiral chaos with simpler dynamics than Lorenz (1976)',
+        is3D: true,
+        defaults: { a: 0.2, b: 0.2, c: 5.7, d: 0, e: 0, f: 0 },
+        paramRanges: { a: [-1, 1], b: [-1, 1], c: [0, 20] },
+        usedParams: ['a', 'b', 'c']
+      },
+      henon: {
+        name: 'Henon Map',
+        description: 'Classic discrete chaotic map (1976)',
+        is3D: false,
+        defaults: { a: 1.4, b: 0.3, c: 0, d: 0, e: 0, f: 0 },
+        paramRanges: { a: [0.5, 1.5], b: [0.1, 0.5] },
+        usedParams: ['a', 'b']
+      },
+      clifford: {
+        name: 'Clifford Attractor',
+        description: 'Trigonometric 2D attractor with beautiful patterns',
+        is3D: false,
+        defaults: { a: -1.4, b: 1.6, c: 1.0, d: 0.7, e: 0, f: 0 },
+        paramRanges: { a: [-3, 3], b: [-3, 3], c: [-3, 3], d: [-3, 3] },
+        usedParams: ['a', 'b', 'c', 'd']
+      },
+      aizawa: {
+        name: 'Aizawa Attractor',
+        description: 'Complex 3D torus-like attractor with 6 parameters',
+        is3D: true,
+        defaults: { a: 0.95, b: 0.7, c: 0.6, d: 3.5, e: 0.25, f: 0.1 },
+        paramRanges: { a: [0.5, 1.5], b: [0.3, 1.2], c: [0.3, 1.0], d: [2, 5], e: [0.1, 0.5], f: [0.05, 0.2] },
+        usedParams: ['a', 'b', 'c', 'd', 'e', 'f']
+      },
+      thomas: {
+        name: 'Thomas Attractor',
+        description: 'Cyclically symmetric chaotic flow',
+        is3D: true,
+        defaults: { a: 0.208186, b: 0, c: 0, d: 0, e: 0, f: 0 },
+        paramRanges: { a: [0.1, 0.3] },
+        usedParams: ['a']
+      },
+      chua: {
+        name: "Chua's Circuit",
+        description: 'Double scroll attractor from electronic circuit',
+        is3D: true,
+        defaults: { a: 15.6, b: 28, c: -1.143, d: -0.714, e: 0, f: 0 },
+        paramRanges: { a: [10, 20], b: [20, 35], c: [-2, -0.5], d: [-1, -0.3] },
+        usedParams: ['a', 'b', 'c', 'd']
+      },
+      dejong: {
+        name: 'De Jong Attractor',
+        description: 'Trigonometric 2D attractor (Peter de Jong)',
+        is3D: false,
+        defaults: { a: -2.24, b: 0.43, c: -0.65, d: -2.43, e: 0, f: 0 },
+        paramRanges: { a: [-3, 3], b: [-3, 3], c: [-3, 3], d: [-3, 3] },
+        usedParams: ['a', 'b', 'c', 'd']
+      }
+    };
+
+    // Canvas and state
+    let canvas;
+    let points = [];
+    let presetManager;
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    // ============================================
+    // ATTRACTOR COMPUTATION
+    // ============================================
+
+    function computeAttractor() {
+      points = [];
+      const info = attractorInfo[params.attractorType];
+      const dt = params.dt;
+      const { a, b, c, d, e, f } = params;
+
+      // Initial conditions
+      let x = 0.1, y = 0, z = 0;
+
+      // Skip initial transient
+      for (let i = 0; i < params.skip; i++) {
+        const result = stepAttractor(x, y, z, a, b, c, d, e, f, dt);
+        x = result.x; y = result.y; z = result.z;
+      }
+
+      // Main iteration
+      for (let i = 0; i < params.iterations; i++) {
+        const result = stepAttractor(x, y, z, a, b, c, d, e, f, dt);
+        x = result.x; y = result.y; z = result.z;
+
+        // Skip invalid values
+        if (!isFinite(x) || !isFinite(y) || !isFinite(z)) {
+          break;
+        }
+
+        points.push({ x, y, z });
+      }
+
+      return points;
+    }
+
+    function stepAttractor(x, y, z, a, b, c, d, e, f, dt) {
+      let dx, dy, dz;
+
+      switch (params.attractorType) {
+        case 'rossler':
+          // dx/dt = -y - z, dy/dt = x + a*y, dz/dt = b + z*(x - c)
+          dx = -y - z;
+          dy = x + a * y;
+          dz = b + z * (x - c);
+          return { x: x + dx * dt, y: y + dy * dt, z: z + dz * dt };
+
+        case 'henon':
+          // x_n+1 = 1 - a*x_n^2 + y_n, y_n+1 = b*x_n
+          return { x: 1 - a * x * x + y, y: b * x, z: 0 };
+
+        case 'clifford':
+          // x_n+1 = sin(a*y_n) + c*cos(a*x_n), y_n+1 = sin(b*x_n) + d*cos(b*y_n)
+          return {
+            x: Math.sin(a * y) + c * Math.cos(a * x),
+            y: Math.sin(b * x) + d * Math.cos(b * y),
+            z: 0
+          };
+
+        case 'aizawa':
+          // Complex 3D attractor
+          dx = (z - b) * x - d * y;
+          dy = d * x + (z - b) * y;
+          dz = c + a * z - (z * z * z) / 3 - (x * x + y * y) * (1 + e * z) + f * z * x * x * x;
+          return { x: x + dx * dt, y: y + dy * dt, z: z + dz * dt };
+
+        case 'thomas':
+          // dx/dt = sin(y) - b*x, dy/dt = sin(z) - b*y, dz/dt = sin(x) - b*z
+          dx = Math.sin(y) - a * x;
+          dy = Math.sin(z) - a * y;
+          dz = Math.sin(x) - a * z;
+          return { x: x + dx * dt, y: y + dy * dt, z: z + dz * dt };
+
+        case 'chua':
+          // Chua's circuit with piecewise-linear function
+          const h = (c * x + 0.5 * (d - c) * (Math.abs(x + 1) - Math.abs(x - 1)));
+          dx = a * (y - x - h);
+          dy = x - y + z;
+          dz = -b * y;
+          return { x: x + dx * dt, y: y + dy * dt, z: z + dz * dt };
+
+        case 'dejong':
+          // x_n+1 = sin(a*y_n) - cos(b*x_n), y_n+1 = sin(c*x_n) - cos(d*y_n)
+          return {
+            x: Math.sin(a * y) - Math.cos(b * x),
+            y: Math.sin(c * x) - Math.cos(d * y),
+            z: 0
+          };
+
+        default:
+          return { x, y, z };
+      }
+    }
+
+    // ============================================
+    // PROJECTION
+    // ============================================
+
+    function project3D(point) {
+      const { x, y, z } = point;
+      const info = attractorInfo[params.attractorType];
+
+      // 2D attractors: direct mapping
+      if (!info.is3D) {
+        return {
+          x: x * params.scale + width / 2 + params.offsetX,
+          y: y * params.scale + height / 2 + params.offsetY
+        };
+      }
+
+      // 3D projection
+      let px, py;
+
+      switch (params.projection) {
+        case 'xy':
+          px = x;
+          py = y;
+          break;
+        case 'xz':
+          px = x;
+          py = z;
+          break;
+        case 'yz':
+          px = y;
+          py = z;
+          break;
+        case 'iso':
+          // Isometric projection with rotation
+          const radRot = params.rotation * Math.PI / 180;
+          const radTilt = params.tilt * Math.PI / 180;
+
+          // Rotate around Z axis
+          const rx = x * Math.cos(radRot) - y * Math.sin(radRot);
+          const ry = x * Math.sin(radRot) + y * Math.cos(radRot);
+
+          // Tilt (rotate around X axis)
+          const ry2 = ry * Math.cos(radTilt) - z * Math.sin(radTilt);
+
+          px = rx;
+          py = ry2;
+          break;
+        default:
+          px = x;
+          py = y;
+      }
+
+      return {
+        x: px * params.scale + width / 2 + params.offsetX,
+        y: -py * params.scale + height / 2 + params.offsetY  // Flip Y for screen coords
+      };
+    }
+
+    // ============================================
+    // DRAWING
+    // ============================================
+
+    function drawAttractor() {
+      background(params.bgColor);
+
+      if (points.length < 2) return;
+
+      // Update stats display
+      if (window.statsDisplay) {
+        const info = attractorInfo[params.attractorType];
+        window.statsDisplay.update({
+          'Attractor': info.name,
+          'Type': info.is3D ? '3D' : '2D',
+          'Points': points.length.toLocaleString(),
+          'Iterations': params.iterations.toLocaleString(),
+          'Time Step': params.dt,
+          'Projection': params.projection.toUpperCase(),
+          'Draw Mode': params.drawMode
+        });
+      }
+
+      const alpha = Math.floor(params.opacity * 2.55);
+      const col = hexToRgb(params.strokeColor);
+      stroke(col.r, col.g, col.b, alpha);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      if (params.drawMode === 'lines') {
+        beginShape();
+        for (const p of points) {
+          const proj = project3D(p);
+          vertex(proj.x, proj.y);
+        }
+        endShape();
+      } else {
+        // Points mode
+        for (const p of points) {
+          const proj = project3D(p);
+          point(proj.x, proj.y);
+        }
+      }
+    }
+
+    function hexToRgb(hex) {
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+      } : { r: 0, g: 0, b: 0 };
+    }
+
+    // ============================================
+    // SVG GENERATION
+    // ============================================
+
+    function generateSVG() {
+      if (points.length < 2) return '';
+
+      const svgPaths = [];
+
+      if (params.drawMode === 'lines') {
+        const projectedPoints = points.map(p => project3D(p));
+        svgPaths.push({
+          d: TSExport.pointsToPath(projectedPoints, false),
+          stroke: params.strokeColor,
+          strokeWidth: params.strokeWeight,
+          opacity: params.opacity / 100
+        });
+      } else {
+        // Points as small circles
+        for (const p of points) {
+          const proj = project3D(p);
+          svgPaths.push({
+            d: `M ${proj.x} ${proj.y} m -${params.strokeWeight/2},0 a ${params.strokeWeight/2},${params.strokeWeight/2} 0 1,0 ${params.strokeWeight},0 a ${params.strokeWeight/2},${params.strokeWeight/2} 0 1,0 -${params.strokeWeight},0`,
+            stroke: params.strokeColor,
+            strokeWidth: 0.1,
+            fill: params.strokeColor,
+            opacity: params.opacity / 100
+          });
+        }
+      }
+
+      // Build SVG manually for opacity support
+      let pathsMarkup = '';
+      svgPaths.forEach(path => {
+        const opacity = path.opacity ? ` opacity="${path.opacity}"` : '';
+        const fill = path.fill || 'none';
+        pathsMarkup += `  <path d="${path.d}" stroke="${path.stroke}" stroke-width="${path.strokeWidth}" fill="${fill}"${opacity} stroke-linecap="round" stroke-linejoin="round"/>\n`;
+      });
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="100%" height="100%" fill="${params.bgColor}"/>
+${pathsMarkup}</svg>`;
+    }
+
+    // ============================================
+    // UI SETUP
+    // ============================================
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      // Initialize UX components
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
+      setupControls();
+      setupExportButtons();
+      loadAttractorDefaults();
+      canvasControls.setupRandomizeButton();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'strange-attractors',
+        container: '#preset-container',
+        onSave: () => ({ ...params }),
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          computeAttractor();
+          drawAttractor();
+        },
+        onRandomize: randomizeAll
+      });
+
+      computeAttractor();
+      drawAttractor();
+    }
+
+    function setupControls() {
+      // Attractor type selector
+      document.getElementById('attractorType').addEventListener('change', (e) => {
+        params.attractorType = e.target.value;
+        loadAttractorDefaults();
+        computeAttractor();
+        drawAttractor();
+      });
+
+      // Parameter sliders
+      ['a', 'b', 'c', 'd', 'e', 'f'].forEach(p => {
+        const el = document.getElementById(`param-${p}`);
+        const display = document.getElementById(`param-${p}-val`);
+        el.addEventListener('input', () => {
+          params[p] = parseFloat(el.value);
+          display.textContent = params[p].toFixed(2);
+          computeAttractor();
+          drawAttractor();
+        });
+      });
+
+      // Range controls
+      const rangeControls = [
+        { id: 'iterations', param: 'iterations', parse: parseInt },
+        { id: 'dt', param: 'dt', parse: parseFloat },
+        { id: 'skip', param: 'skip', parse: parseInt },
+        { id: 'strokeWeight', param: 'strokeWeight', parse: parseFloat },
+        { id: 'opacity', param: 'opacity', parse: parseInt },
+        { id: 'scale', param: 'scale', parse: parseFloat },
+        { id: 'offsetX', param: 'offsetX', parse: parseInt },
+        { id: 'offsetY', param: 'offsetY', parse: parseInt },
+        { id: 'rotation', param: 'rotation', parse: parseInt },
+        { id: 'tilt', param: 'tilt', parse: parseInt }
+      ];
+
+      rangeControls.forEach(({ id, param, parse }) => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        if (el) {
+          el.addEventListener('input', () => {
+            params[param] = parse(el.value);
+            if (display) display.textContent = el.value;
+            if (['iterations', 'dt', 'skip'].includes(param)) {
+              computeAttractor();
+            }
+            drawAttractor();
+          });
+        }
+      });
+
+      // Draw mode
+      document.getElementById('drawMode').addEventListener('change', (e) => {
+        params.drawMode = e.target.value;
+        drawAttractor();
+      });
+
+      // Projection buttons
+      ['xy', 'xz', 'yz', 'iso'].forEach(proj => {
+        document.getElementById(`proj-${proj}`).addEventListener('click', () => {
+          params.projection = proj;
+          updateProjectionButtons();
+          drawAttractor();
+        });
+      });
+
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = CanvasLayout.getSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+        drawAttractor();
+      });
+
+      // Colors
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        drawAttractor();
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        drawAttractor();
+      });
+
+      // Action buttons
+      document.getElementById('regenerateBtn').addEventListener('click', () => {
+        computeAttractor();
+        drawAttractor();
+      });
+
+      document.getElementById('randomizeParams').addEventListener('click', () => {
+        randomizeAttractorParams();
+        computeAttractor();
+        drawAttractor();
+      });
+    }
+
+    function setupExportButtons() {
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, `strange-attractor-${params.attractorType}`);
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, `strange-attractor-${params.attractorType}`);
+      });
+
+      document.getElementById('exportGIF').addEventListener('click', async () => {
+        // Create rotation animation GIF for 3D attractors
+        const info = attractorInfo[params.attractorType];
+        if (!info.is3D) {
+          alert('GIF export works best with 3D attractors. Try Rossler, Aizawa, Thomas, or Chua.');
+          return;
+        }
+
+        const frames = [];
+        const originalRotation = params.rotation;
+        const frameCount = 36; // 10-degree steps
+
+        for (let i = 0; i < frameCount; i++) {
+          params.rotation = (i * 10) % 360;
+          drawAttractor();
+
+          // Capture frame
+          const frameCanvas = document.createElement('canvas');
+          frameCanvas.width = width;
+          frameCanvas.height = height;
+          const ctx = frameCanvas.getContext('2d');
+          ctx.drawImage(canvas.canvas, 0, 0);
+          frames.push(frameCanvas);
+        }
+
+        params.rotation = originalRotation;
+        drawAttractor();
+
+        await TSExport.downloadGIF(frames, `strange-attractor-${params.attractorType}`, { fps: 12 });
+      });
+    }
+
+    function loadAttractorDefaults() {
+      const info = attractorInfo[params.attractorType];
+
+      // Update description
+      document.getElementById('attractor-info').textContent = info.description;
+
+      // Load default parameters
+      Object.assign(params, info.defaults);
+
+      // Update UI
+      ['a', 'b', 'c', 'd', 'e', 'f'].forEach(p => {
+        const el = document.getElementById(`param-${p}`);
+        const display = document.getElementById(`param-${p}-val`);
+        const group = el.parentElement;
+
+        if (info.usedParams.includes(p)) {
+          group.style.display = 'block';
+          el.value = params[p];
+          display.textContent = params[p].toFixed(2);
+
+          // Update range if available
+          if (info.paramRanges[p]) {
+            el.min = info.paramRanges[p][0];
+            el.max = info.paramRanges[p][1];
+          }
+        } else {
+          group.style.display = 'none';
+        }
+      });
+
+      // Adjust scale based on attractor type
+      const scalePresets = {
+        rossler: 15,
+        henon: 200,
+        clifford: 150,
+        aizawa: 100,
+        thomas: 100,
+        chua: 20,
+        dejong: 150
+      };
+      params.scale = scalePresets[params.attractorType] || 15;
+      document.getElementById('scale').value = params.scale;
+      document.getElementById('scale-val').textContent = params.scale;
+
+      // Adjust dt for different attractor types
+      const dtPresets = {
+        rossler: 0.01,
+        henon: 1,
+        clifford: 1,
+        aizawa: 0.01,
+        thomas: 0.1,
+        chua: 0.005,
+        dejong: 1
+      };
+      params.dt = dtPresets[params.attractorType] || 0.01;
+      document.getElementById('dt').value = params.dt;
+      document.getElementById('dt-val').textContent = params.dt;
+    }
+
+    function updateProjectionButtons() {
+      ['xy', 'xz', 'yz', 'iso'].forEach(proj => {
+        const btn = document.getElementById(`proj-${proj}`);
+        if (params.projection === proj) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+
+    function randomizeAttractorParams() {
+      const info = attractorInfo[params.attractorType];
+
+      info.usedParams.forEach(p => {
+        if (info.paramRanges[p]) {
+          const [min, max] = info.paramRanges[p];
+          params[p] = min + Math.random() * (max - min);
+        }
+      });
+
+      updateUIFromParams();
+    }
+
+    function randomizeAll() {
+      randomizeAttractorParams();
+      canvasControls.randomizeColors();
+      computeAttractor();
+      drawAttractor();
+    }
+
+    function updateUIFromParams() {
+      // Update attractor type
+      document.getElementById('attractorType').value = params.attractorType;
+
+      // Update parameter sliders
+      ['a', 'b', 'c', 'd', 'e', 'f'].forEach(p => {
+        const el = document.getElementById(`param-${p}`);
+        const display = document.getElementById(`param-${p}-val`);
+        el.value = params[p];
+        display.textContent = params[p].toFixed(2);
+      });
+
+      // Update other controls
+      const controls = ['iterations', 'dt', 'skip', 'strokeWeight', 'opacity', 'scale', 'offsetX', 'offsetY', 'rotation', 'tilt'];
+      controls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        if (el) {
+          el.value = params[id];
+          if (display) display.textContent = params[id];
+        }
+      });
+
+      document.getElementById('drawMode').value = params.drawMode;
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+
+      updateProjectionButtons();
+    }
+
+    function draw() {
+      // Static drawing - only redraw on demand
+    }
+
+    function windowResized() {
+      // Maintain canvas size based on paper setting
+    }
+  </script>
+</body>
+</html>

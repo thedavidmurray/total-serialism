@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Circle Packing Generator - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-container input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stats .stat-value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .progress-info {
+      background: var(--ts-bg-deep);
+      padding: 8px 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-accent-primary);
+      margin-bottom: 12px;
+      display: none;
+    }
+    #imagePreview {
+      max-width: 100%;
+      margin-bottom: 12px;
+      border-radius: var(--ts-radius-md);
+      display: none;
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
+
+  <div id="controls">
+    <h2>Circle Packing</h2>
+
+    <div class="algorithm-info">
+      <strong>Circle Packing:</strong> Creates beautiful organic patterns by placing circles that never overlap. Perfect for pen plotters!
+    </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <!-- Canvas Settings -->
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color <input type="color" id="bgColor" value="#ffffff"></label>
+      </div>
+      <div class="control">
+        <label>Stroke Color <input type="color" id="strokeColor" value="#000000"></label>
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
+      </div>
+    </div>
+
+    <!-- Packing Mode -->
+    <div class="control-group">
+      <h3>Packing Mode</h3>
+      <div class="control">
+        <label>Algorithm</label>
+        <select id="packingMode">
+          <option value="random">Random Placement</option>
+          <option value="front">Front Placement (Ordered)</option>
+          <option value="image">Image-Based Size</option>
+          <option value="growing">Growing Circles</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Max Attempts <span class="value" id="maxAttemptsValue">1000</span></label>
+        <input type="range" id="maxAttempts" min="100" max="5000" value="1000" step="100">
+      </div>
+      <div class="control">
+        <label>Seed</label>
+        <input type="number" id="seed" value="42" min="1" max="99999">
+      </div>
+    </div>
+
+    <!-- Circle Size -->
+    <div class="control-group">
+      <h3>Circle Size</h3>
+      <div class="control">
+        <label>Min Radius <span class="value" id="minRadiusValue">2</span></label>
+        <input type="range" id="minRadius" min="1" max="50" value="2" step="1">
+      </div>
+      <div class="control">
+        <label>Max Radius <span class="value" id="maxRadiusValue">50</span></label>
+        <input type="range" id="maxRadius" min="5" max="200" value="50" step="5">
+      </div>
+      <div class="control">
+        <label>Size Distribution</label>
+        <select id="sizeDistribution">
+          <option value="uniform">Uniform</option>
+          <option value="powerlaw">Power Law (More Small)</option>
+          <option value="gaussian">Gaussian (Medium Bias)</option>
+          <option value="inverse">Inverse (More Large)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Image Upload (for image mode) -->
+    <div class="control-group" id="imageControls" style="display: none;">
+      <h3>Source Image</h3>
+      <div class="control">
+        <label>Upload Image</label>
+        <input type="file" id="imageUpload" accept="image/*">
+      </div>
+      <img id="imagePreview" alt="Preview">
+      <div class="control">
+        <label>Size Influence <span class="value" id="sizeInfluenceValue">2.0</span></label>
+        <input type="range" id="sizeInfluence" min="0.5" max="5" value="2.0" step="0.1">
+      </div>
+    </div>
+
+    <!-- Display Options -->
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Style</label>
+        <select id="displayStyle">
+          <option value="outline">Outline Only</option>
+          <option value="filled">Filled</option>
+          <option value="concentric">Concentric Rings</option>
+          <option value="radial">Radial Lines</option>
+          <option value="tangent">Tangent Lines</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Line Weight <span class="value" id="lineWeightValue">1.5</span></label>
+        <input type="range" id="lineWeight" min="0.5" max="5" value="1.5" step="0.1">
+      </div>
+      <div class="control">
+        <label>Detail Level <span class="value" id="detailLevelValue">5</span></label>
+        <input type="range" id="detailLevel" min="1" max="20" value="5" step="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showSourceImage">
+        <label for="showSourceImage">Show Source Image</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animateGrowth">
+        <label for="animateGrowth">Animate Growth</label>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button onclick="startPacking()">Start Packing</button>
+      <button onclick="stopPacking()" class="secondary">Stop</button>
+      <div class="button-group">
+        <button class="secondary" onclick="randomizeSeed()">Random Seed</button>
+        <button class="secondary" onclick="clearCanvas()">Clear</button>
+      </div>
+      <div class="progress-info" id="progressInfo">
+        Packing... <span id="progressText">0 circles</span>
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()" class="secondary">Export PNG</button>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats">
+      <div>
+        <span>Circles:</span>
+        <span class="stat-value" id="statCircles">0</span>
+      </div>
+      <div>
+        <span>Coverage:</span>
+        <span class="stat-value" id="statCoverage">0%</span>
+      </div>
+      <div>
+        <span>Attempts:</span>
+        <span class="stat-value" id="statAttempts">0</span>
+      </div>
+      <div>
+        <span>Status:</span>
+        <span class="stat-value" id="statStatus">Ready</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global variables
+    let circles = [];
+    let sourceImage = null;
+    let isPacking = false;
+    let attempts = 0;
+    let presetManager;
+    let panelController;
+    let statsDisplay;
+
+    // Parameters
+    const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      packingMode: 'random',
+      maxAttempts: 1000,
+      seed: 42,
+      minRadius: 2,
+      maxRadius: 50,
+      sizeDistribution: 'uniform',
+      sizeInfluence: 2.0,
+      displayStyle: 'outline',
+      lineWeight: 1.5,
+      detailLevel: 5,
+      showSourceImage: false,
+      animateGrowth: false
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    // p5.js setup
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas');
+      background(params.bgColor);
+
+      canvasControls.setupRandomizeButton();
+
+      // Initialize panel controller
+      panelController = new TSPanelController('controls', {
+        onToggle: (isVisible) => {
+          console.log(`Panel ${isVisible ? 'shown' : 'hidden'}`);
+        }
+      });
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+
+      // Canvas settings handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'circle-packing',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          clearCanvas();
+        },
+        onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 99999);
+          params.minRadius = Math.floor(Math.random() * 10) + 1;
+          params.maxRadius = Math.floor(Math.random() * 150) + 20;
+          params.lineWeight = Math.random() * 4 + 0.5;
+          params.detailLevel = Math.floor(Math.random() * 15) + 3;
+          updateUIFromParams();
+          clearCanvas();
+          startPacking();
+        }
+      });
+    }
+
+    // p5.js draw
+    function draw() {
+      background(params.bgColor);
+
+      // Show source image if requested
+      if (params.showSourceImage && sourceImage) {
+        push();
+        tint(255, 100);
+        image(sourceImage, 0, 0, width, height);
+        pop();
+      }
+
+      // Draw circles
+      for (let circle of circles) {
+        drawCircle(circle);
+      }
+
+      // Continue packing if active
+      if (isPacking) {
+        packStep();
+      }
+
+      // Update stats
+      updateStats();
+    }
+
+    // Draw a single circle based on style
+    function drawCircle(c) {
+      const r = c.r;
+
+      switch (params.displayStyle) {
+        case 'outline':
+          stroke(params.strokeColor);
+          strokeWeight(params.lineWeight);
+          noFill();
+          circle(c.x, c.y, r * 2);
+          break;
+
+        case 'filled':
+          fill(params.strokeColor);
+          noStroke();
+          circle(c.x, c.y, r * 2);
+          break;
+
+        case 'concentric':
+          stroke(params.strokeColor);
+          strokeWeight(params.lineWeight);
+          noFill();
+          const rings = params.detailLevel;
+          for (let i = 0; i < rings; i++) {
+            const ratio = (i + 1) / rings;
+            circle(c.x, c.y, r * 2 * ratio);
+          }
+          break;
+
+        case 'radial':
+          stroke(params.strokeColor);
+          strokeWeight(params.lineWeight);
+          const lines = params.detailLevel * 2;
+          for (let i = 0; i < lines; i++) {
+            const angle = (TWO_PI / lines) * i;
+            const x1 = c.x;
+            const y1 = c.y;
+            const x2 = c.x + cos(angle) * r;
+            const y2 = c.y + sin(angle) * r;
+            line(x1, y1, x2, y2);
+          }
+          noFill();
+          circle(c.x, c.y, r * 2);
+          break;
+
+        case 'tangent':
+          // Draw circle
+          stroke(params.strokeColor);
+          strokeWeight(params.lineWeight);
+          noFill();
+          circle(c.x, c.y, r * 2);
+
+          // Draw tangent lines to nearby circles
+          const col = color(params.strokeColor);
+          col.setAlpha(100);
+          stroke(col);
+          strokeWeight(params.lineWeight * 0.5);
+          for (let other of circles) {
+            if (other !== c) {
+              const d = dist(c.x, c.y, other.x, other.y);
+              if (d < r + other.r + 20) {
+                line(c.x, c.y, other.x, other.y);
+              }
+            }
+          }
+          break;
+      }
+    }
+
+    // Single packing step
+    function packStep() {
+      let placed = false;
+
+      for (let i = 0; i < 10 && !placed; i++) {
+        attempts++;
+
+        if (attempts > params.maxAttempts) {
+          stopPacking();
+          return;
+        }
+
+        const newCircle = generateCircle();
+
+        if (newCircle && !overlaps(newCircle)) {
+          circles.push(newCircle);
+          placed = true;
+
+          // If growing mode, grow the circle
+          if (params.packingMode === 'growing') {
+            growCircle(newCircle);
+          }
+        }
+      }
+
+      document.getElementById('progressText').textContent = `${circles.length} circles, ${attempts} attempts`;
+    }
+
+    // Generate a new circle based on packing mode
+    function generateCircle() {
+      randomSeed(params.seed + attempts);
+
+      let x, y, r;
+
+      switch (params.packingMode) {
+        case 'random':
+          x = random(width);
+          y = random(height);
+          r = getRandomRadius();
+          break;
+
+        case 'front':
+          // Place from front (top to bottom, left to right)
+          const index = circles.length;
+          const cols = Math.ceil(Math.sqrt(params.maxAttempts / 4));
+          x = (index % cols) * (width / cols) + random(width / cols);
+          y = Math.floor(index / cols) * (height / cols) + random(height / cols);
+          r = getRandomRadius();
+          break;
+
+        case 'image':
+          if (!sourceImage) {
+            x = random(width);
+            y = random(height);
+            r = getRandomRadius();
+          } else {
+            x = random(width);
+            y = random(height);
+            r = getImageBasedRadius(x, y);
+          }
+          break;
+
+        case 'growing':
+          x = random(width);
+          y = random(height);
+          r = params.minRadius;
+          break;
+      }
+
+      return { x, y, r };
+    }
+
+    // Get random radius based on distribution
+    function getRandomRadius() {
+      const u = random();
+      let r;
+
+      switch (params.sizeDistribution) {
+        case 'uniform':
+          r = lerp(params.minRadius, params.maxRadius, u);
+          break;
+
+        case 'powerlaw':
+          r = lerp(params.minRadius, params.maxRadius, pow(u, 2));
+          break;
+
+        case 'gaussian':
+          const g = (random() + random() + random()) / 3;
+          r = lerp(params.minRadius, params.maxRadius, g);
+          break;
+
+        case 'inverse':
+          r = lerp(params.minRadius, params.maxRadius, 1 - pow(1 - u, 2));
+          break;
+      }
+
+      return r;
+    }
+
+    // Get image-based radius
+    function getImageBasedRadius(x, y) {
+      if (!sourceImage) return getRandomRadius();
+
+      sourceImage.loadPixels();
+      const imgX = map(x, 0, width, 0, sourceImage.width);
+      const imgY = map(y, 0, height, 0, sourceImage.height);
+      const idx = (Math.floor(imgY) * sourceImage.width + Math.floor(imgX)) * 4;
+      const brightness = (sourceImage.pixels[idx] + sourceImage.pixels[idx + 1] + sourceImage.pixels[idx + 2]) / 3;
+
+      // Darker areas = larger circles
+      const sizeFactor = pow(1 - brightness / 255, params.sizeInfluence);
+      return lerp(params.minRadius, params.maxRadius, sizeFactor);
+    }
+
+    // Check if circle overlaps with existing circles
+    function overlaps(circle) {
+      const margin = 2;
+
+      // Check canvas bounds
+      if (circle.x - circle.r < 0 || circle.x + circle.r > width ||
+          circle.y - circle.r < 0 || circle.y + circle.r > height) {
+        return true;
+      }
+
+      // Check overlap with other circles
+      for (let other of circles) {
+        const d = dist(circle.x, circle.y, other.x, other.y);
+        if (d < circle.r + other.r + margin) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    // Grow circle until it hits something
+    function growCircle(circle) {
+      const growthRate = 1;
+      const maxGrowth = params.maxRadius;
+
+      while (circle.r < maxGrowth) {
+        circle.r += growthRate;
+
+        if (overlaps(circle)) {
+          circle.r -= growthRate;
+          break;
+        }
+      }
+    }
+
+    // Start packing
+    function startPacking() {
+      randomSeed(params.seed);
+      circles = [];
+      attempts = 0;
+      isPacking = true;
+      document.getElementById('progressInfo').style.display = 'block';
+      document.getElementById('statStatus').textContent = 'Packing...';
+    }
+
+    // Stop packing
+    function stopPacking() {
+      isPacking = false;
+      document.getElementById('progressInfo').style.display = 'none';
+      document.getElementById('statStatus').textContent = 'Complete';
+    }
+
+    // Clear canvas
+    function clearCanvas() {
+      circles = [];
+      attempts = 0;
+      isPacking = false;
+      document.getElementById('progressInfo').style.display = 'none';
+      document.getElementById('statStatus').textContent = 'Ready';
+      updateStats();
+    }
+
+    // Resize canvas for paper size
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      clearCanvas();
+    }
+
+    // Randomize seed
+    function randomizeSeed() {
+      params.seed = Math.floor(Math.random() * 99999);
+      document.getElementById('seed').value = params.seed;
+      clearCanvas();
+      startPacking();
+    }
+
+    // Update statistics
+    function updateStats() {
+      document.getElementById('statCircles').textContent = circles.length;
+      document.getElementById('statAttempts').textContent = attempts;
+
+      // Calculate coverage
+      let totalArea = 0;
+      for (let c of circles) {
+        totalArea += PI * c.r * c.r;
+      }
+      const coverage = (totalArea / (width * height) * 100).toFixed(1);
+      document.getElementById('statCoverage').textContent = coverage + '%';
+
+      // Update TSStatsDisplay if initialized
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Circles': circles.length,
+          'Coverage': coverage + '%',
+          'Attempts': attempts,
+          'Status': isPacking ? 'Packing...' : (circles.length > 0 ? 'Complete' : 'Ready')
+        });
+      }
+    }
+
+    // UI event listeners
+    document.getElementById('packingMode').addEventListener('change', (e) => {
+      params.packingMode = e.target.value;
+      document.getElementById('imageControls').style.display = params.packingMode === 'image' ? 'block' : 'none';
+    });
+
+    document.getElementById('maxAttempts').addEventListener('input', (e) => {
+      params.maxAttempts = parseInt(e.target.value);
+      document.getElementById('maxAttemptsValue').textContent = params.maxAttempts;
+    });
+
+    document.getElementById('seed').addEventListener('input', (e) => {
+      params.seed = parseInt(e.target.value);
+    });
+
+    document.getElementById('minRadius').addEventListener('input', (e) => {
+      params.minRadius = parseInt(e.target.value);
+      document.getElementById('minRadiusValue').textContent = params.minRadius;
+    });
+
+    document.getElementById('maxRadius').addEventListener('input', (e) => {
+      params.maxRadius = parseInt(e.target.value);
+      document.getElementById('maxRadiusValue').textContent = params.maxRadius;
+    });
+
+    document.getElementById('sizeDistribution').addEventListener('change', (e) => {
+      params.sizeDistribution = e.target.value;
+    });
+
+    document.getElementById('sizeInfluence').addEventListener('input', (e) => {
+      params.sizeInfluence = parseFloat(e.target.value);
+      document.getElementById('sizeInfluenceValue').textContent = params.sizeInfluence.toFixed(1);
+    });
+
+    document.getElementById('displayStyle').addEventListener('change', (e) => {
+      params.displayStyle = e.target.value;
+    });
+
+    document.getElementById('lineWeight').addEventListener('input', (e) => {
+      params.lineWeight = parseFloat(e.target.value);
+      document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(1);
+    });
+
+    document.getElementById('detailLevel').addEventListener('input', (e) => {
+      params.detailLevel = parseInt(e.target.value);
+      document.getElementById('detailLevelValue').textContent = params.detailLevel;
+    });
+
+    document.getElementById('showSourceImage').addEventListener('change', (e) => {
+      params.showSourceImage = e.target.checked;
+    });
+
+    document.getElementById('animateGrowth').addEventListener('change', (e) => {
+      params.animateGrowth = e.target.checked;
+    });
+
+    document.getElementById('imageUpload').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          loadImage(event.target.result, (img) => {
+            sourceImage = img;
+            sourceImage.resize(width, height);
+            document.getElementById('imagePreview').src = event.target.result;
+            document.getElementById('imagePreview').style.display = 'block';
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Update UI from params
+    function updateUIFromParams() {
+      // Canvas settings
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+
+      document.getElementById('packingMode').value = params.packingMode;
+      document.getElementById('maxAttempts').value = params.maxAttempts;
+      document.getElementById('seed').value = params.seed;
+      document.getElementById('minRadius').value = params.minRadius;
+      document.getElementById('maxRadius').value = params.maxRadius;
+      document.getElementById('sizeDistribution').value = params.sizeDistribution;
+      document.getElementById('sizeInfluence').value = params.sizeInfluence;
+      document.getElementById('displayStyle').value = params.displayStyle;
+      document.getElementById('lineWeight').value = params.lineWeight;
+      document.getElementById('detailLevel').value = params.detailLevel;
+      document.getElementById('showSourceImage').checked = params.showSourceImage;
+      document.getElementById('animateGrowth').checked = params.animateGrowth;
+
+      document.getElementById('maxAttemptsValue').textContent = params.maxAttempts;
+      document.getElementById('minRadiusValue').textContent = params.minRadius;
+      document.getElementById('maxRadiusValue').textContent = params.maxRadius;
+      document.getElementById('sizeInfluenceValue').textContent = params.sizeInfluence.toFixed(1);
+      document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(1);
+      document.getElementById('detailLevelValue').textContent = params.detailLevel;
+
+      document.getElementById('imageControls').style.display = params.packingMode === 'image' ? 'block' : 'none';
+    }
+
+    // Export SVG
+    function exportSVG() {
+      if (circles.length === 0) {
+        alert('Generate circles first!');
+        return;
+      }
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="${width}" height="${height}" fill="${params.bgColor}"/>
+`;
+
+      for (let c of circles) {
+        switch (params.displayStyle) {
+          case 'outline':
+          case 'filled':
+            svg += `  <circle cx="${c.x}" cy="${c.y}" r="${c.r}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="${params.displayStyle === 'filled' ? params.strokeColor : 'none'}"/>\n`;
+            break;
+
+          case 'concentric':
+            const rings = params.detailLevel;
+            for (let i = 0; i < rings; i++) {
+              const ratio = (i + 1) / rings;
+              const r = c.r * ratio;
+              svg += `  <circle cx="${c.x}" cy="${c.y}" r="${r}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none"/>\n`;
+            }
+            break;
+
+          case 'radial':
+            const lines = params.detailLevel * 2;
+            for (let i = 0; i < lines; i++) {
+              const angle = (Math.PI * 2 / lines) * i;
+              const x2 = c.x + Math.cos(angle) * c.r;
+              const y2 = c.y + Math.sin(angle) * c.r;
+              svg += `  <line x1="${c.x}" y1="${c.y}" x2="${x2}" y2="${y2}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}"/>\n`;
+            }
+            svg += `  <circle cx="${c.x}" cy="${c.y}" r="${c.r}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none"/>\n`;
+            break;
+        }
+      }
+
+      svg += `</svg>`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `circle-packing-${Date.now()}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Export PNG
+    function exportPNG() {
+      saveCanvas(`circle-packing-${Date.now()}`, 'png');
+    }
+  </script>
+</body>
+</html>

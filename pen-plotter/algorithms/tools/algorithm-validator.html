@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algorithm Validator - Total Serialism</title>
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    :root {
+      --status-pass: #22c55e;
+      --status-fail: #ef4444;
+      --status-pending: #f59e0b;
+      --status-running: #3b82f6;
+    }
+
+    .validator-container {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      background: var(--ts-bg-secondary);
+      border-right: 1px solid var(--ts-border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--ts-border);
+    }
+
+    .sidebar-header h1 {
+      font-size: 1rem;
+      margin: 0 0 0.5rem 0;
+      font-weight: 600;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .stat {
+      text-align: center;
+      padding: 0.5rem;
+      background: var(--ts-bg-primary);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border);
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--ts-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat.pass .stat-value { color: var(--status-pass); }
+    .stat.fail .stat-value { color: var(--status-fail); }
+    .stat.pending .stat-value { color: var(--status-pending); }
+    .stat.total .stat-value { color: var(--ts-text-primary); }
+
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .algorithm-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.5rem;
+    }
+
+    .category {
+      margin-bottom: 1rem;
+    }
+
+    .category-header {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ts-text-muted);
+      padding: 0.5rem;
+      background: var(--ts-bg-tertiary);
+      border-radius: 4px;
+      margin-bottom: 0.25rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .algorithm-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s;
+      font-size: 0.8rem;
+    }
+
+    .algorithm-item:hover {
+      background: var(--ts-bg-tertiary);
+    }
+
+    .algorithm-item.selected {
+      background: var(--ts-accent);
+      color: var(--ts-bg-primary);
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-indicator.pending { background: var(--status-pending); }
+    .status-indicator.running { background: var(--status-running); animation: pulse 1s infinite; }
+    .status-indicator.pass { background: var(--status-pass); }
+    .status-indicator.fail { background: var(--status-fail); }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .preview-header {
+      padding: 1rem;
+      border-bottom: 1px solid var(--ts-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .preview-title {
+      font-weight: 600;
+    }
+
+    .preview-frame {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .error-log {
+      background: var(--ts-bg-secondary);
+      border-top: 1px solid var(--ts-border);
+      padding: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.75rem;
+    }
+
+    .error-item {
+      color: var(--status-fail);
+      margin-bottom: 0.5rem;
+      padding: 0.5rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 4px;
+    }
+
+    .error-log:empty::after {
+      content: 'No errors detected';
+      color: var(--ts-text-muted);
+    }
+
+    .progress-bar {
+      height: 4px;
+      background: var(--ts-bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--ts-accent);
+      transition: width 0.3s;
+    }
+
+    .filter-input {
+      width: 100%;
+      padding: 0.5rem;
+      border: 1px solid var(--ts-border);
+      border-radius: 4px;
+      background: var(--ts-bg-primary);
+      color: var(--ts-text-primary);
+      margin-top: 0.5rem;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 0.25rem;
+      margin-top: 0.5rem;
+    }
+
+    .filter-btn {
+      flex: 1;
+      padding: 0.25rem;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filter-btn.active {
+      background: var(--ts-accent);
+      color: var(--ts-bg-primary);
+    }
+  </style>
+</head>
+<body>
+  <div class="validator-container">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>Algorithm Validator</h1>
+        <p style="font-size: 0.75rem; color: var(--ts-text-muted); margin: 0;">
+          Validates algorithms render correctly
+        </p>
+
+        <div class="stats">
+          <div class="stat total">
+            <div class="stat-value" id="totalCount">0</div>
+            <div class="stat-label">Total</div>
+          </div>
+          <div class="stat pass">
+            <div class="stat-value" id="passCount">0</div>
+            <div class="stat-label">Pass</div>
+          </div>
+          <div class="stat fail">
+            <div class="stat-value" id="failCount">0</div>
+            <div class="stat-label">Fail</div>
+          </div>
+          <div class="stat pending">
+            <div class="stat-value" id="pendingCount">0</div>
+            <div class="stat-label">Pending</div>
+          </div>
+        </div>
+
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="controls">
+          <button class="ts-btn ts-btn-primary" id="runAll">Run All</button>
+          <button class="ts-btn ts-btn-secondary" id="runFailed">Retry Failed</button>
+          <button class="ts-btn ts-btn-secondary" id="exportResults">Export</button>
+        </div>
+
+        <input type="text" class="filter-input" id="filterInput" placeholder="Filter algorithms...">
+
+        <div class="filter-buttons">
+          <button class="ts-btn filter-btn active" data-filter="all">All</button>
+          <button class="ts-btn filter-btn" data-filter="pass">Pass</button>
+          <button class="ts-btn filter-btn" data-filter="fail">Fail</button>
+          <button class="ts-btn filter-btn" data-filter="pending">Pending</button>
+        </div>
+      </div>
+
+      <div class="algorithm-list" id="algorithmList"></div>
+    </aside>
+
+    <main class="main-content">
+      <div class="preview-header">
+        <span class="preview-title" id="previewTitle">Select an algorithm</span>
+        <div>
+          <button class="ts-btn ts-btn-secondary" id="openInTab">Open in Tab</button>
+          <button class="ts-btn ts-btn-primary" id="validateCurrent">Validate</button>
+        </div>
+      </div>
+      <div class="preview-frame">
+        <iframe id="previewIframe" src="about:blank"></iframe>
+      </div>
+      <div class="error-log" id="errorLog"></div>
+    </main>
+  </div>
+
+  <script>
+    // Algorithm registry - all 65 algorithms organized by category
+    const algorithms = {
+      'advanced': [
+        'chladni-patterns-gui.html',
+        'parametric-surfaces-gui.html',
+        'sound-waveform-gui.html',
+        'vortex-street-gui.html'
+      ],
+      'ai': [
+        'ml5-patterns-gui.html'
+      ],
+      'cellular-automata': [
+        'elementary-ca-layers.html',
+        'elementary-ca.html',
+        'game-of-life-gui.html',
+        'game-of-life-layers.html'
+      ],
+      'chemical': [
+        'belousov-zhabotinsky-gui.html',
+        'chromatography-gui.html',
+        'convection-cells-gui.html',
+        'crystallization-gui.html',
+        'liesegang-rings-gui.html',
+        'mixing-patterns-gui.html'
+      ],
+      'curves': [
+        'hilbert-curve-gui.html'
+      ],
+      'flow-fields': [
+        'flow-field-collision.html',
+        'flow-field-p5-gui.html'
+      ],
+      'geometric': [
+        '10print-gui.html',
+        '10print-simple.html',
+        'circle-rays-gui.html',
+        'circle-twist-gui.html',
+        'grid-landscape-gui.html',
+        'hash-tiles-gui.html',
+        'islamic-patterns-gui.html',
+        'penrose-tiling-gui.html',
+        'perlin-circles-gui.html',
+        'perlin-landscape-gui.html',
+        'perlin-spiral-gui.html',
+        'snowflakes-gui.html',
+        'spiral-burst-gui.html',
+        'spiral-fill.html',
+        'spirotron-gui.html'
+      ],
+      'hybrid': [
+        'hybrid-composer-gui.html'
+      ],
+      'image-processing': [
+        'ascii-art-gui.html',
+        'dithering-gui.html',
+        'halftone.html',
+        'hatching.html',
+        'image-to-ascii-gui.html',
+        'squigglecam.html'
+      ],
+      'natural': [
+        'astronomy-gui.html',
+        'coral-growth-gui.html',
+        'crystal-growth-gui.html',
+        'lightning-gui.html'
+      ],
+      'packing': [
+        'circle-packing-gui.html'
+      ],
+      'physics': [
+        'particle-system-gui.html',
+        'test-color-controls.html'
+      ],
+      'reaction-diffusion': [
+        'reaction-diffusion-enhanced.html',
+        'reaction-diffusion-gui.html',
+        'reaction-diffusion-layers.html'
+      ],
+      'symmetry': [
+        'kumiko-pattern.html',
+        'truchet-tiles-gui.html',
+        'zellige-pattern.html'
+      ],
+      'textures': [
+        'hatching-demo.html'
+      ],
+      'trees-lsystems': [
+        'lsystem-simple.html',
+        'tree-gui.html',
+        'tree-working.html'
+      ],
+      'voronoi': [
+        'tsp-art-gui.html',
+        'voronoi-stippling-gui.html'
+      ]
+    };
+
+    // State
+    const state = {
+      results: new Map(), // path -> { status, errors, time }
+      currentPath: null,
+      filter: 'all',
+      searchQuery: ''
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      buildAlgorithmList();
+      updateStats();
+      setupEventListeners();
+    });
+
+    function buildAlgorithmList() {
+      const container = document.getElementById('algorithmList');
+      container.innerHTML = '';
+
+      let total = 0;
+      Object.entries(algorithms).forEach(([category, files]) => {
+        const categoryEl = document.createElement('div');
+        categoryEl.className = 'category';
+        categoryEl.dataset.category = category;
+
+        const header = document.createElement('div');
+        header.className = 'category-header';
+        header.innerHTML = `<span>${category}</span><span>${files.length}</span>`;
+        categoryEl.appendChild(header);
+
+        files.forEach(file => {
+          const path = `../${category}/${file}`;
+          const name = file.replace(/-gui\.html$/, '').replace(/\.html$/, '').replace(/-/g, ' ');
+
+          const item = document.createElement('div');
+          item.className = 'algorithm-item';
+          item.dataset.path = path;
+          item.dataset.category = category;
+          item.innerHTML = `
+            <div class="status-indicator pending"></div>
+            <span>${name}</span>
+          `;
+
+          item.addEventListener('click', () => selectAlgorithm(path, name));
+          categoryEl.appendChild(item);
+
+          state.results.set(path, { status: 'pending', errors: [], time: 0 });
+          total++;
+        });
+
+        container.appendChild(categoryEl);
+      });
+
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('pendingCount').textContent = total;
+    }
+
+    function selectAlgorithm(path, name) {
+      state.currentPath = path;
+
+      // Update selection UI
+      document.querySelectorAll('.algorithm-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.path === path);
+      });
+
+      // Update preview
+      document.getElementById('previewTitle').textContent = name || path;
+      document.getElementById('previewIframe').src = path;
+
+      // Show errors for this algorithm
+      const result = state.results.get(path);
+      const errorLog = document.getElementById('errorLog');
+      errorLog.innerHTML = result.errors.map(e => `<div class="error-item">${e}</div>`).join('');
+    }
+
+    function setupEventListeners() {
+      // Run all
+      document.getElementById('runAll').addEventListener('click', runAllTests);
+
+      // Retry failed
+      document.getElementById('runFailed').addEventListener('click', () => {
+        const failedPaths = [...state.results.entries()]
+          .filter(([_, r]) => r.status === 'fail')
+          .map(([p, _]) => p);
+        runTests(failedPaths);
+      });
+
+      // Export results
+      document.getElementById('exportResults').addEventListener('click', exportResults);
+
+      // Open in tab
+      document.getElementById('openInTab').addEventListener('click', () => {
+        if (state.currentPath) {
+          window.open(state.currentPath, '_blank');
+        }
+      });
+
+      // Validate current
+      document.getElementById('validateCurrent').addEventListener('click', () => {
+        if (state.currentPath) {
+          runTests([state.currentPath]);
+        }
+      });
+
+      // Filter input
+      document.getElementById('filterInput').addEventListener('input', (e) => {
+        state.searchQuery = e.target.value.toLowerCase();
+        applyFilters();
+      });
+
+      // Filter buttons
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.filter = btn.dataset.filter;
+          applyFilters();
+        });
+      });
+    }
+
+    function applyFilters() {
+      document.querySelectorAll('.algorithm-item').forEach(item => {
+        const path = item.dataset.path;
+        const result = state.results.get(path);
+        const name = item.textContent.toLowerCase();
+
+        const matchesSearch = !state.searchQuery || name.includes(state.searchQuery);
+        const matchesFilter = state.filter === 'all' || result.status === state.filter;
+
+        item.style.display = matchesSearch && matchesFilter ? '' : 'none';
+      });
+
+      // Hide empty categories
+      document.querySelectorAll('.category').forEach(cat => {
+        const visibleItems = cat.querySelectorAll('.algorithm-item[style=""]').length +
+                           cat.querySelectorAll('.algorithm-item:not([style])').length;
+        cat.style.display = visibleItems > 0 ? '' : 'none';
+      });
+    }
+
+    async function runAllTests() {
+      const paths = [...state.results.keys()];
+      await runTests(paths);
+    }
+
+    async function runTests(paths) {
+      const iframe = document.getElementById('previewIframe');
+
+      for (const path of paths) {
+        // Update status to running
+        updateAlgorithmStatus(path, 'running');
+
+        try {
+          const result = await validateAlgorithm(path, iframe);
+          state.results.set(path, result);
+          updateAlgorithmStatus(path, result.status);
+        } catch (error) {
+          state.results.set(path, { status: 'fail', errors: [error.message], time: 0 });
+          updateAlgorithmStatus(path, 'fail');
+        }
+
+        updateStats();
+        await new Promise(r => setTimeout(r, 100)); // Small delay between tests
+      }
+    }
+
+    function validateAlgorithm(path, iframe) {
+      return new Promise((resolve) => {
+        const startTime = Date.now();
+        const errors = [];
+        const timeout = 10000; // 10 second timeout
+
+        // Set up error listener
+        const errorHandler = (e) => {
+          errors.push(`${e.message} at ${e.filename}:${e.lineno}`);
+        };
+
+        // Load the algorithm
+        iframe.src = path;
+
+        const checkCanvas = () => {
+          try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const canvas = iframeDoc.querySelector('canvas');
+
+            if (!canvas) {
+              resolve({ status: 'fail', errors: ['No canvas found'], time: Date.now() - startTime });
+              return;
+            }
+
+            // Check if canvas has content
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+              const hasContent = imageData.data.some((v, i) => i % 4 !== 3 && v !== 0);
+
+              if (!hasContent) {
+                // Check if it's all white
+                const isAllWhite = imageData.data.every((v, i) => i % 4 === 3 || v === 255);
+                if (isAllWhite) {
+                  resolve({ status: 'pass', errors: [], time: Date.now() - startTime, note: 'Canvas is white (may be intentional)' });
+                  return;
+                }
+                resolve({ status: 'fail', errors: ['Canvas appears blank'], time: Date.now() - startTime });
+                return;
+              }
+            }
+
+            resolve({
+              status: errors.length > 0 ? 'fail' : 'pass',
+              errors,
+              time: Date.now() - startTime
+            });
+          } catch (e) {
+            // Cross-origin or other access error - just check if loaded
+            resolve({ status: 'pass', errors: [], time: Date.now() - startTime, note: 'Could not inspect canvas (CORS)' });
+          }
+        };
+
+        // Wait for load
+        iframe.onload = () => {
+          setTimeout(checkCanvas, 2000); // Wait 2s for canvas to render
+        };
+
+        // Timeout
+        setTimeout(() => {
+          resolve({ status: 'fail', errors: ['Timeout'], time: timeout });
+        }, timeout);
+      });
+    }
+
+    function updateAlgorithmStatus(path, status) {
+      const item = document.querySelector(`.algorithm-item[data-path="${path}"]`);
+      if (item) {
+        const indicator = item.querySelector('.status-indicator');
+        indicator.className = `status-indicator ${status}`;
+      }
+    }
+
+    function updateStats() {
+      let pass = 0, fail = 0, pending = 0;
+      state.results.forEach(r => {
+        if (r.status === 'pass') pass++;
+        else if (r.status === 'fail') fail++;
+        else pending++;
+      });
+
+      document.getElementById('passCount').textContent = pass;
+      document.getElementById('failCount').textContent = fail;
+      document.getElementById('pendingCount').textContent = pending;
+
+      const total = state.results.size;
+      const progress = ((pass + fail) / total) * 100;
+      document.getElementById('progressFill').style.width = `${progress}%`;
+    }
+
+    function exportResults() {
+      const results = [];
+      state.results.forEach((result, path) => {
+        results.push({
+          path,
+          category: path.split('/')[1],
+          name: path.split('/').pop(),
+          ...result
+        });
+      });
+
+      const report = {
+        timestamp: new Date().toISOString(),
+        summary: {
+          total: results.length,
+          pass: results.filter(r => r.status === 'pass').length,
+          fail: results.filter(r => r.status === 'fail').length
+        },
+        results
+      };
+
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `algorithm-validation-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

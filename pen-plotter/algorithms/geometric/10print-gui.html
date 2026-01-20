@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>10PRINT Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    .export-btn {
+      background: var(--ts-accent-secondary) !important;
+    }
+
+    .export-btn:hover {
+      background: color-mix(in srgb, var(--ts-accent-secondary) 85%, white) !important;
+    }
+
+    #gif-progress {
+      display: none;
+      background: var(--ts-bg-deep);
+      padding: 10px;
+      border-radius: var(--ts-radius-sm);
+      margin-top: 10px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: var(--ts-bg-base);
+      border-radius: var(--ts-radius-md);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--ts-accent-primary);
+      transition: width 0.3s;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+
+    .checkbox-container input[type="checkbox"] {
+      width: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div class="paper-size-badge" id="paper-size-badge">A4 (210x297mm)</div>
+  </div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+    <h2>10PRINT Pattern Controls</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">US Letter Landscape</option>
+          <option value="letter_portrait">US Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="custom" selected>Custom (800x600px)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">20</span></label>
+        <input type="range" id="gridSize" min="5" max="100" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">20</span>px</label>
+        <input type="range" id="cellSize" min="5" max="50" value="20" step="1">
+      </div>
+      <div class="control">
+        <label>Line Type:</label>
+        <select id="lineType">
+          <option value="diagonal">Diagonal (Classic)</option>
+          <option value="straight">Straight (+ pattern)</option>
+          <option value="curved">Curved</option>
+          <option value="mixed">Mixed</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Probability: <span class="value" id="probability-val">0.5</span></label>
+        <input type="range" id="probability" min="0" max="1" value="0.5" step="0.01">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">2</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="10" value="2" step="0.5">
+      </div>
+      <div class="control">
+        <label>Line Cap:</label>
+        <select id="lineCap">
+          <option value="round">Round</option>
+          <option value="square">Square</option>
+          <option value="project">Project</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Gradient</option>
+          <option value="random">Random</option>
+          <option value="zones">Color Zones</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Variations</h3>
+      <div class="control">
+        <label>Pattern Variation:</label>
+        <select id="variation">
+          <option value="classic">Classic 10PRINT</option>
+          <option value="triangular">Triangular</option>
+          <option value="hexagonal">Hexagonal</option>
+          <option value="truchet">Truchet Tiles</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Rotation: <span class="value" id="rotation-val">0</span>deg</label>
+        <input type="range" id="rotation" min="0" max="90" value="0" step="15">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>View</h3>
+      <button id="fitViewBtn" class="secondary">Toggle Fit / Manual</button>
+      <div class="control">
+        <label>Zoom: <span id="zoom-val">1.0x</span></label>
+        <input type="range" id="zoom" min="0.25" max="2.5" value="1" step="0.05">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate" checked>
+        <label for="autoRegenerate">Auto regenerate on change</label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="generateNewSeed()">Random Seed</button>
+      <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button class="export-btn" onclick="toggleGifRecording()">
+        <span id="gif-record-text">Record GIF</span>
+      </button>
+      <div id="gif-progress">
+        <div>Recording: <span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preset Manager Container at bottom -->
+    <div class="preset-manager" id="preset-container"></div>
+  </div>
+
+  <script>
+    // Paper size presets at 150 DPI for print quality
+    const PAPER_SIZES = (window.CanvasLayout && CanvasLayout.paperPresets) ? CanvasLayout.paperPresets : {
+      a4: { width: 1240, height: 1754, label: 'A4 (210x297mm)', mm: '210x297' },
+      a3: { width: 1754, height: 2480, label: 'A3 (297x420mm)', mm: '297x420' },
+      a5: { width: 874, height: 1240, label: 'A5 (148x210mm)', mm: '148x210' },
+      letter: { width: 1275, height: 1650, label: 'US Letter (216x279mm)', mm: '216x279' },
+      square: { width: 1772, height: 1772, label: 'Square (300x300mm)', mm: '300x300' },
+      custom: { width: 800, height: 600, label: 'Custom', mm: '800x600px' }
+    };
+
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      paperSize: 'custom',
+      gridSize: 20,
+      cellSize: 20,
+      lineType: 'diagonal',
+      probability: 0.5,
+      strokeWeight: 2,
+      lineCap: 'round',
+      colorMode: 'mono',
+      variation: 'classic',
+      rotation: 0,
+      bgColor: '#ffffff'
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    let grid = [];
+    let animationFrame = 0;
+    let isAnimating = false;
+    let presetManager;
+    let canvasWidth = 800;
+    let canvasHeight = 600;
+    let autoRegenerate = true;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
+    let fitZoom;
+    let panelController;
+    let statsDisplay;
+
+    function setup() {
+      updateCanvasSize();
+
+      // Create regular canvas (SVG export is done manually)
+      let canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-container');
+
+      const fitBtn = document.getElementById('fitViewBtn');
+      const zoomInput = document.getElementById('zoom');
+      if (window.CanvasLayout) {
+        fitZoom = CanvasLayout.attachFitZoom({
+          container: document.getElementById('canvas-container'),
+          canvasEl: canvas.canvas,
+          fitToggle: fitBtn,
+          zoomInput
+        });
+      }
+
+      // Initialize panel controller and stats display
+      panelController = new TSPanelController().attach();
+      statsDisplay = new TSStatsDisplay().attach();
+
+      // Initialize preset manager with error handling
+      try {
+        if (typeof PresetManager !== 'undefined') {
+          presetManager = new PresetManager({
+            algorithmId: '10print',
+            container: '#preset-container',
+            onSave: () => params,
+            onLoad: (preset) => {
+              Object.assign(params, preset.data);
+              updateUIFromParams();
+              regenerate();
+            },
+            onRandomize: () => {
+              params.seed = Math.floor(Math.random() * 1000000);
+              params.gridSize = Math.floor(random(5, 100));
+              params.cellSize = Math.floor(random(5, 50));
+              params.probability = random(0, 1);
+              params.strokeWeight = random(0.5, 5);
+              params.rotation = Math.floor(random(0, 360));
+              const lineTypes = ['diagonal', 'straight', 'curved'];
+              params.lineType = random(lineTypes);
+              updateUIFromParams();
+              regenerate();
+            }
+          });
+        } else {
+          console.warn('PresetManager not loaded - presets disabled');
+        }
+      } catch (e) {
+        console.warn('PresetManager initialization failed:', e.message);
+      }
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+      regenerate();
+    }
+
+    function updateCanvasSize() {
+      const size = (window.CanvasLayout ? CanvasLayout.getSize(params.paperSize) : (PAPER_SIZES[params.paperSize] || PAPER_SIZES.custom));
+      canvasWidth = size.width;
+      canvasHeight = size.height;
+      updatePaperSizeBadge();
+    }
+
+    function updatePaperSizeBadge() {
+      const size = PAPER_SIZES[params.paperSize] || PAPER_SIZES.custom;
+      const badge = document.getElementById('paper-size-badge');
+      if (params.paperSize === 'custom') {
+        badge.textContent = `${size.mm}`;
+      } else {
+        badge.textContent = `${size.label}`;
+      }
+    }
+
+    function changeCanvasSize() {
+      updateCanvasSize();
+      resizeCanvas(canvasWidth, canvasHeight);
+      regenerate();
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.value = params[key];
+            const display = document.getElementById(key + '-val');
+            if (display) display.textContent = params[key];
+          } else if (element.tagName === 'SELECT') {
+            element.value = params[key];
+          }
+        }
+      });
+      document.getElementById('seed-display').textContent = params.seed;
+    }
+
+    function setupControls() {
+      // Handle paper size separately
+      const paperSizeSelect = document.getElementById('paperSize');
+      if (paperSizeSelect) {
+        paperSizeSelect.addEventListener('change', (e) => {
+          params.paperSize = e.target.value;
+          changeCanvasSize();
+        });
+      }
+
+      // Setup all control event listeners
+      Object.keys(params).forEach(key => {
+        if (key === 'paperSize') return; // Already handled above
+
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = element.type === 'range' ? parseFloat(e.target.value) : e.target.value;
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              if (!isAnimating) queueRegenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              if (!isAnimating) queueRegenerate();
+            });
+          }
+        }
+      });
+
+      const zoomInput = document.getElementById('zoom');
+      if (zoomInput) {
+        zoomInput.addEventListener('input', (e) => {
+          document.getElementById('zoom-val').textContent = `${parseFloat(e.target.value).toFixed(2)}x`;
+        });
+      }
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) {
+            queueRegenerate();
+          }
+        });
+      }
+    }
+
+    function regenerate() {
+      randomSeed(params.seed);
+      generatePattern();
+      redraw();
+
+      // Update stats display with pattern metrics
+      if (statsDisplay) {
+        const cols = Math.floor(width / params.cellSize);
+        const rows = Math.floor(height / params.cellSize);
+        const totalCells = cols * rows;
+        const filledCells = grid.reduce((sum, row) => sum + row.reduce((s, val) => s + val, 0), 0);
+
+        statsDisplay.update({
+          'Canvas': `${canvasWidth}×${canvasHeight}px`,
+          'Grid': `${cols}×${rows} (${totalCells} cells)`,
+          'Pattern': params.variation,
+          'Line Type': params.lineType,
+          'Probability': params.probability.toFixed(2),
+          'Fill Ratio': `${(filledCells/totalCells*100).toFixed(1)}%`,
+          'Cell Size': `${params.cellSize}px`,
+          'Stroke': `${params.strokeWeight}px ${params.lineCap}`,
+          'Color Mode': params.colorMode,
+          'Rotation': `${params.rotation}°`,
+          'Seed': params.seed
+        });
+      }
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
+    }
+
+    function generatePattern() {
+      grid = [];
+      const cols = Math.floor(width / params.cellSize);
+      const rows = Math.floor(height / params.cellSize);
+
+      for (let y = 0; y < rows; y++) {
+        grid[y] = [];
+        for (let x = 0; x < cols; x++) {
+          grid[y][x] = random() < params.probability ? 1 : 0;
+        }
+      }
+    }
+
+    function draw() {
+      background(params.bgColor);
+
+      stroke(0);
+      strokeWeight(params.strokeWeight);
+
+      // Set line cap
+      switch (params.lineCap) {
+        case 'round': strokeCap(ROUND); break;
+        case 'square': strokeCap(SQUARE); break;
+        case 'project': strokeCap(PROJECT); break;
+      }
+
+      push();
+
+      // Apply rotation if needed
+      if (params.rotation > 0) {
+        translate(width/2, height/2);
+        rotate(radians(params.rotation));
+        translate(-width/2, -height/2);
+      }
+
+      // Animate pattern generation for GIF
+      if (isAnimating) {
+        const cellsPerFrame = 5;
+        const totalCells = grid.length * (grid[0] ? grid[0].length : 0);
+        const currentCell = animationFrame * cellsPerFrame;
+
+        let cellCount = 0;
+        for (let y = 0; y < grid.length; y++) {
+          for (let x = 0; x < grid[y].length; x++) {
+            if (cellCount < currentCell) {
+              drawCell(x, y, grid[y][x]);
+            }
+            cellCount++;
+          }
+        }
+
+        animationFrame++;
+
+        // Stop when complete
+        if (currentCell >= totalCells) {
+          isAnimating = false;
+          noLoop();
+        }
+      } else {
+        // Draw all cells at once
+        for (let y = 0; y < grid.length; y++) {
+          for (let x = 0; x < grid[y].length; x++) {
+            drawCell(x, y, grid[y][x]);
+          }
+        }
+      }
+
+      pop();
+
+      if (!isAnimating) {
+        noLoop();
+      }
+    }
+
+    function drawCell(x, y, value) {
+      const px = x * params.cellSize;
+      const py = y * params.cellSize;
+      const s = params.cellSize;
+
+      // Apply color based on mode
+      applyColor(x, y);
+
+      switch (params.variation) {
+        case 'classic':
+          drawClassic10Print(px, py, s, value);
+          break;
+        case 'triangular':
+          drawTriangular(px, py, s, value);
+          break;
+        case 'hexagonal':
+          drawHexagonal(px, py, s, value);
+          break;
+        case 'truchet':
+          drawTruchet(px, py, s, value);
+          break;
+      }
+    }
+
+    function drawClassic10Print(x, y, size, value) {
+      switch (params.lineType) {
+        case 'diagonal':
+          if (value === 1) {
+            line(x, y, x + size, y + size); // \
+          } else {
+            line(x + size, y, x, y + size); // /
+          }
+          break;
+        case 'straight':
+          if (value === 1) {
+            line(x + size/2, y, x + size/2, y + size); // |
+          } else {
+            line(x, y + size/2, x + size, y + size/2); // -
+          }
+          break;
+        case 'curved':
+          noFill();
+          if (value === 1) {
+            arc(x, y, size*2, size*2, 0, HALF_PI);
+          } else {
+            arc(x + size, y, size*2, size*2, HALF_PI, PI);
+          }
+          break;
+        case 'mixed':
+          const type = floor(random(3));
+          if (type === 0) {
+            drawClassic10Print(x, y, size, value);
+          } else if (type === 1) {
+            params.lineType = 'straight';
+            drawClassic10Print(x, y, size, value);
+            params.lineType = 'mixed';
+          } else {
+            params.lineType = 'curved';
+            drawClassic10Print(x, y, size, value);
+            params.lineType = 'mixed';
+          }
+          break;
+      }
+    }
+
+    function drawTriangular(x, y, size, value) {
+      if (value === 1) {
+        triangle(x, y + size, x + size/2, y, x + size, y + size);
+      } else {
+        triangle(x, y, x + size, y, x + size/2, y + size);
+      }
+    }
+
+    function drawHexagonal(x, y, size, value) {
+      // Simplified hex pattern
+      push();
+      translate(x + size/2, y + size/2);
+      if (value === 1) {
+        rotate(0);
+      } else {
+        rotate(PI/3);
+      }
+
+      noFill();
+      beginShape();
+      for (let i = 0; i < 6; i++) {
+        const angle = i * PI/3;
+        const px = cos(angle) * size/2;
+        const py = sin(angle) * size/2;
+        vertex(px, py);
+      }
+      endShape(CLOSE);
+      pop();
+    }
+
+    function drawTruchet(x, y, size, value) {
+      noFill();
+      if (value === 1) {
+        arc(x, y, size, size, 0, HALF_PI);
+        arc(x + size, y + size, size, size, PI, PI + HALF_PI);
+      } else {
+        arc(x + size, y, size, size, HALF_PI, PI);
+        arc(x, y + size, size, size, PI + HALF_PI, TWO_PI);
+      }
+    }
+
+    function applyColor(x, y) {
+      switch (params.colorMode) {
+        case 'mono':
+          stroke(0);
+          break;
+        case 'gradient':
+          const g = map(y, 0, grid.length, 0, 255);
+          stroke(g, 0, 255-g);
+          break;
+        case 'random':
+          stroke(random(255), random(255), random(255));
+          break;
+        case 'zones':
+          const zone = floor(map(x + y, 0, grid[0].length + grid.length, 0, 4));
+          const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+          stroke(colors[zone]);
+          break;
+      }
+    }
+
+    // Named differently to avoid shadowing p5.js's randomSeed()
+    function generateNewSeed() {
+      params.seed = Math.floor(Math.random() * 1000000);
+      document.getElementById('seed-display').textContent = params.seed;
+      regenerate();
+    }
+
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `10print-params-${params.seed}.json`;
+      a.click();
+    }
+
+    function exportSVG() {
+      // Generate SVG manually
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="${width}" height="${height}" fill="${params.bgColor}"/>
+<g stroke="black" stroke-width="${params.strokeWeight}" stroke-linecap="${params.lineCap}" fill="none">
+`;
+
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          const px = x * params.cellSize;
+          const py = y * params.cellSize;
+          const s = params.cellSize;
+          const value = grid[y][x];
+
+          // Get color for this cell
+          let strokeColor = 'black';
+          if (params.colorMode === 'gradient') {
+            const g = Math.floor((y / grid.length) * 255);
+            strokeColor = `rgb(${g}, 0, ${255-g})`;
+          } else if (params.colorMode === 'zones') {
+            const zone = Math.floor(((x + y) / (grid[0].length + grid.length)) * 4);
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'];
+            strokeColor = colors[zone];
+          }
+
+          if (params.colorMode !== 'mono') {
+            svg += `<g stroke="${strokeColor}">`;
+          }
+
+          // Draw based on variation and line type
+          if (params.variation === 'classic') {
+            if (params.lineType === 'diagonal') {
+              if (value === 1) {
+                svg += `<line x1="${px}" y1="${py}" x2="${px + s}" y2="${py + s}"/>`;
+              } else {
+                svg += `<line x1="${px + s}" y1="${py}" x2="${px}" y2="${py + s}"/>`;
+              }
+            } else if (params.lineType === 'straight') {
+              if (value === 1) {
+                svg += `<line x1="${px + s/2}" y1="${py}" x2="${px + s/2}" y2="${py + s}"/>`;
+              } else {
+                svg += `<line x1="${px}" y1="${py + s/2}" x2="${px + s}" y2="${py + s/2}"/>`;
+              }
+            } else if (params.lineType === 'curved') {
+              if (value === 1) {
+                svg += `<path d="M ${px} ${py + s} A ${s} ${s} 0 0 1 ${px + s} ${py}"/>`;
+              } else {
+                svg += `<path d="M ${px} ${py} A ${s} ${s} 0 0 0 ${px + s} ${py + s}"/>`;
+              }
+            }
+          } else if (params.variation === 'truchet') {
+            if (value === 1) {
+              svg += `<path d="M ${px} ${py + s/2} A ${s/2} ${s/2} 0 0 1 ${px + s/2} ${py}"/>`;
+              svg += `<path d="M ${px + s} ${py + s/2} A ${s/2} ${s/2} 0 0 1 ${px + s/2} ${py + s}"/>`;
+            } else {
+              svg += `<path d="M ${px + s/2} ${py} A ${s/2} ${s/2} 0 0 1 ${px + s} ${py + s/2}"/>`;
+              svg += `<path d="M ${px + s/2} ${py + s} A ${s/2} ${s/2} 0 0 1 ${px} ${py + s/2}"/>`;
+            }
+          }
+
+          if (params.colorMode !== 'mono') {
+            svg += `</g>`;
+          }
+        }
+      }
+
+      svg += `</g></svg>`;
+
+      // Download
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `10print-${params.variation}-${params.seed}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportPNG() {
+      save(`10print-${params.variation}-${params.seed}.png`);
+    }
+
+    function toggleGifRecording() {
+      alert('GIF recording feature coming soon! Use PNG export for now.');
+    }
+  </script>
+</body>
+</html>

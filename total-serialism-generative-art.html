@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism Generative Art</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #canvas-container {
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        #info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-family: monospace;
+            background: rgba(255,255,255,0.9);
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">
+        Press 's' to save | Press 'r' to regenerate | A3 @ 150 DPI
+    </div>
+    <div id="canvas-container"></div>
+    
+    <script>
+        // Total Serialism algorithms implemented in JavaScript
+        const TotalSerialism = {
+            // Generative module
+            Gen: {
+                spread: function(n) {
+                    let arr = [];
+                    for (let i = 0; i < n; i++) {
+                        arr.push(i / (n - 1));
+                    }
+                    return arr;
+                },
+                spreadFloat: function(n, min = 0, max = 1) {
+                    return this.spread(n).map(v => min + v * (max - min));
+                },
+                fill: function(n, value) {
+                    return Array(n).fill(value);
+                },
+                cosine: function(n, periods = 1) {
+                    let arr = [];
+                    for (let i = 0; i < n; i++) {
+                        arr.push((Math.cos(i * periods * 2 * Math.PI / n) + 1) / 2);
+                    }
+                    return arr;
+                }
+            },
+            
+            // Algorithmic module
+            Algo: {
+                euclid: function(steps, hits) {
+                    let pattern = [];
+                    for (let i = 0; i < steps; i++) {
+                        pattern.push((i * hits) % steps < hits ? 1 : 0);
+                    }
+                    return pattern;
+                },
+                fibonacci: function(n) {
+                    let seq = [0, 1];
+                    for (let i = 2; i < n; i++) {
+                        seq.push(seq[i-1] + seq[i-2]);
+                    }
+                    return seq;
+                }
+            },
+            
+            // Stochastic module
+            Rand: {
+                random: function(n, min = 0, max = 1) {
+                    let arr = [];
+                    for (let i = 0; i < n; i++) {
+                        arr.push(Math.random() * (max - min) + min);
+                    }
+                    return arr;
+                },
+                drunk: function(n, step = 0.1, min = 0, max = 1) {
+                    let arr = [Math.random()];
+                    for (let i = 1; i < n; i++) {
+                        let next = arr[i-1] + (Math.random() - 0.5) * step * 2;
+                        next = Math.max(min, Math.min(max, next));
+                        arr.push(next);
+                    }
+                    return arr;
+                },
+                pick: function(arr, weights) {
+                    if (!weights) return arr[Math.floor(Math.random() * arr.length)];
+                    
+                    let sum = weights.reduce((a, b) => a + b, 0);
+                    let r = Math.random() * sum;
+                    let acc = 0;
+                    
+                    for (let i = 0; i < arr.length; i++) {
+                        acc += weights[i];
+                        if (r < acc) return arr[i];
+                    }
+                    return arr[arr.length - 1];
+                }
+            },
+            
+            // Transform module
+            Transform: {
+                rotate: function(arr, n) {
+                    n = n % arr.length;
+                    return arr.slice(-n).concat(arr.slice(0, -n));
+                },
+                reverse: function(arr) {
+                    return arr.slice().reverse();
+                },
+                palindrome: function(arr) {
+                    return arr.concat(arr.slice(0, -1).reverse());
+                },
+                lace: function(a, b) {
+                    let result = [];
+                    let maxLen = Math.max(a.length, b.length);
+                    for (let i = 0; i < maxLen; i++) {
+                        if (i < a.length) result.push(a[i]);
+                        if (i < b.length) result.push(b[i]);
+                    }
+                    return result;
+                }
+            }
+        };
+
+        // A3 dimensions at 150 DPI
+        const A3_WIDTH = 1754;  // 297mm at 150 DPI
+        const A3_HEIGHT = 2480; // 420mm at 150 DPI
+        
+        let flowField;
+        let particles = [];
+        let colorPalette;
+        let backgroundPattern;
+
+        function setup() {
+            let canvas = createCanvas(A3_WIDTH, A3_HEIGHT);
+            canvas.parent('canvas-container');
+            
+            regenerate();
+        }
+
+        function regenerate() {
+            // Clear everything
+            clear();
+            particles = [];
+            
+            // Generate color palette using harmonic relationships
+            colorPalette = generateColorPalette();
+            
+            // Create background
+            drawBackground();
+            
+            // Generate flow field using Total Serialism patterns
+            flowField = generateFlowField();
+            
+            // Create particles for flow
+            generateParticles();
+            
+            // Draw the artwork
+            drawArtwork();
+        }
+
+        function generateColorPalette() {
+            // Use musical intervals to create harmonic color relationships
+            const baseHue = Math.random() * 360;
+            const intervals = [0, 30, 60, 120, 180]; // Musical intervals as hue offsets
+            
+            // Use Markov-like selection for color dominance
+            const weights = TotalSerialism.Rand.random(5, 0.1, 1);
+            
+            return intervals.map((interval, i) => {
+                const hue = (baseHue + interval) % 360;
+                const sat = 40 + TotalSerialism.Rand.random(1, 0, 40)[0];
+                const bright = 30 + TotalSerialism.Rand.random(1, 0, 50)[0];
+                return {
+                    hue: hue,
+                    sat: sat,
+                    bright: bright,
+                    weight: weights[i]
+                };
+            });
+        }
+
+        function drawBackground() {
+            // Use Euclidean rhythms for background pattern
+            const rhythm = TotalSerialism.Algo.euclid(13, 5);
+            const spread = TotalSerialism.Gen.spread(20);
+            
+            push();
+            colorMode(HSB);
+            
+            // Base color
+            const bgColor = TotalSerialism.Rand.pick(colorPalette);
+            background(bgColor.hue, bgColor.sat * 0.3, 95);
+            
+            // Subtle pattern using rhythms
+            noStroke();
+            for (let y = 0; y < height; y += 40) {
+                for (let x = 0; x < width; x += 40) {
+                    const rhythmIndex = Math.floor((x + y) / 40) % rhythm.length;
+                    if (rhythm[rhythmIndex]) {
+                        const color = TotalSerialism.Rand.pick(colorPalette, colorPalette.map(c => c.weight));
+                        fill(color.hue, color.sat * 0.2, 90, 20);
+                        const size = 20 + TotalSerialism.Rand.random(1, 0, 30)[0];
+                        ellipse(x + 20, y + 20, size);
+                    }
+                }
+            }
+            pop();
+        }
+
+        function generateFlowField() {
+            // Use Total Serialism patterns to create flow field
+            const cols = Math.floor(width / 20);
+            const rows = Math.floor(height / 20);
+            const field = [];
+            
+            // Use cosine waves and drunk walks for organic flow
+            const xWave = TotalSerialism.Gen.cosine(cols, 2);
+            const yWave = TotalSerialism.Gen.cosine(rows, 3);
+            const drunkWalk = TotalSerialism.Rand.drunk(cols * rows, 0.1);
+            
+            for (let y = 0; y < rows; y++) {
+                field[y] = [];
+                for (let x = 0; x < cols; x++) {
+                    const index = y * cols + x;
+                    const angle = (xWave[x % cols] + yWave[y % rows] + drunkWalk[index % drunkWalk.length]) * TWO_PI;
+                    field[y][x] = angle;
+                }
+            }
+            
+            return field;
+        }
+
+        function generateParticles() {
+            // Use Fibonacci sequence for particle distribution
+            const fib = TotalSerialism.Algo.fibonacci(15);
+            const particleCount = fib[10] * 3; // ~165 particles
+            
+            // Use spread for even distribution with variations
+            const xPositions = TotalSerialism.Gen.spreadFloat(Math.sqrt(particleCount), 0, width);
+            const yPositions = TotalSerialism.Gen.spreadFloat(Math.sqrt(particleCount), 0, height);
+            
+            // Lace the positions for interesting patterns
+            const positions = TotalSerialism.Transform.lace(xPositions, yPositions);
+            
+            for (let i = 0; i < particleCount; i++) {
+                const color = TotalSerialism.Rand.pick(colorPalette, colorPalette.map(c => c.weight));
+                particles.push({
+                    x: positions[i * 2 % positions.length],
+                    y: positions[i * 2 + 1 % positions.length],
+                    color: color,
+                    size: TotalSerialism.Rand.random(1, 2, 15)[0],
+                    life: TotalSerialism.Rand.random(1, 100, 500)[0],
+                    speed: TotalSerialism.Rand.random(1, 0.5, 3)[0]
+                });
+            }
+        }
+
+        function drawArtwork() {
+            push();
+            colorMode(HSB);
+            
+            // Draw particles following flow field
+            particles.forEach(p => {
+                strokeWeight(p.size);
+                stroke(p.color.hue, p.color.sat, p.color.bright, 30);
+                
+                beginShape();
+                noFill();
+                
+                let x = p.x;
+                let y = p.y;
+                
+                for (let i = 0; i < p.life; i++) {
+                    vertex(x, y);
+                    
+                    // Follow flow field
+                    const col = Math.floor(x / 20);
+                    const row = Math.floor(y / 20);
+                    
+                    if (flowField[row] && flowField[row][col]) {
+                        const angle = flowField[row][col];
+                        x += cos(angle) * p.speed;
+                        y += sin(angle) * p.speed;
+                        
+                        // Add some randomness
+                        x += TotalSerialism.Rand.random(1, -1, 1)[0];
+                        y += TotalSerialism.Rand.random(1, -1, 1)[0];
+                    }
+                    
+                    // Wrap around edges
+                    x = (x + width) % width;
+                    y = (y + height) % height;
+                }
+                
+                endShape();
+            });
+            
+            // Add accent shapes using Euclidean rhythms
+            const accentRhythm = TotalSerialism.Algo.euclid(21, 8);
+            const accentPositions = TotalSerialism.Gen.spreadFloat(accentRhythm.length, 0.1, 0.9);
+            
+            noStroke();
+            accentRhythm.forEach((hit, i) => {
+                if (hit) {
+                    const x = accentPositions[i] * width;
+                    const y = TotalSerialism.Rand.random(1, 0, height)[0];
+                    const color = TotalSerialism.Rand.pick(colorPalette, colorPalette.map(c => c.weight));
+                    
+                    fill(color.hue, color.sat * 0.7, color.bright, 40);
+                    const size = TotalSerialism.Rand.random(1, 50, 200)[0];
+                    ellipse(x, y, size, size * 0.7);
+                }
+            });
+            
+            pop();
+        }
+
+        function draw() {
+            // Static artwork, no animation needed
+        }
+
+        function keyPressed() {
+            if (key === 's' || key === 'S') {
+                save('total-serialism-art-' + Date.now() + '.png');
+            } else if (key === 'r' || key === 'R') {
+                regenerate();
+            }
+        }
+    </script>
+</body>
+</html>

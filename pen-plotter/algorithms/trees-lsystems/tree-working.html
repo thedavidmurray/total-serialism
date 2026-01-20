@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>L-System Tree Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    .control-group {
+      background: var(--ts-bg-control);
+      padding: var(--ts-space-md);
+      border-radius: var(--ts-radius-md);
+      margin-bottom: var(--ts-space-md);
+    }
+
+    .control-group h3 {
+      margin: 0 0 var(--ts-space-md) 0;
+      color: var(--ts-accent-primary);
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+      padding-bottom: var(--ts-space-sm);
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: var(--ts-space-md);
+      margin-bottom: var(--ts-space-lg);
+    }
+
+    .buttons-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--ts-space-sm);
+      margin-top: var(--ts-space-lg);
+    }
+
+    .preset {
+      background: var(--ts-bg-control) !important;
+      border: 1px solid var(--ts-border-default) !important;
+      color: var(--ts-text-secondary) !important;
+    }
+
+    .preset:hover {
+      background: var(--ts-bg-hover) !important;
+      border-color: var(--ts-accent-primary) !important;
+      color: var(--ts-text-primary) !important;
+    }
+
+    /* Preset container at bottom */
+    .preset-container {
+      margin-top: var(--ts-space-lg);
+      padding-top: var(--ts-space-lg);
+      border-top: 1px solid var(--ts-border-subtle);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+    <h2>L-System Tree Generator</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>Paper Size:</label>
+          <select id="paperSize">
+            <option value="custom" selected>Custom (800x600)</option>
+            <option value="a5">A5 Portrait</option>
+            <option value="a4">A4 Portrait</option>
+            <option value="a3">A3 Portrait</option>
+            <option value="letter">US Letter</option>
+            <option value="square">Square</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Structure</h3>
+      <div class="controls-grid">
+        <div>
+          <label>Iterations: <span class="value" id="iterations-val">5</span></label>
+          <input type="range" id="iterations" min="1" max="8" value="5">
+        </div>
+        <div>
+          <label>Branch Length: <span class="value" id="length-val">60</span></label>
+          <input type="range" id="length" min="20" max="100" value="60">
+        </div>
+        <div>
+          <label>Branch Angle: <span class="value" id="angle-val">25</span>deg</label>
+          <input type="range" id="angle" min="10" max="45" value="25">
+        </div>
+        <div>
+          <label>Length Decay: <span class="value" id="decay-val">0.7</span></label>
+          <input type="range" id="decay" min="0.5" max="0.9" step="0.05" value="0.7">
+        </div>
+      </div>
+    </div>
+
+    <div class="buttons-row">
+      <button id="regenerate">Regenerate</button>
+      <button id="export">Export SVG</button>
+    </div>
+
+    <!-- Preset container at bottom -->
+    <div class="preset-container">
+      <h3>Presets</h3>
+      <div class="buttons-row">
+        <button class="preset" id="simple">Simple Tree</button>
+        <button class="preset" id="organic">Organic</button>
+        <button class="preset" id="willow">Willow</button>
+        <button class="preset" id="fern">Fern</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let params = {
+      paperSize: 'custom',
+      iterations: 5,
+      length: 60,
+      angle: 25,
+      decay: 0.7,
+      axiom: 'F',
+      rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
+    };
+
+    const presets = {
+      simple: {
+        iterations: 5,
+        angle: 25,
+        decay: 0.7,
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
+      },
+      organic: {
+        iterations: 4,
+        angle: 30,
+        decay: 0.75,
+        axiom: 'F',
+        rules: { 'F': 'F[+F]F[-F][F]' }
+      },
+      willow: {
+        iterations: 5,
+        angle: 35,
+        decay: 0.8,
+        axiom: 'F',
+        rules: { 'F': 'FF+[+F-FF-F]-[-F+FF+F]' }
+      },
+      fern: {
+        iterations: 6,
+        angle: 22,
+        decay: 0.85,
+        axiom: 'X',
+        rules: {
+          'X': 'F+[[X]-X]-F[-FX]+X',
+          'F': 'FF'
+        }
+      }
+    };
+
+    let canvas;
+    let canvasWidth = 800;
+    let canvasHeight = 600;
+
+    function setup() {
+      updateCanvasSize();
+      canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-container');
+
+      // Setup paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        updateCanvasSize();
+        resizeCanvas(canvasWidth, canvasHeight);
+        drawTree();
+      });
+
+      // Setup range inputs
+      document.getElementById('iterations').addEventListener('input', updateParam);
+      document.getElementById('length').addEventListener('input', updateParam);
+      document.getElementById('angle').addEventListener('input', updateParam);
+      document.getElementById('decay').addEventListener('input', updateParam);
+
+      // Setup buttons
+      document.getElementById('regenerate').addEventListener('click', drawTree);
+      document.getElementById('export').addEventListener('click', exportSVG);
+
+      // Setup presets
+      Object.keys(presets).forEach(preset => {
+        document.getElementById(preset).addEventListener('click', () => loadPreset(preset));
+      });
+
+      drawTree();
+    }
+
+    function updateCanvasSize() {
+      if (window.CanvasLayout) {
+        const size = CanvasLayout.getSize(params.paperSize);
+        canvasWidth = size.width;
+        canvasHeight = size.height;
+      }
+    }
+
+    function updateParam(e) {
+      const id = e.target.id;
+      params[id] = parseFloat(e.target.value);
+      document.getElementById(id + '-val').textContent = e.target.value;
+      drawTree();
+    }
+
+    function generateLSystem() {
+      let current = params.axiom;
+      for (let i = 0; i < params.iterations; i++) {
+        let next = '';
+        for (let char of current) {
+          next += params.rules[char] || char;
+        }
+        current = next;
+      }
+      return current;
+    }
+
+    function drawTree() {
+      background(255);
+      stroke(0);
+      strokeWeight(2);
+
+      push();
+      translate(width / 2, height - 50);
+
+      const system = generateLSystem();
+      drawLSystem(system);
+
+      pop();
+    }
+
+    function drawLSystem(system) {
+      for (let char of system) {
+        switch (char) {
+          case 'F':
+            line(0, 0, 0, -params.length);
+            translate(0, -params.length);
+            break;
+          case '+':
+            rotate(radians(params.angle));
+            break;
+          case '-':
+            rotate(radians(-params.angle));
+            break;
+          case '[':
+            push();
+            params.length *= params.decay;
+            break;
+          case ']':
+            params.length /= params.decay;
+            pop();
+            break;
+        }
+      }
+    }
+
+    function loadPreset(name) {
+      const preset = presets[name];
+      Object.assign(params, preset);
+
+      // Update UI
+      ['iterations', 'length', 'angle', 'decay'].forEach(key => {
+        if (params[key] !== undefined) {
+          const element = document.getElementById(key);
+          if (element) {
+            element.value = params[key];
+            document.getElementById(key + '-val').textContent = params[key];
+          }
+        }
+      });
+
+      drawTree();
+    }
+
+    function exportSVG() {
+      // Create SVG version
+      let svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
+
+      svgCanvas.background(255);
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(2);
+
+      svgCanvas.push();
+      svgCanvas.translate(canvasWidth / 2, canvasHeight - 50);
+
+      // Draw to SVG
+      const system = generateLSystem();
+      let len = params.length;
+
+      for (let char of system) {
+        switch (char) {
+          case 'F':
+            svgCanvas.line(0, 0, 0, -len);
+            svgCanvas.translate(0, -len);
+            break;
+          case '+':
+            svgCanvas.rotate(radians(params.angle));
+            break;
+          case '-':
+            svgCanvas.rotate(radians(-params.angle));
+            break;
+          case '[':
+            svgCanvas.push();
+            len *= params.decay;
+            break;
+          case ']':
+            len /= params.decay;
+            svgCanvas.pop();
+            break;
+        }
+      }
+
+      svgCanvas.pop();
+
+      // Save the SVG
+      save(svgCanvas, 'lsystem-tree.svg');
+      svgCanvas.remove();
+    }
+  </script>
+</body>
+</html>

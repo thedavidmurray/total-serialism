@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V3 Debug</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #fff;
+            font-family: monospace;
+        }
+        #debug {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .error { color: #ff4444; }
+        .success { color: #44ff44; }
+    </style>
+</head>
+<body>
+    <h1>V3 Debug</h1>
+    <div id="debug"></div>
+    <div id="loading">Loading...</div>
+    <div id="app-container" style="display:none;">
+        <div id="canvas-container"></div>
+    </div>
+    
+    <script>
+        const debug = document.getElementById('debug');
+        const log = (msg, type = 'info') => {
+            const time = new Date().toLocaleTimeString();
+            debug.innerHTML += `<div class="${type}">[${time}] ${msg}</div>`;
+            console.log(`[${type}] ${msg}`);
+        };
+        
+        log('Starting V3 Debug...');
+        
+        // Add error handler
+        window.addEventListener('error', (e) => {
+            log(`ERROR: ${e.message} at ${e.filename}:${e.lineno}:${e.colno}`, 'error');
+            if (e.error && e.error.stack) {
+                log(`Stack: ${e.error.stack}`, 'error');
+            }
+        });
+    </script>
+    
+    <!-- Load dependencies in order -->
+    <script>log('Loading collision-detection.js...');</script>
+    <script src="collision-detection.js"></script>
+    <script>
+        log(`CollisionDetectionSystem: ${typeof CollisionDetectionSystem}`, CollisionDetectionSystem ? 'success' : 'error');
+        log(`CollisionStrategies: ${typeof CollisionStrategies}`, CollisionStrategies ? 'success' : 'error');
+    </script>
+    
+    <script>log('Loading golden-ratio-composition.js...');</script>
+    <script src="golden-ratio-composition.js"></script>
+    <script>
+        log(`GoldenRatioComposition: ${typeof GoldenRatioComposition}`, GoldenRatioComposition ? 'success' : 'error');
+    </script>
+    
+    <script>log('Loading total-serialism-v3-engine.js...');</script>
+    <script src="total-serialism-v3-engine.js"></script>
+    <script>
+        log(`TotalSerialismArtwork: ${typeof TotalSerialismArtwork}`, TotalSerialismArtwork ? 'success' : 'error');
+        
+        // Check for artwork after load event
+        window.addEventListener('load', () => {
+            log('Window loaded, checking artwork...');
+            log(`artwork exists: ${typeof window.artwork !== 'undefined'}`, window.artwork ? 'success' : 'error');
+            
+            if (window.artwork) {
+                log('Artwork object properties:');
+                log(`- algorithm: ${artwork.algorithm}`);
+                log(`- width: ${artwork.width}`);
+                log(`- height: ${artwork.height}`);
+                log(`- p5: ${artwork.p5}`);
+                
+                // Wait a bit more
+                setTimeout(() => {
+                    log('After additional wait:');
+                    log(`- p5 instance: ${artwork.p5 ? 'initialized' : 'not initialized'}`);
+                    
+                    if (!artwork.p5) {
+                        log('Trying to manually initialize...', 'error');
+                        // Try removing the loading message manually
+                        const loading = document.getElementById('loading');
+                        const container = document.getElementById('app-container');
+                        if (loading) loading.style.display = 'none';
+                        if (container) container.style.display = 'block';
+                    }
+                }, 1000);
+            } else {
+                log('Artwork not found, trying to create manually...', 'error');
+                try {
+                    window.artwork = new TotalSerialismArtwork();
+                    artwork.init();
+                    log('Manually created artwork', 'success');
+                } catch (e) {
+                    log(`Failed to create artwork: ${e.message}`, 'error');
+                }
+            }
+        });
+    </script>
+</body>
+</html>

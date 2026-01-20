@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism × Fidenza v2 - Enhanced Controls</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0a0a0a;
+            display: flex;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #e0e0e0;
+        }
+        #controls {
+            width: 320px;
+            background: rgba(20,20,20,0.95);
+            padding: 20px;
+            overflow-y: auto;
+            backdrop-filter: blur(10px);
+            border-right: 1px solid #333;
+        }
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+        .control-group:last-child {
+            border-bottom: none;
+        }
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #ffa500;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .control {
+            margin-bottom: 12px;
+        }
+        .control label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 12px;
+            color: #999;
+        }
+        .control input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 5px;
+            background: #333;
+            outline: none;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .control input[type="range"]:hover {
+            opacity: 1;
+        }
+        .control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ffa500;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        .control select {
+            width: 100%;
+            padding: 8px;
+            background: #222;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .control .value {
+            display: inline-block;
+            float: right;
+            color: #ffa500;
+            font-size: 12px;
+        }
+        button {
+            background: #ffa500;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px 5px 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        button:hover {
+            background: #ffb520;
+            transform: translateY(-1px);
+        }
+        #info {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,165,0,0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        .keyboard-hint {
+            display: inline-block;
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 2px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h2 style="color: #ffa500; margin-top: 0;">Total Serialism × Fidenza v2</h2>
+        
+        <div class="control-group">
+            <h3>Actions</h3>
+            <button onclick="regenerateArt()">Regenerate (R)</button>
+            <button onclick="saveAsPNG()">Save PNG (P)</button>
+            <button onclick="saveAsSVG()">Save SVG (S)</button>
+            <button onclick="togglePause()">Pause/Play (Space)</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Particles</h3>
+            <div class="control">
+                <label>Particle Count <span class="value" id="particleCount-value">168</span></label>
+                <input type="range" id="particleCount" min="50" max="500" value="168" step="1">
+            </div>
+            <div class="control">
+                <label>Min Size <span class="value" id="minSize-value">1</span></label>
+                <input type="range" id="minSize" min="0.5" max="5" value="1" step="0.5">
+            </div>
+            <div class="control">
+                <label>Max Size <span class="value" id="maxSize-value">8</span></label>
+                <input type="range" id="maxSize" min="2" max="20" value="8" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Flow Field</h3>
+            <div class="control">
+                <label>Flow Strength <span class="value" id="flowStrength-value">1</span></label>
+                <input type="range" id="flowStrength" min="0" max="3" value="1" step="0.1">
+            </div>
+            <div class="control">
+                <label>Turbulence <span class="value" id="turbulence-value">0.5</span></label>
+                <input type="range" id="turbulence" min="0" max="2" value="0.5" step="0.1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Colors</h3>
+            <div class="control">
+                <label>Color Scheme</label>
+                <select id="colorScheme">
+                    <option value="0">Complementary</option>
+                    <option value="1">Analogous</option>
+                    <option value="2">Triadic</option>
+                    <option value="3">Square</option>
+                    <option value="4">Split Complementary</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Saturation <span class="value" id="saturation-value">60</span></label>
+                <input type="range" id="saturation" min="0" max="100" value="60" step="5">
+            </div>
+            <div class="control">
+                <label>Alpha <span class="value" id="alpha-value">40</span></label>
+                <input type="range" id="alpha" min="10" max="100" value="40" step="5">
+            </div>
+        </div>
+
+        <div id="info">
+            <strong>Keyboard Shortcuts:</strong><br>
+            <span class="keyboard-hint">R</span> Regenerate<br>
+            <span class="keyboard-hint">P</span> Save PNG<br>
+            <span class="keyboard-hint">S</span> Save SVG<br>
+            <span class="keyboard-hint">Space</span> Pause/Play<br>
+            <span class="keyboard-hint">1-5</span> Color Presets
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script>
+        // Total Serialism implementation
+        const TS = {
+            Gen: {
+                spread: (n) => Array.from({length: n}, (_, i) => i / (n - 1)),
+                spreadFloat: (n, min = 0, max = 1) => 
+                    TS.Gen.spread(n).map(v => min + v * (max - min)),
+                cosine: (n, periods = 1, phase = 0) => 
+                    Array.from({length: n}, (_, i) => 
+                        (Math.cos((i / n * periods + phase) * 2 * Math.PI) + 1) / 2),
+                sine: (n, periods = 1, phase = 0) => 
+                    Array.from({length: n}, (_, i) => 
+                        (Math.sin((i / n * periods + phase) * 2 * Math.PI) + 1) / 2)
+            },
+            Algo: {
+                euclid: (steps, hits) => {
+                    const pattern = new Array(steps).fill(0);
+                    const spacing = steps / hits;
+                    for (let i = 0; i < hits; i++) {
+                        pattern[Math.floor(i * spacing)] = 1;
+                    }
+                    return pattern;
+                },
+                fibonacci: (n) => {
+                    const seq = [0, 1];
+                    for (let i = 2; i < n; i++) {
+                        seq.push(seq[i-1] + seq[i-2]);
+                    }
+                    return seq;
+                }
+            },
+            Rand: {
+                random: (n = 1, min = 0, max = 1) => 
+                    Array.from({length: n}, () => Math.random() * (max - min) + min),
+                drunk: (n, step = 0.1, min = 0, max = 1, start = 0.5) => {
+                    const walk = [start];
+                    for (let i = 1; i < n; i++) {
+                        let next = walk[i-1] + (Math.random() - 0.5) * step * 2;
+                        next = Math.max(min, Math.min(max, next));
+                        walk.push(next);
+                    }
+                    return walk;
+                },
+                pick: (arr, weights) => {
+                    if (!weights) return arr[Math.floor(Math.random() * arr.length)];
+                    const sum = weights.reduce((a, b) => a + b, 0);
+                    let r = Math.random() * sum;
+                    for (let i = 0; i < arr.length; i++) {
+                        r -= weights[i];
+                        if (r <= 0) return arr[i];
+                    }
+                    return arr[arr.length - 1];
+                }
+            }
+        };
+
+        // Global variables
+        let flowField = [];
+        let particles = [];
+        let palette = [];
+        let rhythmPatterns = {};
+        let isPaused = false;
+        let svgPaths = [];
+        let isRecordingSVG = false;
+
+        // A3 dimensions at 150 DPI
+        const A3_WIDTH = 1754;
+        const A3_HEIGHT = 2480;
+        const SCALE_FACTOR = 0.35;
+
+        // Display dimensions
+        const DISPLAY_WIDTH = A3_WIDTH * SCALE_FACTOR;
+        const DISPLAY_HEIGHT = A3_HEIGHT * SCALE_FACTOR;
+
+        // Parameters
+        let params = {
+            particleCount: 168,
+            minSize: 1,
+            maxSize: 8,
+            flowStrength: 1,
+            turbulence: 0.5,
+            colorScheme: 0,
+            saturation: 60,
+            alpha: 40
+        };
+
+        function setup() {
+            const canvas = createCanvas(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            canvas.parent('canvas-container');
+            pixelDensity(2);
+            
+            setupControls();
+            regenerateArt();
+        }
+
+        function setupControls() {
+            // Add event listeners
+            Object.keys(params).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.addEventListener('input', (e) => {
+                        const value = e.target.type === 'range' ? parseFloat(e.target.value) : e.target.value;
+                        params[key] = value;
+                        
+                        // Update value display
+                        const valueDisplay = document.getElementById(`${key}-value`);
+                        if (valueDisplay) {
+                            valueDisplay.textContent = value;
+                        }
+                        
+                        // Regenerate for certain parameters
+                        if (['colorScheme', 'particleCount'].includes(key)) {
+                            regenerateArt();
+                        }
+                    });
+                }
+            });
+        }
+
+        function regenerateArt() {
+            clear();
+            particles = [];
+            svgPaths = [];
+            
+            generatePalette();
+            generateRhythms();
+            createBackground();
+            generateFlowField();
+            createParticles();
+        }
+
+        function generatePalette() {
+            const schemes = [
+                { base: 0, intervals: [0, 60, 120, 180, 240], name: "Complementary" },
+                { base: 30, intervals: [0, 30, 60, 150, 180], name: "Analogous" },
+                { base: 200, intervals: [0, 120, 240], name: "Triadic" },
+                { base: 120, intervals: [0, 90, 180, 270], name: "Square" },
+                { base: 300, intervals: [0, 15, 30, 45, 180], name: "Split Comp" }
+            ];
+            
+            const scheme = schemes[params.colorScheme];
+            palette = scheme.intervals.map((interval, i) => {
+                const hue = (scheme.base + interval) % 360;
+                return {
+                    h: hue,
+                    s: params.saturation,
+                    b: 30 + Math.random() * 40,
+                    weight: Math.random()
+                };
+            });
+        }
+
+        function generateRhythms() {
+            rhythmPatterns = {
+                main: TS.Algo.euclid(16, 7),
+                accent: TS.Algo.euclid(23, 9),
+                micro: TS.Algo.euclid(31, 13)
+            };
+        }
+
+        function createBackground() {
+            push();
+            colorMode(HSB);
+            const bgColor = palette[0];
+            background(bgColor.h, bgColor.s * 0.2, 95);
+            
+            // Add subtle texture
+            noStroke();
+            for (let i = 0; i < 100; i++) {
+                const x = random(width);
+                const y = random(height);
+                const color = TS.Rand.pick(palette);
+                fill(color.h, color.s * 0.3, 90, 10);
+                ellipse(x, y, random(20, 60));
+            }
+            pop();
+        }
+
+        function generateFlowField() {
+            const cols = Math.ceil(width / 15);
+            const rows = Math.ceil(height / 15);
+            
+            // Use waves for flow
+            const xWave = TS.Gen.cosine(cols, 2);
+            const yWave = TS.Gen.sine(rows, 3);
+            const turbulence = TS.Rand.drunk(cols * rows, params.turbulence * 0.3);
+            
+            flowField = [];
+            for (let y = 0; y < rows; y++) {
+                flowField[y] = [];
+                for (let x = 0; x < cols; x++) {
+                    const idx = y * cols + x;
+                    const angle = (xWave[x % cols] + yWave[y % rows] + turbulence[idx % turbulence.length]) * TWO_PI * params.flowStrength;
+                    flowField[y][x] = angle;
+                }
+            }
+        }
+
+        function createParticles() {
+            particles = [];
+            
+            // Golden spiral spawn pattern
+            const golden = (1 + Math.sqrt(5)) / 2;
+            const angleStep = TWO_PI / golden;
+            
+            for (let i = 0; i < params.particleCount; i++) {
+                const radius = sqrt(i) * 10;
+                const angle = i * angleStep;
+                const color = TS.Rand.pick(palette, palette.map(p => p.weight));
+                
+                particles.push({
+                    x: width / 2 + cos(angle) * radius,
+                    y: height / 2 + sin(angle) * radius,
+                    prevX: width / 2 + cos(angle) * radius,
+                    prevY: height / 2 + sin(angle) * radius,
+                    color: color,
+                    size: params.minSize + Math.random() * (params.maxSize - params.minSize),
+                    life: 100 + Math.random() * 400,
+                    speed: 0.5 + Math.random() * 2,
+                    age: 0
+                });
+            }
+        }
+
+        function draw() {
+            if (isPaused) return;
+            
+            push();
+            colorMode(HSB);
+            
+            particles.forEach((p, i) => {
+                if (p.age < p.life) {
+                    // Update position
+                    const col = Math.floor(p.x / 15);
+                    const row = Math.floor(p.y / 15);
+                    
+                    if (flowField[row] && flowField[row][col]) {
+                        const angle = flowField[row][col];
+                        p.x += cos(angle) * p.speed;
+                        p.y += sin(angle) * p.speed;
+                        
+                        // Add some randomness
+                        p.x += random(-0.5, 0.5);
+                        p.y += random(-0.5, 0.5);
+                    }
+                    
+                    // Wrap around edges
+                    if (p.x < 0) p.x = width;
+                    if (p.x > width) p.x = 0;
+                    if (p.y < 0) p.y = height;
+                    if (p.y > height) p.y = 0;
+                    
+                    // Draw particle
+                    strokeWeight(p.size);
+                    stroke(p.color.h, p.color.s, p.color.b, params.alpha * (1 - p.age / p.life));
+                    line(p.prevX, p.prevY, p.x, p.y);
+                    
+                    // Record for SVG
+                    if (isRecordingSVG) {
+                        svgPaths.push({
+                            x1: p.prevX / SCALE_FACTOR,
+                            y1: p.prevY / SCALE_FACTOR,
+                            x2: p.x / SCALE_FACTOR,
+                            y2: p.y / SCALE_FACTOR,
+                            stroke: `hsla(${p.color.h}, ${p.color.s}%, ${p.color.b}%, ${params.alpha * (1 - p.age / p.life) / 100})`,
+                            strokeWidth: p.size / SCALE_FACTOR
+                        });
+                    }
+                    
+                    p.prevX = p.x;
+                    p.prevY = p.y;
+                    p.age++;
+                }
+            });
+            
+            pop();
+        }
+
+        // Control functions
+        window.regenerateArt = regenerateArt;
+
+        window.saveAsPNG = function() {
+            save(`total-serialism-${Date.now()}.png`);
+        }
+
+        window.saveAsSVG = function() {
+            // Record current state
+            isRecordingSVG = true;
+            svgPaths = [];
+            
+            // Draw one frame to capture paths
+            push();
+            colorMode(HSB);
+            particles.forEach((p, i) => {
+                if (p.age < p.life) {
+                    strokeWeight(p.size);
+                    stroke(p.color.h, p.color.s, p.color.b, params.alpha * (1 - p.age / p.life));
+                    line(p.prevX, p.prevY, p.x, p.y);
+                }
+            });
+            pop();
+            
+            isRecordingSVG = false;
+            
+            // Generate SVG
+            let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${A3_WIDTH}" height="${A3_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+<rect width="${A3_WIDTH}" height="${A3_HEIGHT}" fill="white"/>
+<g>`;
+
+            svgPaths.forEach(path => {
+                svg += `\n<line x1="${path.x1}" y1="${path.y1}" x2="${path.x2}" y2="${path.y2}" stroke="${path.stroke}" stroke-width="${path.strokeWidth}" stroke-linecap="round"/>`;
+            });
+            
+            svg += '\n</g>\n</svg>';
+            
+            // Download
+            const blob = new Blob([svg], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `total-serialism-${Date.now()}.svg`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        window.togglePause = function() {
+            isPaused = !isPaused;
+        }
+
+        function keyPressed() {
+            switch (key) {
+                case 'r':
+                case 'R':
+                    regenerateArt();
+                    break;
+                case 'p':
+                case 'P':
+                    saveAsPNG();
+                    break;
+                case 's':
+                case 'S':
+                    saveAsSVG();
+                    break;
+                case ' ':
+                    togglePause();
+                    break;
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                    params.colorScheme = parseInt(key) - 1;
+                    document.getElementById('colorScheme').value = params.colorScheme;
+                    regenerateArt();
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

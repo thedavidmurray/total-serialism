@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Serialism × Fidenza Style Generative Art</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        #canvas-container {
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            background: white;
+        }
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            backdrop-filter: blur(10px);
+        }
+        #controls h3 {
+            margin-top: 0;
+            color: #ffa500;
+        }
+        #controls div {
+            margin: 10px 0;
+        }
+        #controls kbd {
+            background: #333;
+            padding: 3px 6px;
+            border-radius: 3px;
+            margin: 0 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h3>Total Serialism × Fidenza</h3>
+        <div>A3 Size (297×420mm @ 150 DPI)</div>
+        <div>Press <kbd>R</kbd> to regenerate</div>
+        <div>Press <kbd>S</kbd> to save PNG</div>
+        <div>Press <kbd>1-5</kbd> for presets</div>
+        <div>Press <kbd>SPACE</kbd> to pause</div>
+        <div id="info"></div>
+    </div>
+    <div id="canvas-container"></div>
+    
+    <script>
+        // Total Serialism implementation
+        const TS = {
+            Gen: {
+                spread: (n) => Array.from({length: n}, (_, i) => i / (n - 1)),
+                spreadFloat: (n, min = 0, max = 1) => 
+                    TS.Gen.spread(n).map(v => min + v * (max - min)),
+                spreadExp: (n, exp = 2) => 
+                    TS.Gen.spread(n).map(v => Math.pow(v, exp)),
+                cosine: (n, periods = 1, phase = 0) => 
+                    Array.from({length: n}, (_, i) => 
+                        (Math.cos((i / n * periods + phase) * 2 * Math.PI) + 1) / 2),
+                sine: (n, periods = 1, phase = 0) => 
+                    Array.from({length: n}, (_, i) => 
+                        (Math.sin((i / n * periods + phase) * 2 * Math.PI) + 1) / 2)
+            },
+            Algo: {
+                euclid: (steps, hits) => {
+                    steps = Math.max(1, Math.floor(steps));
+                    hits = Math.max(0, Math.min(steps, Math.floor(hits)));
+                    if (hits === 0) return Array(steps).fill(0);
+                    if (hits === steps) return Array(steps).fill(1);
+
+                    const pattern = [];
+                    const counts = [];
+                    const remainders = [hits];
+                    let divisor = steps - hits;
+                    let level = 0;
+
+                    while (true) {
+                        counts[level] = Math.floor(divisor / remainders[level]);
+                        remainders[level + 1] = divisor % remainders[level];
+                        divisor = remainders[level];
+                        level++;
+                        if (remainders[level] <= 1) {
+                            break;
+                        }
+                    }
+
+                    counts[level] = divisor;
+
+                    const build = (levelIndex) => {
+                        if (levelIndex === -1) return [0];
+                        if (levelIndex === -2) return [1];
+
+                        const sequenceA = build(levelIndex - 1);
+                        const sequenceB = build(levelIndex - 2);
+                        let result = [];
+
+                        for (let i = 0; i < counts[levelIndex]; i++) {
+                            result = result.concat(sequenceA);
+                        }
+                        if (remainders[levelIndex] > 0) {
+                            result = result.concat(sequenceB);
+                        }
+                        return result;
+                    };
+
+                    const bjorklund = build(level);
+                    for (let i = 0; i < steps; i++) {
+                        pattern.push(bjorklund[i % bjorklund.length]);
+                    }
+                    return pattern;
+                },
+                fibonacci: (n) => {
+                    const seq = [0, 1];
+                    for (let i = 2; i < n; i++) {
+                        seq.push(seq[i-1] + seq[i-2]);
+                    }
+                    return seq;
+                },
+                hexBeat: (pattern) => {
+                    return pattern.split('').map(c => c === 'x' ? 1 : 0);
+                },
+                cellular: (rule, init, gens) => {
+                    let current = init;
+                    const history = [current];
+                    
+                    for (let g = 0; g < gens; g++) {
+                        const next = [];
+                        for (let i = 0; i < current.length; i++) {
+                            const left = current[(i - 1 + current.length) % current.length];
+                            const center = current[i];
+                            const right = current[(i + 1) % current.length];
+                            const idx = (left << 2) | (center << 1) | right;
+                            next.push((rule >> idx) & 1);
+                        }
+                        current = next;
+                        history.push(current);
+                    }
+                    return history;
+                }
+            },
+            Rand: {
+                seed: 1,
+                _state: 0x6D2B79F5,
+                _normalizeSeed(value) {
+                    if (typeof value === 'number' && Number.isFinite(value)) {
+                        const normalized = value >>> 0;
+                        return normalized === 0 ? 0x6D2B79F5 : normalized;
+                    }
+                    const str = String(value ?? '');
+                    let hash = 2166136261;
+                    for (let i = 0; i < str.length; i++) {
+                        hash ^= str.charCodeAt(i);
+                        hash = Math.imul(hash, 16777619);
+                    }
+                    const normalized = hash >>> 0;
+                    return normalized === 0 ? 0x6D2B79F5 : normalized;
+                },
+                setSeed(value) {
+                    const normalized = TS.Rand._normalizeSeed(value);
+                    TS.Rand.seed = normalized;
+                    TS.Rand._state = normalized;
+                },
+                _randomFloat() {
+                    let t = TS.Rand._state += 0x6D2B79F5;
+                    t = Math.imul(t ^ (t >>> 15), t | 1);
+                    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+                    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+                },
+                float(min = 0, max = 1) {
+                    return min + TS.Rand._randomFloat() * (max - min);
+                },
+                int(min = 0, max = 1) {
+                    return Math.floor(TS.Rand.float(min, max));
+                },
+                bool(bias = 0.5) {
+                    return TS.Rand.float() < bias;
+                },
+                random: (n = 1, min = 0, max = 1) => {
+                    if (n === 1) {
+                        return [TS.Rand.float(min, max)];
+                    }
+                    return Array.from({length: n}, () => TS.Rand.float(min, max));
+                },
+                drunk: (n, step = 0.1, min = 0, max = 1, start = 0.5) => {
+                    const walk = [start];
+                    for (let i = 1; i < n; i++) {
+                        let next = walk[i-1] + TS.Rand.float(-0.5, 0.5) * step * 2;
+                        next = Math.max(min, Math.min(max, next));
+                        walk.push(next);
+                    }
+                    return walk;
+                },
+                pick: (arr, weights) => {
+                    if (!arr || arr.length === 0) return undefined;
+                    if (!weights) {
+                        const idx = TS.Rand.int(0, arr.length);
+                        return arr[idx];
+                    }
+                    const sum = weights.reduce((a, b) => a + b, 0);
+                    let r = TS.Rand.float(0, sum);
+                    for (let i = 0; i < arr.length; i++) {
+                        r -= weights[i];
+                        if (r <= 0) return arr[i];
+                    }
+                    return arr[arr.length - 1];
+                },
+                coin: (n = 1, bias = 0.5) => {
+                    if (n === 1) {
+                        return [TS.Rand.bool(bias) ? 1 : 0];
+                    }
+                    return Array.from({length: n}, () => TS.Rand.bool(bias) ? 1 : 0);
+                }
+            },
+            Transform: {
+                rotate: (arr, n) => {
+                    n = n % arr.length;
+                    return [...arr.slice(n), ...arr.slice(0, n)];
+                },
+                palindrome: (arr) => [...arr, ...arr.slice(0, -1).reverse()],
+                lace: (...arrays) => {
+                    const maxLen = Math.max(...arrays.map(a => a.length));
+                    const result = [];
+                    for (let i = 0; i < maxLen; i++) {
+                        arrays.forEach(arr => {
+                            if (i < arr.length) result.push(arr[i]);
+                        });
+                    }
+                    return result;
+                },
+                repeat: (arr, n) => Array(n).fill(arr).flat()
+            }
+        };
+
+        // Global variables
+        let flowField = [];
+        let particles = [];
+        let palette = [];
+        let rhythmPatterns = {};
+        let isPaused = false;
+        let preset = 0;
+        
+        // A3 dimensions at 150 DPI
+        const A3_WIDTH = 1754;
+        const A3_HEIGHT = 2480;
+        const SCALE_FACTOR = 0.4; // Display scale
+        
+        // Display dimensions
+        const DISPLAY_WIDTH = A3_WIDTH * SCALE_FACTOR;
+        const DISPLAY_HEIGHT = A3_HEIGHT * SCALE_FACTOR;
+
+        function setup() {
+            const canvas = createCanvas(DISPLAY_WIDTH, DISPLAY_HEIGHT);
+            canvas.parent('canvas-container');
+            pixelDensity(2); // High quality
+            
+            generateArtwork(preset);
+        }
+
+        function generateArtwork(presetIndex = 0) {
+            // Clear and reset
+            clear();
+            particles = [];
+            
+            // Generate color palette using harmonic relationships
+            generateHarmonicPalette(presetIndex);
+            
+            // Generate rhythm patterns
+            generateRhythmPatterns();
+            
+            // Create background with subtle texture
+            createBackground();
+            
+            // Generate flow field
+            generateFlowField();
+            
+            // Create particle system
+            createParticles();
+            
+            // Update info
+            updateInfo();
+        }
+
+        function generateHarmonicPalette(preset) {
+            const schemes = [
+                { base: 0, intervals: [0, 60, 120, 180, 240], name: "Complementary" },
+                { base: 30, intervals: [0, 30, 60, 150, 180], name: "Analogous" },
+                { base: 200, intervals: [0, 120, 240], name: "Triadic" },
+                { base: 120, intervals: [0, 90, 180, 270], name: "Square" },
+                { base: 300, intervals: [0, 15, 30, 45, 180], name: "Split Comp" }
+            ];
+            
+            const scheme = schemes[preset % schemes.length];
+            const satWeights = TS.Gen.spreadExp(5, 1.5);
+            const brightWeights = TS.Gen.cosine(5, 0.5, 0.25);
+            
+            palette = scheme.intervals.map((interval, i) => {
+                const hue = (scheme.base + interval) % 360;
+                const variations = TS.Rand.drunk(3, 0.1, 0, 1, 0.5);
+                
+                return {
+                    hue: hue,
+                    sat: 20 + satWeights[i] * 60,
+                    bright: 20 + brightWeights[i] * 60,
+                    weight: variations[0],
+                    alpha: 40 + variations[1] * 40,
+                    scheme: scheme.name
+                };
+            });
+        }
+
+        function generateRhythmPatterns() {
+            // Generate multiple rhythm patterns for different aspects
+            rhythmPatterns = {
+                main: TS.Algo.euclid(16, 7),      // Main flow
+                accent: TS.Algo.euclid(23, 9),    // Accent elements
+                micro: TS.Algo.euclid(31, 13),    // Fine details
+                pulse: TS.Algo.hexBeat('x..x..x.xx.x..x.'),
+                cellular: TS.Algo.cellular(30, TS.Rand.coin(8), 16)
+            };
+        }
+
+        function createBackground() {
+            push();
+            colorMode(HSB);
+            
+            // Base color from palette
+            const bgColor = palette[0];
+            background(bgColor.hue, bgColor.sat * 0.2, 95);
+            
+            // Add texture using cellular automaton
+            const cellPattern = rhythmPatterns.cellular;
+            noStroke();
+            
+            cellPattern.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    if (cell) {
+                        const color = TS.Rand.pick(palette, palette.map(p => p.weight));
+                        fill(color.hue, color.sat * 0.3, 90, 10);
+                        const size = TS.Rand.random(1, 5, 30)[0];
+                        const px = (x / row.length) * width;
+                        const py = (y / cellPattern.length) * height;
+                        ellipse(px, py, size);
+                    }
+                });
+            });
+            
+            pop();
+        }
+
+        function generateFlowField() {
+            const cols = Math.ceil(width / 15);
+            const rows = Math.ceil(height / 15);
+            
+            // Use multiple wave functions for complex flow
+            const xWaves = [
+                TS.Gen.cosine(cols, 2),
+                TS.Gen.sine(cols, 3, 0.25),
+                TS.Gen.cosine(cols, 5, 0.5)
+            ];
+            
+            const yWaves = [
+                TS.Gen.sine(rows, 2),
+                TS.Gen.cosine(rows, 4, 0.33),
+                TS.Gen.sine(rows, 7, 0.66)
+            ];
+            
+            // Drunk walk for organic variation
+            const variation = TS.Rand.drunk(cols * rows, 0.15);
+            
+            flowField = [];
+            for (let y = 0; y < rows; y++) {
+                flowField[y] = [];
+                for (let x = 0; x < cols; x++) {
+                    const idx = y * cols + x;
+                    
+                    // Combine waves with different weights
+                    const xInfluence = xWaves.reduce((sum, wave, i) => 
+                        sum + wave[x % wave.length] * (1 / (i + 1)), 0) / xWaves.length;
+                    
+                    const yInfluence = yWaves.reduce((sum, wave, i) => 
+                        sum + wave[y % wave.length] * (1 / (i + 1)), 0) / yWaves.length;
+                    
+                    // Add rhythm influence
+                    const rhythmInfluence = rhythmPatterns.main[idx % rhythmPatterns.main.length] * 0.5;
+                    
+                    const angle = (xInfluence + yInfluence + variation[idx % variation.length] + rhythmInfluence) * TWO_PI;
+                    flowField[y][x] = angle;
+                }
+            }
+        }
+
+        function createParticles() {
+            // Use Fibonacci for particle count
+            const fib = TS.Algo.fibonacci(12);
+            const baseCount = fib[8]; // 21
+            const totalParticles = baseCount * 8;
+            
+            // Generate spawn patterns
+            const spawnMethods = [
+                () => generateGoldenSpiral(totalParticles),
+                () => generateRhythmicGrid(totalParticles),
+                () => generateClusteredPoints(totalParticles),
+                () => generateFlowLines(totalParticles)
+            ];
+            
+            const points = TS.Rand.pick(spawnMethods)();
+            
+            particles = points.map((point, i) => {
+                const color = TS.Rand.pick(palette, palette.map(p => p.weight));
+                const rhythm = rhythmPatterns.accent[i % rhythmPatterns.accent.length];
+                
+                return {
+                    x: point.x,
+                    y: point.y,
+                    prevX: point.x,
+                    prevY: point.y,
+                    color: color,
+                    size: rhythm ? TS.Rand.pick([1, 2, 3, 5, 8]) : TS.Rand.pick([1, 1, 2, 3]),
+                    life: TS.Rand.pick(TS.Gen.spreadFloat(10, 200, 800)),
+                    speed: TS.Rand.pick(TS.Gen.spreadExp(5, 2).map(v => 0.5 + v * 2)),
+                    age: 0,
+                    behavior: TS.Rand.pick(['flow', 'flow', 'flow', 'spiral', 'wave']),
+                    variation: TS.Rand.random(1)[0]
+                };
+            });
+        }
+
+        function generateGoldenSpiral(count) {
+            const points = [];
+            const golden = (1 + Math.sqrt(5)) / 2;
+            const angleStep = TWO_PI / golden;
+            
+            for (let i = 0; i < count; i++) {
+                const radius = sqrt(i) * 10;
+                const angle = i * angleStep;
+                
+                points.push({
+                    x: width / 2 + cos(angle) * radius,
+                    y: height / 2 + sin(angle) * radius
+                });
+            }
+            return points;
+        }
+
+        function generateRhythmicGrid(count) {
+            const points = [];
+            const gridSize = Math.ceil(Math.sqrt(count));
+            const cellSize = Math.min(width, height) / gridSize;
+            
+            let i = 0;
+            for (let y = 0; y < gridSize && i < count; y++) {
+                for (let x = 0; x < gridSize && i < count; x++) {
+                    const rhythmX = rhythmPatterns.main[x % rhythmPatterns.main.length];
+                    const rhythmY = rhythmPatterns.accent[y % rhythmPatterns.accent.length];
+                    
+                    if (rhythmX || rhythmY) {
+                        const jitter = TS.Rand.random(2, -cellSize * 0.3, cellSize * 0.3);
+                        points.push({
+                            x: (x + 0.5) * cellSize + jitter[0],
+                            y: (y + 0.5) * cellSize + jitter[1]
+                        });
+                        i++;
+                    }
+                }
+            }
+            
+            // Fill remaining with random points
+            while (points.length < count) {
+                points.push({
+                    x: TS.Rand.random(1, 0, width)[0],
+                    y: TS.Rand.random(1, 0, height)[0]
+                });
+            }
+            
+            return points;
+        }
+
+        function generateClusteredPoints(count) {
+            const points = [];
+            const clusters = 3 + Math.floor(preset * 2);
+            const centersX = TS.Rand.random(clusters, width * 0.2, width * 0.8);
+            const centersY = TS.Rand.random(clusters, height * 0.2, height * 0.8);
+            const spreads = TS.Gen.spreadFloat(clusters, 50, 200);
+            
+            for (let i = 0; i < count; i++) {
+                const cluster = i % clusters;
+                const angle = TS.Rand.random(1, 0, TWO_PI)[0];
+                const dist = TS.Rand.random(1, 0, spreads[cluster])[0];
+                
+                points.push({
+                    x: centersX[cluster] + cos(angle) * dist,
+                    y: centersY[cluster] + sin(angle) * dist
+                });
+            }
+            return points;
+        }
+
+        function generateFlowLines(count) {
+            const points = [];
+            const lines = 5 + preset * 2;
+            const pointsPerLine = Math.floor(count / lines);
+            
+            for (let l = 0; l < lines; l++) {
+                const startX = TS.Rand.random(1, 0, width)[0];
+                const wave = TS.Gen.sine(pointsPerLine, 2, l / lines);
+                
+                for (let p = 0; p < pointsPerLine; p++) {
+                    points.push({
+                        x: startX + wave[p] * width * 0.3,
+                        y: (p / pointsPerLine) * height
+                    });
+                }
+            }
+            return points;
+        }
+
+        function draw() {
+            if (isPaused) return;
+            
+            push();
+            colorMode(HSB);
+            
+            // Draw particles
+            particles.forEach((p, i) => {
+                if (p.age < p.life) {
+                    // Update position based on behavior
+                    updateParticle(p, i);
+                    
+                    // Draw particle trail
+                    strokeWeight(p.size);
+                    stroke(p.color.hue, p.color.sat, p.color.bright, p.color.alpha);
+                    line(p.prevX, p.prevY, p.x, p.y);
+                    
+                    // Update previous position
+                    p.prevX = p.x;
+                    p.prevY = p.y;
+                    p.age++;
+                }
+            });
+            
+            // Add accent shapes periodically
+            if (frameCount % 60 === 0) {
+                drawAccentShapes();
+            }
+            
+            pop();
+        }
+
+        function updateParticle(p, index) {
+            const col = Math.floor(p.x / 15);
+            const row = Math.floor(p.y / 15);
+            
+            if (flowField[row] && flowField[row][col]) {
+                const angle = flowField[row][col];
+                
+                switch (p.behavior) {
+                    case 'flow':
+                        p.x += cos(angle) * p.speed;
+                        p.y += sin(angle) * p.speed;
+                        break;
+                        
+                    case 'spiral':
+                        const spiralAngle = angle + p.age * 0.05;
+                        p.x += cos(spiralAngle) * p.speed;
+                        p.y += sin(spiralAngle) * p.speed;
+                        break;
+                        
+                    case 'wave':
+                        const waveOffset = sin(p.age * 0.1) * 2;
+                        p.x += cos(angle) * p.speed + waveOffset;
+                        p.y += sin(angle) * p.speed;
+                        break;
+                }
+                
+                // Add micro rhythm influence
+                const microRhythm = rhythmPatterns.micro[index % rhythmPatterns.micro.length];
+                if (microRhythm) {
+                    p.x += TS.Rand.random(1, -1, 1)[0] * p.variation;
+                    p.y += TS.Rand.random(1, -1, 1)[0] * p.variation;
+                }
+            }
+            
+            // Boundary behavior
+            if (p.x < 0 || p.x > width) p.x = (p.x + width) % width;
+            if (p.y < 0 || p.y > height) p.y = (p.y + height) % height;
+        }
+
+        function drawAccentShapes() {
+            const pulseIndex = Math.floor(frameCount / 60) % rhythmPatterns.pulse.length;
+            
+            if (rhythmPatterns.pulse[pulseIndex]) {
+                push();
+                noStroke();
+                const color = TS.Rand.pick(palette, palette.map(p => p.weight));
+                fill(color.hue, color.sat * 0.7, color.bright, 20);
+                
+                const x = TS.Rand.random(1, 0, width)[0];
+                const y = TS.Rand.random(1, 0, height)[0];
+                const size = TS.Rand.pick(TS.Algo.fibonacci(8).slice(4)) * 10;
+                
+                ellipse(x, y, size, size * 0.618);
+                pop();
+            }
+        }
+
+        function updateInfo() {
+            const info = document.getElementById('info');
+            const scheme = palette[0].scheme;
+            info.innerHTML = `
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #444;">
+                    <div>Scheme: ${scheme}</div>
+                    <div>Particles: ${particles.length}</div>
+                    <div>Rhythm: ${Object.keys(rhythmPatterns).join(', ')}</div>
+                </div>
+            `;
+        }
+
+        function keyPressed() {
+            switch (key) {
+                case 'r':
+                case 'R':
+                    generateArtwork(preset);
+                    break;
+                    
+                case 's':
+                case 'S':
+                    save(`total-serialism-fidenza-${Date.now()}.png`);
+                    break;
+                    
+                case ' ':
+                    isPaused = !isPaused;
+                    break;
+                    
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                    preset = parseInt(key) - 1;
+                    generateArtwork(preset);
+                    break;
+            }
+        }
+    </script>
+</body>
+</html>

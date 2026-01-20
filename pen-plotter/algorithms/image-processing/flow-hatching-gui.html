@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Flow-Based Hatching - Directional Hatching Following Image Structure</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="../../path-optimizer.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      position: relative;
+    }
+    #controls {
+      width: 360px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 1px solid var(--ts-border-subtle);
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .control {
+      margin-bottom: 14px;
+    }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+    }
+    .control input[type="range"] {
+      width: 100%;
+      margin-bottom: 4px;
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-default);
+    }
+    .control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--ts-text-primary);
+      border-radius: 50%;
+      border: 2px solid var(--ts-accent-primary);
+      cursor: pointer;
+    }
+    .control input[type="file"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: 4px;
+      font-size: 0.8rem;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    .control select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      font-family: inherit;
+    }
+    .control span.value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      font-size: 0.8rem;
+      min-width: 50px;
+      text-align: right;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 4px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: 0 0 20px var(--ts-glow-primary);
+    }
+    button:disabled {
+      background: var(--ts-bg-active);
+      color: var(--ts-text-muted);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    button.secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    button.secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-accent-primary);
+      box-shadow: none;
+    }
+    .button-group {
+      display: flex;
+      gap: 10px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    #image-upload-area {
+      border: 2px dashed var(--ts-accent-primary);
+      border-radius: 8px;
+      padding: 30px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin-bottom: 15px;
+      background: var(--ts-bg-control);
+    }
+    #image-upload-area:hover {
+      background: var(--ts-bg-hover);
+      border-color: #00e8bb;
+    }
+    #image-upload-area.dragover {
+      background: var(--ts-bg-active);
+      border-color: var(--ts-accent-secondary);
+    }
+    .upload-text {
+      color: var(--ts-text-secondary);
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+    }
+    .upload-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: rgba(0, 212, 170, 0.2);
+      color: var(--ts-accent-primary);
+      border: 1px solid var(--ts-accent-primary);
+    }
+    #processing-status.error {
+      background: rgba(255, 71, 87, 0.2);
+      color: var(--ts-accent-danger);
+      border: 1px solid var(--ts-accent-danger);
+    }
+    #processing-status.processing {
+      background: rgba(255, 149, 0, 0.2);
+      color: var(--ts-accent-secondary);
+      border: 1px solid var(--ts-accent-secondary);
+    }
+    .stats {
+      font-size: 0.75rem;
+      color: var(--ts-text-secondary);
+      margin-top: 10px;
+      padding: 12px;
+      background: var(--ts-bg-control);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .stats strong {
+      color: var(--ts-accent-primary);
+    }
+    .preview-options {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .preview-options label {
+      display: flex;
+      align-items: center;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: var(--ts-text-secondary);
+    }
+    .preview-options input[type="checkbox"] {
+      margin-right: 6px;
+      accent-color: var(--ts-accent-primary);
+      width: 16px;
+      height: 16px;
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: 0 0 0 1px var(--ts-border-subtle), 0 20px 60px rgba(0,0,0,0.5);
+      border-radius: 4px;
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .color-row label {
+      flex: 1;
+      margin-bottom: 0;
+    }
+    .color-swatch {
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      border: 2px solid var(--ts-border-default);
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .color-swatch input[type="color"] {
+      width: 150%;
+      height: 150%;
+      margin: -25%;
+      border: none;
+      cursor: pointer;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+      color: var(--ts-text-muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+    }
+    .back-link:hover {
+      color: var(--ts-accent-primary);
+    }
+    h2 {
+      color: var(--ts-text-primary);
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    .subtitle {
+      color: var(--ts-text-muted);
+      font-size: 0.75rem;
+      margin: 0 0 20px 0;
+    }
+    .preset-manager {
+      margin-bottom: 20px;
+    }
+    .preset-manager .control-group {
+      margin-bottom: 0;
+      padding-bottom: 16px;
+    }
+    .preset-manager input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: 4px;
+      font-size: 0.85rem;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .flow-preview {
+      width: 100%;
+      height: 80px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-subtle);
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+
+  <div id="controls">
+    <a href="../../index.html" class="back-link">Back to Index</a>
+    <h2>Flow-Based Hatching</h2>
+    <p class="subtitle">Directional hatching following image structure</p>
+
+    <div class="control-group">
+      <h3>Image Input</h3>
+      <div id="image-upload-area" tabindex="0">
+        <div class="upload-icon">+</div>
+        <div class="upload-text">Drop image here or click to browse</div>
+        <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+      </div>
+      <button onclick="loadSampleImage()" class="secondary">Load Sample Image</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Flow Source</h3>
+      <div class="control">
+        <label>Flow Type:</label>
+        <select id="flowType">
+          <option value="gradient">Image Gradient (Sobel)</option>
+          <option value="structure">Structure Tensor</option>
+          <option value="noise">Perlin Noise</option>
+          <option value="radial">Radial</option>
+          <option value="spiral">Spiral</option>
+          <option value="custom">Custom Angle</option>
+        </select>
+      </div>
+      <div class="control" id="customAngleControl" style="display: none;">
+        <label>Custom Angle: <span class="value" id="customAngle-value">45</span>deg</label>
+        <input type="range" id="customAngle" min="0" max="360" step="1" value="45">
+      </div>
+      <div class="control">
+        <label>Flow Smoothing: <span class="value" id="flowSmoothing-value">3</span></label>
+        <input type="range" id="flowSmoothing" min="0" max="10" step="1" value="3">
+      </div>
+      <div class="control">
+        <label>Noise Influence: <span class="value" id="noiseInfluence-value">0</span>%</label>
+        <input type="range" id="noiseInfluence" min="0" max="100" step="5" value="0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Hatching Parameters</h3>
+      <div class="control">
+        <label>Hatch Density: <span class="value" id="hatchDensity-value">15</span></label>
+        <input type="range" id="hatchDensity" min="5" max="50" step="1" value="15">
+      </div>
+      <div class="control">
+        <label>Line Spacing: <span class="value" id="lineSpacing-value">4</span>px</label>
+        <input type="range" id="lineSpacing" min="2" max="20" step="1" value="4">
+      </div>
+      <div class="control">
+        <label>Min Line Length: <span class="value" id="minLineLength-value">5</span>px</label>
+        <input type="range" id="minLineLength" min="2" max="50" step="1" value="5">
+      </div>
+      <div class="control">
+        <label>Max Line Length: <span class="value" id="maxLineLength-value">100</span>px</label>
+        <input type="range" id="maxLineLength" min="20" max="500" step="10" value="100">
+      </div>
+      <div class="control">
+        <label>Step Size: <span class="value" id="stepSize-value">2</span>px</label>
+        <input type="range" id="stepSize" min="1" max="10" step="0.5" value="2">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Brightness Mapping</h3>
+      <div class="control">
+        <label>Brightness Threshold: <span class="value" id="brightnessThreshold-value">200</span></label>
+        <input type="range" id="brightnessThreshold" min="0" max="255" step="5" value="200">
+      </div>
+      <div class="control">
+        <label>Darkness Multiplier: <span class="value" id="darknessMultiplier-value">2.0</span>x</label>
+        <input type="range" id="darknessMultiplier" min="0.5" max="5" step="0.1" value="2.0">
+      </div>
+      <div class="control">
+        <label>Contrast Boost: <span class="value" id="contrastBoost-value">1.0</span>x</label>
+        <input type="range" id="contrastBoost" min="0.5" max="3" step="0.1" value="1.0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Cross-Hatching</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="crossHatchEnabled"> Enable Cross-Hatching
+        </label>
+      </div>
+      <div class="control" id="crossHatchAngleControl">
+        <label>Angle Offset: <span class="value" id="crossHatchAngle-value">90</span>deg</label>
+        <input type="range" id="crossHatchAngle" min="30" max="150" step="5" value="90">
+      </div>
+      <div class="control" id="crossHatchDensityControl">
+        <label>Cross-Hatch Density: <span class="value" id="crossHatchDensity-value">0.5</span>x</label>
+        <input type="range" id="crossHatchDensity" min="0.2" max="1" step="0.1" value="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Line Appearance</h3>
+      <div class="control">
+        <label>Line Weight: <span class="value" id="lineWeight-value">1.0</span>px</label>
+        <input type="range" id="lineWeight" min="0.3" max="3" step="0.1" value="1.0">
+      </div>
+      <div class="color-row">
+        <label>Stroke Color:</label>
+        <div class="color-swatch">
+          <input type="color" id="strokeColor" value="#000000">
+        </div>
+      </div>
+      <div class="color-row" style="margin-top: 12px;">
+        <label>Background:</label>
+        <div class="color-swatch">
+          <input type="color" id="bgColor" value="#ffffff">
+        </div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="600x600">Square 600x600</option>
+          <option value="800x600">Landscape 800x600</option>
+          <option value="600x800">Portrait 600x800</option>
+          <option value="1024x768">HD 1024x768</option>
+          <option value="a4-portrait">A4 Portrait</option>
+          <option value="a4-landscape">A4 Landscape</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div class="control" id="customSizeControl" style="display: none;">
+        <label>Width: <span class="value" id="customWidth-value">600</span>px</label>
+        <input type="range" id="customWidth" min="200" max="1200" step="50" value="600">
+        <label style="margin-top: 8px;">Height: <span class="value" id="customHeight-value">600</span>px</label>
+        <input type="range" id="customHeight" min="200" max="1200" step="50" value="600">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="preview-options">
+        <label>
+          <input type="checkbox" id="showOriginal"> Show Original
+        </label>
+        <label>
+          <input type="checkbox" id="showFlowField"> Show Flow Field
+        </label>
+        <label>
+          <input type="checkbox" id="showHatching" checked> Show Hatching
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Generate</h3>
+      <button onclick="generateHatching()">Generate Flow Hatching</button>
+      <button onclick="randomizeSeed()" class="secondary">Randomize Seed</button>
+      <div id="processing-status"></div>
+      <div class="stats" id="stats" style="display: none;">
+        <div>Lines: <strong id="lineCountStat">0</strong></div>
+        <div>Points: <strong id="pointCountStat">0</strong></div>
+        <div>Path Length: <strong id="pathLengthStat">0</strong>mm</div>
+        <div>Seed: <strong id="seedStat">0</strong></div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="button-group">
+        <button onclick="exportSVG()" id="exportBtn" disabled>SVG</button>
+        <button onclick="exportPNG()" id="exportPNGBtn" disabled>PNG</button>
+      </div>
+      <button onclick="exportPlotterSVG()" id="exportPlotterBtn" disabled class="secondary">Plotter SVG (No Fill)</button>
+    </div>
+
+    <div id="preset-container"></div>
+  </div>
+
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <script>
+    // Global variables
+    let img = null;
+    let canvas;
+    let svgCanvas;
+    let hatchLines = [];
+    let flowField = [];
+    let gradientField = [];
+    let processing = false;
+    let currentSeed = Math.floor(Math.random() * 100000);
+    let presetManager;
+
+    // Canvas dimensions
+    let canvasWidth = 600;
+    let canvasHeight = 600;
+
+    // P5.js setup
+    function setup() {
+      updateCanvasSize();
+      canvas = createCanvas(canvasWidth, canvasHeight);
+      canvas.parent('canvas-wrapper');
+
+      // Initialize UX components
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
+      // Initialize SVG canvas for export
+      svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
+
+      background(255);
+      noLoop();
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'flow-hatching',
+        container: '#preset-container',
+        onSave: getParameters,
+        onLoad: applyPreset
+      });
+
+      // Setup control listeners
+      setupControlListeners();
+      setupImageUpload();
+    }
+
+    function draw() {
+      const bgColor = document.getElementById('bgColor').value;
+      background(bgColor);
+
+      if (img && document.getElementById('showOriginal').checked) {
+        push();
+        tint(255, 80);
+        image(img, 0, 0, width, height);
+        pop();
+      }
+
+      if (flowField.length > 0 && document.getElementById('showFlowField').checked) {
+        drawFlowField();
+      }
+
+      if (hatchLines.length > 0 && document.getElementById('showHatching').checked) {
+        drawHatchLines();
+      }
+    }
+
+    function drawFlowField() {
+      const spacing = 15;
+      const arrowLen = 8;
+
+      push();
+      stroke(0, 100, 200, 100);
+      strokeWeight(1);
+
+      for (let y = spacing / 2; y < height; y += spacing) {
+        for (let x = spacing / 2; x < width; x += spacing) {
+          const angle = getFlowAngle(x, y);
+          const dx = cos(angle) * arrowLen;
+          const dy = sin(angle) * arrowLen;
+
+          line(x - dx/2, y - dy/2, x + dx/2, y + dy/2);
+
+          // Arrow head
+          push();
+          translate(x + dx/2, y + dy/2);
+          rotate(angle);
+          line(0, 0, -3, -2);
+          line(0, 0, -3, 2);
+          pop();
+        }
+      }
+      pop();
+    }
+
+    function drawHatchLines() {
+      const strokeCol = document.getElementById('strokeColor').value;
+      const lineW = parseFloat(document.getElementById('lineWeight').value);
+
+      stroke(strokeCol);
+      strokeWeight(lineW);
+      noFill();
+
+      hatchLines.forEach(line => {
+        if (line.points && line.points.length >= 2) {
+          beginShape();
+          line.points.forEach(point => {
+            vertex(point.x, point.y);
+          });
+          endShape();
+        }
+      });
+    }
+
+    function setupImageUpload() {
+      const uploadArea = document.getElementById('image-upload-area');
+      const fileInput = document.getElementById('imageUpload');
+
+      uploadArea.addEventListener('click', () => fileInput.click());
+      uploadArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          fileInput.click();
+        }
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+          loadImageFile(e.target.files[0]);
+        }
+      });
+
+      uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+      });
+
+      uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+      });
+
+      uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+
+        if (e.dataTransfer.files.length > 0) {
+          loadImageFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function setupControlListeners() {
+      // Flow type changes
+      document.getElementById('flowType').addEventListener('change', () => {
+        const flowType = document.getElementById('flowType').value;
+        document.getElementById('customAngleControl').style.display =
+          flowType === 'custom' ? 'block' : 'none';
+      });
+
+      // Paper size changes
+      document.getElementById('paperSize').addEventListener('change', () => {
+        const size = document.getElementById('paperSize').value;
+        document.getElementById('customSizeControl').style.display =
+          size === 'custom' ? 'block' : 'none';
+        updateCanvasSize();
+        resizeCanvasAndRedraw();
+      });
+
+      // Custom size controls
+      ['customWidth', 'customHeight'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => {
+          updateCanvasSize();
+          resizeCanvasAndRedraw();
+        });
+      });
+
+      // Cross-hatch toggle
+      document.getElementById('crossHatchEnabled').addEventListener('change', () => {
+        const enabled = document.getElementById('crossHatchEnabled').checked;
+        document.getElementById('crossHatchAngleControl').style.opacity = enabled ? 1 : 0.5;
+        document.getElementById('crossHatchDensityControl').style.opacity = enabled ? 1 : 0.5;
+      });
+
+      // Update value displays for all range inputs
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const valueSpan = document.getElementById(e.target.id + '-value');
+          if (valueSpan) {
+            valueSpan.textContent = e.target.value;
+          }
+        });
+      });
+
+      // Display option checkboxes
+      ['showOriginal', 'showFlowField', 'showHatching'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => redraw());
+      });
+
+      // Color changes
+      ['strokeColor', 'bgColor'].forEach(id => {
+        document.getElementById(id).addEventListener('input', () => redraw());
+      });
+
+      // Line weight changes
+      document.getElementById('lineWeight').addEventListener('input', () => redraw());
+    }
+
+    function updateCanvasSize() {
+      const size = document.getElementById('paperSize').value;
+
+      switch(size) {
+        case '600x600':
+          canvasWidth = 600; canvasHeight = 600; break;
+        case '800x600':
+          canvasWidth = 800; canvasHeight = 600; break;
+        case '600x800':
+          canvasWidth = 600; canvasHeight = 800; break;
+        case '1024x768':
+          canvasWidth = 1024; canvasHeight = 768; break;
+        case 'a4-portrait':
+          canvasWidth = 595; canvasHeight = 842; break;
+        case 'a4-landscape':
+          canvasWidth = 842; canvasHeight = 595; break;
+        case 'custom':
+          canvasWidth = parseInt(document.getElementById('customWidth').value);
+          canvasHeight = parseInt(document.getElementById('customHeight').value);
+          document.getElementById('customWidth-value').textContent = canvasWidth;
+          document.getElementById('customHeight-value').textContent = canvasHeight;
+          break;
+      }
+    }
+
+    function resizeCanvasAndRedraw() {
+      resizeCanvas(canvasWidth, canvasHeight);
+      svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
+
+      if (img) {
+        computeFlowField();
+      }
+      redraw();
+    }
+
+    function loadImageFile(file) {
+      if (!file.type.match('image.*')) {
+        showStatus('Please upload an image file', 'error');
+        return;
+      }
+
+      showStatus(`Loading ${file.name}...`, 'processing');
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        loadImage(e.target.result, (loadedImg) => {
+          img = loadedImg;
+          hatchLines = [];
+          computeFlowField();
+          showStatus('Image loaded successfully', 'success');
+          disableExportButtons();
+          redraw();
+        }, () => {
+          showStatus('Could not read that image', 'error');
+        });
+      };
+      reader.onerror = () => showStatus('Could not read that image', 'error');
+      reader.readAsDataURL(file);
+    }
+
+    function loadSampleImage() {
+      showStatus('Generating sample image...', 'processing');
+
+      // Create a sample gradient image
+      const sampleImg = createGraphics(400, 400);
+      sampleImg.background(255);
+      sampleImg.noStroke();
+
+      // Create circles with varying brightness
+      for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 5; j++) {
+          const x = 40 + i * 80;
+          const y = 40 + j * 80;
+          const brightness = map(dist(x, y, 200, 200), 0, 200, 0, 255);
+          sampleImg.fill(brightness);
+          sampleImg.ellipse(x, y, 60 + random(-10, 10), 60 + random(-10, 10));
+        }
+      }
+
+      // Add some structure
+      sampleImg.stroke(50);
+      sampleImg.strokeWeight(3);
+      sampleImg.noFill();
+      sampleImg.ellipse(200, 200, 300, 300);
+      sampleImg.ellipse(200, 200, 200, 200);
+      sampleImg.ellipse(200, 200, 100, 100);
+
+      img = sampleImg;
+      img.loadPixels();
+      computeFlowField();
+      showStatus('Sample image loaded', 'success');
+      disableExportButtons();
+      redraw();
+    }
+
+    function computeFlowField() {
+      if (!img) return;
+
+      img.loadPixels();
+
+      const flowType = document.getElementById('flowType').value;
+      const smoothing = parseInt(document.getElementById('flowSmoothing').value);
+
+      // Initialize gradient field
+      gradientField = [];
+      flowField = [];
+
+      // Create brightness map
+      const brightnessMap = [];
+      for (let y = 0; y < height; y++) {
+        brightnessMap[y] = [];
+        for (let x = 0; x < width; x++) {
+          brightnessMap[y][x] = sampleBrightness(x, y);
+        }
+      }
+
+      // Compute gradient field using Sobel operator
+      for (let y = 0; y < height; y++) {
+        gradientField[y] = [];
+        flowField[y] = [];
+
+        for (let x = 0; x < width; x++) {
+          let gx = 0, gy = 0;
+
+          if (flowType === 'gradient' || flowType === 'structure') {
+            // Sobel operator kernels
+            const sobelX = [
+              [-1, 0, 1],
+              [-2, 0, 2],
+              [-1, 0, 1]
+            ];
+            const sobelY = [
+              [-1, -2, -1],
+              [0, 0, 0],
+              [1, 2, 1]
+            ];
+
+            // Apply Sobel operator
+            for (let ky = -1; ky <= 1; ky++) {
+              for (let kx = -1; kx <= 1; kx++) {
+                const sx = constrain(x + kx, 0, width - 1);
+                const sy = constrain(y + ky, 0, height - 1);
+                const brightness = brightnessMap[sy][sx];
+
+                gx += brightness * sobelX[ky + 1][kx + 1];
+                gy += brightness * sobelY[ky + 1][kx + 1];
+              }
+            }
+          }
+
+          gradientField[y][x] = { gx, gy };
+
+          // Compute flow angle based on flow type
+          let angle;
+          switch (flowType) {
+            case 'gradient':
+              // Perpendicular to gradient (follows edges)
+              angle = atan2(gy, gx) + HALF_PI;
+              break;
+            case 'structure':
+              // Structure tensor gives dominant orientation
+              angle = computeStructureTensorAngle(x, y, brightnessMap);
+              break;
+            case 'noise':
+              angle = noise(x * 0.01, y * 0.01, currentSeed * 0.001) * TWO_PI * 2;
+              break;
+            case 'radial':
+              angle = atan2(y - height/2, x - width/2) + HALF_PI;
+              break;
+            case 'spiral':
+              const dist = sqrt(pow(x - width/2, 2) + pow(y - height/2, 2));
+              angle = atan2(y - height/2, x - width/2) + dist * 0.02;
+              break;
+            case 'custom':
+              angle = radians(parseFloat(document.getElementById('customAngle').value));
+              break;
+            default:
+              angle = 0;
+          }
+
+          flowField[y][x] = angle;
+        }
+      }
+
+      // Apply smoothing to flow field
+      if (smoothing > 0) {
+        smoothFlowField(smoothing);
+      }
+    }
+
+    function computeStructureTensorAngle(x, y, brightnessMap) {
+      // Structure tensor components
+      let Jxx = 0, Jxy = 0, Jyy = 0;
+      const radius = 3;
+
+      for (let ky = -radius; ky <= radius; ky++) {
+        for (let kx = -radius; kx <= radius; kx++) {
+          const sx = constrain(x + kx, 1, width - 2);
+          const sy = constrain(y + ky, 1, height - 2);
+
+          // Gradient at this point
+          const gx = (brightnessMap[sy][sx + 1] - brightnessMap[sy][sx - 1]) / 2;
+          const gy = (brightnessMap[sy + 1][sx] - brightnessMap[sy - 1][sx]) / 2;
+
+          // Gaussian weight
+          const weight = exp(-(kx*kx + ky*ky) / (2 * radius));
+
+          Jxx += gx * gx * weight;
+          Jxy += gx * gy * weight;
+          Jyy += gy * gy * weight;
+        }
+      }
+
+      // Compute dominant orientation from structure tensor
+      const angle = 0.5 * atan2(2 * Jxy, Jxx - Jyy);
+      return angle + HALF_PI; // Perpendicular to gradient direction
+    }
+
+    function smoothFlowField(iterations) {
+      for (let iter = 0; iter < iterations; iter++) {
+        const smoothed = [];
+
+        for (let y = 0; y < height; y++) {
+          smoothed[y] = [];
+          for (let x = 0; x < width; x++) {
+            // Average nearby angles using vector averaging
+            let sumX = 0, sumY = 0;
+            const radius = 2;
+
+            for (let ky = -radius; ky <= radius; ky++) {
+              for (let kx = -radius; kx <= radius; kx++) {
+                const sx = constrain(x + kx, 0, width - 1);
+                const sy = constrain(y + ky, 0, height - 1);
+
+                if (flowField[sy] && flowField[sy][sx] !== undefined) {
+                  sumX += cos(flowField[sy][sx]);
+                  sumY += sin(flowField[sy][sx]);
+                }
+              }
+            }
+
+            smoothed[y][x] = atan2(sumY, sumX);
+          }
+        }
+
+        flowField = smoothed;
+      }
+    }
+
+    function getFlowAngle(x, y) {
+      const noiseInfluence = parseFloat(document.getElementById('noiseInfluence').value) / 100;
+
+      const ix = constrain(Math.floor(x), 0, width - 1);
+      const iy = constrain(Math.floor(y), 0, height - 1);
+
+      let angle = flowField[iy] && flowField[iy][ix] !== undefined
+        ? flowField[iy][ix]
+        : 0;
+
+      // Add noise influence
+      if (noiseInfluence > 0) {
+        const noiseAngle = noise(x * 0.02, y * 0.02, currentSeed * 0.001) * TWO_PI;
+        angle = lerp(angle, noiseAngle, noiseInfluence);
+      }
+
+      return angle;
+    }
+
+    function sampleBrightness(x, y) {
+      if (!img || !img.pixels) return 255;
+
+      const imgX = Math.floor(map(x, 0, width, 0, img.width));
+      const imgY = Math.floor(map(y, 0, height, 0, img.height));
+      const pixelIndex = constrain((imgY * img.width + imgX) * 4, 0, img.pixels.length - 4);
+
+      const r = img.pixels[pixelIndex];
+      const g = img.pixels[pixelIndex + 1];
+      const b = img.pixels[pixelIndex + 2];
+
+      return (r + g + b) / 3;
+    }
+
+    function getDensityAtPoint(x, y) {
+      const brightness = sampleBrightness(x, y);
+      const threshold = parseInt(document.getElementById('brightnessThreshold').value);
+      const darknessMult = parseFloat(document.getElementById('darknessMultiplier').value);
+      const contrastBoost = parseFloat(document.getElementById('contrastBoost').value);
+
+      if (brightness > threshold) return 0;
+
+      // Apply contrast boost
+      let adjustedBrightness = 128 + (brightness - 128) * contrastBoost;
+      adjustedBrightness = constrain(adjustedBrightness, 0, 255);
+
+      // Convert brightness to density (darker = more lines)
+      const density = map(threshold - adjustedBrightness, 0, threshold, 0, 1) * darknessMult;
+      return constrain(density, 0, 1);
+    }
+
+    function generateHatching() {
+      if (!img && document.getElementById('flowType').value === 'gradient') {
+        showStatus('Please upload an image first for gradient-based flow', 'error');
+        return;
+      }
+
+      if (processing) {
+        showStatus('Already processing...', 'error');
+        return;
+      }
+
+      processing = true;
+      showStatus('Generating flow-based hatching...', 'processing');
+
+      randomSeed(currentSeed);
+      noiseSeed(currentSeed);
+
+      // Recompute flow field
+      if (img) {
+        computeFlowField();
+      }
+
+      // Clear previous lines
+      hatchLines = [];
+
+      // Get parameters
+      const hatchDensity = parseInt(document.getElementById('hatchDensity').value);
+      const lineSpacing = parseInt(document.getElementById('lineSpacing').value);
+      const minLength = parseInt(document.getElementById('minLineLength').value);
+      const maxLength = parseInt(document.getElementById('maxLineLength').value);
+      const stepSize = parseFloat(document.getElementById('stepSize').value);
+      const crossHatchEnabled = document.getElementById('crossHatchEnabled').checked;
+      const crossHatchAngle = radians(parseInt(document.getElementById('crossHatchAngle').value));
+      const crossHatchDensity = parseFloat(document.getElementById('crossHatchDensity').value);
+
+      // Generate seed points based on density
+      const seedPoints = generateSeedPoints(hatchDensity, lineSpacing);
+
+      // Generate hatch lines from seed points
+      seedPoints.forEach(seed => {
+        const density = img ? getDensityAtPoint(seed.x, seed.y) : 0.5;
+
+        if (density > random(0, 1)) {
+          // Primary hatch line
+          const line = traceLine(seed.x, seed.y, stepSize, minLength, maxLength, 0);
+          if (line && line.points.length >= 2) {
+            hatchLines.push(line);
+          }
+
+          // Cross-hatch line
+          if (crossHatchEnabled && density * crossHatchDensity > random(0, 1)) {
+            const crossLine = traceLine(seed.x, seed.y, stepSize, minLength, maxLength, crossHatchAngle);
+            if (crossLine && crossLine.points.length >= 2) {
+              hatchLines.push(crossLine);
+            }
+          }
+        }
+      });
+
+      // Update stats
+      updateStats();
+
+      // Update TSStatsDisplay
+      if (window.statsDisplay) {
+        const totalLength = hatchLines.reduce((sum, line) => {
+          let lineLength = 0;
+          if (line.points && line.points.length > 1) {
+            for (let i = 1; i < line.points.length; i++) {
+              const dx = line.points[i].x - line.points[i-1].x;
+              const dy = line.points[i].y - line.points[i-1].y;
+              lineLength += Math.sqrt(dx * dx + dy * dy);
+            }
+          }
+          return sum + lineLength;
+        }, 0);
+        const totalPoints = hatchLines.reduce((sum, line) => sum + (line.points ? line.points.length : 0), 0);
+
+        window.statsDisplay.updateStats({
+          lines: hatchLines.length,
+          strokes: totalPoints,
+          pathLength: (totalLength * 25.4 / 96).toFixed(1),
+          seed: currentSeed
+        });
+      }
+
+      processing = false;
+      showStatus('Flow hatching generated!', 'success');
+      enableExportButtons();
+
+      redraw();
+    }
+
+    function generateSeedPoints(density, spacing) {
+      const points = [];
+      const jitter = spacing * 0.3;
+
+      // Grid with jitter
+      for (let y = spacing / 2; y < height; y += spacing) {
+        for (let x = spacing / 2; x < width; x += spacing) {
+          // Add jitter for more organic feel
+          const jx = x + random(-jitter, jitter);
+          const jy = y + random(-jitter, jitter);
+
+          if (jx >= 0 && jx < width && jy >= 0 && jy < height) {
+            points.push({ x: jx, y: jy });
+          }
+        }
+      }
+
+      // Shuffle points for more varied drawing order
+      for (let i = points.length - 1; i > 0; i--) {
+        const j = Math.floor(random(i + 1));
+        [points[i], points[j]] = [points[j], points[i]];
+      }
+
+      return points;
+    }
+
+    function traceLine(startX, startY, stepSize, minLength, maxLength, angleOffset) {
+      const points = [];
+      let x = startX;
+      let y = startY;
+      let length = 0;
+
+      // Trace forward
+      while (length < maxLength && x >= 0 && x < width && y >= 0 && y < height) {
+        points.push({ x, y });
+
+        const angle = getFlowAngle(x, y) + angleOffset;
+        x += cos(angle) * stepSize;
+        y += sin(angle) * stepSize;
+        length += stepSize;
+
+        // Check if we should stop based on brightness
+        if (img) {
+          const density = getDensityAtPoint(x, y);
+          if (density < 0.05) break;
+        }
+      }
+
+      // Trace backward from start
+      x = startX;
+      y = startY;
+      length = 0;
+      const backwardPoints = [];
+
+      while (length < maxLength && x >= 0 && x < width && y >= 0 && y < height) {
+        const angle = getFlowAngle(x, y) + angleOffset + PI;
+        x += cos(angle) * stepSize;
+        y += sin(angle) * stepSize;
+        length += stepSize;
+
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+          backwardPoints.unshift({ x, y });
+        }
+
+        // Check if we should stop based on brightness
+        if (img) {
+          const density = getDensityAtPoint(x, y);
+          if (density < 0.05) break;
+        }
+      }
+
+      // Combine backward and forward points
+      const allPoints = [...backwardPoints, ...points];
+
+      // Check minimum length
+      if (allPoints.length * stepSize < minLength) {
+        return null;
+      }
+
+      return { points: allPoints };
+    }
+
+    function randomizeSeed() {
+      currentSeed = Math.floor(Math.random() * 100000);
+      showStatus(`New seed: ${currentSeed}`, 'success');
+      if (img || document.getElementById('flowType').value !== 'gradient') {
+        generateHatching();
+      }
+    }
+
+    function exportSVG() {
+      if (hatchLines.length === 0) {
+        showStatus('No hatching to export', 'error');
+        return;
+      }
+
+      const strokeCol = document.getElementById('strokeColor').value;
+      const lineW = parseFloat(document.getElementById('lineWeight').value);
+      const bgColor = document.getElementById('bgColor').value;
+
+      svgCanvas.clear();
+      svgCanvas.background(bgColor);
+      svgCanvas.stroke(strokeCol);
+      svgCanvas.strokeWeight(lineW);
+      svgCanvas.noFill();
+
+      hatchLines.forEach(line => {
+        if (line.points && line.points.length >= 2) {
+          svgCanvas.beginShape();
+          line.points.forEach(point => {
+            svgCanvas.vertex(point.x, point.y);
+          });
+          svgCanvas.endShape();
+        }
+      });
+
+      save(svgCanvas, `flow-hatching-${currentSeed}.svg`);
+      showStatus('SVG exported!', 'success');
+    }
+
+    function exportPlotterSVG() {
+      if (hatchLines.length === 0) {
+        showStatus('No hatching to export', 'error');
+        return;
+      }
+
+      const lineW = parseFloat(document.getElementById('lineWeight').value);
+
+      svgCanvas.clear();
+      // No background for plotter SVG
+      svgCanvas.stroke(0);
+      svgCanvas.strokeWeight(lineW);
+      svgCanvas.noFill();
+
+      hatchLines.forEach(line => {
+        if (line.points && line.points.length >= 2) {
+          svgCanvas.beginShape();
+          line.points.forEach(point => {
+            svgCanvas.vertex(point.x, point.y);
+          });
+          svgCanvas.endShape();
+        }
+      });
+
+      save(svgCanvas, `flow-hatching-plotter-${currentSeed}.svg`);
+      showStatus('Plotter SVG exported!', 'success');
+    }
+
+    function exportPNG() {
+      if (hatchLines.length === 0) {
+        showStatus('No hatching to export', 'error');
+        return;
+      }
+
+      save(canvas, `flow-hatching-${currentSeed}.png`);
+      showStatus('PNG exported!', 'success');
+    }
+
+    function updateStats() {
+      let totalLines = hatchLines.length;
+      let totalPoints = 0;
+      let totalLength = 0;
+
+      hatchLines.forEach(line => {
+        if (line.points && line.points.length > 0) {
+          totalPoints += line.points.length;
+
+          for (let i = 1; i < line.points.length; i++) {
+            const dx = line.points[i].x - line.points[i-1].x;
+            const dy = line.points[i].y - line.points[i-1].y;
+            totalLength += Math.sqrt(dx * dx + dy * dy);
+          }
+        }
+      });
+
+      const lengthMM = (totalLength * 25.4 / 96).toFixed(1);
+
+      document.getElementById('lineCountStat').textContent = totalLines;
+      document.getElementById('pointCountStat').textContent = totalPoints;
+      document.getElementById('pathLengthStat').textContent = lengthMM;
+      document.getElementById('seedStat').textContent = currentSeed;
+      document.getElementById('stats').style.display = 'block';
+    }
+
+    function enableExportButtons() {
+      document.getElementById('exportBtn').disabled = false;
+      document.getElementById('exportPNGBtn').disabled = false;
+      document.getElementById('exportPlotterBtn').disabled = false;
+    }
+
+    function disableExportButtons() {
+      document.getElementById('exportBtn').disabled = true;
+      document.getElementById('exportPNGBtn').disabled = true;
+      document.getElementById('exportPlotterBtn').disabled = true;
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+
+      if (type !== 'processing') {
+        setTimeout(() => {
+          status.style.display = 'none';
+        }, 3000);
+      }
+    }
+
+    // Preset management
+    function getParameters() {
+      return {
+        flowType: document.getElementById('flowType').value,
+        customAngle: document.getElementById('customAngle').value,
+        flowSmoothing: document.getElementById('flowSmoothing').value,
+        noiseInfluence: document.getElementById('noiseInfluence').value,
+        hatchDensity: document.getElementById('hatchDensity').value,
+        lineSpacing: document.getElementById('lineSpacing').value,
+        minLineLength: document.getElementById('minLineLength').value,
+        maxLineLength: document.getElementById('maxLineLength').value,
+        stepSize: document.getElementById('stepSize').value,
+        brightnessThreshold: document.getElementById('brightnessThreshold').value,
+        darknessMultiplier: document.getElementById('darknessMultiplier').value,
+        contrastBoost: document.getElementById('contrastBoost').value,
+        crossHatchEnabled: document.getElementById('crossHatchEnabled').checked,
+        crossHatchAngle: document.getElementById('crossHatchAngle').value,
+        crossHatchDensity: document.getElementById('crossHatchDensity').value,
+        lineWeight: document.getElementById('lineWeight').value,
+        strokeColor: document.getElementById('strokeColor').value,
+        bgColor: document.getElementById('bgColor').value,
+        paperSize: document.getElementById('paperSize').value,
+        customWidth: document.getElementById('customWidth').value,
+        customHeight: document.getElementById('customHeight').value,
+        seed: currentSeed
+      };
+    }
+
+    function applyPreset(preset) {
+      const data = preset.data || preset.parameters || preset;
+
+      // Apply all parameters
+      if (data.flowType) document.getElementById('flowType').value = data.flowType;
+      if (data.customAngle) {
+        document.getElementById('customAngle').value = data.customAngle;
+        document.getElementById('customAngle-value').textContent = data.customAngle;
+      }
+      if (data.flowSmoothing) {
+        document.getElementById('flowSmoothing').value = data.flowSmoothing;
+        document.getElementById('flowSmoothing-value').textContent = data.flowSmoothing;
+      }
+      if (data.noiseInfluence) {
+        document.getElementById('noiseInfluence').value = data.noiseInfluence;
+        document.getElementById('noiseInfluence-value').textContent = data.noiseInfluence;
+      }
+      if (data.hatchDensity) {
+        document.getElementById('hatchDensity').value = data.hatchDensity;
+        document.getElementById('hatchDensity-value').textContent = data.hatchDensity;
+      }
+      if (data.lineSpacing) {
+        document.getElementById('lineSpacing').value = data.lineSpacing;
+        document.getElementById('lineSpacing-value').textContent = data.lineSpacing;
+      }
+      if (data.minLineLength) {
+        document.getElementById('minLineLength').value = data.minLineLength;
+        document.getElementById('minLineLength-value').textContent = data.minLineLength;
+      }
+      if (data.maxLineLength) {
+        document.getElementById('maxLineLength').value = data.maxLineLength;
+        document.getElementById('maxLineLength-value').textContent = data.maxLineLength;
+      }
+      if (data.stepSize) {
+        document.getElementById('stepSize').value = data.stepSize;
+        document.getElementById('stepSize-value').textContent = data.stepSize;
+      }
+      if (data.brightnessThreshold) {
+        document.getElementById('brightnessThreshold').value = data.brightnessThreshold;
+        document.getElementById('brightnessThreshold-value').textContent = data.brightnessThreshold;
+      }
+      if (data.darknessMultiplier) {
+        document.getElementById('darknessMultiplier').value = data.darknessMultiplier;
+        document.getElementById('darknessMultiplier-value').textContent = data.darknessMultiplier;
+      }
+      if (data.contrastBoost) {
+        document.getElementById('contrastBoost').value = data.contrastBoost;
+        document.getElementById('contrastBoost-value').textContent = data.contrastBoost;
+      }
+      if (data.crossHatchEnabled !== undefined) {
+        document.getElementById('crossHatchEnabled').checked = data.crossHatchEnabled;
+      }
+      if (data.crossHatchAngle) {
+        document.getElementById('crossHatchAngle').value = data.crossHatchAngle;
+        document.getElementById('crossHatchAngle-value').textContent = data.crossHatchAngle;
+      }
+      if (data.crossHatchDensity) {
+        document.getElementById('crossHatchDensity').value = data.crossHatchDensity;
+        document.getElementById('crossHatchDensity-value').textContent = data.crossHatchDensity;
+      }
+      if (data.lineWeight) {
+        document.getElementById('lineWeight').value = data.lineWeight;
+        document.getElementById('lineWeight-value').textContent = data.lineWeight;
+      }
+      if (data.strokeColor) document.getElementById('strokeColor').value = data.strokeColor;
+      if (data.bgColor) document.getElementById('bgColor').value = data.bgColor;
+      if (data.paperSize) {
+        document.getElementById('paperSize').value = data.paperSize;
+        document.getElementById('customSizeControl').style.display =
+          data.paperSize === 'custom' ? 'block' : 'none';
+      }
+      if (data.customWidth) {
+        document.getElementById('customWidth').value = data.customWidth;
+        document.getElementById('customWidth-value').textContent = data.customWidth;
+      }
+      if (data.customHeight) {
+        document.getElementById('customHeight').value = data.customHeight;
+        document.getElementById('customHeight-value').textContent = data.customHeight;
+      }
+      if (data.seed) currentSeed = data.seed;
+
+      // Update canvas size and flow type visibility
+      const flowType = document.getElementById('flowType').value;
+      document.getElementById('customAngleControl').style.display =
+        flowType === 'custom' ? 'block' : 'none';
+
+      updateCanvasSize();
+      resizeCanvasAndRedraw();
+
+      showStatus('Preset loaded', 'success');
+    }
+  </script>
+</body>
+</html>

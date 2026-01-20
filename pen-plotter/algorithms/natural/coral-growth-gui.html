@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Coral Growth - Pen Plotter Art</title>
+    <script src="../../preset-manager.js"></script>
+    <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+    <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
+    <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--ts-font-mono);
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      min-height: 100vh;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ts-bg-base);
+      padding: 20px;
+    }
+
+    #canvas-container canvas {
+      max-width: 100%;
+      max-height: 100%;
+      box-shadow: 0 0 0 1px var(--ts-border-subtle), 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      flex-shrink: 0;
+      border-left: 1px solid var(--ts-border-subtle);
+    }
+
+    #controls::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #controls::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #controls::-webkit-scrollbar-thumb {
+      background: var(--ts-bg-active);
+      border-radius: var(--ts-radius-full);
+    }
+
+    h1 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-accent-primary);
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--ts-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .control-group input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: var(--ts-bg-deep);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+      border: 1px solid var(--ts-border-default);
+    }
+
+    .control-group input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .control-group input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent-primary);
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    select:hover {
+      border-color: var(--ts-accent-primary);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-control);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ts-accent-primary);
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+    }
+
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    button {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    button.primary {
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+    }
+
+    button.primary:hover {
+      background: #00e8bb;
+      box-shadow: 0 0 20px var(--ts-glow-primary);
+    }
+
+    button.secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+
+    button.secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    .value-display {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    .species-color {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+      vertical-align: middle;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-sm);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 16px;
+      color: var(--ts-text-muted);
+      text-decoration: none;
+      font-size: 12px;
+      transition: color 0.2s ease;
+    }
+
+    .back-link:hover {
+      color: var(--ts-accent-primary);
+    }
+
+    /* Preset Manager Styles */
+    #preset-container {
+      margin-top: 20px;
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
+    }
+
+    #preset-container h3 {
+      color: var(--ts-accent-primary);
+      margin: 0 0 15px 0;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #preset-container select {
+      margin-bottom: 10px;
+    }
+
+    #preset-container input[type="text"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: var(--ts-font-mono);
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    #preset-container input[type="text"]:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <canvas id="canvas" width="800" height="800"></canvas>
+  </div>
+
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h1>CORAL GROWTH</h1>
+
+    <div class="control-group">
+      <h3>Coral Parameters</h3>
+      <div class="control">
+        <label>Coral Type</label>
+        <select id="coralType">
+          <option value="branching">Branching Coral</option>
+          <option value="brain">Brain Coral</option>
+          <option value="staghorn">Staghorn Coral</option>
+          <option value="table">Table Coral</option>
+          <option value="fan">Sea Fan</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
+          <option value="square800">Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color</label>
+        <input type="color" id="bgColor" value="#000033">
+      </div>
+      <div class="control">
+        <label>Stroke Color</label>
+        <input type="color" id="strokeColor" value="#ff6b6b">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Growth Settings</h3>
+      <div class="control">
+        <label>Growth Rate <span class="value-display" id="growthRateValue">2.0</span></label>
+        <input type="range" id="growthRate" min="0.5" max="5" step="0.1" value="2">
+      </div>
+      <div class="control">
+        <label>Branch Probability <span class="value-display" id="branchProbabilityValue">0.10</span></label>
+        <input type="range" id="branchProbability" min="0.01" max="0.3" step="0.01" value="0.1">
+      </div>
+      <div class="control">
+        <label>Branch Angle <span class="value-display" id="branchAngleValue">30</span></label>
+        <input type="range" id="branchAngle" min="10" max="90" value="30">
+      </div>
+      <div class="control">
+        <label>Max Growth Depth <span class="value-display" id="maxDepthValue">6</span></label>
+        <input type="range" id="maxDepth" min="3" max="10" value="6">
+      </div>
+      <div class="control">
+        <label>Generations <span class="value-display" id="generationsValue">50</span></label>
+        <input type="range" id="generations" min="10" max="200" value="50">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Environmental Factors</h3>
+      <div class="control">
+        <label>Light Direction <span class="value-display" id="lightDirectionValue">270</span></label>
+        <input type="range" id="lightDirection" min="0" max="360" value="270">
+      </div>
+      <div class="control">
+        <label>Light Intensity <span class="value-display" id="lightIntensityValue">0.5</span></label>
+        <input type="range" id="lightIntensity" min="0" max="1" step="0.1" value="0.5">
+      </div>
+      <div class="control">
+        <label>Current Strength <span class="value-display" id="currentStrengthValue">0.3</span></label>
+        <input type="range" id="currentStrength" min="0" max="1" step="0.1" value="0.3">
+      </div>
+      <div class="control">
+        <label>Current Direction <span class="value-display" id="currentDirectionValue">90</span></label>
+        <input type="range" id="currentDirection" min="0" max="360" value="90">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Species</h3>
+      <div class="control">
+        <label>
+          <input type="checkbox" id="multiSpecies"> Multi-Species Mode
+        </label>
+      </div>
+      <div class="control">
+        <label>Number of Species</label>
+        <input type="number" id="speciesCount" min="1" max="5" value="3">
+      </div>
+      <div class="control" id="speciesColors">
+        <label>Species Colors</label>
+        <div><span class="species-color" style="background-color: #ff6b6b;"></span>Species 1</div>
+        <div><span class="species-color" style="background-color: #4ecdc4;"></span>Species 2</div>
+        <div><span class="species-color" style="background-color: #45b7d1;"></span>Species 3</div>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Controls</h3>
+      <div class="btn-row">
+        <button class="primary" onclick="growCoral()">Grow Coral</button>
+        <button class="secondary" onclick="clearCanvas()">Clear</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Animation</h3>
+      <div class="btn-row">
+        <button class="secondary" onclick="animateGrowth()">Animate Growth</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="btn-row">
+        <button class="secondary" onclick="exportSVG()">SVG</button>
+        <button class="secondary" onclick="exportPNG()">PNG</button>
+        <button class="secondary" onclick="exportGIF()">GIF</button>
+      </div>
+    </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+  </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let coralSystem = null;
+        let animationFrames = [];
+        let presetManager;
+        let panelController;
+        let statsDisplay;
+
+        // Parameters object
+        let params = {
+            paperSize: 'square800',
+            bgColor: '#000033',
+            strokeColor: '#ff6b6b',
+            coralType: 'branching',
+            growthRate: 2,
+            branchProbability: 0.1,
+            branchAngle: 30,
+            maxDepth: 6,
+            generations: 50,
+            lightDirection: 270,
+            lightIntensity: 0.5,
+            currentStrength: 0.3,
+            currentDirection: 90,
+            multiSpecies: false,
+            speciesCount: 3
+        };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
+        canvasControls.setupRandomizeButton();
+
+        // Initialize preset manager, panel controller, and stats display
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize panel controller
+            panelController = new TSPanelController({
+                onToggle: (collapsed) => {
+                    console.log('Panel collapsed:', collapsed);
+                }
+            });
+            panelController.attach();
+
+            // Initialize stats display
+            statsDisplay = new TSStatsDisplay();
+            statsDisplay.attach();
+
+            presetManager = new PresetManager({
+                algorithmId: 'coral-growth',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    growCoral();
+                },
+                onRandomize: () => {
+                    const types = ['branching', 'brain', 'staghorn', 'table', 'fan'];
+                    params.coralType = types[Math.floor(Math.random() * types.length)];
+                    params.growthRate = (Math.random() * 4.5 + 0.5).toFixed(1);
+                    params.branchProbability = (Math.random() * 0.29 + 0.01).toFixed(2);
+                    params.branchAngle = Math.floor(Math.random() * 80 + 10);
+                    params.maxDepth = Math.floor(Math.random() * 8 + 3);
+                    params.generations = Math.floor(Math.random() * 190 + 10);
+                    params.lightDirection = Math.floor(Math.random() * 360);
+                    params.lightIntensity = (Math.random()).toFixed(1);
+                    params.currentStrength = (Math.random()).toFixed(1);
+                    params.currentDirection = Math.floor(Math.random() * 360);
+                    params.multiSpecies = Math.random() > 0.5;
+                    params.speciesCount = Math.floor(Math.random() * 5 + 1);
+                    updateUIFromParams();
+                    growCoral();
+                }
+            });
+        });
+
+        // Helper function to update UI from params
+        function updateUIFromParams() {
+            document.getElementById('paperSize').value = params.paperSize;
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
+            document.getElementById('coralType').value = params.coralType;
+            document.getElementById('growthRate').value = params.growthRate;
+            document.getElementById('branchProbability').value = params.branchProbability;
+            document.getElementById('branchAngle').value = params.branchAngle;
+            document.getElementById('maxDepth').value = params.maxDepth;
+            document.getElementById('generations').value = params.generations;
+            document.getElementById('lightDirection').value = params.lightDirection;
+            document.getElementById('lightIntensity').value = params.lightIntensity;
+            document.getElementById('currentStrength').value = params.currentStrength;
+            document.getElementById('currentDirection').value = params.currentDirection;
+            document.getElementById('multiSpecies').checked = params.multiSpecies;
+            document.getElementById('speciesCount').value = params.speciesCount;
+
+            // Update value displays
+            document.getElementById('growthRateValue').textContent = parseFloat(params.growthRate).toFixed(1);
+            document.getElementById('branchProbabilityValue').textContent = parseFloat(params.branchProbability).toFixed(2);
+            document.getElementById('branchAngleValue').textContent = params.branchAngle + '°';
+            document.getElementById('maxDepthValue').textContent = params.maxDepth;
+            document.getElementById('generationsValue').textContent = params.generations;
+            document.getElementById('lightDirectionValue').textContent = params.lightDirection + '°';
+            document.getElementById('lightIntensityValue').textContent = params.lightIntensity;
+            document.getElementById('currentStrengthValue').textContent = params.currentStrength;
+            document.getElementById('currentDirectionValue').textContent = params.currentDirection + '°';
+
+            // Apply canvas size
+            resizeCanvasForPaperSize();
+        }
+
+        function resizeCanvasForPaperSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+            clearCanvas();
+        }
+
+        // Update value displays and params
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const paramName = e.target.id;
+                const value = parseFloat(e.target.value);
+                params[paramName] = value;
+
+                const valueDisplay = document.getElementById(paramName + 'Value');
+                if (valueDisplay) {
+                    let displayValue = value;
+                    if (paramName.includes('Direction') || paramName === 'branchAngle') {
+                        displayValue = value + '°';
+                    } else if (paramName === 'branchProbability') {
+                        displayValue = value.toFixed(2);
+                    } else if (paramName === 'growthRate' || paramName === 'lightIntensity' || paramName === 'currentStrength') {
+                        displayValue = value.toFixed(1);
+                    }
+                    valueDisplay.textContent = displayValue;
+                }
+            });
+        });
+
+        // Update params for select and checkbox inputs
+        document.getElementById('coralType').addEventListener('change', (e) => {
+            params.coralType = e.target.value;
+        });
+
+        document.getElementById('multiSpecies').addEventListener('change', (e) => {
+            params.multiSpecies = e.target.checked;
+        });
+
+        document.getElementById('speciesCount').addEventListener('input', (e) => {
+            params.speciesCount = parseInt(e.target.value);
+        });
+
+        // Canvas settings handlers
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            params.paperSize = e.target.value;
+            resizeCanvasForPaperSize();
+        });
+
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            if (coralSystem) coralSystem.draw(ctx);
+            else clearCanvas();
+        });
+
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+            if (coralSystem) coralSystem.draw(ctx);
+        });
+
+        class CoralBranch {
+            constructor(x, y, angle, depth, species = 0) {
+                this.startX = x;
+                this.startY = y;
+                this.endX = x;
+                this.endY = y;
+                this.angle = angle;
+                this.depth = depth;
+                this.species = species;
+                this.children = [];
+                this.segments = [{x, y}];
+                this.age = 0;
+                this.thickness = Math.max(1, 8 - depth);
+            }
+
+            grow(environment) {
+                const growthRate = parseFloat(params.growthRate);
+                const branchProb = parseFloat(params.branchProbability);
+                const maxDepth = parseInt(params.maxDepth);
+
+                // Environmental influences
+                const lightDir = parseInt(params.lightDirection) * Math.PI / 180;
+                const lightIntensity = parseFloat(params.lightIntensity);
+                const currentDir = parseInt(params.currentDirection) * Math.PI / 180;
+                const currentStrength = parseFloat(params.currentStrength);
+
+                // Calculate growth direction influenced by environment
+                let growthAngle = this.angle;
+
+                // Light influence (phototropism)
+                const lightInfluence = Math.cos(growthAngle - lightDir) * lightIntensity * 0.3;
+                growthAngle += lightInfluence;
+
+                // Current influence
+                const currentInfluence = Math.cos(growthAngle - currentDir) * currentStrength * 0.2;
+                growthAngle += currentInfluence;
+
+                // Add some randomness
+                growthAngle += (Math.random() - 0.5) * 0.2;
+
+                // Grow segment
+                const segmentLength = growthRate * (1 - this.depth / (maxDepth * 2));
+                this.endX += Math.cos(growthAngle) * segmentLength;
+                this.endY += Math.sin(growthAngle) * segmentLength;
+
+                this.segments.push({x: this.endX, y: this.endY});
+                this.angle = growthAngle;
+
+                // Branching
+                if (Math.random() < branchProb && this.depth < maxDepth) {
+                    const branchAngleRange = parseInt(params.branchAngle) * Math.PI / 180;
+                    const newAngle1 = this.angle + branchAngleRange * (0.5 + Math.random() * 0.5);
+                    const newAngle2 = this.angle - branchAngleRange * (0.5 + Math.random() * 0.5);
+
+                    this.children.push(new CoralBranch(this.endX, this.endY, newAngle1, this.depth + 1, this.species));
+                    this.children.push(new CoralBranch(this.endX, this.endY, newAngle2, this.depth + 1, this.species));
+                }
+
+                // Grow children
+                this.children.forEach(child => child.grow(environment));
+
+                this.age++;
+            }
+
+            draw(ctx) {
+                const coralType = params.coralType;
+                const speciesColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffd93d', '#6bcf7f'];
+                const color = speciesColors[this.species % speciesColors.length];
+
+                // Draw main branch
+                ctx.strokeStyle = color;
+                ctx.lineWidth = this.thickness;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                if (this.segments.length > 1) {
+                    ctx.beginPath();
+                    ctx.moveTo(this.segments[0].x, this.segments[0].y);
+
+                    if (coralType === 'brain' || coralType === 'table') {
+                        // Smoother curves for certain coral types
+                        for (let i = 1; i < this.segments.length - 1; i++) {
+                            const xc = (this.segments[i].x + this.segments[i + 1].x) / 2;
+                            const yc = (this.segments[i].y + this.segments[i + 1].y) / 2;
+                            ctx.quadraticCurveTo(this.segments[i].x, this.segments[i].y, xc, yc);
+                        }
+                        ctx.lineTo(this.segments[this.segments.length - 1].x,
+                                  this.segments[this.segments.length - 1].y);
+                    } else {
+                        this.segments.forEach(segment => {
+                            ctx.lineTo(segment.x, segment.y);
+                        });
+                    }
+
+                    ctx.stroke();
+
+                    // Add polyps or texture
+                    if (coralType === 'brain') {
+                        ctx.fillStyle = color;
+                        this.segments.forEach((segment, i) => {
+                            if (i % 3 === 0) {
+                                ctx.beginPath();
+                                ctx.arc(segment.x, segment.y, this.thickness * 0.8, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        });
+                    }
+                }
+
+                // Draw children
+                this.children.forEach(child => child.draw(ctx));
+            }
+        }
+
+        class CoralSystem {
+            constructor() {
+                this.colonies = [];
+                this.bounds = {minX: canvas.width, maxX: 0, minY: canvas.height, maxY: 0};
+            }
+
+            // Calculate statistics about the coral system
+            getStats() {
+                let totalBranches = 0;
+                let totalSegments = 0;
+                let maxDepth = 0;
+
+                function countBranches(branch, depth = 0) {
+                    totalBranches++;
+                    totalSegments += branch.segments.length;
+                    maxDepth = Math.max(maxDepth, depth);
+                    branch.children.forEach(child => countBranches(child, depth + 1));
+                }
+
+                this.colonies.forEach(colony => countBranches(colony));
+
+                return {
+                    colonies: this.colonies.length,
+                    branches: totalBranches,
+                    segments: totalSegments,
+                    maxDepth: maxDepth,
+                    generations: params.generations,
+                    type: params.coralType
+                };
+            }
+
+            initialize() {
+                const coralType = params.coralType;
+                const multiSpecies = params.multiSpecies;
+                const speciesCount = multiSpecies ? parseInt(params.speciesCount) : 1;
+
+                this.colonies = [];
+
+                if (coralType === 'brain' || coralType === 'table') {
+                    // Circular growth pattern
+                    const centerX = canvas.width / 2;
+                    const centerY = canvas.height / 2;
+                    const numStarters = 8;
+
+                    for (let i = 0; i < numStarters; i++) {
+                        const angle = (i / numStarters) * Math.PI * 2;
+                        const species = multiSpecies ? i % speciesCount : 0;
+                        const branch = new CoralBranch(centerX, centerY, angle, 0, species);
+                        this.colonies.push(branch);
+                    }
+                } else {
+                    // Bottom-up growth
+                    const numColonies = multiSpecies ? speciesCount * 2 : 3;
+                    const spacing = canvas.width / (numColonies + 1);
+
+                    for (let i = 0; i < numColonies; i++) {
+                        const x = spacing * (i + 1);
+                        const y = canvas.height - 50;
+                        const angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5;
+                        const species = multiSpecies ? i % speciesCount : 0;
+
+                        const branch = new CoralBranch(x, y, angle, 0, species);
+                        this.colonies.push(branch);
+                    }
+                }
+            }
+
+            grow() {
+                const generations = parseInt(params.generations);
+
+                for (let gen = 0; gen < generations; gen++) {
+                    this.colonies.forEach(colony => {
+                        colony.grow({generation: gen});
+                    });
+                }
+            }
+
+            draw(ctx) {
+                ctx.fillStyle = params.bgColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Add gradient for underwater effect
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, 'rgba(0, 50, 100, 0.3)');
+                gradient.addColorStop(1, 'rgba(0, 0, 50, 0.5)');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Draw coral colonies
+                this.colonies.forEach(colony => colony.draw(ctx));
+
+                // Add particles for underwater ambiance
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                for (let i = 0; i < 50; i++) {
+                    const x = Math.random() * canvas.width;
+                    const y = Math.random() * canvas.height;
+                    const size = Math.random() * 2;
+                    ctx.beginPath();
+                    ctx.arc(x, y, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        function growCoral() {
+            coralSystem = new CoralSystem();
+            coralSystem.initialize();
+            coralSystem.grow();
+            coralSystem.draw(ctx);
+
+            // Update stats display
+            if (statsDisplay) {
+                const stats = coralSystem.getStats();
+                statsDisplay.update({
+                    colonies: { value: stats.colonies, label: 'Colonies' },
+                    branches: { value: stats.branches, label: 'Branches' },
+                    segments: { value: stats.segments, label: 'Segments' },
+                    maxDepth: { value: stats.maxDepth, label: 'Max Depth' },
+                    generations: { value: stats.generations, label: 'Gens' },
+                    type: { value: stats.type, label: 'Type' }
+                });
+            }
+        }
+
+        function animateGrowth() {
+            animationFrames = [];
+            coralSystem = new CoralSystem();
+            coralSystem.initialize();
+
+            const generations = parseInt(params.generations);
+            const frameStep = Math.max(1, Math.floor(generations / 30));
+
+            for (let gen = 0; gen <= generations; gen += frameStep) {
+                // Clear and redraw
+                const tempSystem = new CoralSystem();
+                tempSystem.colonies = coralSystem.colonies.map(colony => {
+                    const newColony = new CoralBranch(colony.startX, colony.startY, colony.angle, 0, colony.species);
+                    return newColony;
+                });
+
+                // Grow to current generation
+                for (let g = 0; g < gen; g++) {
+                    tempSystem.colonies.forEach(colony => {
+                        colony.grow({generation: g});
+                    });
+                }
+
+                // Draw frame
+                tempSystem.draw(ctx);
+
+                // Capture frame
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                animationFrames.push(imageData);
+            }
+
+            // Show final result
+            coralSystem.grow();
+            coralSystem.draw(ctx);
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = params.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            coralSystem = null;
+            animationFrames = [];
+
+            // Clear stats display
+            if (statsDisplay) {
+                statsDisplay.clear();
+            }
+        }
+
+        function exportSVG() {
+            if (!coralSystem) return;
+
+            let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="${params.bgColor}"/>`;
+
+            const speciesColors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#ffd93d', '#6bcf7f'];
+
+            function exportBranch(branch) {
+                if (branch.segments.length > 1) {
+                    const color = speciesColors[branch.species % speciesColors.length];
+                    let path = `M ${branch.segments[0].x} ${branch.segments[0].y}`;
+
+                    branch.segments.slice(1).forEach(segment => {
+                        path += ` L ${segment.x} ${segment.y}`;
+                    });
+
+                    svg += `<path d="${path}" stroke="${color}" stroke-width="${branch.thickness}" `;
+                    svg += `fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+                }
+
+                branch.children.forEach(child => exportBranch(child));
+            }
+
+            coralSystem.colonies.forEach(colony => exportBranch(colony));
+
+            svg += '</svg>';
+
+            const blob = new Blob([svg], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'coral.svg';
+            a.click();
+        }
+
+        function exportPNG() {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'coral.png';
+                a.click();
+            });
+        }
+
+        function exportGIF() {
+            if (animationFrames.length === 0) {
+                alert('Please animate the growth first!');
+                return;
+            }
+
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height
+            });
+
+            animationFrames.forEach(frame => {
+                gif.addFrame(frame, {delay: 100});
+            });
+
+            gif.on('finished', blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'coral-growth.gif';
+                a.click();
+            });
+
+            gif.render();
+        }
+
+        // Click to plant coral
+        canvas.addEventListener('click', (e) => {
+            if (!coralSystem) {
+                coralSystem = new CoralSystem();
+                coralSystem.colonies = [];
+            }
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const multiSpecies = params.multiSpecies;
+            const species = multiSpecies ? Math.floor(Math.random() * parseInt(params.speciesCount)) : 0;
+
+            const branch = new CoralBranch(x, y, -Math.PI / 2 + (Math.random() - 0.5) * 0.5, 0, species);
+            coralSystem.colonies.push(branch);
+
+            coralSystem.colonies.forEach(colony => {
+                for (let i = 0; i < parseInt(params.generations); i++) {
+                    colony.grow({generation: i});
+                }
+            });
+
+            coralSystem.draw(ctx);
+
+            // Update stats display
+            if (statsDisplay) {
+                const stats = coralSystem.getStats();
+                statsDisplay.update({
+                    colonies: { value: stats.colonies, label: 'Colonies' },
+                    branches: { value: stats.branches, label: 'Branches' },
+                    segments: { value: stats.segments, label: 'Segments' },
+                    maxDepth: { value: stats.maxDepth, label: 'Max Depth' },
+                    generations: { value: stats.generations, label: 'Gens' },
+                    type: { value: stats.type, label: 'Type' }
+                });
+            }
+        });
+
+        // Initialize
+        clearCanvas();
+    </script>
+</body>
+</html>

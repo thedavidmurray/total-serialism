@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spirotron - Spirograph Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+
+    #seed-display {
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      padding: 5px 8px;
+      border-radius: var(--ts-radius-sm);
+      font-size: 11px;
+      color: var(--ts-accent-primary);
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+
+    .control-group:last-child {
+      border-bottom: none;
+    }
+
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: var(--ts-accent-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-container input {
+      margin-right: 10px;
+    }
+
+    .preset-btn {
+      background: var(--ts-accent-tertiary) !important;
+      margin: 2px 0;
+    }
+
+    .preset-btn:hover {
+      background: #6a5acd !important;
+    }
+
+    #gif-status {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--ts-text-muted);
+    }
+
+    input[type="color"] {
+      width: 100%;
+      height: 35px;
+      padding: 2px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 2px;
+    }
+
+    input[type="color"]::-webkit-color-swatch {
+      border-radius: 2px;
+      border: none;
+    }
+
+    .preset-manager {
+      margin-top: 20px;
+    }
+
+    .preset-manager .control-group {
+      background: var(--ts-bg-control);
+      padding: 15px;
+      border-radius: var(--ts-radius-lg);
+      border: 1px solid var(--ts-border-subtle);
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+    <h2>Spirotron Controls</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square_medium" selected>Square (800x800)</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_large">Square (1200x1200)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Primary Wheel</h3>
+      <div class="control">
+        <label>Outer Radius: <span class="value" id="outerRadius-val">200</span></label>
+        <input type="range" id="outerRadius" min="50" max="300" value="200" step="5">
+      </div>
+      <div class="control">
+        <label>Inner Radius: <span class="value" id="innerRadius-val">65</span></label>
+        <input type="range" id="innerRadius" min="10" max="150" value="65" step="5">
+      </div>
+      <div class="control">
+        <label>Pen Distance: <span class="value" id="penDistance-val">43</span></label>
+        <input type="range" id="penDistance" min="0" max="200" value="43" step="1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pattern Settings</h3>
+      <div class="control">
+        <label>Resolution: <span class="value" id="resolution-val">0.01</span></label>
+        <input type="range" id="resolution" min="0.001" max="0.1" value="0.01" step="0.001">
+      </div>
+      <div class="control">
+        <label>Rotations: <span class="value" id="rotations-val">50</span></label>
+        <input type="range" id="rotations" min="1" max="200" value="50" step="1">
+      </div>
+      <div class="control">
+        <label>Pattern Type:</label>
+        <select id="patternType">
+          <option value="hypotrochoid">Hypotrochoid (Inside)</option>
+          <option value="epitrochoid">Epitrochoid (Outside)</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="compound">Compound</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Multi-Wheel Mode</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="multiWheel">
+        <label for="multiWheel">Enable Multi-Wheel</label>
+      </div>
+      <div class="control">
+        <label>Secondary Radius: <span class="value" id="secondaryRadius-val">30</span></label>
+        <input type="range" id="secondaryRadius" min="5" max="100" value="30" step="5">
+      </div>
+      <div class="control">
+        <label>Secondary Pen: <span class="value" id="secondaryPen-val">15</span></label>
+        <input type="range" id="secondaryPen" min="0" max="100" value="15" step="1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+        <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+      </div>
+      <div class="control">
+        <label>Color Mode:</label>
+        <select id="colorMode">
+          <option value="mono">Monochrome</option>
+          <option value="gradient">Gradient</option>
+          <option value="rainbow">Rainbow</option>
+          <option value="phase">Phase-based</option>
+        </select>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showGuides">
+        <label for="showGuides">Show Guide Circles</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="animateDrawing">
+        <label for="animateDrawing">Animate Drawing</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Quick Presets</h3>
+      <button class="preset-btn" onclick="loadPreset('classic')">Classic Spirograph</button>
+      <button class="preset-btn" onclick="loadPreset('flower')">Flower Pattern</button>
+      <button class="preset-btn" onclick="loadPreset('star')">Star Pattern</button>
+      <button class="preset-btn" onclick="loadPreset('complex')">Complex Pattern</button>
+      <button class="preset-btn" onclick="loadPreset('minimal')">Minimal</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">12345</span></label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate" checked>
+        <label for="autoRegenerate">Auto regenerate on change</label>
+      </div>
+      <button onclick="regenerate()">Regenerate</button>
+      <button onclick="randomizeParams()">Randomize</button>
+      <button onclick="saveParams()">Save Parameters</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="exportGIF()">Export GIF</button>
+      <div id="gif-status"></div>
+      <button onclick="copyShareUrl()" style="margin-top: 8px;">📋 Copy Share URL</button>
+      <div id="share-status" style="font-size: 12px; color: #888;"></div>
+    </div>
+
+    <div class="preset-manager" id="preset-container"></div>
+  </div>
+
+  <script>
+    let params = {
+      seed: Math.floor(Math.random() * 1000000),
+      paperSize: 'square_medium',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      outerRadius: 200,
+      innerRadius: 65,
+      penDistance: 43,
+      resolution: 0.01,
+      rotations: 50,
+      patternType: 'hypotrochoid',
+      multiWheel: false,
+      secondaryRadius: 30,
+      secondaryPen: 15,
+      strokeWeight: 1,
+      colorMode: 'mono',
+      showGuides: false,
+      animateDrawing: false
+    };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
+
+    // URL State - compact shareable URLs
+    const urlState = new TSUrlState({
+      algorithmId: 'spirotron',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'outerRadius', type: 'int', bytes: 2, default: 200 },
+        { key: 'innerRadius', type: 'int', bytes: 1, default: 65 },
+        { key: 'penDistance', type: 'int', bytes: 1, default: 43 },
+        { key: 'rotations', type: 'int', bytes: 1, default: 50 },
+        { key: 'strokeWeight', type: 'float', min: 0.1, max: 5, bytes: 1, default: 1 },
+        { key: 'bgColor', type: 'color', default: '#ffffff' },
+        { key: 'strokeColor', type: 'color', default: '#000000' },
+        { key: 'patternType', type: 'enum', options: ['hypotrochoid', 'epitrochoid', 'rose'], default: 'hypotrochoid' },
+        { key: 'multiWheel', type: 'bool', default: false },
+        { key: 'secondaryRadius', type: 'int', bytes: 1, default: 30 },
+        { key: 'secondaryPen', type: 'int', bytes: 1, default: 15 }
+      ]
+    });
+
+    // Load params from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
+
+    let points = [];
+    let svgCanvas;
+    let animationProgress = 0;
+    let isAnimating = false;
+    let presetManager;
+    let panelController;
+    let statsDisplay;
+    let autoRegenerate = true;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+
+      svgCanvas = createCanvas(size.width * scale, size.height * scale);
+      svgCanvas.parent('canvas-container');
+
+      // Initialize preset manager
+      presetManager = new PresetManager('spirotron', {
+        onSave: () => params,
+        onLoad: (loadedParams) => {
+          params = loadedParams;
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          params.outerRadius = random(100, 250);
+          params.innerRadius = random(20, min(params.outerRadius - 10, 120));
+          params.penDistance = random(10, params.innerRadius * 1.5);
+          params.resolution = random(0.005, 0.05);
+          params.rotations = random(5, 100);
+          params.patternType = ['hypotrochoid', 'epitrochoid', 'hybrid', 'compound'][floor(random(4))];
+          params.multiWheel = random() > 0.7;
+          params.secondaryRadius = random(10, 60);
+          params.secondaryPen = random(5, 50);
+          params.strokeWeight = random(0.5, 3);
+          params.colorMode = ['mono', 'gradient', 'rainbow', 'phase'][floor(random(4))];
+          params.seed = Math.floor(Math.random() * 1000000);
+          updateUIFromParams();
+          regenerate();
+        }
+      });
+
+      // Initialize UX components
+      panelController = new TSPanelController().attach();
+
+      statsDisplay = new TSStatsDisplay().attach();
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+      updateUIFromParams();  // Sync UI with URL params
+      regenerate();
+    }
+
+    function updateUIFromParams() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else {
+            element.value = params[key];
+          }
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = params[key];
+        }
+      });
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      resizeCanvas(size.width * scale, size.height * scale);
+      generatePattern();
+      redraw();
+    }
+
+    function setupControls() {
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'range') {
+            element.addEventListener('input', (e) => {
+              params[key] = parseFloat(e.target.value);
+              const display = document.getElementById(key + '-val');
+              if (display) display.textContent = params[key];
+              queueRegenerate();
+            });
+          } else if (element.type === 'checkbox') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.checked;
+              if (key === 'animateDrawing') {
+                if (params[key]) {
+                  animationProgress = 0;
+                  isAnimating = true;
+                  loop();
+                } else {
+                  isAnimating = false;
+                  animationProgress = 1;
+                  redraw();
+                  noLoop();
+                }
+              }
+              queueRegenerate();
+            });
+          } else if (element.tagName === 'SELECT') {
+            element.addEventListener('change', (e) => {
+              params[key] = e.target.value;
+              if (key === 'paperSize') {
+                resizeCanvasForPaperSize();
+              } else {
+                queueRegenerate();
+              }
+            });
+          }
+        }
+      });
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) {
+            queueRegenerate();
+          }
+        });
+      }
+    }
+
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      document.getElementById('seed-display').textContent = params.seed;
+
+      generateSpirograph();
+
+      // Update stats display
+      if (statsDisplay) {
+        statsDisplay.update({
+          vertices: points.length,
+          seed: params.seed,
+          pattern: { value: params.patternType, format: 'raw' }
+        });
+      }
+
+      // Update URL with current params (replace to avoid cluttering history)
+      urlState.replaceState(params);
+
+      if (!isAnimating) {
+        redraw();
+        noLoop();
+      }
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(regenerate, REGEN_DEBOUNCE);
+    }
+
+    function generateSpirograph() {
+      points = [];
+      const R = params.outerRadius;
+      const r = params.innerRadius;
+      const d = params.penDistance;
+
+      let maxT = params.rotations * TWO_PI;
+
+      // Calculate the least common multiple to determine when pattern repeats
+      const gcd = (a, b) => b === 0 ? a : gcd(b, a % b);
+      const lcm = (a, b) => (a * b) / gcd(a, b);
+
+      if (params.patternType === 'hypotrochoid' || params.patternType === 'hybrid') {
+        const ratio = R / r;
+        const repeatFactor = lcm(R, r) / r;
+        maxT = min(maxT, repeatFactor * TWO_PI * 1.1); // Add 10% to ensure closure
+      }
+
+      for (let t = 0; t <= maxT; t += params.resolution) {
+        let x, y;
+
+        switch (params.patternType) {
+          case 'hypotrochoid':
+            // Wheel rolling inside
+            x = (R - r) * cos(t) + d * cos((R - r) / r * t);
+            y = (R - r) * sin(t) - d * sin((R - r) / r * t);
+            break;
+
+          case 'epitrochoid':
+            // Wheel rolling outside
+            x = (R + r) * cos(t) - d * cos((R + r) / r * t);
+            y = (R + r) * sin(t) - d * sin((R + r) / r * t);
+            break;
+
+          case 'hybrid':
+            // Combination of both
+            const hx = (R - r) * cos(t) + d * cos((R - r) / r * t);
+            const hy = (R - r) * sin(t) - d * sin((R - r) / r * t);
+            const ex = (R + r) * cos(t) - d * cos((R + r) / r * t);
+            const ey = (R + r) * sin(t) - d * sin((R + r) / r * t);
+            const blend = (sin(t * 0.1) + 1) / 2;
+            x = lerp(hx, ex, blend);
+            y = lerp(hy, ey, blend);
+            break;
+
+          case 'compound':
+            // Multi-stage spirograph
+            if (params.multiWheel) {
+              const r2 = params.secondaryRadius;
+              const d2 = params.secondaryPen;
+              x = (R - r) * cos(t) + d * cos((R - r) / r * t);
+              y = (R - r) * sin(t) - d * sin((R - r) / r * t);
+              // Add secondary rotation
+              const t2 = t * r / r2;
+              x += r2 * cos(t2) + d2 * cos(t2 * 3);
+              y += r2 * sin(t2) - d2 * sin(t2 * 3);
+            } else {
+              // Default to hypotrochoid
+              x = (R - r) * cos(t) + d * cos((R - r) / r * t);
+              y = (R - r) * sin(t) - d * sin((R - r) / r * t);
+            }
+            break;
+        }
+
+        points.push({ x, y, t });
+      }
+    }
+
+    function draw() {
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      translate(width/2, height/2);
+
+      // Draw guide circles if enabled
+      if (params.showGuides) {
+        noFill();
+        stroke(200);
+        strokeWeight(0.5);
+
+        // Outer circle
+        ellipse(0, 0, params.outerRadius * 2);
+
+        // Inner circle (current position)
+        if (isAnimating && animationProgress < 1) {
+          const t = animationProgress * params.rotations * TWO_PI;
+          const cx = (params.outerRadius - params.innerRadius) * cos(t);
+          const cy = (params.outerRadius - params.innerRadius) * sin(t);
+          ellipse(cx, cy, params.innerRadius * 2);
+
+          // Pen position
+          fill(255, 0, 0);
+          noStroke();
+          ellipse(
+            points[floor(animationProgress * (points.length - 1))].x,
+            points[floor(animationProgress * (points.length - 1))].y,
+            5
+          );
+        }
+      }
+
+      // Draw spirograph
+      noFill();
+      strokeWeight(params.strokeWeight);
+
+      const numPoints = isAnimating ?
+        floor(animationProgress * points.length) :
+        points.length;
+
+      if (params.colorMode === 'mono') {
+        stroke(0);
+        beginShape();
+        for (let i = 0; i < numPoints; i++) {
+          vertex(points[i].x, points[i].y);
+        }
+        endShape();
+      } else {
+        // Draw with color
+        for (let i = 1; i < numPoints; i++) {
+          switch (params.colorMode) {
+            case 'gradient':
+              const g = map(i, 0, points.length - 1, 0, 255);
+              stroke(g, 0, 255 - g);
+              break;
+
+            case 'rainbow':
+              colorMode(HSB);
+              stroke(map(i, 0, points.length, 0, 360), 80, 80);
+              colorMode(RGB);
+              break;
+
+            case 'phase':
+              const phase = points[i].t;
+              stroke(
+                128 + 127 * sin(phase),
+                128 + 127 * sin(phase + TWO_PI/3),
+                128 + 127 * sin(phase + 2*TWO_PI/3)
+              );
+              break;
+          }
+
+          line(points[i-1].x, points[i-1].y, points[i].x, points[i].y);
+        }
+      }
+
+      // Update animation
+      if (isAnimating && animationProgress < 1) {
+        animationProgress += 0.01;
+        if (animationProgress >= 1) {
+          animationProgress = 1;
+          isAnimating = false;
+          noLoop();
+        }
+      }
+    }
+
+    function loadPreset(preset) {
+      switch (preset) {
+        case 'classic':
+          params.outerRadius = 200;
+          params.innerRadius = 65;
+          params.penDistance = 43;
+          params.patternType = 'hypotrochoid';
+          params.multiWheel = false;
+          break;
+
+        case 'flower':
+          params.outerRadius = 200;
+          params.innerRadius = 50;
+          params.penDistance = 50;
+          params.patternType = 'hypotrochoid';
+          params.rotations = 10;
+          break;
+
+        case 'star':
+          params.outerRadius = 200;
+          params.innerRadius = 80;
+          params.penDistance = 75;
+          params.patternType = 'epitrochoid';
+          params.rotations = 20;
+          break;
+
+        case 'complex':
+          params.outerRadius = 200;
+          params.innerRadius = 37;
+          params.penDistance = 65;
+          params.patternType = 'compound';
+          params.multiWheel = true;
+          params.secondaryRadius = 23;
+          params.secondaryPen = 17;
+          break;
+
+        case 'minimal':
+          params.outerRadius = 200;
+          params.innerRadius = 100;
+          params.penDistance = 20;
+          params.patternType = 'hypotrochoid';
+          params.rotations = 5;
+          break;
+      }
+
+      // Update UI
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = params[key];
+          } else {
+            element.value = params[key];
+          }
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = params[key];
+        }
+      });
+
+      regenerate();
+    }
+
+    function randomizeParams() {
+      params.outerRadius = random(100, 250);
+      params.innerRadius = random(20, min(params.outerRadius - 10, 120));
+      params.penDistance = random(10, params.innerRadius * 1.5);
+      params.rotations = random(5, 50);
+      params.seed = Math.floor(Math.random() * 1000000);
+
+      // Update UI
+      Object.keys(params).forEach(key => {
+        const element = document.getElementById(key);
+        if (element && element.type === 'range') {
+          element.value = params[key];
+          const display = document.getElementById(key + '-val');
+          if (display) display.textContent = Math.round(params[key]);
+        }
+      });
+
+      regenerate();
+    }
+
+    function saveParams() {
+      const json = JSON.stringify(params, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `spirotron-${params.seed}.json`;
+      a.click();
+    }
+
+    function exportSVG() {
+      save(svgCanvas, `spirotron-${params.patternType}-${params.seed}.svg`);
+    }
+
+    function exportPNG() {
+      save(`spirotron-${params.patternType}-${params.seed}.png`);
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = 'URL copied to clipboard!';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+      }).catch(() => {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = shareUrl;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        statusEl.textContent = 'URL copied!';
+        setTimeout(() => { statusEl.textContent = ''; }, 2500);
+      });
+    }
+
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      statusEl.textContent = 'Preparing GIF export...';
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.worker.js'
+      });
+
+      // Create offscreen canvas for GIF frames
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = width;
+      offscreenCanvas.height = height;
+      const ctx = offscreenCanvas.getContext('2d');
+
+      // Generate frames showing the drawing process
+      const totalFrames = 60;
+      const frameDelay = 50; // milliseconds
+
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Clear and draw frame
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, width, height);
+
+        // Set up transformation
+        ctx.save();
+        ctx.translate(width/2, height/2);
+
+        // Draw progress
+        const progress = frame / (totalFrames - 1);
+        const numPoints = floor(progress * points.length);
+
+        ctx.strokeStyle = 'black';
+        ctx.lineWidth = params.strokeWeight;
+        ctx.beginPath();
+
+        for (let i = 0; i < numPoints; i++) {
+          if (i === 0) {
+            ctx.moveTo(points[i].x, points[i].y);
+          } else {
+            ctx.lineTo(points[i].x, points[i].y);
+          }
+        }
+
+        ctx.stroke();
+
+        // Draw guide circles if enabled
+        if (params.showGuides && progress < 1) {
+          const t = progress * params.rotations * TWO_PI;
+          const cx = (params.outerRadius - params.innerRadius) * Math.cos(t);
+          const cy = (params.outerRadius - params.innerRadius) * Math.sin(t);
+
+          ctx.strokeStyle = '#ccc';
+          ctx.lineWidth = 0.5;
+
+          // Outer circle
+          ctx.beginPath();
+          ctx.arc(0, 0, params.outerRadius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Inner circle
+          ctx.beginPath();
+          ctx.arc(cx, cy, params.innerRadius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          // Pen position
+          if (numPoints > 0) {
+            ctx.fillStyle = 'red';
+            ctx.beginPath();
+            ctx.arc(points[numPoints - 1].x, points[numPoints - 1].y, 3, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        ctx.restore();
+
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+
+        // Update status
+        const progressPercent = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progressPercent}%`;
+      }
+
+      statusEl.textContent = 'Rendering GIF...';
+
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `spirotron-${params.patternType}-${params.seed}.gif`;
+        a.click();
+
+        setTimeout(() => {
+          statusEl.textContent = '';
+        }, 3000);
+      });
+
+      gif.render();
+    }
+  </script>
+</body>
+</html>

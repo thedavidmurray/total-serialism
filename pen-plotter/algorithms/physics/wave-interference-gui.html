@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Wave Interference - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: var(--ts-font-mono);
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 1px solid var(--ts-border-subtle);
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+    }
+    .control-group {
+      margin-bottom: 25px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 15px 0;
+      color: var(--ts-accent-primary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border-default);
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: var(--ts-text-primary);
+      border-radius: 50%;
+      border: 2px solid var(--ts-accent-primary);
+      cursor: pointer;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      font-size: 0.85rem;
+    }
+    select:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 500;
+      border-radius: 6px;
+      font-family: var(--ts-font-mono);
+      transition: all 0.2s ease;
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: 0 0 20px var(--ts-glow-primary);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-accent-primary);
+      box-shadow: none;
+    }
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+      background: var(--ts-bg-deep);
+      padding: 2px 8px;
+      border-radius: 4px;
+      min-width: 48px;
+      text-align: center;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .checkbox-container input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-container label {
+      margin-bottom: 0;
+    }
+    .color-input-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-input-group input[type="color"] {
+      width: 48px;
+      height: 36px;
+      border: 2px solid var(--ts-border-default);
+      border-radius: 6px;
+      cursor: pointer;
+      background: transparent;
+      padding: 2px;
+    }
+    .color-input-group input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    .color-input-group input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+    .btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .btn-group button {
+      margin: 0;
+    }
+    .info-text {
+      font-size: 0.7rem;
+      color: var(--ts-text-muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Wave Interference</h2>
+
+    <div class="control-group">
+      <h3>Pattern Type</h3>
+      <div class="control">
+        <label>Pattern:</label>
+        <select id="patternType">
+          <option value="circular">Circular Ripples</option>
+          <option value="linear">Linear Waves</option>
+          <option value="radial">Radial Source</option>
+          <option value="grid">Grid Sources</option>
+        </select>
+      </div>
+      <p class="info-text" id="pattern-info">Multiple circular wave sources</p>
+    </div>
+
+    <div class="control-group">
+      <h3>Wave Parameters</h3>
+      <div class="control">
+        <label>Wave Sources: <span class="value" id="sources-val">3</span></label>
+        <input type="range" id="sources" min="1" max="8" value="3">
+      </div>
+      <div class="control">
+        <label>Wavelength: <span class="value" id="wavelength-val">30</span></label>
+        <input type="range" id="wavelength" min="10" max="80" value="30">
+      </div>
+      <div class="control">
+        <label>Contour Levels: <span class="value" id="contourLevels-val">10</span></label>
+        <input type="range" id="contourLevels" min="3" max="25" value="10">
+      </div>
+      <div class="control">
+        <label>Decay: <span class="value" id="decay-val">0.002</span></label>
+        <input type="range" id="decay" min="0" max="0.01" value="0.002" step="0.0005">
+      </div>
+      <div class="control">
+        <label>Phase Offset: <span class="value" id="phase-val">0</span></label>
+        <input type="range" id="phase" min="0" max="360" value="0">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Stroke Weight: <span class="value" id="strokeWeight-val">0.5</span></label>
+        <input type="range" id="strokeWeight" min="0.2" max="2" value="0.5" step="0.1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showSources" checked>
+        <label for="showSources">Show Sources</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="regenerateBtn">Regenerate</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="custom">Custom (800x800px)</option>
+          <option value="a5">A5 (148x210mm)</option>
+          <option value="a4">A4 (210x297mm)</option>
+          <option value="a3">A3 (297x420mm)</option>
+          <option value="a3-landscape">A3 Landscape</option>
+          <option value="square">Square (300x300mm)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Color Settings</h3>
+      <div class="control">
+        <label>Background:</label>
+        <div class="color-input-group">
+          <input type="color" id="bgColor" value="#ffffff">
+        </div>
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <div class="color-input-group">
+          <input type="color" id="strokeColor" value="#000000">
+        </div>
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="btn-group">
+        <button class="secondary" id="exportSVG">Export SVG</button>
+        <button class="secondary" id="exportPNG">Export PNG</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../shared/export-utils.js"></script>
+  <script>
+    const params = {
+      patternType: 'circular',
+      sources: 3,
+      wavelength: 30,
+      contourLevels: 10,
+      decay: 0.002,
+      phase: 0,
+      strokeWeight: 0.5,
+      showSources: true,
+      paperSize: 'custom',
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    // Global instances
+    let panelController;
+    let statsDisplay;
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    const patternInfo = {
+      circular: 'Multiple circular wave sources',
+      linear: 'Parallel linear wave fronts',
+      radial: 'Single center with radial pattern',
+      grid: 'Regular grid of wave sources'
+    };
+
+    let canvas;
+    let contours = [];
+    let sourcePositions = [];
+    let SIZE = 800;
+    let RESOLUTION = 300;
+
+    function setup() {
+      canvas = createCanvas(SIZE, SIZE);
+      canvas.parent('canvas-container');
+
+      // Initialize panel controller with onToggle callback
+      panelController = new TSPanelController({
+        onToggle: (collapsed) => {
+          // p5.js will auto-resize canvas when window resize event fires
+          console.log(`Panel ${collapsed ? 'collapsed' : 'expanded'}`);
+        }
+      });
+      panelController.attach();
+
+      // Initialize stats display
+      statsDisplay = new TSStatsDisplay();
+      statsDisplay.attach();
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+      generateWaves();
+    }
+
+    function setupControls() {
+      const rangeControls = ['sources', 'wavelength', 'contourLevels', 'decay', 'phase', 'strokeWeight'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          generateWaves();
+        });
+      });
+
+      document.getElementById('patternType').addEventListener('change', (e) => {
+        params.patternType = e.target.value;
+        document.getElementById('pattern-info').textContent = patternInfo[params.patternType];
+        generateWaves();
+      });
+
+      document.getElementById('showSources').addEventListener('change', (e) => {
+        params.showSources = e.target.checked;
+        drawWaves();
+      });
+
+      document.getElementById('regenerateBtn').addEventListener('click', () => {
+        // Randomize phase for visible change
+        params.phase = Math.floor(Math.random() * 360);
+        document.getElementById('phase').value = params.phase;
+        document.getElementById('phase-val').textContent = params.phase;
+        generateWaves();
+      });
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, `wave-interference-${params.patternType}`);
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, `wave-interference-${params.patternType}`);
+      });
+
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const paperDims = CanvasLayout.getSize(params.paperSize);
+        SIZE = Math.max(paperDims.width, paperDims.height);
+        if (SIZE > 800) SIZE = Math.min(SIZE, 1000);
+        RESOLUTION = Math.min(300, Math.floor(SIZE / 2.5));
+        resizeCanvas(SIZE, SIZE);
+        generateWaves();
+      });
+
+      document.getElementById('bgColor').addEventListener('change', (e) => {
+        params.bgColor = e.target.value;
+        drawWaves();
+      });
+
+      document.getElementById('strokeColor').addEventListener('change', (e) => {
+        params.strokeColor = e.target.value;
+        drawWaves();
+      });
+    }
+
+    function generateSourcePositions() {
+      sourcePositions = [];
+      const n = params.sources;
+      const margin = 100;
+
+      switch (params.patternType) {
+        case 'circular':
+          // Random positions
+          for (let i = 0; i < n; i++) {
+            sourcePositions.push({
+              x: margin + Math.random() * (SIZE - 2 * margin),
+              y: margin + Math.random() * (SIZE - 2 * margin),
+              amplitude: 0.8 + Math.random() * 0.4
+            });
+          }
+          break;
+
+        case 'linear':
+          // Sources along left edge creating parallel waves
+          for (let i = 0; i < n; i++) {
+            sourcePositions.push({
+              x: -100,
+              y: (i + 0.5) * SIZE / n,
+              amplitude: 1
+            });
+          }
+          break;
+
+        case 'radial':
+          // Single center source
+          sourcePositions.push({
+            x: SIZE / 2,
+            y: SIZE / 2,
+            amplitude: 1
+          });
+          break;
+
+        case 'grid':
+          // Regular grid
+          const gridSize = Math.ceil(Math.sqrt(n));
+          const spacing = SIZE / (gridSize + 1);
+          for (let i = 0; i < n; i++) {
+            const row = Math.floor(i / gridSize);
+            const col = i % gridSize;
+            sourcePositions.push({
+              x: (col + 1) * spacing,
+              y: (row + 1) * spacing,
+              amplitude: 1
+            });
+          }
+          break;
+      }
+    }
+
+    function waveFunction(x, y) {
+      const phaseRad = params.phase * Math.PI / 180;
+      let sum = 0;
+
+      for (const src of sourcePositions) {
+        const dx = x - src.x;
+        const dy = y - src.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // Wave equation with decay
+        const decay = Math.exp(-params.decay * dist);
+        const wave = Math.sin((dist / params.wavelength) * TWO_PI + phaseRad);
+
+        sum += wave * decay * src.amplitude;
+      }
+
+      return sum;
+    }
+
+    function generateWaves() {
+      generateSourcePositions();
+
+      // Compute wave field
+      const grid = [];
+      for (let j = 0; j <= RESOLUTION; j++) {
+        const row = [];
+        for (let i = 0; i <= RESOLUTION; i++) {
+          const x = (i / RESOLUTION) * SIZE;
+          const y = (j / RESOLUTION) * SIZE;
+          row.push(waveFunction(x, y));
+        }
+        grid.push(row);
+      }
+
+      // Find min/max for normalization
+      let minVal = Infinity, maxVal = -Infinity;
+      for (const row of grid) {
+        for (const val of row) {
+          minVal = Math.min(minVal, val);
+          maxVal = Math.max(maxVal, val);
+        }
+      }
+
+      // Extract contours using marching squares
+      contours = [];
+      const levels = params.contourLevels;
+
+      for (let level = 0; level < levels; level++) {
+        const t = (level + 0.5) / levels;
+        const threshold = minVal + t * (maxVal - minVal);
+        const levelContours = marchingSquares(grid, threshold);
+        contours.push(...levelContours);
+      }
+
+      // Update stats display with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          pattern: { value: params.patternType, label: 'Pattern' },
+          sources: { value: params.sources, label: 'Sources' },
+          wavelength: { value: params.wavelength, label: 'Wavelength' },
+          contours: { value: contours.length, label: 'Contour Lines' },
+          resolution: { value: `${RESOLUTION}×${RESOLUTION}`, label: 'Grid' }
+        });
+      }
+
+      drawWaves();
+    }
+
+    function marchingSquares(grid, threshold) {
+      const lines = [];
+      const cellW = SIZE / RESOLUTION;
+      const cellH = SIZE / RESOLUTION;
+
+      for (let j = 0; j < RESOLUTION; j++) {
+        for (let i = 0; i < RESOLUTION; i++) {
+          const a = grid[j][i] >= threshold ? 1 : 0;
+          const b = grid[j][i + 1] >= threshold ? 1 : 0;
+          const c = grid[j + 1][i + 1] >= threshold ? 1 : 0;
+          const d = grid[j + 1][i] >= threshold ? 1 : 0;
+
+          const caseIndex = a * 8 + b * 4 + c * 2 + d;
+
+          const x = i * cellW;
+          const y = j * cellH;
+
+          // Interpolation
+          const lerp_ab = Math.abs(grid[j][i] - grid[j][i + 1]) > 0.001
+            ? (grid[j][i] - threshold) / (grid[j][i] - grid[j][i + 1])
+            : 0.5;
+          const lerp_bc = Math.abs(grid[j][i + 1] - grid[j + 1][i + 1]) > 0.001
+            ? (grid[j][i + 1] - threshold) / (grid[j][i + 1] - grid[j + 1][i + 1])
+            : 0.5;
+          const lerp_cd = Math.abs(grid[j + 1][i] - grid[j + 1][i + 1]) > 0.001
+            ? (grid[j + 1][i] - threshold) / (grid[j + 1][i] - grid[j + 1][i + 1])
+            : 0.5;
+          const lerp_da = Math.abs(grid[j][i] - grid[j + 1][i]) > 0.001
+            ? (grid[j][i] - threshold) / (grid[j][i] - grid[j + 1][i])
+            : 0.5;
+
+          const points = {
+            top: { x: x + lerp_ab * cellW, y: y },
+            right: { x: x + cellW, y: y + lerp_bc * cellH },
+            bottom: { x: x + lerp_cd * cellW, y: y + cellH },
+            left: { x: x, y: y + lerp_da * cellH }
+          };
+
+          switch (caseIndex) {
+            case 1: case 14: lines.push([points.left, points.bottom]); break;
+            case 2: case 13: lines.push([points.bottom, points.right]); break;
+            case 3: case 12: lines.push([points.left, points.right]); break;
+            case 4: case 11: lines.push([points.top, points.right]); break;
+            case 5:
+              lines.push([points.left, points.top]);
+              lines.push([points.bottom, points.right]);
+              break;
+            case 6: case 9: lines.push([points.top, points.bottom]); break;
+            case 7: case 8: lines.push([points.left, points.top]); break;
+            case 10:
+              lines.push([points.top, points.right]);
+              lines.push([points.left, points.bottom]);
+              break;
+          }
+        }
+      }
+
+      return lines;
+    }
+
+    function drawWaves() {
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.strokeWeight);
+      noFill();
+
+      // Draw contours
+      for (const segment of contours) {
+        line(segment[0].x, segment[0].y, segment[1].x, segment[1].y);
+      }
+
+      // Draw source positions
+      if (params.showSources && params.patternType !== 'linear') {
+        fill(200, 50, 50);
+        noStroke();
+        for (const src of sourcePositions) {
+          if (src.x >= 0 && src.x <= SIZE && src.y >= 0 && src.y <= SIZE) {
+            ellipse(src.x, src.y, 10, 10);
+          }
+        }
+      }
+    }
+
+    function generateSVG() {
+      const paths = [];
+
+      // Contour lines
+      for (const segment of contours) {
+        paths.push({
+          d: `M ${segment[0].x} ${segment[0].y} L ${segment[1].x} ${segment[1].y}`,
+          stroke: params.strokeColor
+        });
+      }
+
+      // Source points
+      if (params.showSources && params.patternType !== 'linear') {
+        for (const src of sourcePositions) {
+          if (src.x >= 0 && src.x <= SIZE && src.y >= 0 && src.y <= SIZE) {
+            paths.push({
+              d: `M ${src.x - 5} ${src.y} a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0`,
+              fill: '#C83232',
+              stroke: 'none'
+            });
+          }
+        }
+      }
+
+      return TSExport.createSVG(paths, SIZE, SIZE, {
+        backgroundColor: params.bgColor,
+        strokeWidth: params.strokeWeight
+      });
+    }
+  </script>
+</body>
+</html>

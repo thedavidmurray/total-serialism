@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phyllotaxis Pattern Generator - Pen Plotter Art</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <!-- Total Serialism Design System -->
+    <link rel="stylesheet" href="../../shared/algorithm.css">
+    <style>
+        /* Algorithm-specific overrides */
+        .value {
+            font-weight: 600;
+            color: var(--ts-accent-primary);
+        }
+
+        #seed-display {
+            font-family: var(--ts-font-mono);
+            background: var(--ts-bg-deep);
+            padding: 5px 8px;
+            border-radius: var(--ts-radius-sm);
+            font-size: 11px;
+            color: var(--ts-accent-primary);
+        }
+
+        .export-btn {
+            background: var(--ts-accent-danger) !important;
+        }
+
+        .export-btn:hover {
+            background: #ff5252 !important;
+        }
+
+        .randomize-btn {
+            background: var(--ts-accent-tertiary) !important;
+        }
+
+        .randomize-btn:hover {
+            background: #8b7cf0 !important;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button-row button {
+            flex: 1;
+        }
+
+        #gif-progress {
+            display: none;
+            background: var(--ts-bg-deep);
+            padding: 10px;
+            border-radius: var(--ts-radius-md);
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: var(--ts-bg-active);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--ts-accent-primary);
+            transition: width 0.3s;
+        }
+
+        /* Preset Manager Styles */
+        .preset-manager {
+            margin-top: 20px;
+        }
+
+        .preset-manager .control-group {
+            background: var(--ts-bg-control);
+            padding: 15px;
+            border-radius: var(--ts-radius-lg);
+            border: 1px solid var(--ts-border-subtle);
+        }
+
+        .preset-manager h3 {
+            color: var(--ts-accent-primary);
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .preset-manager select {
+            margin-bottom: 10px;
+        }
+
+        .preset-manager input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            background: var(--ts-bg-deep);
+            color: var(--ts-text-primary);
+            border: 1px solid var(--ts-border-default);
+            border-radius: var(--ts-radius-md);
+            font-family: var(--ts-font-mono);
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .preset-manager input[type="text"]:focus {
+            outline: none;
+            border-color: var(--ts-accent-primary);
+        }
+
+        .preset-manager #delete-preset-btn {
+            background: var(--ts-accent-danger) !important;
+        }
+
+        .preset-manager #delete-preset-btn:hover {
+            background: #da190b !important;
+        }
+
+        .preset-manager #export-presets-btn,
+        .preset-manager #import-presets-btn {
+            background: var(--ts-accent-tertiary) !important;
+        }
+
+        .preset-manager #export-presets-btn:hover,
+        .preset-manager #import-presets-btn:hover {
+            background: #6a5acd !important;
+        }
+
+        .preset-manager hr {
+            border: none;
+            border-top: 1px solid var(--ts-border-subtle);
+            margin: 15px 0;
+        }
+
+        .color-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-row .control {
+            flex: 1;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--ts-border-subtle);
+        }
+
+        .control-group:last-child {
+            border-bottom: none;
+        }
+
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: var(--ts-accent-primary);
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .control {
+            margin-bottom: 12px;
+        }
+
+        h2 {
+            margin: 0 0 20px 0;
+            color: var(--ts-accent-primary);
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 35px;
+            padding: 2px;
+            background: var(--ts-bg-deep);
+            border: 1px solid var(--ts-border-default);
+            border-radius: var(--ts-radius-md);
+            cursor: pointer;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 2px;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border-radius: 2px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="canvas-wrapper"></div>
+    </div>
+
+    <div id="controls">
+        <a href="../../index.html" class="back-link">&larr; Back to Gallery</a>
+        <h2>Phyllotaxis Controls</h2>
+
+        <div class="control-group">
+            <h3>Pattern Settings</h3>
+            <div class="control">
+                <label>Number of Elements: <span class="value" id="numElements-val">500</span></label>
+                <input type="range" id="numElements" min="50" max="2000" value="500" step="10">
+            </div>
+            <div class="control">
+                <label>Angle Divergence: <span class="value" id="angleDivergence-val">137.5</span> degrees</label>
+                <input type="range" id="angleDivergence" min="100" max="180" value="137.5" step="0.1">
+            </div>
+            <div class="control">
+                <label>Scale Factor (c): <span class="value" id="scaleFactor-val">8</span></label>
+                <input type="range" id="scaleFactor" min="1" max="20" value="8" step="0.5">
+            </div>
+            <div class="control">
+                <label>Rotation Offset: <span class="value" id="rotationOffset-val">0</span> degrees</label>
+                <input type="range" id="rotationOffset" min="0" max="360" value="0" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Element Type</h3>
+            <div class="control">
+                <label>Shape Type:</label>
+                <select id="elementType">
+                    <option value="circle">Circles</option>
+                    <option value="square">Squares</option>
+                    <option value="polygon">Polygons</option>
+                    <option value="line-center">Lines to Center</option>
+                    <option value="dots">Dots</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Polygon Sides: <span class="value" id="polygonSides-val">6</span></label>
+                <input type="range" id="polygonSides" min="3" max="12" value="6" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Size Settings</h3>
+            <div class="control">
+                <label>Size Mode:</label>
+                <select id="sizeMode">
+                    <option value="constant">Constant</option>
+                    <option value="growing">Growing (inner to outer)</option>
+                    <option value="shrinking">Shrinking (outer to inner)</option>
+                    <option value="wave">Wave Pattern</option>
+                    <option value="random">Random</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Base Size: <span class="value" id="baseSize-val">5</span></label>
+                <input type="range" id="baseSize" min="1" max="30" value="5" step="0.5">
+            </div>
+            <div class="control">
+                <label>Size Variation: <span class="value" id="sizeVariation-val">1</span></label>
+                <input type="range" id="sizeVariation" min="0" max="5" value="1" step="0.1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Connection Mode</h3>
+            <div class="control">
+                <label>Connection Type:</label>
+                <select id="connectionMode">
+                    <option value="none">None</option>
+                    <option value="center">Lines to Center</option>
+                    <option value="neighbors">To Neighbors</option>
+                    <option value="spiral">Spiral Connection</option>
+                    <option value="fibonacci">Fibonacci Spirals</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Connection Weight: <span class="value" id="connectionWeight-val">1</span></label>
+                <input type="range" id="connectionWeight" min="0.5" max="5" value="1" step="0.5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Style</h3>
+            <div class="control">
+                <label>Stroke Weight: <span class="value" id="strokeWeight-val">1</span></label>
+                <input type="range" id="strokeWeight" min="0.5" max="5" value="1" step="0.5">
+            </div>
+            <div class="control">
+                <label>Fill Mode:</label>
+                <select id="fillMode">
+                    <option value="stroke">Stroke Only</option>
+                    <option value="fill">Fill Only</option>
+                    <option value="both">Stroke and Fill</option>
+                </select>
+            </div>
+            <div class="color-row">
+                <div class="control">
+                    <label>Background:</label>
+                    <input type="color" id="bgColor" value="#ffffff">
+                </div>
+                <div class="control">
+                    <label>Stroke:</label>
+                    <input type="color" id="strokeColor" value="#000000">
+                </div>
+            </div>
+            <div class="color-row">
+                <div class="control">
+                    <label>Fill:</label>
+                    <input type="color" id="fillColor" value="#4CAF50">
+                </div>
+                <div class="control">
+                    <label>Connection:</label>
+                    <input type="color" id="connectionColor" value="#cccccc">
+                </div>
+            </div>
+            <button class="randomize-btn" onclick="randomizeColors()">Randomize Colors</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Paper Size</h3>
+            <div class="control">
+                <label>Paper Format:</label>
+                <select id="paperSize">
+                    <option value="a4-portrait">A4 Portrait (210x297mm)</option>
+                    <option value="a4-landscape">A4 Landscape (297x210mm)</option>
+                    <option value="a3-portrait">A3 Portrait (297x420mm)</option>
+                    <option value="a3-landscape">A3 Landscape (420x297mm)</option>
+                    <option value="letter-portrait">Letter Portrait (8.5x11in)</option>
+                    <option value="letter-landscape">Letter Landscape (11x8.5in)</option>
+                    <option value="square-small">Square Small (200x200mm)</option>
+                    <option value="square-large">Square Large (300x300mm)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Generation</h3>
+            <div class="control">
+                <label>Seed: <span id="seed-display">12345</span></label>
+            </div>
+            <div class="button-row">
+                <button onclick="regenerate()">Regenerate</button>
+                <button onclick="randomSeed()">Random Seed</button>
+            </div>
+            <button onclick="animatePattern()">Animate Growth</button>
+        </div>
+
+        <div class="control-group">
+            <h3>Export</h3>
+            <div class="button-row">
+                <button onclick="exportSVG()">Export SVG</button>
+                <button onclick="exportPNG()">Export PNG</button>
+            </div>
+            <button class="export-btn" onclick="toggleGifRecording()">
+                <span id="gif-record-text">Record GIF</span>
+            </button>
+            <div id="gif-progress">
+                <div>Recording: <span id="gif-status">Preparing...</span></div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="gif-progress-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="preset-manager" id="preset-container">
+            <div class="control-group">
+                <h3>Presets</h3>
+                <div class="control">
+                    <select id="preset-select">
+                        <option value="">-- Select Preset --</option>
+                    </select>
+                </div>
+                <div class="button-row">
+                    <button id="load-preset-btn">Load</button>
+                    <button id="delete-preset-btn">Delete</button>
+                </div>
+                <div class="control">
+                    <input type="text" id="preset-name" placeholder="Enter preset name">
+                </div>
+                <button id="save-preset-btn">Save Current as Preset</button>
+                <hr>
+                <div class="button-row">
+                    <button id="export-presets-btn">Export All</button>
+                    <button id="import-presets-btn">Import</button>
+                </div>
+                <input type="file" id="import-presets" accept=".json" style="display: none;">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Golden angle constant
+        const GOLDEN_ANGLE = 137.5077640500378546463487;
+
+        // Parameters
+        let params = {
+            seed: Math.floor(Math.random() * 1000000),
+            numElements: 500,
+            angleDivergence: 137.5,
+            scaleFactor: 8,
+            rotationOffset: 0,
+            elementType: 'circle',
+            polygonSides: 6,
+            sizeMode: 'constant',
+            baseSize: 5,
+            sizeVariation: 1,
+            connectionMode: 'none',
+            connectionWeight: 1,
+            strokeWeight: 1,
+            fillMode: 'stroke',
+            bgColor: '#ffffff',
+            strokeColor: '#000000',
+            fillColor: '#4CAF50',
+            connectionColor: '#cccccc',
+            paperSize: 'a4-portrait'
+        };
+
+        // Paper size definitions (in pixels at 96 DPI scale factor)
+        const paperSizes = {
+            'a4-portrait': { width: 595, height: 842 },
+            'a4-landscape': { width: 842, height: 595 },
+            'a3-portrait': { width: 842, height: 1191 },
+            'a3-landscape': { width: 1191, height: 842 },
+            'letter-portrait': { width: 612, height: 792 },
+            'letter-landscape': { width: 792, height: 612 },
+            'square-small': { width: 567, height: 567 },
+            'square-large': { width: 850, height: 850 }
+        };
+
+        let points = [];
+        let svgCanvas;
+        let canvasWidth, canvasHeight;
+        let isAnimating = false;
+        let animationFrame = 0;
+        let gif;
+        let isRecordingGif = false;
+
+        function setup() {
+            updateCanvasSize();
+            svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
+            svgCanvas.parent('canvas-wrapper');
+
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
+            setupControls();
+            setupPresetManager();
+            regenerate();
+        }
+
+        function updateCanvasSize() {
+            const size = paperSizes[params.paperSize];
+            // Scale to fit screen while maintaining aspect ratio
+            const maxWidth = window.innerWidth - 400;
+            const maxHeight = window.innerHeight - 100;
+            const scale = Math.min(maxWidth / size.width, maxHeight / size.height, 1);
+            canvasWidth = Math.floor(size.width * scale);
+            canvasHeight = Math.floor(size.height * scale);
+        }
+
+        function setupControls() {
+            // Setup all control event listeners
+            const rangeInputs = ['numElements', 'angleDivergence', 'scaleFactor', 'rotationOffset',
+                                 'polygonSides', 'baseSize', 'sizeVariation', 'connectionWeight', 'strokeWeight'];
+
+            rangeInputs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.addEventListener('input', (e) => {
+                        params[key] = parseFloat(e.target.value);
+                        const display = document.getElementById(key + '-val');
+                        if (display) display.textContent = params[key];
+                        if (!isAnimating) regenerate();
+                    });
+                }
+            });
+
+            const selectInputs = ['elementType', 'sizeMode', 'connectionMode', 'fillMode', 'paperSize'];
+            selectInputs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.addEventListener('change', (e) => {
+                        params[key] = e.target.value;
+                        if (key === 'paperSize') {
+                            updateCanvasSize();
+                            resizeCanvas(canvasWidth, canvasHeight);
+                        }
+                        if (!isAnimating) regenerate();
+                    });
+                }
+            });
+
+            const colorInputs = ['bgColor', 'strokeColor', 'fillColor', 'connectionColor'];
+            colorInputs.forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.addEventListener('input', (e) => {
+                        params[key] = e.target.value;
+                        if (!isAnimating) regenerate();
+                    });
+                }
+            });
+        }
+
+        function setupPresetManager() {
+            const storageKey = 'penplotter_phyllotaxis_presets';
+            let presets = {};
+
+            // Load presets from localStorage
+            try {
+                const stored = localStorage.getItem(storageKey);
+                presets = stored ? JSON.parse(stored) : {};
+            } catch (e) {
+                console.error('Failed to load presets:', e);
+            }
+
+            function savePresets() {
+                localStorage.setItem(storageKey, JSON.stringify(presets));
+            }
+
+            function updatePresetList() {
+                const select = document.getElementById('preset-select');
+                select.innerHTML = '<option value="">-- Select Preset --</option>';
+                Object.keys(presets).sort().forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    select.appendChild(option);
+                });
+            }
+
+            document.getElementById('load-preset-btn').addEventListener('click', () => {
+                const select = document.getElementById('preset-select');
+                if (select.value && presets[select.value]) {
+                    const preset = presets[select.value];
+                    Object.keys(preset.parameters).forEach(key => {
+                        params[key] = preset.parameters[key];
+                        const element = document.getElementById(key);
+                        if (element) {
+                            element.value = params[key];
+                            const display = document.getElementById(key + '-val');
+                            if (display) display.textContent = params[key];
+                        }
+                    });
+                    if (params.paperSize) {
+                        updateCanvasSize();
+                        resizeCanvas(canvasWidth, canvasHeight);
+                    }
+                    regenerate();
+                }
+            });
+
+            document.getElementById('save-preset-btn').addEventListener('click', () => {
+                const name = document.getElementById('preset-name').value.trim();
+                if (name) {
+                    presets[name] = {
+                        name: name,
+                        timestamp: Date.now(),
+                        parameters: { ...params }
+                    };
+                    savePresets();
+                    updatePresetList();
+                    document.getElementById('preset-name').value = '';
+                    alert(`Preset "${name}" saved!`);
+                } else {
+                    alert('Please enter a preset name');
+                }
+            });
+
+            document.getElementById('delete-preset-btn').addEventListener('click', () => {
+                const select = document.getElementById('preset-select');
+                if (select.value) {
+                    if (confirm(`Delete preset "${select.value}"?`)) {
+                        delete presets[select.value];
+                        savePresets();
+                        updatePresetList();
+                    }
+                }
+            });
+
+            document.getElementById('export-presets-btn').addEventListener('click', () => {
+                const dataStr = JSON.stringify(presets, null, 2);
+                const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+                const a = document.createElement('a');
+                a.href = dataUri;
+                a.download = 'phyllotaxis_presets.json';
+                a.click();
+            });
+
+            document.getElementById('import-presets-btn').addEventListener('click', () => {
+                document.getElementById('import-presets').click();
+            });
+
+            document.getElementById('import-presets').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const imported = JSON.parse(event.target.result);
+                        presets = { ...presets, ...imported };
+                        savePresets();
+                        updatePresetList();
+                        alert('Presets imported successfully!');
+                    } catch (error) {
+                        alert('Failed to import presets. Invalid file format.');
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+            // Add some default presets
+            if (Object.keys(presets).length === 0) {
+                presets = {
+                    'Sunflower Classic': {
+                        name: 'Sunflower Classic',
+                        timestamp: Date.now(),
+                        parameters: {
+                            ...params,
+                            numElements: 1000,
+                            angleDivergence: 137.5,
+                            scaleFactor: 6,
+                            elementType: 'circle',
+                            sizeMode: 'growing',
+                            baseSize: 2,
+                            sizeVariation: 0.8
+                        }
+                    },
+                    'Fibonacci Spiral': {
+                        name: 'Fibonacci Spiral',
+                        timestamp: Date.now(),
+                        parameters: {
+                            ...params,
+                            numElements: 800,
+                            angleDivergence: 137.5077,
+                            scaleFactor: 8,
+                            connectionMode: 'fibonacci',
+                            elementType: 'dots',
+                            baseSize: 3
+                        }
+                    },
+                    'Succulent Rosette': {
+                        name: 'Succulent Rosette',
+                        timestamp: Date.now(),
+                        parameters: {
+                            ...params,
+                            numElements: 300,
+                            angleDivergence: 137.5,
+                            scaleFactor: 12,
+                            elementType: 'polygon',
+                            polygonSides: 5,
+                            sizeMode: 'shrinking',
+                            baseSize: 15,
+                            sizeVariation: 2
+                        }
+                    },
+                    'Radial Lines': {
+                        name: 'Radial Lines',
+                        timestamp: Date.now(),
+                        parameters: {
+                            ...params,
+                            numElements: 500,
+                            angleDivergence: 137.5,
+                            scaleFactor: 10,
+                            elementType: 'line-center',
+                            connectionMode: 'none',
+                            strokeWeight: 0.5
+                        }
+                    },
+                    'Dense Spiral': {
+                        name: 'Dense Spiral',
+                        timestamp: Date.now(),
+                        parameters: {
+                            ...params,
+                            numElements: 2000,
+                            angleDivergence: 137.508,
+                            scaleFactor: 4,
+                            elementType: 'dots',
+                            baseSize: 1.5,
+                            connectionMode: 'spiral'
+                        }
+                    }
+                };
+                savePresets();
+            }
+
+            updatePresetList();
+        }
+
+        function generatePhyllotaxis() {
+            points = [];
+            const centerX = canvasWidth / 2;
+            const centerY = canvasHeight / 2;
+            const angleRad = radians(params.angleDivergence);
+            const offsetRad = radians(params.rotationOffset);
+
+            randomSeed(params.seed);
+
+            for (let n = 0; n < params.numElements; n++) {
+                // Phyllotaxis formula: r = c * sqrt(n), theta = n * angle
+                const r = params.scaleFactor * sqrt(n);
+                const theta = n * angleRad + offsetRad;
+
+                const x = centerX + r * cos(theta);
+                const y = centerY + r * sin(theta);
+
+                // Calculate size based on mode
+                let size = params.baseSize;
+                switch (params.sizeMode) {
+                    case 'growing':
+                        size = params.baseSize + (n / params.numElements) * params.sizeVariation * params.baseSize;
+                        break;
+                    case 'shrinking':
+                        size = params.baseSize + ((params.numElements - n) / params.numElements) * params.sizeVariation * params.baseSize;
+                        break;
+                    case 'wave':
+                        size = params.baseSize + sin(n * 0.1) * params.sizeVariation * params.baseSize;
+                        break;
+                    case 'random':
+                        size = params.baseSize + random(-1, 1) * params.sizeVariation * params.baseSize;
+                        break;
+                }
+
+                points.push({
+                    x: x,
+                    y: y,
+                    r: r,
+                    theta: theta,
+                    n: n,
+                    size: max(0.5, size)
+                });
+            }
+        }
+
+        function regenerate() {
+            noiseSeed(params.seed);
+            randomSeed(params.seed);
+            generatePhyllotaxis();
+            redraw();
+        }
+
+        function draw() {
+            clear();  // Required for SVG mode - removes existing elements
+            background(params.bgColor);
+
+            const centerX = canvasWidth / 2;
+            const centerY = canvasHeight / 2;
+
+            // Determine how many points to draw (for animation)
+            const numToDraw = isAnimating ? min(animationFrame, points.length) : points.length;
+
+            // Draw connections first (behind elements)
+            if (params.connectionMode !== 'none') {
+                stroke(params.connectionColor);
+                strokeWeight(params.connectionWeight);
+                noFill();
+
+                switch (params.connectionMode) {
+                    case 'center':
+                        for (let i = 0; i < numToDraw; i++) {
+                            line(points[i].x, points[i].y, centerX, centerY);
+                        }
+                        break;
+
+                    case 'neighbors':
+                        for (let i = 1; i < numToDraw; i++) {
+                            line(points[i].x, points[i].y, points[i-1].x, points[i-1].y);
+                        }
+                        break;
+
+                    case 'spiral':
+                        beginShape();
+                        noFill();
+                        for (let i = 0; i < numToDraw; i++) {
+                            vertex(points[i].x, points[i].y);
+                        }
+                        endShape();
+                        break;
+
+                    case 'fibonacci':
+                        // Draw Fibonacci spiral connections (every 13, 21, 34, 55 elements)
+                        const fibNums = [8, 13, 21, 34, 55];
+                        fibNums.forEach(fib => {
+                            for (let i = fib; i < numToDraw; i++) {
+                                line(points[i].x, points[i].y, points[i-fib].x, points[i-fib].y);
+                            }
+                        });
+                        break;
+                }
+            }
+
+            // Draw elements
+            for (let i = 0; i < numToDraw; i++) {
+                const p = points[i];
+
+                // Set stroke and fill based on mode
+                if (params.fillMode === 'stroke' || params.fillMode === 'both') {
+                    stroke(params.strokeColor);
+                    strokeWeight(params.strokeWeight);
+                } else {
+                    noStroke();
+                }
+
+                if (params.fillMode === 'fill' || params.fillMode === 'both') {
+                    fill(params.fillColor);
+                } else {
+                    noFill();
+                }
+
+                push();
+                translate(p.x, p.y);
+                rotate(p.theta);
+
+                switch (params.elementType) {
+                    case 'circle':
+                        ellipse(0, 0, p.size * 2);
+                        break;
+
+                    case 'square':
+                        rectMode(CENTER);
+                        rect(0, 0, p.size * 2, p.size * 2);
+                        break;
+
+                    case 'polygon':
+                        drawPolygon(0, 0, p.size, params.polygonSides);
+                        break;
+
+                    case 'line-center':
+                        stroke(params.strokeColor);
+                        strokeWeight(params.strokeWeight);
+                        const lineLength = p.size * 2;
+                        line(-lineLength/2, 0, lineLength/2, 0);
+                        break;
+
+                    case 'dots':
+                        noStroke();
+                        fill(params.strokeColor);
+                        ellipse(0, 0, p.size);
+                        break;
+                }
+
+                pop();
+            }
+
+            // Update stats display
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    'Points': numToDraw,
+                    'Total': points.length,
+                    'Angle': params.angleDivergence.toFixed(1) + '°',
+                    'Scale': params.scaleFactor.toFixed(1),
+                    'Element': params.elementType,
+                    'Size Mode': params.sizeMode,
+                    'Connection': params.connectionMode,
+                    'Seed': params.seed
+                });
+            }
+
+            // Handle animation
+            if (isAnimating) {
+                animationFrame += 10;
+
+                if (isRecordingGif && gif) {
+                    // Capture frame
+                    gif.addFrame(document.querySelector('canvas'), {
+                        delay: 50,
+                        copy: true
+                    });
+                }
+
+                if (animationFrame >= points.length) {
+                    isAnimating = false;
+                    if (isRecordingGif && gif) {
+                        // Add a few frames at the end
+                        for (let i = 0; i < 10; i++) {
+                            gif.addFrame(document.querySelector('canvas'), {
+                                delay: 100,
+                                copy: true
+                            });
+                        }
+                        gif.render();
+                    }
+                    noLoop();
+                }
+            } else {
+                noLoop();
+            }
+        }
+
+        function drawPolygon(x, y, radius, sides) {
+            beginShape();
+            for (let i = 0; i < sides; i++) {
+                const angle = TWO_PI * i / sides - HALF_PI;
+                vertex(x + cos(angle) * radius, y + sin(angle) * radius);
+            }
+            endShape(CLOSE);
+        }
+
+        function animatePattern() {
+            animationFrame = 0;
+            isAnimating = true;
+            loop();
+        }
+
+        function randomSeed() {
+            params.seed = Math.floor(Math.random() * 1000000);
+            document.getElementById('seed-display').textContent = params.seed;
+            regenerate();
+        }
+
+        function randomizeColors() {
+            // Generate random color palette
+            const hue = random(360);
+
+            // Background - light or dark
+            const bgLight = random() > 0.5;
+            params.bgColor = bgLight ? '#ffffff' : '#1a1a1a';
+
+            // Stroke - contrasting with background
+            params.strokeColor = bgLight ? colorToHex(hue, 70, 30) : colorToHex(hue, 70, 80);
+
+            // Fill - complementary
+            params.fillColor = colorToHex((hue + 180) % 360, 60, 60);
+
+            // Connection - muted
+            params.connectionColor = bgLight ? '#cccccc' : '#444444';
+
+            // Update UI
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
+            document.getElementById('fillColor').value = params.fillColor;
+            document.getElementById('connectionColor').value = params.connectionColor;
+
+            regenerate();
+        }
+
+        function colorToHex(h, s, l) {
+            // HSL to Hex conversion
+            s /= 100;
+            l /= 100;
+
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+
+            let r, g, b;
+
+            if (h < 60) { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else { r = c; g = 0; b = x; }
+
+            const toHex = (v) => {
+                const hex = Math.round((v + m) * 255).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+
+            return '#' + toHex(r) + toHex(g) + toHex(b);
+        }
+
+        function exportSVG() {
+            save(svgCanvas, `phyllotaxis-${params.seed}.svg`);
+        }
+
+        function exportPNG() {
+            // Create a non-SVG canvas for PNG export
+            const tempCanvas = createGraphics(canvasWidth, canvasHeight);
+            tempCanvas.background(params.bgColor);
+
+            const centerX = canvasWidth / 2;
+            const centerY = canvasHeight / 2;
+
+            // Draw connections
+            if (params.connectionMode !== 'none') {
+                tempCanvas.stroke(params.connectionColor);
+                tempCanvas.strokeWeight(params.connectionWeight);
+                tempCanvas.noFill();
+
+                switch (params.connectionMode) {
+                    case 'center':
+                        for (let i = 0; i < points.length; i++) {
+                            tempCanvas.line(points[i].x, points[i].y, centerX, centerY);
+                        }
+                        break;
+                    case 'neighbors':
+                        for (let i = 1; i < points.length; i++) {
+                            tempCanvas.line(points[i].x, points[i].y, points[i-1].x, points[i-1].y);
+                        }
+                        break;
+                    case 'spiral':
+                        tempCanvas.beginShape();
+                        tempCanvas.noFill();
+                        for (let i = 0; i < points.length; i++) {
+                            tempCanvas.vertex(points[i].x, points[i].y);
+                        }
+                        tempCanvas.endShape();
+                        break;
+                    case 'fibonacci':
+                        const fibNums = [8, 13, 21, 34, 55];
+                        fibNums.forEach(fib => {
+                            for (let i = fib; i < points.length; i++) {
+                                tempCanvas.line(points[i].x, points[i].y, points[i-fib].x, points[i-fib].y);
+                            }
+                        });
+                        break;
+                }
+            }
+
+            // Draw elements
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+
+                if (params.fillMode === 'stroke' || params.fillMode === 'both') {
+                    tempCanvas.stroke(params.strokeColor);
+                    tempCanvas.strokeWeight(params.strokeWeight);
+                } else {
+                    tempCanvas.noStroke();
+                }
+
+                if (params.fillMode === 'fill' || params.fillMode === 'both') {
+                    tempCanvas.fill(params.fillColor);
+                } else {
+                    tempCanvas.noFill();
+                }
+
+                tempCanvas.push();
+                tempCanvas.translate(p.x, p.y);
+                tempCanvas.rotate(p.theta);
+
+                switch (params.elementType) {
+                    case 'circle':
+                        tempCanvas.ellipse(0, 0, p.size * 2);
+                        break;
+                    case 'square':
+                        tempCanvas.rectMode(CENTER);
+                        tempCanvas.rect(0, 0, p.size * 2, p.size * 2);
+                        break;
+                    case 'polygon':
+                        tempCanvas.beginShape();
+                        for (let j = 0; j < params.polygonSides; j++) {
+                            const angle = TWO_PI * j / params.polygonSides - HALF_PI;
+                            tempCanvas.vertex(cos(angle) * p.size, sin(angle) * p.size);
+                        }
+                        tempCanvas.endShape(CLOSE);
+                        break;
+                    case 'line-center':
+                        tempCanvas.stroke(params.strokeColor);
+                        tempCanvas.strokeWeight(params.strokeWeight);
+                        const lineLength = p.size * 2;
+                        tempCanvas.line(-lineLength/2, 0, lineLength/2, 0);
+                        break;
+                    case 'dots':
+                        tempCanvas.noStroke();
+                        tempCanvas.fill(params.strokeColor);
+                        tempCanvas.ellipse(0, 0, p.size);
+                        break;
+                }
+
+                tempCanvas.pop();
+            }
+
+            saveCanvas(tempCanvas, `phyllotaxis-${params.seed}`, 'png');
+            tempCanvas.remove();
+        }
+
+        function toggleGifRecording() {
+            if (isRecordingGif) {
+                // Stop recording
+                isRecordingGif = false;
+                document.getElementById('gif-record-text').textContent = 'Record GIF';
+                document.getElementById('gif-progress').style.display = 'none';
+                isAnimating = false;
+                noLoop();
+            } else {
+                // Start recording
+                isRecordingGif = true;
+                document.getElementById('gif-record-text').textContent = 'Stop Recording';
+                document.getElementById('gif-progress').style.display = 'block';
+                document.getElementById('gif-status').textContent = 'Recording...';
+
+                gif = new GIF({
+                    workers: 2,
+                    quality: 10,
+                    width: canvasWidth,
+                    height: canvasHeight,
+                    workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js'
+                });
+
+                gif.on('progress', (p) => {
+                    document.getElementById('gif-status').textContent = `Encoding: ${Math.round(p * 100)}%`;
+                    document.getElementById('gif-progress-bar').style.width = (p * 100) + '%';
+                });
+
+                gif.on('finished', (blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `phyllotaxis-${params.seed}.gif`;
+                    a.click();
+
+                    isRecordingGif = false;
+                    document.getElementById('gif-record-text').textContent = 'Record GIF';
+                    document.getElementById('gif-progress').style.display = 'none';
+                });
+
+                // Start animation
+                animatePattern();
+            }
+        }
+
+        // Update display values on load
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('seed-display').textContent = params.seed;
+        });
+    </script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
+</body>
+</html>

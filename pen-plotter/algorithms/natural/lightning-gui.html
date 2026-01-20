@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Lightning Generator - Pen Plotter Art</title>
+    <script src="../../preset-manager.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
+    <link rel="stylesheet" href="../../preset-manager.css">
+    
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    input[type="number"], select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .button-group button {
+      margin: 0;
+    }
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin: 8px 0;
+    }
+    .export-buttons button {
+      margin: 0;
+    }
+    .value-display, .range-value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    canvas {
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <canvas id="canvas" width="800" height="800"></canvas>
+  </div>
+
+  <div id="controls">
+    <h2>Lightning Generator</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <label>Paper Size
+        <select id="paperSize">
+          <option value="square800">Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </label>
+      <label>Background <input type="color" id="bgColor" value="#000000"></label>
+      <label>Stroke Color <input type="color" id="strokeColor" value="#ffffff"></label>
+      <button id="randomizeAll" class="secondary">Randomize Colors</button>
+    </div>
+
+            <div class="control-group">
+                <label for="lightningType">Lightning Type</label>
+                <select id="lightningType">
+                    <option value="cloud-to-ground">Cloud to Ground</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="ball">Ball Lightning</option>
+                    <option value="upward">Upward Lightning</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="branchProb">Branch Probability</label>
+                <input type="range" id="branchProb" min="0" max="1" step="0.01" value="0.05">
+                <div class="value-display" id="branchProbValue">0.05</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="branchAngle">Branch Angle Range</label>
+                <input type="range" id="branchAngle" min="10" max="90" value="45">
+                <div class="value-display" id="branchAngleValue">45°</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="stepSize">Step Size</label>
+                <input type="range" id="stepSize" min="1" max="20" value="5">
+                <div class="value-display" id="stepSizeValue">5</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="maxSteps">Max Steps</label>
+                <input type="range" id="maxSteps" min="50" max="1000" value="200">
+                <div class="value-display" id="maxStepsValue">200</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="lineWidth">Line Width</label>
+                <input type="range" id="lineWidth" min="0.5" max="5" step="0.5" value="1.5">
+                <div class="value-display" id="lineWidthValue">1.5</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="fadeout">Branch Fadeout</label>
+                <input type="checkbox" id="fadeout" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="glow">Add Glow Effect</label>
+                <input type="checkbox" id="glow" checked>
+            </div>
+            
+            <div class="control-group">
+                <label for="multiStrike">Multi-Strike Mode</label>
+                <input type="checkbox" id="multiStrike">
+            </div>
+            
+            <div class="control-group">
+                <label for="strikeCount">Strike Count</label>
+                <input type="number" id="strikeCount" min="1" max="10" value="3">
+            </div>
+            
+            <div class="button-group">
+                <button onclick="generateLightning()">Generate</button>
+                <button onclick="clearCanvas()">Clear</button>
+            </div>
+            
+            <h3>Animation</h3>
+            <div class="control-group">
+                <label for="animationSpeed">Animation Speed (ms)</label>
+                <input type="range" id="animationSpeed" min="10" max="200" value="50">
+                <div class="value-display" id="animationSpeedValue">50ms</div>
+            </div>
+            
+            <button onclick="animateLightning()">Animate Strike</button>
+            
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="export-buttons">
+        <button onclick="exportSVG()">SVG</button>
+        <button onclick="exportPNG()">PNG</button>
+        <button onclick="exportGIF()">GIF</button>
+      </div>
+    </div>
+
+    <!-- Preset Manager (at bottom) -->
+    <div id="preset-container" style="margin-top: 20px;"></div>
+  </div>
+    
+    <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+    <script src="../../shared/export-utils.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let currentPaths = [];
+        let animationFrames = [];
+        let presetManager;
+        let panelController;
+        let statsDisplay;
+
+        // Lightning parameters
+        let params = {
+            paperSize: 'square800',
+            bgColor: '#000000',
+            strokeColor: '#ffffff',
+            lightningType: 'cloud-to-ground',
+            branchProb: 0.05,
+            branchAngle: 45,
+            stepSize: 5,
+            maxSteps: 200,
+            lineWidth: 1.5,
+            fadeout: true,
+            glow: true,
+            multiStrike: false,
+            strikeCount: 3,
+            animationSpeed: 50
+        };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
+        canvasControls.setupRandomizeButton();
+
+        function initCanvasSize() {
+            const size = CanvasLayout.getSize(params.paperSize);
+            canvas.width = size.width;
+            canvas.height = size.height;
+        }
+        initCanvasSize();
+
+        // Canvas settings event handlers
+        document.getElementById('paperSize').addEventListener('change', (e) => {
+            params.paperSize = e.target.value;
+            initCanvasSize();
+            clearCanvas();
+        });
+        document.getElementById('bgColor').addEventListener('input', (e) => {
+            params.bgColor = e.target.value;
+            clearCanvas();
+        });
+        document.getElementById('strokeColor').addEventListener('input', (e) => {
+            params.strokeColor = e.target.value;
+            // Lightning color handled in bolt class
+        });
+
+        function updateUIFromParams() {
+            Object.keys(params).forEach(key => {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = params[key];
+                    } else {
+                        element.value = params[key];
+                    }
+                    const valueDisplay = document.getElementById(key + 'Value');
+                    if (valueDisplay) {
+                        let value = params[key];
+                        if (key === 'branchAngle') value += '°';
+                        else if (key === 'animationSpeed') value += 'ms';
+                        valueDisplay.textContent = value;
+                    }
+                }
+            });
+        }
+
+        function syncParamsFromUI() {
+            params.lightningType = document.getElementById('lightningType').value;
+            params.branchProb = parseFloat(document.getElementById('branchProb').value);
+            params.branchAngle = parseInt(document.getElementById('branchAngle').value);
+            params.stepSize = parseInt(document.getElementById('stepSize').value);
+            params.maxSteps = parseInt(document.getElementById('maxSteps').value);
+            params.lineWidth = parseFloat(document.getElementById('lineWidth').value);
+            params.fadeout = document.getElementById('fadeout').checked;
+            params.glow = document.getElementById('glow').checked;
+            params.multiStrike = document.getElementById('multiStrike').checked;
+            params.strikeCount = parseInt(document.getElementById('strikeCount').value);
+            params.animationSpeed = parseInt(document.getElementById('animationSpeed').value);
+        }
+
+        // Update value displays
+        document.querySelectorAll('input[type="range"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                syncParamsFromUI();
+                const valueDisplay = document.getElementById(e.target.id + 'Value');
+                if (valueDisplay) {
+                    let value = e.target.value;
+                    if (e.target.id === 'branchAngle') value += '°';
+                    else if (e.target.id === 'animationSpeed') value += 'ms';
+                    valueDisplay.textContent = value;
+                }
+            });
+        });
+
+        // Update params when other controls change
+        document.querySelectorAll('select, input[type="checkbox"], input[type="number"]').forEach(input => {
+            input.addEventListener('change', () => {
+                syncParamsFromUI();
+            });
+        });
+        
+        class LightningBolt {
+            constructor(startX, startY, type) {
+                this.paths = [];
+                this.type = type;
+                this.startX = startX;
+                this.startY = startY;
+            }
+
+            generate() {
+                const branchProb = params.branchProb;
+                const branchAngle = params.branchAngle;
+                const stepSize = params.stepSize;
+                const maxSteps = params.maxSteps;
+                
+                this.paths = [];
+                
+                switch(this.type) {
+                    case 'cloud-to-ground':
+                        this.generateVertical(this.startX, this.startY, -90, 0, maxSteps);
+                        break;
+                    case 'horizontal':
+                        this.generateHorizontal(this.startX, this.startY, 0, 0, maxSteps);
+                        break;
+                    case 'ball':
+                        this.generateBall(this.startX, this.startY, maxSteps);
+                        break;
+                    case 'upward':
+                        this.generateVertical(this.startX, this.startY, 90, 0, maxSteps);
+                        break;
+                }
+            }
+            
+            generateVertical(x, y, baseAngle, depth, remainingSteps) {
+                if (remainingSteps <= 0 || y >= canvas.height - 20 || y <= 20) return;
+
+                const path = [{x, y}];
+                const branchProb = params.branchProb;
+                const branchAngle = params.branchAngle;
+                const stepSize = params.stepSize;
+                
+                let currentX = x;
+                let currentY = y;
+                let steps = 0;
+                
+                while (steps < remainingSteps && currentY < canvas.height - 20 && currentY > 20) {
+                    // Add some randomness to the path
+                    const angleVariation = (Math.random() - 0.5) * 30;
+                    const angle = (baseAngle + angleVariation) * Math.PI / 180;
+                    
+                    currentX += Math.cos(angle) * stepSize + (Math.random() - 0.5) * stepSize;
+                    currentY -= Math.sin(angle) * stepSize;
+                    
+                    path.push({x: currentX, y: currentY});
+                    
+                    // Branch occasionally
+                    if (Math.random() < branchProb && depth < 3) {
+                        const branchDir = Math.random() > 0.5 ? 1 : -1;
+                        const newAngle = baseAngle + branchDir * (Math.random() * branchAngle);
+                        this.generateVertical(currentX, currentY, newAngle, depth + 1, 
+                            Math.floor(remainingSteps * 0.7));
+                    }
+                    
+                    steps++;
+                }
+                
+                this.paths.push({path, depth});
+            }
+            
+            generateHorizontal(x, y, baseAngle, depth, remainingSteps) {
+                if (remainingSteps <= 0) return;
+
+                const path = [{x, y}];
+                const branchProb = params.branchProb;
+                const branchAngle = params.branchAngle;
+                const stepSize = params.stepSize;
+                
+                let currentX = x;
+                let currentY = y;
+                let steps = 0;
+                
+                while (steps < remainingSteps && currentX < canvas.width - 20 && currentX > 20) {
+                    const angleVariation = (Math.random() - 0.5) * 20;
+                    const angle = (baseAngle + angleVariation) * Math.PI / 180;
+                    
+                    currentX += Math.cos(angle) * stepSize;
+                    currentY += Math.sin(angle) * stepSize * 0.3;
+                    
+                    path.push({x: currentX, y: currentY});
+                    
+                    if (Math.random() < branchProb && depth < 3) {
+                        const newAngle = baseAngle + (Math.random() - 0.5) * branchAngle;
+                        this.generateHorizontal(currentX, currentY, newAngle, depth + 1, 
+                            Math.floor(remainingSteps * 0.6));
+                    }
+                    
+                    steps++;
+                }
+                
+                this.paths.push({path, depth});
+            }
+            
+            generateBall(centerX, centerY, maxSteps) {
+                const numStrands = 8 + Math.floor(Math.random() * 8);
+
+                for (let i = 0; i < numStrands; i++) {
+                    const angle = (i / numStrands) * Math.PI * 2;
+                    const path = [{x: centerX, y: centerY}];
+
+                    let currentX = centerX;
+                    let currentY = centerY;
+                    let currentAngle = angle;
+
+                    const stepSize = params.stepSize;
+                    const steps = maxSteps / 2 + Math.random() * maxSteps / 2;
+                    
+                    for (let j = 0; j < steps; j++) {
+                        currentAngle += (Math.random() - 0.5) * 0.5;
+                        const radius = j * stepSize * 0.5;
+                        
+                        currentX = centerX + Math.cos(currentAngle) * radius;
+                        currentY = centerY + Math.sin(currentAngle) * radius;
+                        
+                        // Add crackling effect
+                        currentX += (Math.random() - 0.5) * stepSize;
+                        currentY += (Math.random() - 0.5) * stepSize;
+                        
+                        path.push({x: currentX, y: currentY});
+                    }
+                    
+                    this.paths.push({path, depth: 0});
+                }
+            }
+            
+            draw(ctx, alpha = 1) {
+                const lineWidth = params.lineWidth;
+                const fadeout = params.fadeout;
+                const glow = params.glow;
+                
+                this.paths.forEach(({path, depth}) => {
+                    if (path.length < 2) return;
+                    
+                    const depthAlpha = fadeout ? Math.max(0.3, 1 - depth * 0.3) : 1;
+                    const finalAlpha = alpha * depthAlpha;
+                    
+                    // Draw glow effect
+                    if (glow) {
+                        ctx.strokeStyle = `rgba(150, 200, 255, ${finalAlpha * 0.3})`;
+                        ctx.lineWidth = lineWidth * 4;
+                        ctx.beginPath();
+                        ctx.moveTo(path[0].x, path[0].y);
+                        path.forEach(point => ctx.lineTo(point.x, point.y));
+                        ctx.stroke();
+                    }
+                    
+                    // Draw main lightning
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${finalAlpha})`;
+                    ctx.lineWidth = lineWidth * (1 - depth * 0.2);
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(path[0].x, path[0].y);
+                    path.forEach(point => ctx.lineTo(point.x, point.y));
+                    ctx.stroke();
+                });
+            }
+        }
+        
+        function generateLightning() {
+            syncParamsFromUI();
+            clearCanvas();
+            currentPaths = [];
+
+            const type = params.lightningType;
+            const multiStrike = params.multiStrike;
+            const strikeCount = multiStrike ? params.strikeCount : 1;
+            
+            for (let i = 0; i < strikeCount; i++) {
+                let startX, startY;
+                
+                if (type === 'cloud-to-ground' || type === 'upward') {
+                    startX = canvas.width * (0.3 + Math.random() * 0.4);
+                    startY = type === 'cloud-to-ground' ? 50 : canvas.height - 50;
+                } else if (type === 'horizontal') {
+                    startX = 50;
+                    startY = canvas.height * (0.3 + Math.random() * 0.4);
+                } else {
+                    startX = canvas.width / 2;
+                    startY = canvas.height / 2;
+                }
+                
+                const bolt = new LightningBolt(startX, startY, type);
+                bolt.generate();
+                bolt.draw(ctx);
+                currentPaths.push(bolt);
+            }
+
+            // Update stats display
+            if (statsDisplay) {
+                const totalBranches = currentPaths.reduce((sum, bolt) => sum + bolt.paths.length, 0);
+                const totalSegments = currentPaths.reduce((sum, bolt) =>
+                    sum + bolt.paths.reduce((pathSum, {path}) => pathSum + path.length, 0), 0);
+
+                statsDisplay.update({
+                    strikes: strikeCount,
+                    branches: totalBranches,
+                    segments: totalSegments
+                });
+            }
+        }
+        
+        function animateLightning() {
+            if (currentPaths.length === 0) {
+                generateLightning();
+            }
+
+            const speed = params.animationSpeed;
+            let frame = 0;
+            const maxFrames = 20;
+            
+            animationFrames = [];
+            
+            const animate = () => {
+                ctx.fillStyle = params.bgColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const alpha = frame < 5 ? frame / 5 : 
+                              frame > 15 ? (20 - frame) / 5 : 1;
+                
+                currentPaths.forEach(bolt => {
+                    bolt.draw(ctx, alpha);
+                });
+                
+                // Capture frame for GIF
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                animationFrames.push(imageData);
+                
+                frame++;
+                if (frame < maxFrames) {
+                    setTimeout(animate, speed);
+                }
+            };
+            
+            animate();
+        }
+        
+        function clearCanvas() {
+            ctx.fillStyle = params.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            currentPaths = [];
+            animationFrames = [];
+        }
+        
+        function exportSVG() {
+            if (currentPaths.length === 0) return;
+
+            let svg = `<svg width="${canvas.width}" height="${canvas.height}" xmlns="http://www.w3.org/2000/svg">`;
+            svg += `<rect width="${canvas.width}" height="${canvas.height}" fill="#000000"/>`;
+
+            const lineWidth = params.lineWidth;
+            const fadeout = params.fadeout;
+            
+            currentPaths.forEach(bolt => {
+                bolt.paths.forEach(({path, depth}) => {
+                    if (path.length < 2) return;
+                    
+                    const opacity = fadeout ? Math.max(0.3, 1 - depth * 0.3) : 1;
+                    const strokeWidth = lineWidth * (1 - depth * 0.2);
+                    
+                    let d = `M ${path[0].x} ${path[0].y}`;
+                    path.slice(1).forEach(point => {
+                        d += ` L ${point.x} ${point.y}`;
+                    });
+                    
+                    svg += `<path d="${d}" stroke="white" stroke-width="${strokeWidth}" `;
+                    svg += `fill="none" opacity="${opacity}" stroke-linecap="round" stroke-linejoin="round"/>`;
+                });
+            });
+            
+            svg += '</svg>';
+            
+            const blob = new Blob([svg], {type: 'image/svg+xml'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'lightning.svg';
+            a.click();
+        }
+        
+        function exportPNG() {
+            canvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'lightning.png';
+                a.click();
+            });
+        }
+        
+        function exportGIF() {
+            if (animationFrames.length === 0) {
+                alert('Please animate the lightning first!');
+                return;
+            }
+            
+            const gif = new GIF({
+                workers: 2,
+                quality: 10,
+                width: canvas.width,
+                height: canvas.height
+            });
+            
+            animationFrames.forEach((frame, i) => {
+                gif.addFrame(frame, {delay: params.animationSpeed});
+            });
+            
+            gif.on('finished', blob => {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'lightning.gif';
+                a.click();
+            });
+            
+            gif.render();
+        }
+        
+        // Click to set lightning origin
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            clearCanvas();
+            const type = params.lightningType;
+            const bolt = new LightningBolt(x, y, type);
+            bolt.generate();
+            bolt.draw(ctx);
+            currentPaths = [bolt];
+        });
+
+        // Initialize preset manager
+        window.addEventListener('DOMContentLoaded', () => {
+            panelController = new TSPanelController({
+                onToggle: (collapsed) => {
+                    // Trigger resize handling if needed
+                }
+            }).attach();
+
+            statsDisplay = new TSStatsDisplay().attach();
+
+            presetManager = new PresetManager('lightning', {
+                onSave: () => {
+                    syncParamsFromUI();
+                    return params;
+                },
+                onLoad: (loadedParams) => {
+                    params = loadedParams;
+                    updateUIFromParams();
+                    generateLightning();
+                },
+                onRandomize: () => {
+                    params.lightningType = ['cloud-to-ground', 'horizontal', 'ball', 'upward'][Math.floor(Math.random() * 4)];
+                    params.branchProb = Math.random() * 0.15;
+                    params.branchAngle = 20 + Math.random() * 60;
+                    params.stepSize = 2 + Math.random() * 15;
+                    params.maxSteps = 100 + Math.random() * 700;
+                    params.lineWidth = 0.5 + Math.random() * 4;
+                    params.fadeout = Math.random() > 0.3;
+                    params.glow = Math.random() > 0.3;
+                    params.multiStrike = Math.random() > 0.6;
+                    params.strikeCount = 1 + Math.floor(Math.random() * 8);
+                    params.animationSpeed = 20 + Math.random() * 150;
+                    updateUIFromParams();
+                    generateLightning();
+                }
+            });
+        });
+
+        // Initial generation
+        generateLightning();
+    </script>
+</body>
+</html>

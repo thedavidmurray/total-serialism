@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Physarum Simulation - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      position: relative;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      background: var(--ts-bg-deep);
+      padding: 2px 8px;
+      border-radius: var(--ts-radius-sm);
+      min-width: 48px;
+      text-align: center;
+      font-size: 0.8rem;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-container input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--ts-accent-primary);
+    }
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(6, 6, 10, 0.9);
+      padding: 12px 16px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.75rem;
+      border: 1px solid var(--ts-border-subtle);
+    }
+    #info-display div {
+      margin-bottom: 4px;
+    }
+    #info-display span {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+    .export-btn {
+      background: var(--ts-accent-secondary);
+    }
+    .export-btn:hover {
+      background: #ffaa33;
+    }
+    #gif-progress {
+      display: none;
+      background: var(--ts-bg-control);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      margin-top: 8px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-full);
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: var(--ts-accent-primary);
+      transition: width 0.3s;
+    }
+    .preset-btn {
+      background: var(--ts-accent-tertiary);
+    }
+    .preset-btn:hover {
+      background: #9580ff;
+    }
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .btn-row button {
+      flex: 1;
+    }
+    input[type="color"] {
+      width: 44px;
+      height: 32px;
+      border: 2px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+      background: transparent;
+      padding: 0;
+    }
+    input[type="color"]:hover {
+      border-color: var(--ts-accent-primary);
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .color-row label {
+      margin-bottom: 0;
+      flex: 1;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Agents: <span id="agent-count">0</span></div>
+      <div>Frame: <span id="frame-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+      <div>Trail Density: <span id="trail-density">0%</span></div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <h2>Physarum Simulation</h2>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="a4">A4 Portrait</option>
+          <option value="a3" selected>A3 Portrait</option>
+          <option value="letter">US Letter</option>
+          <option value="square">Square (300mm)</option>
+          <option value="a5">A5 Portrait</option>
+        </select>
+      </div>
+      <div class="color-row">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="color-row">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="secondary">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Simulation Control</h3>
+      <button id="play-pause">Pause</button>
+      <div class="btn-row">
+        <button id="step" class="secondary">Step</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Agent Parameters</h3>
+      <div class="control">
+        <label>Number of Agents: <span class="value" id="numAgents-val">10000</span></label>
+        <input type="range" id="numAgents" min="1000" max="50000" value="10000" step="1000">
+      </div>
+      <div class="control">
+        <label>Sensor Angle: <span class="value" id="sensorAngle-val">45</span>deg</label>
+        <input type="range" id="sensorAngle" min="0" max="90" value="45" step="1">
+      </div>
+      <div class="control">
+        <label>Sensor Distance: <span class="value" id="sensorDistance-val">9</span>px</label>
+        <input type="range" id="sensorDistance" min="1" max="50" value="9" step="1">
+      </div>
+      <div class="control">
+        <label>Turn Angle: <span class="value" id="turnAngle-val">45</span>deg</label>
+        <input type="range" id="turnAngle" min="0" max="90" value="45" step="1">
+      </div>
+      <div class="control">
+        <label>Move Speed: <span class="value" id="moveSpeed-val">1</span>px</label>
+        <input type="range" id="moveSpeed" min="0.5" max="5" value="1" step="0.1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Trail Parameters</h3>
+      <div class="control">
+        <label>Deposit Amount: <span class="value" id="depositAmount-val">5</span></label>
+        <input type="range" id="depositAmount" min="1" max="50" value="5" step="1">
+      </div>
+      <div class="control">
+        <label>Decay Rate: <span class="value" id="decayRate-val">0.9</span></label>
+        <input type="range" id="decayRate" min="0.8" max="0.999" value="0.9" step="0.001">
+      </div>
+      <div class="control">
+        <label>Diffusion: <span class="value" id="diffusionRate-val">1</span></label>
+        <input type="range" id="diffusionRate" min="0" max="3" value="1" step="0.1">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Food Sources</h3>
+      <div class="control">
+        <label>Configuration:</label>
+        <select id="foodSource">
+          <option value="none">None</option>
+          <option value="center" selected>Center</option>
+          <option value="edges">Edges</option>
+          <option value="random">Random Points</option>
+          <option value="ring">Ring</option>
+          <option value="grid">Grid</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Food Strength: <span class="value" id="foodStrength-val">50</span></label>
+        <input type="range" id="foodStrength" min="0" max="255" value="50" step="5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Render Mode:</label>
+        <select id="renderMode">
+          <option value="trail" selected>Trail Map</option>
+          <option value="agents">Agents Only</option>
+          <option value="both">Trail + Agents</option>
+          <option value="network">Network Extract</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Trail Threshold: <span class="value" id="trailThreshold-val">10</span></label>
+        <input type="range" id="trailThreshold" min="1" max="100" value="10" step="1">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showInfo" checked>
+        <label for="showInfo">Show Info Panel</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="invertColors">
+        <label for="invertColors">Invert Colors</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Presets</h3>
+      <button class="preset-btn" onclick="loadPreset('classic')">Classic Slime</button>
+      <button class="preset-btn" onclick="loadPreset('web')">Spider Web</button>
+      <button class="preset-btn" onclick="loadPreset('coral')">Coral Network</button>
+      <button class="preset-btn" onclick="loadPreset('veins')">Vein Structure</button>
+      <button class="preset-btn" onclick="loadPreset('maze')">Maze Pattern</button>
+      <button class="preset-btn" onclick="loadPreset('dots')">Dotted Network</button>
+    </div>
+
+    <div class="control-group">
+      <h3>View Controls</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate">
+        <label for="autoRegenerate">Auto regenerate on change</label>
+      </div>
+      <button id="fitViewBtn" class="secondary">Toggle Fit / Manual</button>
+      <div class="control">
+        <label>Zoom: <span class="value" id="zoom-val">1.00x</span></label>
+        <input type="range" id="zoom" min="0.25" max="2.5" value="1" step="0.05">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button id="exportSVG">Export SVG</button>
+      <button id="exportPNG">Export PNG</button>
+      <button id="exportGIF" class="export-btn">Export Animated GIF</button>
+      <div id="gif-progress">
+        <div id="gif-status">Preparing...</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Physarum Transport Network Simulation
+    // Based on Jones (2010) "Characteristics of pattern formation and evolution in approximations of Physarum transport networks"
+
+    let agents = [];
+    let trailMap;
+    let nextTrailMap;
+    let frameNum = 0;
+    let isPaused = false;
+    let presetManager;
+    let autoRegenerate = false;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 200;
+    let fitZoomCtl;
+    let canvas;
+    let simWidth, simHeight;
+
+    // Parameters
+    const params = {
+      paperSize: 'a3',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      numAgents: 10000,
+      sensorAngle: 45,
+      sensorDistance: 9,
+      turnAngle: 45,
+      moveSpeed: 1,
+      depositAmount: 5,
+      decayRate: 0.9,
+      diffusionRate: 1,
+      foodSource: 'center',
+      foodStrength: 50,
+      renderMode: 'trail',
+      trailThreshold: 10,
+      invertColors: false
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor,
+      strokeColor: params.strokeColor
+    });
+    canvasControls.bind(params);
+
+    // Agent class for Physarum simulation
+    class PhysarumAgent {
+      constructor(x, y, angle) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle !== undefined ? angle : random(TWO_PI);
+      }
+
+      sense(angleOffset) {
+        const sensorAngleRad = radians(params.sensorAngle);
+        const angle = this.angle + angleOffset * sensorAngleRad;
+        const senseX = Math.round(this.x + Math.cos(angle) * params.sensorDistance);
+        const senseY = Math.round(this.y + Math.sin(angle) * params.sensorDistance);
+
+        // Wrap coordinates
+        const wx = ((senseX % simWidth) + simWidth) % simWidth;
+        const wy = ((senseY % simHeight) + simHeight) % simHeight;
+
+        return trailMap[wy * simWidth + wx] || 0;
+      }
+
+      update() {
+        // Sense in three directions
+        const senseLeft = this.sense(-1);
+        const senseCenter = this.sense(0);
+        const senseRight = this.sense(1);
+
+        const turnAngleRad = radians(params.turnAngle);
+
+        // Decide turning direction based on sensor readings
+        if (senseCenter > senseLeft && senseCenter > senseRight) {
+          // Continue straight
+        } else if (senseCenter < senseLeft && senseCenter < senseRight) {
+          // Turn randomly left or right
+          this.angle += (random() < 0.5 ? -1 : 1) * turnAngleRad;
+        } else if (senseLeft < senseRight) {
+          // Turn right
+          this.angle += turnAngleRad;
+        } else if (senseRight < senseLeft) {
+          // Turn left
+          this.angle -= turnAngleRad;
+        }
+
+        // Move forward
+        this.x += Math.cos(this.angle) * params.moveSpeed;
+        this.y += Math.sin(this.angle) * params.moveSpeed;
+
+        // Wrap around edges
+        this.x = ((this.x % simWidth) + simWidth) % simWidth;
+        this.y = ((this.y % simHeight) + simHeight) % simHeight;
+
+        // Deposit pheromone trail
+        const ix = Math.floor(this.x);
+        const iy = Math.floor(this.y);
+        const idx = iy * simWidth + ix;
+        if (idx >= 0 && idx < trailMap.length) {
+          trailMap[idx] = Math.min(255, trailMap[idx] + params.depositAmount);
+        }
+      }
+    }
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      // Use actual canvas size for display, but simulation runs at lower resolution
+      simWidth = size.width;
+      simHeight = size.height;
+
+      canvas = createCanvas(simWidth, simHeight);
+      canvas.parent('canvas-container');
+
+      // Initialize panel controller and stats display
+      window.panelController = new TSPanelController().attach();
+      window.statsDisplay = new TSStatsDisplay().attach();
+
+      // Initialize trail maps
+      trailMap = new Float32Array(simWidth * simHeight);
+      nextTrailMap = new Float32Array(simWidth * simHeight);
+
+      initializeAgents();
+      addFoodSources();
+      setupControls();
+      canvasControls.setupRandomizeButton();
+
+      // Setup fit/zoom controls
+      if (window.CanvasLayout) {
+        fitZoomCtl = CanvasLayout.attachFitZoom({
+          container: document.getElementById('canvas-container'),
+          canvasEl: canvas.canvas,
+          fitToggle: document.getElementById('fitViewBtn'),
+          zoomInput: document.getElementById('zoom')
+        });
+      }
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'physarum-simulation',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          resetSimulation();
+        },
+        onRandomize: () => {
+          params.numAgents = Math.floor(random(5000, 30000));
+          params.sensorAngle = Math.floor(random(10, 80));
+          params.sensorDistance = Math.floor(random(3, 30));
+          params.turnAngle = Math.floor(random(10, 80));
+          params.moveSpeed = random(0.5, 3);
+          params.depositAmount = Math.floor(random(1, 30));
+          params.decayRate = random(0.85, 0.99);
+          params.diffusionRate = random(0, 2);
+          updateUIFromParams();
+          resetSimulation();
+        }
+      });
+    }
+
+    function initializeAgents() {
+      agents = [];
+      const cx = simWidth / 2;
+      const cy = simHeight / 2;
+
+      for (let i = 0; i < params.numAgents; i++) {
+        // Spawn agents in a circle around center
+        const angle = random(TWO_PI);
+        const radius = random(50, Math.min(simWidth, simHeight) * 0.4);
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        agents.push(new PhysarumAgent(x, y, angle + PI)); // Face toward center
+      }
+    }
+
+    function addFoodSources() {
+      const cx = simWidth / 2;
+      const cy = simHeight / 2;
+      const strength = params.foodStrength;
+
+      switch (params.foodSource) {
+        case 'center':
+          addFoodAt(cx, cy, 30, strength);
+          break;
+
+        case 'edges':
+          addFoodAt(50, cy, 20, strength);
+          addFoodAt(simWidth - 50, cy, 20, strength);
+          addFoodAt(cx, 50, 20, strength);
+          addFoodAt(cx, simHeight - 50, 20, strength);
+          break;
+
+        case 'random':
+          for (let i = 0; i < 10; i++) {
+            addFoodAt(random(simWidth), random(simHeight), 15, strength);
+          }
+          break;
+
+        case 'ring':
+          const ringRadius = Math.min(simWidth, simHeight) * 0.35;
+          for (let a = 0; a < TWO_PI; a += PI / 6) {
+            addFoodAt(cx + Math.cos(a) * ringRadius, cy + Math.sin(a) * ringRadius, 10, strength);
+          }
+          break;
+
+        case 'grid':
+          const spacing = 100;
+          for (let x = spacing; x < simWidth; x += spacing) {
+            for (let y = spacing; y < simHeight; y += spacing) {
+              addFoodAt(x, y, 8, strength);
+            }
+          }
+          break;
+
+        case 'none':
+        default:
+          break;
+      }
+    }
+
+    function addFoodAt(x, y, radius, strength) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        for (let dy = -radius; dy <= radius; dy++) {
+          if (dx * dx + dy * dy <= radius * radius) {
+            const px = Math.floor(x + dx);
+            const py = Math.floor(y + dy);
+            if (px >= 0 && px < simWidth && py >= 0 && py < simHeight) {
+              const idx = py * simWidth + px;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              const falloff = 1 - (dist / radius);
+              trailMap[idx] = Math.min(255, trailMap[idx] + strength * falloff);
+            }
+          }
+        }
+      }
+    }
+
+    function resetSimulation() {
+      trailMap.fill(0);
+      nextTrailMap.fill(0);
+      frameNum = 0;
+      initializeAgents();
+      addFoodSources();
+    }
+
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? 'Play' : 'Pause';
+      });
+
+      // Step
+      document.getElementById('step').addEventListener('click', () => {
+        if (isPaused) {
+          simulationStep();
+          renderSimulation();
+        }
+      });
+
+      // Reset
+      document.getElementById('reset').addEventListener('click', resetSimulation);
+
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      // Color controls
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+      });
+
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+      });
+
+      // Agent parameters
+      setupRangeControl('numAgents', true);
+      setupRangeControl('sensorAngle', true);
+      setupRangeControl('sensorDistance', true);
+      setupRangeControl('turnAngle', true);
+      setupRangeControl('moveSpeed', false);
+
+      // Trail parameters
+      setupRangeControl('depositAmount', true);
+      setupRangeControl('decayRate', false);
+      setupRangeControl('diffusionRate', false);
+
+      // Food source
+      document.getElementById('foodSource').addEventListener('change', (e) => {
+        params.foodSource = e.target.value;
+        queueRegenerate();
+      });
+      setupRangeControl('foodStrength', true);
+
+      // Display options
+      document.getElementById('renderMode').addEventListener('change', (e) => {
+        params.renderMode = e.target.value;
+      });
+      setupRangeControl('trailThreshold', true);
+
+      document.getElementById('showInfo').addEventListener('change', (e) => {
+        document.getElementById('info-display').style.display = e.target.checked ? 'block' : 'none';
+      });
+
+      document.getElementById('invertColors').addEventListener('change', (e) => {
+        params.invertColors = e.target.checked;
+      });
+
+      // Auto regenerate
+      document.getElementById('autoRegenerate').addEventListener('change', (e) => {
+        autoRegenerate = e.target.checked;
+      });
+
+      // Zoom
+      document.getElementById('zoom').addEventListener('input', (e) => {
+        document.getElementById('zoom-val').textContent = parseFloat(e.target.value).toFixed(2) + 'x';
+      });
+
+      // Export buttons
+      document.getElementById('exportSVG').addEventListener('click', exportSVG);
+      document.getElementById('exportPNG').addEventListener('click', exportPNG);
+      document.getElementById('exportGIF').addEventListener('click', exportGIF);
+    }
+
+    function setupRangeControl(id, isInt) {
+      const element = document.getElementById(id);
+      const valueDisplay = document.getElementById(id + '-val');
+
+      element.addEventListener('input', (e) => {
+        const value = isInt ? parseInt(e.target.value) : parseFloat(e.target.value);
+        params[id] = value;
+        if (valueDisplay) {
+          valueDisplay.textContent = isInt ? value : value.toFixed(value < 1 ? 3 : 1);
+        }
+        queueRegenerate();
+      });
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(resetSimulation, REGEN_DEBOUNCE);
+    }
+
+    function updateUIFromParams() {
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          if (element.type === 'checkbox') {
+            element.checked = params[param];
+          } else {
+            element.value = params[param];
+          }
+          const valueDisplay = document.getElementById(param + '-val');
+          if (valueDisplay) {
+            const val = params[param];
+            valueDisplay.textContent = typeof val === 'number' ?
+              (Number.isInteger(val) ? val : val.toFixed(val < 1 ? 3 : 1)) : val;
+          }
+        }
+      });
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      simWidth = size.width;
+      simHeight = size.height;
+
+      resizeCanvas(simWidth, simHeight);
+
+      // Reinitialize trail maps
+      trailMap = new Float32Array(simWidth * simHeight);
+      nextTrailMap = new Float32Array(simWidth * simHeight);
+
+      resetSimulation();
+    }
+
+    function draw() {
+      if (!isPaused) {
+        simulationStep();
+      }
+      renderSimulation();
+      updateInfo();
+      frameNum++;
+    }
+
+    function simulationStep() {
+      // Update all agents
+      for (const agent of agents) {
+        agent.update();
+      }
+
+      // Diffuse and decay trail map
+      diffuseTrailMap();
+
+      // Swap buffers
+      [trailMap, nextTrailMap] = [nextTrailMap, trailMap];
+
+      // Apply decay
+      for (let i = 0; i < trailMap.length; i++) {
+        trailMap[i] *= params.decayRate;
+      }
+
+      // Reapply food sources (persistent attractors)
+      if (params.foodSource !== 'none' && frameNum % 10 === 0) {
+        addFoodSources();
+      }
+    }
+
+    function diffuseTrailMap() {
+      const diffusion = params.diffusionRate;
+
+      if (diffusion === 0) {
+        // No diffusion, just copy
+        nextTrailMap.set(trailMap);
+        return;
+      }
+
+      // 3x3 box blur kernel
+      const kernel = 1 / 9;
+
+      for (let y = 1; y < simHeight - 1; y++) {
+        for (let x = 1; x < simWidth - 1; x++) {
+          let sum = 0;
+          for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+              sum += trailMap[(y + dy) * simWidth + (x + dx)];
+            }
+          }
+          const blurred = sum * kernel;
+          const original = trailMap[y * simWidth + x];
+          nextTrailMap[y * simWidth + x] = lerp(original, blurred, diffusion);
+        }
+      }
+    }
+
+    function renderSimulation() {
+      loadPixels();
+
+      const bg = color(params.bgColor);
+      const stroke = color(params.strokeColor);
+      const bgR = red(bg), bgG = green(bg), bgB = blue(bg);
+      const sR = red(stroke), sG = green(stroke), sB = blue(stroke);
+      const threshold = params.trailThreshold;
+      const invert = params.invertColors;
+
+      for (let i = 0; i < trailMap.length; i++) {
+        const pixelIndex = i * 4;
+        const trail = trailMap[i];
+
+        if (params.renderMode === 'agents') {
+          // Background only for agent rendering
+          pixels[pixelIndex] = bgR;
+          pixels[pixelIndex + 1] = bgG;
+          pixels[pixelIndex + 2] = bgB;
+          pixels[pixelIndex + 3] = 255;
+        } else if (params.renderMode === 'network') {
+          // Binary threshold for network extraction
+          if (trail > threshold) {
+            pixels[pixelIndex] = invert ? bgR : sR;
+            pixels[pixelIndex + 1] = invert ? bgG : sG;
+            pixels[pixelIndex + 2] = invert ? bgB : sB;
+          } else {
+            pixels[pixelIndex] = invert ? sR : bgR;
+            pixels[pixelIndex + 1] = invert ? sG : bgG;
+            pixels[pixelIndex + 2] = invert ? sB : bgB;
+          }
+          pixels[pixelIndex + 3] = 255;
+        } else {
+          // Trail map visualization
+          const t = Math.min(trail / 100, 1);
+          if (invert) {
+            pixels[pixelIndex] = lerp(sR, bgR, t);
+            pixels[pixelIndex + 1] = lerp(sG, bgG, t);
+            pixels[pixelIndex + 2] = lerp(sB, bgB, t);
+          } else {
+            pixels[pixelIndex] = lerp(bgR, sR, t);
+            pixels[pixelIndex + 1] = lerp(bgG, sG, t);
+            pixels[pixelIndex + 2] = lerp(bgB, sB, t);
+          }
+          pixels[pixelIndex + 3] = 255;
+        }
+      }
+
+      updatePixels();
+
+      // Draw agents if needed
+      if (params.renderMode === 'agents' || params.renderMode === 'both') {
+        noStroke();
+        fill(red(stroke), green(stroke), blue(stroke));
+        for (const agent of agents) {
+          rect(agent.x, agent.y, 1, 1);
+        }
+      }
+    }
+
+    function updateInfo() {
+      document.getElementById('agent-count').textContent = agents.length;
+      document.getElementById('frame-count').textContent = frameNum;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+
+      // Calculate trail density
+      let activePixels = 0;
+      for (let i = 0; i < trailMap.length; i++) {
+        if (trailMap[i] > params.trailThreshold) activePixels++;
+      }
+      const density = (activePixels / trailMap.length * 100).toFixed(1);
+      document.getElementById('trail-density').textContent = density + '%';
+
+      // Update stats display
+      if (window.statsDisplay) {
+        window.statsDisplay.update({
+          agents: agents.length,
+          trails: activePixels,
+          iterations: frameNum,
+          density: density + '%',
+          fps: Math.round(frameRate()),
+          decay: params.decayRate.toFixed(3),
+          diffusion: params.diffusionRate.toFixed(1)
+        });
+      }
+    }
+
+    // Preset configurations
+    function loadPreset(name) {
+      switch (name) {
+        case 'classic':
+          params.sensorAngle = 45;
+          params.sensorDistance = 9;
+          params.turnAngle = 45;
+          params.moveSpeed = 1;
+          params.depositAmount = 5;
+          params.decayRate = 0.9;
+          params.diffusionRate = 1;
+          break;
+
+        case 'web':
+          params.sensorAngle = 22;
+          params.sensorDistance = 20;
+          params.turnAngle = 22;
+          params.moveSpeed = 1.5;
+          params.depositAmount = 3;
+          params.decayRate = 0.95;
+          params.diffusionRate = 0.5;
+          break;
+
+        case 'coral':
+          params.sensorAngle = 60;
+          params.sensorDistance = 5;
+          params.turnAngle = 60;
+          params.moveSpeed = 0.8;
+          params.depositAmount = 10;
+          params.decayRate = 0.85;
+          params.diffusionRate = 2;
+          break;
+
+        case 'veins':
+          params.sensorAngle = 30;
+          params.sensorDistance = 15;
+          params.turnAngle = 30;
+          params.moveSpeed = 1.2;
+          params.depositAmount = 8;
+          params.decayRate = 0.92;
+          params.diffusionRate = 0.8;
+          break;
+
+        case 'maze':
+          params.sensorAngle = 75;
+          params.sensorDistance = 3;
+          params.turnAngle = 90;
+          params.moveSpeed = 0.5;
+          params.depositAmount = 15;
+          params.decayRate = 0.88;
+          params.diffusionRate = 1.5;
+          break;
+
+        case 'dots':
+          params.sensorAngle = 10;
+          params.sensorDistance = 35;
+          params.turnAngle = 10;
+          params.moveSpeed = 2;
+          params.depositAmount = 2;
+          params.decayRate = 0.97;
+          params.diffusionRate = 0.2;
+          break;
+      }
+
+      updateUIFromParams();
+      resetSimulation();
+    }
+
+    // Export functions
+    function exportSVG() {
+      const paths = [];
+      const threshold = params.trailThreshold;
+
+      // Extract contours using marching squares
+      const visited = new Set();
+
+      for (let y = 1; y < simHeight - 1; y++) {
+        for (let x = 1; x < simWidth - 1; x++) {
+          const idx = y * simWidth + x;
+          if (trailMap[idx] > threshold && !visited.has(idx)) {
+            // Trace contour
+            const contour = traceContour(x, y, threshold, visited);
+            if (contour.length > 3) {
+              paths.push({
+                d: TSExport.pointsToPath(contour, true),
+                stroke: params.strokeColor,
+                strokeWidth: 1,
+                fill: 'none'
+              });
+            }
+          }
+        }
+      }
+
+      // If no contours found, export as binary image
+      if (paths.length === 0) {
+        for (let y = 0; y < simHeight; y++) {
+          for (let x = 0; x < simWidth; x++) {
+            if (trailMap[y * simWidth + x] > threshold) {
+              paths.push({
+                d: `M ${x} ${y} h 1 v 1 h -1 Z`,
+                stroke: 'none',
+                fill: params.strokeColor
+              });
+            }
+          }
+        }
+      }
+
+      const svg = TSExport.createSVG(paths, simWidth, simHeight, {
+        backgroundColor: params.bgColor,
+        strokeColor: params.strokeColor,
+        strokeWidth: 1
+      });
+
+      TSExport.downloadSVG(svg, 'physarum');
+    }
+
+    function traceContour(startX, startY, threshold, visited) {
+      const contour = [];
+      let x = startX, y = startY;
+      const directions = [[1,0], [0,1], [-1,0], [0,-1]];
+      let dir = 0;
+      let steps = 0;
+      const maxSteps = simWidth * simHeight;
+
+      do {
+        const idx = y * simWidth + x;
+        if (!visited.has(idx)) {
+          contour.push({x, y});
+          visited.add(idx);
+        }
+
+        // Try to turn right first, then straight, then left
+        let found = false;
+        for (let turn = -1; turn <= 2; turn++) {
+          const newDir = (dir + turn + 4) % 4;
+          const nx = x + directions[newDir][0];
+          const ny = y + directions[newDir][1];
+
+          if (nx >= 0 && nx < simWidth && ny >= 0 && ny < simHeight) {
+            const nidx = ny * simWidth + nx;
+            if (trailMap[nidx] > threshold) {
+              x = nx;
+              y = ny;
+              dir = newDir;
+              found = true;
+              break;
+            }
+          }
+        }
+
+        if (!found) break;
+        steps++;
+      } while ((x !== startX || y !== startY) && steps < maxSteps);
+
+      return contour;
+    }
+
+    function exportPNG() {
+      TSExport.downloadPNG(canvas.canvas, 'physarum', { scale: 2 });
+    }
+
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      const progressBar = document.getElementById('gif-progress-bar');
+      const gifProgress = document.getElementById('gif-progress');
+
+      statusEl.textContent = 'Preparing GIF export...';
+      gifProgress.style.display = 'block';
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: simWidth,
+        height: simHeight,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/dist/gif.worker.js'
+      });
+
+      // Store current state
+      const wasPlaying = !isPaused;
+      isPaused = true;
+
+      // Save current state
+      const savedTrailMap = new Float32Array(trailMap);
+      const savedAgents = agents.map(a => ({x: a.x, y: a.y, angle: a.angle}));
+      const savedFrame = frameNum;
+
+      // Reset for clean GIF
+      resetSimulation();
+
+      const totalFrames = 60;
+      const frameDelay = 100;
+
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Run multiple simulation steps per frame
+        for (let s = 0; s < 3; s++) {
+          simulationStep();
+        }
+
+        // Render to offscreen canvas
+        renderSimulation();
+
+        // Create copy for GIF
+        const offscreen = document.createElement('canvas');
+        offscreen.width = simWidth;
+        offscreen.height = simHeight;
+        const ctx = offscreen.getContext('2d');
+        ctx.drawImage(canvas.canvas, 0, 0);
+
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+        progressBar.style.width = progress + '%';
+      }
+
+      // Restore state
+      trailMap.set(savedTrailMap);
+      agents = savedAgents.map(a => new PhysarumAgent(a.x, a.y, a.angle));
+      frameNum = savedFrame;
+      isPaused = !wasPlaying;
+
+      statusEl.textContent = 'Encoding GIF...';
+
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'physarum-animation.gif';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        setTimeout(() => {
+          statusEl.textContent = '';
+          gifProgress.style.display = 'none';
+        }, 3000);
+      });
+
+      gif.render();
+    }
+
+    // Mouse interaction - add attractors
+    function mousePressed() {
+      if (mouseX >= 0 && mouseX < simWidth && mouseY >= 0 && mouseY < simHeight) {
+        addFoodAt(mouseX, mouseY, 20, params.foodStrength);
+      }
+    }
+
+    function mouseDragged() {
+      if (mouseX >= 0 && mouseX < simWidth && mouseY >= 0 && mouseY < simHeight) {
+        addFoodAt(mouseX, mouseY, 10, params.foodStrength * 0.5);
+      }
+    }
+  </script>
+
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+</body>
+</html>

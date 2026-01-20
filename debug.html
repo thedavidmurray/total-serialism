@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #fff;
+            font-family: monospace;
+        }
+        #log {
+            white-space: pre-wrap;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        #canvas-container {
+            border: 1px solid #333;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Debug Test - Total Serialism V3</h1>
+    
+    <div id="log">Loading scripts...</div>
+    
+    <div id="canvas-container"></div>
+    
+    <script>
+        const log = (msg) => {
+            document.getElementById('log').innerHTML += '\n' + msg;
+            console.log(msg);
+        };
+        
+        log('Page loaded');
+    </script>
+    
+    <script src="collision-detection.js" onload="log('✓ collision-detection.js loaded')" onerror="log('✗ Error loading collision-detection.js')"></script>
+    <script src="golden-ratio-composition.js" onload="log('✓ golden-ratio-composition.js loaded')" onerror="log('✗ Error loading golden-ratio-composition.js')"></script>
+    <script src="total-serialism-v3-engine.js" onload="log('✓ total-serialism-v3-engine.js loaded')" onerror="log('✗ Error loading total-serialism-v3-engine.js')"></script>
+    
+    <script>
+        window.addEventListener('load', () => {
+            log('\nWindow loaded');
+            
+            // Check if classes are available
+            log('CollisionDetectionSystem: ' + (typeof CollisionDetectionSystem));
+            log('GoldenRatioComposition: ' + (typeof GoldenRatioComposition));
+            log('TotalSerialismArtwork: ' + (typeof TotalSerialismArtwork));
+            log('artwork object: ' + (typeof artwork));
+            
+            if (typeof artwork !== 'undefined') {
+                log('\nArtwork object exists!');
+                log('p5: ' + (artwork.p5 ? 'initialized' : 'not initialized'));
+                
+                // Try a simple generation
+                setTimeout(() => {
+                    log('\nAttempting to generate artwork...');
+                    try {
+                        if (artwork.p5) {
+                            artwork.generate();
+                            log('✓ Generation successful!');
+                        } else {
+                            log('✗ p5 not initialized yet');
+                        }
+                    } catch (e) {
+                        log('✗ Error: ' + e.message);
+                        console.error(e);
+                    }
+                }, 1000);
+            }
+        });
+        
+        // Catch any errors
+        window.addEventListener('error', (e) => {
+            log('\n✗ JavaScript Error: ' + e.message + ' at ' + e.filename + ':' + e.lineno);
+        });
+    </script>
+</body>
+</html>

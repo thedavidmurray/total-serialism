@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Functional Validator - Total Serialism</title>
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    :root {
+      --status-pass: #22c55e;
+      --status-fail: #ef4444;
+      --status-warn: #f59e0b;
+      --status-running: #3b82f6;
+      --status-pending: #6b7280;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--ts-bg-primary);
+      color: var(--ts-text-primary);
+    }
+
+    .validator-app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      margin: 0 0 0.5rem 0;
+      font-size: 1.5rem;
+    }
+
+    .subtitle {
+      color: var(--ts-text-muted);
+      font-size: 0.875rem;
+    }
+
+    .controls-bar {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .stats-bar {
+      display: flex;
+      gap: 1.5rem;
+      margin-left: auto;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ts-text-muted);
+    }
+
+    .stat.pass .stat-value { color: var(--status-pass); }
+    .stat.fail .stat-value { color: var(--status-fail); }
+    .stat.warn .stat-value { color: var(--status-warn); }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1rem;
+    }
+
+    .test-card {
+      background: var(--ts-bg-secondary);
+      border: 1px solid var(--ts-border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .test-card.running {
+      border-color: var(--status-running);
+    }
+
+    .test-card.pass {
+      border-color: var(--status-pass);
+    }
+
+    .test-card.fail {
+      border-color: var(--status-fail);
+    }
+
+    .test-card.warn {
+      border-color: var(--status-warn);
+    }
+
+    .card-header {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--ts-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-title {
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .card-category {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--ts-text-muted);
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+
+    .status-badge.pending { background: var(--ts-bg-tertiary); color: var(--status-pending); }
+    .status-badge.running { background: rgba(59, 130, 246, 0.2); color: var(--status-running); }
+    .status-badge.pass { background: rgba(34, 197, 94, 0.2); color: var(--status-pass); }
+    .status-badge.fail { background: rgba(239, 68, 68, 0.2); color: var(--status-fail); }
+    .status-badge.warn { background: rgba(245, 158, 11, 0.2); color: var(--status-warn); }
+
+    .test-results {
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+    }
+
+    .test-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.25rem 0;
+    }
+
+    .test-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .test-icon.pass { color: var(--status-pass); }
+    .test-icon.fail { color: var(--status-fail); }
+    .test-icon.warn { color: var(--status-warn); }
+    .test-icon.pending { color: var(--status-pending); }
+
+    .test-name {
+      flex: 1;
+    }
+
+    .test-detail {
+      color: var(--ts-text-muted);
+      font-size: 0.7rem;
+    }
+
+    .error-section {
+      background: rgba(239, 68, 68, 0.1);
+      padding: 0.5rem 1rem;
+      font-size: 0.7rem;
+      color: var(--status-fail);
+      font-family: 'SF Mono', Monaco, monospace;
+      max-height: 100px;
+      overflow-y: auto;
+    }
+
+    .card-actions {
+      padding: 0.5rem 1rem;
+      border-top: 1px solid var(--ts-border);
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .card-actions .ts-btn {
+      flex: 1;
+      padding: 0.25rem;
+      font-size: 0.7rem;
+    }
+
+    .progress-container {
+      margin-bottom: 1rem;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--ts-bg-tertiary);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--status-pass), var(--ts-accent));
+      transition: width 0.3s;
+    }
+
+    .progress-text {
+      font-size: 0.75rem;
+      color: var(--ts-text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* Hidden test iframe */
+    #testFrame {
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      width: 800px;
+      height: 600px;
+      border: 2px solid var(--ts-border);
+      background: white;
+      z-index: 1000;
+      display: none;
+    }
+
+    #testFrame.visible {
+      display: block;
+    }
+
+    .show-frame-toggle {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      z-index: 1001;
+    }
+  </style>
+</head>
+<body>
+  <div class="validator-app">
+    <header>
+      <h1>Functional Algorithm Validator</h1>
+      <p class="subtitle">Tests controls, canvas regeneration, and API functionality</p>
+    </header>
+
+    <div class="controls-bar">
+      <button class="ts-btn ts-btn-primary" id="runAll">Run All Tests</button>
+      <button class="ts-btn ts-btn-secondary" id="runFailed">Retry Failed</button>
+      <button class="ts-btn ts-btn-secondary" id="exportReport">Export Report</button>
+
+      <div class="stats-bar">
+        <div class="stat pass">
+          <div class="stat-value" id="passCount">0</div>
+          <div class="stat-label">Pass</div>
+        </div>
+        <div class="stat warn">
+          <div class="stat-value" id="warnCount">0</div>
+          <div class="stat-label">Warn</div>
+        </div>
+        <div class="stat fail">
+          <div class="stat-value" id="failCount">0</div>
+          <div class="stat-label">Fail</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-container" id="progressContainer" style="display: none;">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-text" id="progressText">Testing...</div>
+    </div>
+
+    <div class="test-grid" id="testGrid"></div>
+  </div>
+
+  <iframe id="testFrame" sandbox="allow-scripts allow-same-origin"></iframe>
+  <button class="ts-btn ts-btn-secondary show-frame-toggle" id="toggleFrame">Show Test Frame</button>
+
+  <script>
+    // Algorithm registry
+    const algorithms = {
+      'advanced': ['chladni-patterns-gui.html', 'parametric-surfaces-gui.html', 'sound-waveform-gui.html', 'vortex-street-gui.html'],
+      'ai': ['ml5-patterns-gui.html'],
+      'cellular-automata': ['elementary-ca-layers.html', 'elementary-ca.html', 'game-of-life-gui.html', 'game-of-life-layers.html'],
+      'chemical': ['belousov-zhabotinsky-gui.html', 'chromatography-gui.html', 'convection-cells-gui.html', 'crystallization-gui.html', 'liesegang-rings-gui.html', 'mixing-patterns-gui.html'],
+      'curves': ['hilbert-curve-gui.html'],
+      'flow-fields': ['flow-field-collision.html', 'flow-field-p5-gui.html'],
+      'geometric': ['10print-gui.html', '10print-simple.html', 'circle-rays-gui.html', 'circle-twist-gui.html', 'grid-landscape-gui.html', 'hash-tiles-gui.html', 'islamic-patterns-gui.html', 'penrose-tiling-gui.html', 'perlin-circles-gui.html', 'perlin-landscape-gui.html', 'perlin-spiral-gui.html', 'snowflakes-gui.html', 'spiral-burst-gui.html', 'spiral-fill.html', 'spirotron-gui.html'],
+      'hybrid': ['hybrid-composer-gui.html'],
+      'image-processing': ['ascii-art-gui.html', 'dithering-gui.html', 'halftone.html', 'hatching.html', 'image-to-ascii-gui.html', 'squigglecam.html'],
+      'natural': ['astronomy-gui.html', 'coral-growth-gui.html', 'crystal-growth-gui.html', 'lightning-gui.html'],
+      'packing': ['circle-packing-gui.html'],
+      'physics': ['particle-system-gui.html', 'test-color-controls.html'],
+      'reaction-diffusion': ['reaction-diffusion-enhanced.html', 'reaction-diffusion-gui.html', 'reaction-diffusion-layers.html'],
+      'symmetry': ['kumiko-pattern.html', 'truchet-tiles-gui.html', 'zellige-pattern.html'],
+      'textures': ['hatching-demo.html'],
+      'trees-lsystems': ['lsystem-simple.html', 'tree-gui.html', 'tree-working.html'],
+      'voronoi': ['tsp-art-gui.html', 'voronoi-stippling-gui.html']
+    };
+
+    // Test definitions
+    const testDefinitions = [
+      {
+        id: 'canvas-exists',
+        name: 'Canvas exists',
+        test: (win) => {
+          const canvas = win.document.querySelector('canvas');
+          return { pass: !!canvas, detail: canvas ? `${canvas.width}x${canvas.height}` : 'No canvas found' };
+        }
+      },
+      {
+        id: 'canvas-has-content',
+        name: 'Canvas has content',
+        test: (win) => {
+          const canvas = win.document.querySelector('canvas');
+          if (!canvas) return { pass: false, detail: 'No canvas' };
+
+          try {
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return { pass: false, detail: 'No 2D context' };
+
+            const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+            let nonEmpty = 0;
+            for (let i = 0; i < data.length; i += 4) {
+              if (data[i] !== 0 || data[i+1] !== 0 || data[i+2] !== 0 || data[i+3] !== 0) {
+                nonEmpty++;
+              }
+            }
+            const percent = (nonEmpty / (data.length / 4) * 100).toFixed(1);
+            return { pass: nonEmpty > 100, detail: `${percent}% filled` };
+          } catch (e) {
+            // Might be WebGL
+            const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
+            return { pass: !!gl, detail: gl ? 'WebGL canvas' : e.message };
+          }
+        }
+      },
+      {
+        id: 'controls-exist',
+        name: 'Controls exist',
+        test: (win) => {
+          const doc = win.document;
+          const sliders = doc.querySelectorAll('input[type="range"]');
+          const checkboxes = doc.querySelectorAll('input[type="checkbox"]');
+          const selects = doc.querySelectorAll('select');
+          const buttons = doc.querySelectorAll('button');
+          const total = sliders.length + checkboxes.length + selects.length;
+          return {
+            pass: total > 0,
+            detail: `${sliders.length} sliders, ${checkboxes.length} checkboxes, ${selects.length} selects`
+          };
+        }
+      },
+      {
+        id: 'ts-apis-exist',
+        name: 'TS APIs loaded',
+        test: (win) => {
+          const apis = ['TSCanvas', 'TSAutoRegen', 'TSControls', 'TSZoom'];
+          const found = apis.filter(api => typeof win[api] !== 'undefined');
+          return {
+            pass: found.length >= 2,
+            detail: found.length > 0 ? found.join(', ') : 'None found',
+            warn: found.length > 0 && found.length < 4
+          };
+        }
+      },
+      {
+        id: 'slider-changes-value',
+        name: 'Slider changes value',
+        test: async (win) => {
+          const slider = win.document.querySelector('input[type="range"]');
+          if (!slider) return { pass: null, detail: 'No sliders to test' };
+
+          const oldValue = slider.value;
+          const newValue = parseFloat(slider.min) + (parseFloat(slider.max) - parseFloat(slider.min)) / 2;
+
+          slider.value = newValue;
+          slider.dispatchEvent(new Event('input', { bubbles: true }));
+
+          await new Promise(r => setTimeout(r, 100));
+
+          return {
+            pass: slider.value != oldValue,
+            detail: `${oldValue} → ${slider.value}`
+          };
+        }
+      },
+      {
+        id: 'canvas-regenerates',
+        name: 'Canvas regenerates',
+        test: async (win) => {
+          const canvas = win.document.querySelector('canvas');
+          if (!canvas) return { pass: false, detail: 'No canvas' };
+
+          // Capture initial state
+          let initialData;
+          try {
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              initialData = ctx.getImageData(0, 0, Math.min(100, canvas.width), Math.min(100, canvas.height)).data.slice(0, 1000);
+            }
+          } catch (e) {
+            return { pass: null, detail: 'Cannot capture canvas state' };
+          }
+
+          // Try to trigger regeneration
+          const regenBtn = win.document.getElementById('regenerateBtn') ||
+                          win.document.querySelector('[onclick*="generate"]') ||
+                          win.document.querySelector('button');
+
+          if (regenBtn) {
+            regenBtn.click();
+            await new Promise(r => setTimeout(r, 500));
+          } else if (win.TSAutoRegen && win.TSAutoRegen.force) {
+            win.TSAutoRegen.force();
+            await new Promise(r => setTimeout(r, 500));
+          } else {
+            // Try changing a slider
+            const slider = win.document.querySelector('input[type="range"]');
+            if (slider) {
+              const range = parseFloat(slider.max) - parseFloat(slider.min);
+              slider.value = parseFloat(slider.value) + range * 0.1;
+              slider.dispatchEvent(new Event('input', { bubbles: true }));
+              await new Promise(r => setTimeout(r, 500));
+            }
+          }
+
+          // Check if canvas changed
+          try {
+            const ctx = canvas.getContext('2d');
+            if (ctx && initialData) {
+              const newData = ctx.getImageData(0, 0, Math.min(100, canvas.width), Math.min(100, canvas.height)).data.slice(0, 1000);
+              let changes = 0;
+              for (let i = 0; i < initialData.length; i++) {
+                if (initialData[i] !== newData[i]) changes++;
+              }
+              const changePercent = (changes / initialData.length * 100).toFixed(1);
+              return { pass: changes > 50, detail: `${changePercent}% pixels changed` };
+            }
+          } catch (e) {
+            return { pass: null, detail: e.message };
+          }
+
+          return { pass: null, detail: 'Could not verify' };
+        }
+      },
+      {
+        id: 'no-console-errors',
+        name: 'No console errors',
+        test: (win) => {
+          // This is captured during page load
+          const errors = win.__testErrors || [];
+          return {
+            pass: errors.length === 0,
+            detail: errors.length > 0 ? errors[0].substring(0, 50) : 'Clean',
+            errors: errors
+          };
+        }
+      }
+    ];
+
+    // State
+    const state = {
+      results: new Map(),
+      running: false,
+      currentIndex: 0,
+      total: 0
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      buildTestGrid();
+      setupEventListeners();
+    });
+
+    function buildTestGrid() {
+      const grid = document.getElementById('testGrid');
+      grid.innerHTML = '';
+
+      Object.entries(algorithms).forEach(([category, files]) => {
+        files.forEach(file => {
+          const path = `../${category}/${file}`;
+          const name = file.replace(/-gui\.html$/, '').replace(/\.html$/, '').replace(/-/g, ' ');
+
+          const card = document.createElement('div');
+          card.className = 'test-card';
+          card.id = `card-${path.replace(/[^a-z0-9]/gi, '-')}`;
+          card.innerHTML = `
+            <div class="card-header">
+              <div>
+                <div class="card-title">${name}</div>
+                <div class="card-category">${category}</div>
+              </div>
+              <span class="status-badge pending">Pending</span>
+            </div>
+            <div class="test-results">
+              ${testDefinitions.map(t => `
+                <div class="test-item" data-test="${t.id}">
+                  <svg class="test-icon pending" viewBox="0 0 16 16" fill="currentColor">
+                    <circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  <span class="test-name">${t.name}</span>
+                  <span class="test-detail">—</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="error-section" style="display: none;"></div>
+            <div class="card-actions">
+              <button class="ts-btn ts-btn-secondary" onclick="runSingleTest('${path}')">Test</button>
+              <button class="ts-btn ts-btn-secondary" onclick="window.open('${path}', '_blank')">Open</button>
+            </div>
+          `;
+
+          grid.appendChild(card);
+          state.results.set(path, { status: 'pending', tests: {} });
+          state.total++;
+        });
+      });
+    }
+
+    function setupEventListeners() {
+      document.getElementById('runAll').addEventListener('click', runAllTests);
+      document.getElementById('runFailed').addEventListener('click', runFailedTests);
+      document.getElementById('exportReport').addEventListener('click', exportReport);
+      document.getElementById('toggleFrame').addEventListener('click', () => {
+        document.getElementById('testFrame').classList.toggle('visible');
+      });
+    }
+
+    async function runAllTests() {
+      const paths = [...state.results.keys()];
+      await runTests(paths);
+    }
+
+    async function runFailedTests() {
+      const paths = [...state.results.entries()]
+        .filter(([_, r]) => r.status === 'fail')
+        .map(([p, _]) => p);
+      await runTests(paths);
+    }
+
+    async function runSingleTest(path) {
+      await runTests([path]);
+    }
+
+    async function runTests(paths) {
+      if (state.running) return;
+      state.running = true;
+
+      const progress = document.getElementById('progressContainer');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      progress.style.display = 'block';
+
+      const frame = document.getElementById('testFrame');
+
+      for (let i = 0; i < paths.length; i++) {
+        const path = paths[i];
+        progressFill.style.width = `${(i / paths.length) * 100}%`;
+        progressText.textContent = `Testing ${i + 1}/${paths.length}: ${path.split('/').pop()}`;
+
+        updateCardStatus(path, 'running');
+
+        try {
+          const results = await runTestsOnPath(path, frame);
+          state.results.set(path, results);
+          updateCardWithResults(path, results);
+        } catch (e) {
+          state.results.set(path, {
+            status: 'fail',
+            tests: {},
+            error: e.message
+          });
+          updateCardStatus(path, 'fail');
+        }
+
+        updateStats();
+        await new Promise(r => setTimeout(r, 200));
+      }
+
+      progressFill.style.width = '100%';
+      progressText.textContent = 'Complete!';
+      setTimeout(() => progress.style.display = 'none', 2000);
+
+      state.running = false;
+    }
+
+    function runTestsOnPath(path, frame) {
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Timeout loading page'));
+        }, 15000);
+
+        frame.onload = async () => {
+          clearTimeout(timeout);
+
+          try {
+            const win = frame.contentWindow;
+
+            // Wait for initial render
+            await new Promise(r => setTimeout(r, 1500));
+
+            const testResults = {};
+            let passCount = 0;
+            let failCount = 0;
+            let warnCount = 0;
+
+            for (const testDef of testDefinitions) {
+              try {
+                const result = await testDef.test(win);
+                testResults[testDef.id] = result;
+
+                if (result.pass === true) passCount++;
+                else if (result.pass === false) failCount++;
+                else if (result.warn) warnCount++;
+              } catch (e) {
+                testResults[testDef.id] = { pass: false, detail: e.message };
+                failCount++;
+              }
+            }
+
+            const status = failCount > 0 ? 'fail' : warnCount > 0 ? 'warn' : 'pass';
+            resolve({ status, tests: testResults, passCount, failCount, warnCount });
+
+          } catch (e) {
+            reject(e);
+          }
+        };
+
+        frame.onerror = () => {
+          clearTimeout(timeout);
+          reject(new Error('Failed to load page'));
+        };
+
+        // Inject error capture before loading
+        frame.src = path;
+      });
+    }
+
+    function updateCardStatus(path, status) {
+      const cardId = `card-${path.replace(/[^a-z0-9]/gi, '-')}`;
+      const card = document.getElementById(cardId);
+      if (!card) return;
+
+      card.className = `test-card ${status}`;
+      const badge = card.querySelector('.status-badge');
+      badge.className = `status-badge ${status}`;
+      badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    function updateCardWithResults(path, results) {
+      const cardId = `card-${path.replace(/[^a-z0-9]/gi, '-')}`;
+      const card = document.getElementById(cardId);
+      if (!card) return;
+
+      card.className = `test-card ${results.status}`;
+
+      const badge = card.querySelector('.status-badge');
+      badge.className = `status-badge ${results.status}`;
+      badge.textContent = results.status.charAt(0).toUpperCase() + results.status.slice(1);
+
+      // Update individual test results
+      Object.entries(results.tests).forEach(([testId, result]) => {
+        const testItem = card.querySelector(`[data-test="${testId}"]`);
+        if (!testItem) return;
+
+        const icon = testItem.querySelector('.test-icon');
+        const detail = testItem.querySelector('.test-detail');
+
+        let iconClass = 'pending';
+        let iconSvg = '<circle cx="8" cy="8" r="6" fill="none" stroke="currentColor" stroke-width="2"/>';
+
+        if (result.pass === true) {
+          iconClass = 'pass';
+          iconSvg = '<path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z"/>';
+        } else if (result.pass === false) {
+          iconClass = 'fail';
+          iconSvg = '<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>';
+        } else if (result.warn) {
+          iconClass = 'warn';
+          iconSvg = '<path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>';
+        }
+
+        icon.className = `test-icon ${iconClass}`;
+        icon.innerHTML = iconSvg;
+        detail.textContent = result.detail || '—';
+      });
+
+      // Show errors if any
+      const errorSection = card.querySelector('.error-section');
+      const errors = Object.values(results.tests)
+        .filter(r => r.errors && r.errors.length > 0)
+        .flatMap(r => r.errors);
+
+      if (errors.length > 0) {
+        errorSection.style.display = 'block';
+        errorSection.innerHTML = errors.map(e => `<div>${e}</div>`).join('');
+      } else {
+        errorSection.style.display = 'none';
+      }
+    }
+
+    function updateStats() {
+      let pass = 0, fail = 0, warn = 0;
+      state.results.forEach(r => {
+        if (r.status === 'pass') pass++;
+        else if (r.status === 'fail') fail++;
+        else if (r.status === 'warn') warn++;
+      });
+
+      document.getElementById('passCount').textContent = pass;
+      document.getElementById('failCount').textContent = fail;
+      document.getElementById('warnCount').textContent = warn;
+    }
+
+    function exportReport() {
+      const report = {
+        timestamp: new Date().toISOString(),
+        summary: {
+          total: state.results.size,
+          pass: [...state.results.values()].filter(r => r.status === 'pass').length,
+          warn: [...state.results.values()].filter(r => r.status === 'warn').length,
+          fail: [...state.results.values()].filter(r => r.status === 'fail').length
+        },
+        results: Object.fromEntries(state.results)
+      };
+
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `functional-validation-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

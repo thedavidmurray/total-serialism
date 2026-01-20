@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Path Optimizer GUI - Pen Plotter Tools</title>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .control-group {
+      margin-bottom: var(--ts-space-lg);
+      padding-bottom: var(--ts-space-lg);
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control {
+      margin-bottom: var(--ts-space-md);
+    }
+    .control label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: var(--ts-space-sm);
+    }
+    .value {
+      color: var(--ts-accent-primary);
+      font-family: var(--ts-font-display);
+    }
+    input[type="number"] {
+      width: 100%;
+      min-height: var(--ts-control-height);
+      padding: 0 var(--ts-space-md);
+      font-family: var(--ts-font-mono);
+      font-size: 0.85rem;
+      color: var(--ts-text-primary);
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+    }
+    input[type="number"]:focus {
+      outline: none;
+      border-color: var(--ts-accent-primary);
+    }
+    input[type="file"] {
+      width: 100%;
+      padding: var(--ts-space-sm);
+      font-size: 0.8rem;
+      color: var(--ts-text-secondary);
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: var(--ts-space-sm);
+    }
+    .checkbox-container input {
+      width: auto;
+    }
+    .checkbox-container label {
+      margin: 0;
+      justify-content: flex-start;
+    }
+    .visualization {
+      display: flex;
+      gap: var(--ts-space-md);
+      margin-bottom: var(--ts-space-md);
+    }
+    .canvas-box {
+      flex: 1;
+      background: var(--ts-bg-control);
+      border-radius: var(--ts-radius-md);
+      padding: var(--ts-space-md);
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .canvas-box h4 {
+      margin: 0 0 var(--ts-space-sm) 0;
+      font-size: 0.75rem;
+      color: var(--ts-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .canvas-box canvas {
+      width: 100%;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-sm);
+      background: white;
+    }
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--ts-space-sm);
+    }
+    .stat-card {
+      background: var(--ts-bg-deep);
+      padding: var(--ts-space-md);
+      border-radius: var(--ts-radius-md);
+      border: 1px solid var(--ts-border-subtle);
+    }
+    .stat-label {
+      font-size: 0.65rem;
+      color: var(--ts-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+      margin: var(--ts-space-xs) 0;
+    }
+    .stat-change {
+      font-size: 0.7rem;
+      color: var(--ts-accent-primary);
+    }
+    .stat-change.negative {
+      color: var(--ts-accent-danger);
+    }
+    .loading {
+      text-align: center;
+      padding: var(--ts-space-xl);
+      color: var(--ts-text-muted);
+      font-size: 0.8rem;
+    }
+    .error {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--ts-accent-danger);
+      padding: var(--ts-space-md);
+      border-radius: var(--ts-radius-md);
+      margin-bottom: var(--ts-space-md);
+      font-size: 0.8rem;
+      border: 1px solid var(--ts-accent-danger);
+    }
+    button.secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    button.secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+    }
+    .button-row {
+      display: flex;
+      gap: var(--ts-space-sm);
+      flex-wrap: wrap;
+    }
+    .button-row button {
+      flex: 1;
+      min-width: 80px;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container">
+    <div class="visualization">
+      <div class="canvas-box">
+        <h4>Original Paths</h4>
+        <canvas id="originalCanvas" width="400" height="400"></canvas>
+      </div>
+      <div class="canvas-box">
+        <h4>Optimized Paths</h4>
+        <canvas id="optimizedCanvas" width="400" height="400"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div id="controls">
+    <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+    <h2>Path Optimizer</h2>
+    <p style="font-size: 11px; color: var(--ts-text-muted); margin: 0 0 20px 0;">
+      Optimize pen plotter paths for efficiency
+    </p>
+
+    <div class="control-group">
+      <h3>Input</h3>
+      <div class="control">
+        <label>Load SVG or JSON:</label>
+        <input type="file" id="fileInput" accept=".svg,.json">
+      </div>
+      <div class="control">
+        <label>Or Generate Test Pattern:</label>
+        <select id="testPattern">
+          <option value="">Select pattern...</option>
+          <option value="random">Random Paths</option>
+          <option value="grid">Grid Pattern</option>
+          <option value="circular">Circular Pattern</option>
+          <option value="clustered">Clustered Paths</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Path Count: <span class="value" id="pathCountVal">50</span></label>
+        <input type="number" id="pathCount" value="50" min="1" max="1000">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square_medium" selected>Square Medium</option>
+          <option value="square_large">Square Large</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Optimization Settings</h3>
+      <div class="control">
+        <label>Merge Tolerance: <span class="value" id="mergeToleranceVal">0.1</span></label>
+        <input type="number" id="mergeTolerance" value="0.1" min="0" max="10" step="0.1">
+      </div>
+      <div class="control">
+        <label>Simplify Tolerance: <span class="value" id="simplifyToleranceVal">0.5</span></label>
+        <input type="number" id="simplifyTolerance" value="0.5" min="0" max="10" step="0.1">
+      </div>
+      <div class="control">
+        <label>TSP Iterations: <span class="value" id="tspIterationsVal">100</span></label>
+        <input type="number" id="tspIterations" value="100" min="0" max="1000">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Visualization</h3>
+      <div class="checkbox-container">
+        <input type="checkbox" id="showTravel" checked>
+        <label for="showTravel">Show Travel Lines</label>
+      </div>
+      <div class="checkbox-container">
+        <input type="checkbox" id="showMarkers" checked>
+        <label for="showMarkers">Show Start/End Markers</label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="optimizeBtn">Optimize Paths</button>
+      <div class="button-row" style="margin-top: var(--ts-space-sm);">
+        <button id="exportSVGBtn" class="secondary" disabled>SVG</button>
+        <button id="exportGCodeBtn" class="secondary" disabled>G-Code</button>
+        <button id="exportJSONBtn" class="secondary" disabled>JSON</button>
+      </div>
+    </div>
+
+    <div id="error" class="error" style="display: none;"></div>
+
+    <div class="control-group">
+      <h3>Statistics</h3>
+      <div class="stat-grid" id="statsGrid">
+        <div class="loading">Load or generate paths to see statistics</div>
+      </div>
+    </div>
+
+    <!-- Preset Manager -->
+    <div id="preset-container"></div>
+  </div>
+
+  <script src="../../../../path-optimizer.js"></script>
+  <script src="../../shared/optimizer-utils.js"></script>
+  <script>
+    // Global variables
+    let originalPaths = [];
+    let optimizedPaths = [];
+    let optimizer = null;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      optimizer = new PathOptimizer({
+        mergeTolerance: parseFloat(document.getElementById('mergeTolerance').value),
+        simplifyTolerance: parseFloat(document.getElementById('simplifyTolerance').value),
+        tspIterations: parseInt(document.getElementById('tspIterations').value)
+      });
+
+      // Event listeners
+      document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+      document.getElementById('testPattern').addEventListener('change', generateTestPattern);
+      document.getElementById('optimizeBtn').addEventListener('click', optimizePaths);
+      document.getElementById('exportSVGBtn').addEventListener('click', () => exportPaths('svg'));
+      document.getElementById('exportGCodeBtn').addEventListener('click', () => exportPaths('gcode'));
+      document.getElementById('exportJSONBtn').addEventListener('click', () => exportPaths('json'));
+
+      // Update optimizer settings
+      ['mergeTolerance', 'simplifyTolerance', 'tspIterations'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateOptimizerSettings);
+        document.getElementById(id).addEventListener('input', (e) => {
+          document.getElementById(id + 'Val').textContent = e.target.value;
+        });
+      });
+
+      document.getElementById('pathCount').addEventListener('input', (e) => {
+        document.getElementById('pathCountVal').textContent = e.target.value;
+      });
+
+      // Update visualization settings
+      ['showTravel', 'showMarkers'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+          if (originalPaths.length > 0) visualizePaths();
+        });
+      });
+    });
+
+    function updateOptimizerSettings() {
+      optimizer.options.mergeTolerance = parseFloat(document.getElementById('mergeTolerance').value);
+      optimizer.options.simplifyTolerance = parseFloat(document.getElementById('simplifyTolerance').value);
+      optimizer.options.tspIterations = parseInt(document.getElementById('tspIterations').value);
+    }
+
+    function handleFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          if (file.name.endsWith('.json')) {
+            originalPaths = JSON.parse(e.target.result);
+          } else if (file.name.endsWith('.svg')) {
+            originalPaths = parseSVG(e.target.result);
+          }
+
+          optimizedPaths = [];
+          visualizePaths();
+          updateStatistics();
+          document.getElementById('optimizeBtn').disabled = false;
+          hideError();
+        } catch (error) {
+          showError(`Error loading file: ${error.message}`);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function parseSVG(svgText) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(svgText, 'image/svg+xml');
+      const paths = [];
+
+      // Parse path elements
+      doc.querySelectorAll('path').forEach(pathElement => {
+        const d = pathElement.getAttribute('d');
+        if (!d) return;
+
+        const points = [];
+        const commands = d.match(/[MLHVCSQTAZmlhvcsqtaz][^MLHVCSQTAZmlhvcsqtaz]*/g);
+        let currentX = 0, currentY = 0;
+
+        commands.forEach(cmd => {
+          const type = cmd[0];
+          const coords = cmd.substring(1).trim().split(/[\s,]+/).map(parseFloat);
+
+          switch (type.toUpperCase()) {
+            case 'M':
+              currentX = type === 'M' ? coords[0] : currentX + coords[0];
+              currentY = type === 'M' ? coords[1] : currentY + coords[1];
+              points.push({ x: currentX, y: currentY });
+              break;
+            case 'L':
+              currentX = type === 'L' ? coords[0] : currentX + coords[0];
+              currentY = type === 'L' ? coords[1] : currentY + coords[1];
+              points.push({ x: currentX, y: currentY });
+              break;
+            case 'H':
+              currentX = type === 'H' ? coords[0] : currentX + coords[0];
+              points.push({ x: currentX, y: currentY });
+              break;
+            case 'V':
+              currentY = type === 'V' ? coords[0] : currentY + coords[0];
+              points.push({ x: currentX, y: currentY });
+              break;
+            // Add more SVG commands as needed
+          }
+        });
+
+        if (points.length > 0) {
+          paths.push({
+            points,
+            color: pathElement.getAttribute('stroke') || 'black'
+          });
+        }
+      });
+
+      return paths;
+    }
+
+    function generateTestPattern() {
+      const pattern = document.getElementById('testPattern').value;
+      if (!pattern) return;
+
+      const count = parseInt(document.getElementById('pathCount').value);
+
+      try {
+        originalPaths = OptimizerUtils.generateTestPaths(pattern, count, {
+          width: 400,
+          height: 400,
+          colors: ['black', 'red', 'blue', 'green']
+        });
+
+        optimizedPaths = [];
+        visualizePaths();
+        updateStatistics();
+        document.getElementById('optimizeBtn').disabled = false;
+        hideError();
+      } catch (error) {
+        showError(`Error generating pattern: ${error.message}`);
+      }
+    }
+
+    function optimizePaths() {
+      if (originalPaths.length === 0) return;
+
+      try {
+        showLoading();
+
+        // Get optimization options from UI
+        const options = {
+          merge: true,
+          sort: true,
+          reloop: true,
+          simplify: true,
+          tolerance: parseFloat(document.getElementById('simplifyTolerance').value)
+        };
+
+        // Run optimization - PathOptimizer.optimize returns an array directly
+        optimizedPaths = optimizer.optimize(originalPaths, options);
+
+        // Visualize and update stats
+        visualizePaths();
+        updateStatistics();
+
+        // Enable export buttons
+        document.getElementById('exportSVGBtn').disabled = false;
+        document.getElementById('exportGCodeBtn').disabled = false;
+        document.getElementById('exportJSONBtn').disabled = false;
+
+        hideError();
+      } catch (error) {
+        showError(`Optimization error: ${error.message}`);
+      }
+    }
+
+    function visualizePaths() {
+      const showTravel = document.getElementById('showTravel').checked;
+      const showMarkers = document.getElementById('showMarkers').checked;
+
+      // Visualize original paths
+      if (originalPaths.length > 0) {
+        const originalViz = OptimizerUtils.createVisualization(originalPaths, {
+          width: 400,
+          height: 400,
+          showTravel,
+          showStartEnd: showMarkers
+        });
+        drawVisualization('originalCanvas', originalViz);
+      }
+
+      // Visualize optimized paths
+      if (optimizedPaths.length > 0) {
+        const optimizedViz = OptimizerUtils.createVisualization(optimizedPaths, {
+          width: 400,
+          height: 400,
+          showTravel,
+          showStartEnd: showMarkers
+        });
+        drawVisualization('optimizedCanvas', optimizedViz);
+      }
+    }
+
+    function drawVisualization(canvasId, viz) {
+      const canvas = document.getElementById(canvasId);
+      const ctx = canvas.getContext('2d');
+
+      // Clear canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!viz) return;
+
+      // Draw travel lines
+      if (viz.travels.length > 0) {
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
+        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 1;
+
+        viz.travels.forEach(travel => {
+          ctx.beginPath();
+          ctx.moveTo(travel.start.x, travel.start.y);
+          ctx.lineTo(travel.end.x, travel.end.y);
+          ctx.stroke();
+        });
+
+        ctx.setLineDash([]);
+      }
+
+      // Draw paths
+      viz.paths.forEach((path, index) => {
+        ctx.strokeStyle = getColorForPath(path.color, index);
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        path.points.forEach((point, i) => {
+          if (i === 0) {
+            ctx.moveTo(point.x, point.y);
+          } else {
+            ctx.lineTo(point.x, point.y);
+          }
+        });
+        ctx.stroke();
+      });
+
+      // Draw markers
+      viz.markers.forEach(marker => {
+        if (marker.type === 'start') {
+          ctx.fillStyle = 'green';
+          ctx.beginPath();
+          ctx.arc(marker.position.x, marker.position.y, 4, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (marker.type === 'end') {
+          ctx.fillStyle = 'red';
+          ctx.fillRect(marker.position.x - 3, marker.position.y - 3, 6, 6);
+        }
+      });
+    }
+
+    function getColorForPath(color, index) {
+      const colors = {
+        'black': '#000000',
+        'red': '#ff0000',
+        'blue': '#0000ff',
+        'green': '#00ff00',
+        'default': '#000000'
+      };
+
+      if (colors[color]) return colors[color];
+      if (color && color.startsWith('#')) return color;
+      if (color && color.startsWith('rgb')) return color;
+
+      // Generate color based on index
+      const hue = (index * 137.5) % 360;  // Golden angle
+      return `hsl(${hue}, 70%, 50%)`;
+    }
+
+    function updateStatistics() {
+      const statsGrid = document.getElementById('statsGrid');
+
+      if (!originalPaths.length && !optimizedPaths.length) {
+        statsGrid.innerHTML = '<div class="loading">Load or generate paths to see statistics</div>';
+        return;
+      }
+
+      const originalStats = OptimizerUtils.analyzePaths(originalPaths);
+      const optimizedStats = optimizedPaths.length > 0 ?
+        OptimizerUtils.analyzePaths(optimizedPaths) : null;
+
+      let html = '';
+
+      // Path count
+      html += createStatCard('Path Count',
+        originalStats.pathCount,
+        optimizedStats?.pathCount,
+        'paths');
+
+      // Total points
+      html += createStatCard('Total Points',
+        originalStats.totalPoints,
+        optimizedStats?.totalPoints,
+        'points');
+
+      // Travel distance
+      html += createStatCard('Travel Distance',
+        originalStats.travelDistance.toFixed(1),
+        optimizedStats?.travelDistance.toFixed(1),
+        'units');
+
+      // Pen lifts
+      html += createStatCard('Pen Lifts',
+        originalStats.penLifts,
+        optimizedStats?.penLifts,
+        'lifts');
+
+      // Total length
+      html += createStatCard('Total Drawing',
+        originalStats.totalLength.toFixed(1),
+        optimizedStats?.totalLength.toFixed(1),
+        'units');
+
+      // Efficiency
+      html += createStatCard('Efficiency',
+        (originalStats.efficiency * 100).toFixed(1) + '%',
+        optimizedStats ? (optimizedStats.efficiency * 100).toFixed(1) + '%' : null);
+
+      // Colors
+      html += createStatCard('Colors/Tools',
+        originalStats.colors.size,
+        optimizedStats?.colors.size,
+        'colors');
+
+      // Optimization time from PathOptimizer stats (if available)
+      if (optimizer.stats && optimizer.stats.timeSaved) {
+        html += createStatCard('Time Saved',
+          null,
+          optimizer.stats.timeSaved.toFixed(1) + 's');
+      }
+
+      statsGrid.innerHTML = html;
+    }
+
+    function createStatCard(label, originalValue, optimizedValue, unit = '') {
+      let changeHtml = '';
+
+      if (optimizedValue !== null && optimizedValue !== undefined && originalValue !== null) {
+        const originalNum = parseFloat(originalValue);
+        const optimizedNum = parseFloat(optimizedValue);
+
+        if (!isNaN(originalNum) && !isNaN(optimizedNum)) {
+          const change = originalNum - optimizedNum;
+          const changePercent = originalNum > 0 ? (change / originalNum * 100) : 0;
+
+          if (Math.abs(changePercent) > 0.1) {
+            const isPositive = change > 0;
+            changeHtml = `<div class="stat-change ${!isPositive ? 'negative' : ''}">
+              ${isPositive ? '↓' : '↑'} ${Math.abs(changePercent).toFixed(1)}%
+            </div>`;
+          }
+        }
+      }
+
+      const displayValue = optimizedValue !== null && optimizedValue !== undefined ?
+        optimizedValue : originalValue;
+
+      return `
+        <div class="stat-card">
+          <div class="stat-label">${label}</div>
+          <div class="stat-value">${displayValue}</div>
+          ${changeHtml}
+        </div>
+      `;
+    }
+
+    function exportPaths(format) {
+      if (optimizedPaths.length === 0) return;
+
+      try {
+        let content, filename, mimeType;
+
+        switch (format) {
+          case 'svg':
+            content = optimizer.exportSVG(optimizedPaths, 400, 400);
+            filename = 'optimized-paths.svg';
+            mimeType = 'image/svg+xml';
+            break;
+
+          case 'gcode':
+            content = optimizer.exportGCode(optimizedPaths, {
+              feedRate: 1000,
+              scale: 0.1  // Scale down for typical plotter
+            });
+            filename = 'optimized-paths.gcode';
+            mimeType = 'text/plain';
+            break;
+
+          case 'json':
+            content = optimizer.exportPaths(optimizedPaths, 'json');
+            filename = 'optimized-paths.json';
+            mimeType = 'application/json';
+            break;
+        }
+
+        // Download file
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+
+      } catch (error) {
+        showError(`Export error: ${error.message}`);
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('statsGrid').innerHTML =
+        '<div class="loading">Optimizing paths...</div>';
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

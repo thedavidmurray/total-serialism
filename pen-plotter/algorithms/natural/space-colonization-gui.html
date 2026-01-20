@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Space Colonization - Pen Plotter Art</title>
+
+    <!-- Total Serialism Design System -->
+    <link rel="stylesheet" href="../../shared/algorithm.css">
+    <link rel="stylesheet" href="../../preset-manager.css">
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="../../preset-manager.js"></script>
+    <script src="../../shared/canvas-layout.js"></script>
+    <script src="../../shared/canvas-controls.js"></script>
+    <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/panel-controller.js"></script>
+    <script src="../../shared/stats-display.js"></script>
+
+    <style>
+        /* Algorithm-specific styles */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: var(--ts-space-sm);
+            padding: var(--ts-space-sm) var(--ts-space-md);
+            background: var(--ts-bg-deep);
+            border-radius: var(--ts-radius-md);
+            font-size: 0.75rem;
+            color: var(--ts-text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ts-text-muted);
+        }
+
+        .status-dot.running {
+            background: var(--ts-accent-primary);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .status-dot.complete {
+            background: var(--ts-accent-secondary);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            padding: var(--ts-space-xs) 0;
+            font-size: 0.75rem;
+            color: var(--ts-text-muted);
+        }
+
+        .stats-value {
+            color: var(--ts-accent-primary);
+            font-family: var(--ts-font-display);
+        }
+
+        .control-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--ts-space-sm);
+            margin-top: var(--ts-space-md);
+        }
+
+        .control-buttons button {
+            min-height: 40px;
+        }
+
+        .info-text {
+            font-size: 0.7rem;
+            color: var(--ts-text-muted);
+            font-style: italic;
+            margin-top: var(--ts-space-xs);
+        }
+    </style>
+</head>
+<body>
+    <a href="../../index.html" class="back-link">Back to Index</a>
+
+    <div class="container" style="display: flex; max-width: 1400px; margin: 0 auto; padding: 20px; gap: 20px;">
+        <!-- Controls Panel -->
+        <div id="controls">
+            <h3>Space Colonization</h3>
+
+            <!-- Preset Manager Container -->
+            <div id="preset-container"></div>
+
+            <!-- Status Display -->
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Ready</span>
+            </div>
+
+            <!-- Statistics -->
+            <div style="margin: 15px 0; padding: 10px; background: var(--ts-bg-deep); border-radius: var(--ts-radius-md);">
+                <div class="stats-row">
+                    <span>Branch Nodes:</span>
+                    <span class="stats-value" id="branchCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span>Attraction Points:</span>
+                    <span class="stats-value" id="attractorCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span>Line Segments:</span>
+                    <span class="stats-value" id="segmentCount">0</span>
+                </div>
+                <div class="stats-row">
+                    <span>Iteration:</span>
+                    <span class="stats-value" id="iterationCount">0</span>
+                </div>
+            </div>
+
+            <h3>Attraction Points</h3>
+
+            <label>
+                Number of Points
+                <span class="ts-label-value" id="attractorCountValue">500</span>
+            </label>
+            <input type="range" id="attractorCount" min="100" max="2000" step="50" value="500">
+
+            <label>Distribution</label>
+            <select id="distribution">
+                <option value="random">Random (Full Canvas)</option>
+                <option value="circular">Circular (Crown)</option>
+                <option value="rectangular">Rectangular (Canopy)</option>
+                <option value="triangular">Triangular (Tree Shape)</option>
+                <option value="elliptical">Elliptical</option>
+                <option value="heart">Heart Shape</option>
+                <option value="ring">Ring (Hollow Circle)</option>
+            </select>
+            <p class="info-text">Shape where attraction points are scattered</p>
+
+            <label>
+                Distribution Size %
+                <span class="ts-label-value" id="distributionSizeValue">70</span>
+            </label>
+            <input type="range" id="distributionSize" min="20" max="95" step="5" value="70">
+
+            <h3>Seed Configuration</h3>
+
+            <label>
+                Number of Seeds
+                <span class="ts-label-value" id="seedCountValue">1</span>
+            </label>
+            <input type="range" id="seedCount" min="1" max="10" step="1" value="1">
+
+            <label>Seed Position</label>
+            <select id="seedPosition">
+                <option value="bottom-center">Bottom Center (Tree)</option>
+                <option value="bottom-spread">Bottom Spread</option>
+                <option value="center">Center</option>
+                <option value="top-center">Top Center (Roots)</option>
+                <option value="left-center">Left Center</option>
+                <option value="random">Random</option>
+                <option value="edges">All Edges</option>
+            </select>
+
+            <h3>Growth Parameters</h3>
+
+            <label>
+                Branch Segment Length
+                <span class="ts-label-value" id="segmentLengthValue">8</span>
+            </label>
+            <input type="range" id="segmentLength" min="2" max="30" step="1" value="8">
+
+            <label>
+                Kill Distance
+                <span class="ts-label-value" id="killDistanceValue">10</span>
+            </label>
+            <input type="range" id="killDistance" min="3" max="50" step="1" value="10">
+            <p class="info-text">Attraction points within this distance are consumed</p>
+
+            <label>
+                Influence Radius
+                <span class="ts-label-value" id="influenceRadiusValue">80</span>
+            </label>
+            <input type="range" id="influenceRadius" min="20" max="300" step="5" value="80">
+            <p class="info-text">How far attraction points can attract branches</p>
+
+            <label>
+                Max Iterations
+                <span class="ts-label-value" id="maxIterationsValue">500</span>
+            </label>
+            <input type="range" id="maxIterations" min="50" max="2000" step="50" value="500">
+
+            <h3>Branch Thickness</h3>
+
+            <label>Thickness Mode</label>
+            <select id="thicknessMode">
+                <option value="constant">Constant</option>
+                <option value="tapering" selected>Tapering (Root to Tip)</option>
+                <option value="random">Random Variation</option>
+            </select>
+
+            <label>
+                Base Thickness
+                <span class="ts-label-value" id="baseThicknessValue">3.0</span>
+            </label>
+            <input type="range" id="baseThickness" min="0.5" max="10" step="0.5" value="3">
+
+            <label>
+                Min Thickness
+                <span class="ts-label-value" id="minThicknessValue">0.5</span>
+            </label>
+            <input type="range" id="minThickness" min="0.1" max="3" step="0.1" value="0.5">
+
+            <h3>Canvas Settings</h3>
+
+            <label>Paper Size</label>
+            <select id="paperSize">
+                <option value="square">Square (800x800)</option>
+                <option value="a4">A4 Portrait</option>
+                <option value="a3" selected>A3 Portrait</option>
+                <option value="a4-landscape">A4 Landscape</option>
+                <option value="a3-landscape">A3 Landscape</option>
+                <option value="letter">US Letter</option>
+            </select>
+
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#ffffff">
+
+            <label>Stroke Color</label>
+            <input type="color" id="strokeColor" value="#000000">
+
+            <label>
+                Show Attraction Points
+                <input type="checkbox" id="showAttractors" style="width: auto; margin-left: 10px;">
+            </label>
+
+            <div class="control" style="margin-top: 10px;">
+                <button id="randomizeAll" class="ts-btn ts-btn-block">Randomize Colors</button>
+            </div>
+
+            <h3>Animation Controls</h3>
+
+            <div class="control-buttons">
+                <button id="playBtn" class="ts-btn ts-btn-primary">Play</button>
+                <button id="pauseBtn" class="ts-btn ts-btn-secondary">Pause</button>
+                <button id="resetBtn" class="ts-btn ts-btn-secondary">Reset</button>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <button id="stepBtn" class="ts-btn ts-btn-block">Step (1 Iteration)</button>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <button id="instantBtn" class="ts-btn ts-btn-block ts-btn-secondary">Generate Instantly</button>
+            </div>
+
+            <h3>Export Options</h3>
+            <div class="ts-export-group">
+                <button id="exportSVG" class="ts-export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 3v4a1 1 0 0 0 1 1h4"/>
+                        <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2z"/>
+                        <text x="7" y="16" font-size="6" fill="currentColor">SVG</text>
+                    </svg>
+                    SVG
+                </button>
+                <button id="exportPNG" class="ts-export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <path d="M21 15l-5-5L5 21"/>
+                    </svg>
+                    PNG
+                </button>
+                <button id="exportGIF" class="ts-export-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="20" rx="2"/>
+                        <path d="M10 8v8M14 8v8"/>
+                    </svg>
+                    GIF
+                </button>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div id="canvas-container">
+            <!-- p5.js canvas will be inserted here -->
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // Space Colonization Algorithm Implementation
+        // ============================================
+
+        let canvas;
+        let colonizationSystem;
+        let isRunning = false;
+        let presetManager;
+        let canvasControls;
+        let animationFrames = [];
+        let recordingGIF = false;
+
+        // Parameters
+        let params = {
+            paperSize: 'a3',
+            bgColor: '#ffffff',
+            strokeColor: '#000000',
+            attractorCount: 500,
+            distribution: 'circular',
+            distributionSize: 70,
+            seedCount: 1,
+            seedPosition: 'bottom-center',
+            segmentLength: 8,
+            killDistance: 10,
+            influenceRadius: 80,
+            maxIterations: 500,
+            thicknessMode: 'tapering',
+            baseThickness: 3,
+            minThickness: 0.5,
+            showAttractors: false
+        };
+
+        // ============================================
+        // Attraction Point Class
+        // ============================================
+
+        class AttractionPoint {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.reached = false;
+            }
+
+            draw(p) {
+                p.noStroke();
+                p.fill(200, 100, 100, 150);
+                p.ellipse(this.x, this.y, 4, 4);
+            }
+        }
+
+        // ============================================
+        // Branch Node Class
+        // ============================================
+
+        class BranchNode {
+            constructor(x, y, parent = null, direction = null) {
+                this.x = x;
+                this.y = y;
+                this.parent = parent;
+                this.children = [];
+                this.direction = direction || { x: 0, y: -1 }; // Default grow upward
+                this.depth = parent ? parent.depth + 1 : 0;
+                this.maxDepth = this.depth; // Will be updated as tree grows
+
+                if (parent) {
+                    parent.children.push(this);
+                }
+            }
+
+            // Calculate the maximum depth in the subtree rooted at this node
+            updateMaxDepth() {
+                if (this.children.length === 0) {
+                    this.maxDepth = this.depth;
+                } else {
+                    let maxChildDepth = 0;
+                    for (const child of this.children) {
+                        child.updateMaxDepth();
+                        maxChildDepth = Math.max(maxChildDepth, child.maxDepth);
+                    }
+                    this.maxDepth = maxChildDepth;
+                }
+            }
+
+            // Get thickness based on mode and position in tree
+            getThickness(rootMaxDepth) {
+                switch (params.thicknessMode) {
+                    case 'constant':
+                        return params.baseThickness;
+
+                    case 'tapering':
+                        // Thicker at root, thinner at tips
+                        // Use depth relative to max depth
+                        const ratio = 1 - (this.depth / Math.max(1, rootMaxDepth));
+                        return params.minThickness + (params.baseThickness - params.minThickness) * ratio;
+
+                    case 'random':
+                        return params.minThickness + Math.random() * (params.baseThickness - params.minThickness);
+
+                    default:
+                        return params.baseThickness;
+                }
+            }
+        }
+
+        // ============================================
+        // Space Colonization System Class
+        // ============================================
+
+        class SpaceColonizationSystem {
+            constructor(width, height) {
+                this.width = width;
+                this.height = height;
+                this.attractors = [];
+                this.branchNodes = [];
+                this.rootNodes = [];
+                this.segments = [];
+                this.iteration = 0;
+                this.complete = false;
+
+                this.initializeAttractors();
+                this.initializeSeeds();
+            }
+
+            // Create attraction points based on distribution pattern
+            initializeAttractors() {
+                const count = params.attractorCount;
+                const sizeRatio = params.distributionSize / 100;
+                const cx = this.width / 2;
+                const cy = this.height / 2;
+                const maxW = this.width * sizeRatio;
+                const maxH = this.height * sizeRatio;
+
+                for (let i = 0; i < count; i++) {
+                    let x, y;
+                    let valid = false;
+
+                    // Keep trying until we get a valid point for the distribution
+                    while (!valid) {
+                        switch (params.distribution) {
+                            case 'random':
+                                x = (this.width - maxW) / 2 + Math.random() * maxW;
+                                y = (this.height - maxH) / 2 + Math.random() * maxH;
+                                valid = true;
+                                break;
+
+                            case 'circular':
+                                const angle = Math.random() * Math.PI * 2;
+                                const r = Math.random() * Math.min(maxW, maxH) / 2;
+                                x = cx + Math.cos(angle) * r;
+                                y = cy - maxH * 0.2 + Math.sin(angle) * r * 0.6; // Offset up for tree crown
+                                valid = true;
+                                break;
+
+                            case 'rectangular':
+                                x = cx - maxW / 2 + Math.random() * maxW;
+                                y = this.height * 0.1 + Math.random() * maxH * 0.5;
+                                valid = true;
+                                break;
+
+                            case 'triangular':
+                                // Triangle pointing up
+                                const tx = Math.random();
+                                const ty = Math.random();
+                                if (tx + ty <= 1) {
+                                    x = cx + (tx - 0.5) * maxW * (1 - ty);
+                                    y = this.height * 0.15 + ty * maxH * 0.7;
+                                    valid = true;
+                                }
+                                break;
+
+                            case 'elliptical':
+                                const ea = Math.random() * Math.PI * 2;
+                                const er = Math.sqrt(Math.random());
+                                x = cx + Math.cos(ea) * maxW / 2 * er;
+                                y = cy + Math.sin(ea) * maxH / 3 * er;
+                                valid = true;
+                                break;
+
+                            case 'heart':
+                                // Heart shape parametric
+                                const t = Math.random() * Math.PI * 2;
+                                const scale = Math.random() * 0.3 + 0.7;
+                                const heartX = 16 * Math.pow(Math.sin(t), 3);
+                                const heartY = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t));
+                                x = cx + heartX * maxW / 40 * scale;
+                                y = cy + heartY * maxH / 40 * scale;
+                                valid = true;
+                                break;
+
+                            case 'ring':
+                                const ringAngle = Math.random() * Math.PI * 2;
+                                const innerR = Math.min(maxW, maxH) / 3;
+                                const outerR = Math.min(maxW, maxH) / 2;
+                                const ringR = innerR + Math.random() * (outerR - innerR);
+                                x = cx + Math.cos(ringAngle) * ringR;
+                                y = cy + Math.sin(ringAngle) * ringR;
+                                valid = true;
+                                break;
+
+                            default:
+                                x = Math.random() * this.width;
+                                y = Math.random() * this.height;
+                                valid = true;
+                        }
+                    }
+
+                    this.attractors.push(new AttractionPoint(x, y));
+                }
+            }
+
+            // Create seed/root nodes
+            initializeSeeds() {
+                const count = params.seedCount;
+                const margin = 50;
+
+                for (let i = 0; i < count; i++) {
+                    let x, y;
+                    let direction = { x: 0, y: -1 }; // Default: grow upward
+
+                    switch (params.seedPosition) {
+                        case 'bottom-center':
+                            x = this.width / 2 + (i - (count - 1) / 2) * 30;
+                            y = this.height - margin;
+                            direction = { x: 0, y: -1 };
+                            break;
+
+                        case 'bottom-spread':
+                            x = margin + (i / Math.max(1, count - 1)) * (this.width - 2 * margin);
+                            y = this.height - margin;
+                            direction = { x: 0, y: -1 };
+                            break;
+
+                        case 'center':
+                            const angleC = (i / count) * Math.PI * 2;
+                            x = this.width / 2 + Math.cos(angleC) * 20;
+                            y = this.height / 2 + Math.sin(angleC) * 20;
+                            direction = { x: Math.cos(angleC), y: Math.sin(angleC) };
+                            break;
+
+                        case 'top-center':
+                            x = this.width / 2 + (i - (count - 1) / 2) * 30;
+                            y = margin;
+                            direction = { x: 0, y: 1 };
+                            break;
+
+                        case 'left-center':
+                            x = margin;
+                            y = this.height / 2 + (i - (count - 1) / 2) * 30;
+                            direction = { x: 1, y: 0 };
+                            break;
+
+                        case 'random':
+                            x = margin + Math.random() * (this.width - 2 * margin);
+                            y = margin + Math.random() * (this.height - 2 * margin);
+                            direction = { x: Math.random() - 0.5, y: Math.random() - 0.5 };
+                            const mag = Math.sqrt(direction.x * direction.x + direction.y * direction.y);
+                            direction.x /= mag;
+                            direction.y /= mag;
+                            break;
+
+                        case 'edges':
+                            const edge = i % 4;
+                            const pos = (i / count) * (edge < 2 ? this.width : this.height);
+                            switch (edge) {
+                                case 0: // Bottom
+                                    x = pos; y = this.height - margin;
+                                    direction = { x: 0, y: -1 };
+                                    break;
+                                case 1: // Top
+                                    x = pos; y = margin;
+                                    direction = { x: 0, y: 1 };
+                                    break;
+                                case 2: // Left
+                                    x = margin; y = pos;
+                                    direction = { x: 1, y: 0 };
+                                    break;
+                                case 3: // Right
+                                    x = this.width - margin; y = pos;
+                                    direction = { x: -1, y: 0 };
+                                    break;
+                            }
+                            break;
+                    }
+
+                    const root = new BranchNode(x, y, null, direction);
+                    this.branchNodes.push(root);
+                    this.rootNodes.push(root);
+                }
+            }
+
+            // Run one iteration of the algorithm
+            iterate() {
+                if (this.complete) return false;
+                if (this.iteration >= params.maxIterations) {
+                    this.complete = true;
+                    return false;
+                }
+
+                // Check if there are any attractors left
+                const activeAttractors = this.attractors.filter(a => !a.reached);
+                if (activeAttractors.length === 0) {
+                    this.complete = true;
+                    return false;
+                }
+
+                // For each branch node, find all attractors influencing it
+                const influences = new Map(); // node -> { dirX, dirY, count }
+
+                for (const attractor of activeAttractors) {
+                    let closestNode = null;
+                    let closestDist = Infinity;
+
+                    // Find the closest branch node within influence radius
+                    for (const node of this.branchNodes) {
+                        const dx = attractor.x - node.x;
+                        const dy = attractor.y - node.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < params.influenceRadius && dist < closestDist) {
+                            closestDist = dist;
+                            closestNode = node;
+                        }
+                    }
+
+                    // If a node is close enough, mark attractor as reached
+                    if (closestNode) {
+                        const dx = attractor.x - closestNode.x;
+                        const dy = attractor.y - closestNode.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < params.killDistance) {
+                            attractor.reached = true;
+                        } else {
+                            // Add influence to closest node
+                            if (!influences.has(closestNode)) {
+                                influences.set(closestNode, { dirX: 0, dirY: 0, count: 0 });
+                            }
+                            const inf = influences.get(closestNode);
+                            inf.dirX += dx / dist;
+                            inf.dirY += dy / dist;
+                            inf.count++;
+                        }
+                    }
+                }
+
+                // Grow new branches based on influences
+                let grewBranch = false;
+
+                for (const [node, influence] of influences) {
+                    if (influence.count > 0) {
+                        // Average the direction
+                        let dirX = influence.dirX / influence.count;
+                        let dirY = influence.dirY / influence.count;
+
+                        // Normalize
+                        const mag = Math.sqrt(dirX * dirX + dirY * dirY);
+                        if (mag > 0) {
+                            dirX /= mag;
+                            dirY /= mag;
+                        }
+
+                        // Create new branch node
+                        const newX = node.x + dirX * params.segmentLength;
+                        const newY = node.y + dirY * params.segmentLength;
+
+                        // Check if new position is within bounds
+                        if (newX > 0 && newX < this.width && newY > 0 && newY < this.height) {
+                            const newNode = new BranchNode(newX, newY, node, { x: dirX, y: dirY });
+                            this.branchNodes.push(newNode);
+
+                            // Record the segment for drawing
+                            this.segments.push({
+                                x1: node.x,
+                                y1: node.y,
+                                x2: newX,
+                                y2: newY,
+                                parentNode: node,
+                                childNode: newNode
+                            });
+
+                            grewBranch = true;
+                        }
+                    }
+                }
+
+                // If no branches grew and no attractors were consumed, we're stuck
+                if (!grewBranch && !this.attractors.some(a => a.reached && !a._wasReached)) {
+                    // Mark current state of reached attractors
+                    this.attractors.forEach(a => a._wasReached = a.reached);
+
+                    // Count iterations without progress
+                    this._stuckCount = (this._stuckCount || 0) + 1;
+                    if (this._stuckCount > 10) {
+                        this.complete = true;
+                        return false;
+                    }
+                } else {
+                    this._stuckCount = 0;
+                }
+
+                this.iteration++;
+                return true;
+            }
+
+            // Update max depths for thickness calculation
+            updateDepths() {
+                for (const root of this.rootNodes) {
+                    root.updateMaxDepth();
+                }
+            }
+
+            // Get global max depth
+            getMaxDepth() {
+                let maxDepth = 0;
+                for (const node of this.branchNodes) {
+                    maxDepth = Math.max(maxDepth, node.depth);
+                }
+                return maxDepth;
+            }
+
+            getStats() {
+                return {
+                    branches: this.branchNodes.length,
+                    attractors: this.attractors.filter(a => !a.reached).length,
+                    segments: this.segments.length,
+                    iteration: this.iteration
+                };
+            }
+
+            draw(p) {
+                p.background(params.bgColor);
+
+                // Draw attraction points if enabled
+                if (params.showAttractors) {
+                    for (const attractor of this.attractors) {
+                        if (!attractor.reached) {
+                            attractor.draw(p);
+                        }
+                    }
+                }
+
+                // Calculate max depth for tapering
+                const maxDepth = this.getMaxDepth();
+
+                // Draw branch segments
+                p.stroke(params.strokeColor);
+                p.strokeCap(ROUND);
+                p.strokeJoin(ROUND);
+
+                for (const seg of this.segments) {
+                    const thickness = seg.parentNode.getThickness(maxDepth);
+                    p.strokeWeight(thickness);
+                    p.line(seg.x1, seg.y1, seg.x2, seg.y2);
+                }
+
+                // Draw root nodes as small circles
+                p.noStroke();
+                p.fill(params.strokeColor);
+                for (const root of this.rootNodes) {
+                    p.ellipse(root.x, root.y, params.baseThickness * 2);
+                }
+            }
+
+            // Generate SVG content for export
+            generateSVG() {
+                const paths = [];
+                const maxDepth = this.getMaxDepth();
+
+                // Group segments by similar thickness for cleaner SVG
+                const thicknessGroups = new Map();
+
+                for (const seg of this.segments) {
+                    const thickness = seg.parentNode.getThickness(maxDepth);
+                    // Round to nearest 0.5 for grouping
+                    const roundedThickness = Math.round(thickness * 2) / 2;
+
+                    if (!thicknessGroups.has(roundedThickness)) {
+                        thicknessGroups.set(roundedThickness, []);
+                    }
+                    thicknessGroups.get(roundedThickness).push(seg);
+                }
+
+                // Create paths for each thickness group
+                for (const [thickness, segments] of thicknessGroups) {
+                    for (const seg of segments) {
+                        paths.push({
+                            d: `M ${seg.x1.toFixed(2)} ${seg.y1.toFixed(2)} L ${seg.x2.toFixed(2)} ${seg.y2.toFixed(2)}`,
+                            stroke: params.strokeColor,
+                            strokeWidth: thickness
+                        });
+                    }
+                }
+
+                return TSExport.createSVG(paths, this.width, this.height, {
+                    backgroundColor: params.bgColor,
+                    strokeColor: params.strokeColor,
+                    strokeWidth: params.baseThickness
+                });
+            }
+        }
+
+        // ============================================
+        // p5.js Setup and Draw
+        // ============================================
+
+        function setup() {
+            const size = TSCanvasControls.PAPER_SIZES[params.paperSize] || { width: 800, height: 800 };
+            canvas = createCanvas(size.width, size.height);
+            canvas.parent('canvas-container');
+
+            window.panelController = new TSPanelController().attach();
+            window.statsDisplay = new TSStatsDisplay().attach();
+
+            colonizationSystem = new SpaceColonizationSystem(width, height);
+
+            // Initial draw
+            colonizationSystem.draw(window);
+            updateStats();
+        }
+
+        function draw() {
+            if (isRunning && colonizationSystem) {
+                const stillGrowing = colonizationSystem.iterate();
+                colonizationSystem.draw(window);
+                updateStats();
+
+                // Record frame for GIF if needed
+                if (recordingGIF && frameCount % 3 === 0) {
+                    animationFrames.push(get());
+                }
+
+                if (!stillGrowing) {
+                    stopSimulation();
+                    updateStatus('Complete', 'complete');
+                }
+            }
+        }
+
+        // ============================================
+        // Control Functions
+        // ============================================
+
+        function startSimulation() {
+            isRunning = true;
+            updateStatus('Running', 'running');
+        }
+
+        function stopSimulation() {
+            isRunning = false;
+            recordingGIF = false;
+            updateStatus('Paused', '');
+        }
+
+        function resetSimulation() {
+            stopSimulation();
+
+            const size = TSCanvasControls.PAPER_SIZES[params.paperSize] || { width: 800, height: 800 };
+            resizeCanvas(size.width, size.height);
+
+            colonizationSystem = new SpaceColonizationSystem(width, height);
+            colonizationSystem.draw(window);
+
+            animationFrames = [];
+            updateStats();
+            updateStatus('Ready', '');
+        }
+
+        function stepSimulation() {
+            if (!colonizationSystem) return;
+
+            const stillGrowing = colonizationSystem.iterate();
+            colonizationSystem.draw(window);
+            updateStats();
+
+            if (!stillGrowing) {
+                updateStatus('Complete', 'complete');
+            }
+        }
+
+        function instantGenerate() {
+            if (!colonizationSystem) return;
+
+            stopSimulation();
+
+            // Run all iterations at once
+            while (colonizationSystem.iterate()) {
+                // Keep iterating until complete
+            }
+
+            colonizationSystem.draw(window);
+            updateStats();
+            updateStatus('Complete', 'complete');
+        }
+
+        function updateStatus(text, state) {
+            document.getElementById('statusText').textContent = text;
+            const dot = document.getElementById('statusDot');
+            dot.className = 'status-dot';
+            if (state) {
+                dot.classList.add(state);
+            }
+        }
+
+        function updateStats() {
+            if (!colonizationSystem) return;
+
+            const stats = colonizationSystem.getStats();
+            document.getElementById('branchCount').textContent = stats.branches;
+            document.getElementById('attractorCount').textContent = stats.attractors;
+            document.getElementById('segmentCount').textContent = stats.segments;
+            document.getElementById('iterationCount').textContent = stats.iteration;
+
+            // Update TSStatsDisplay
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    'Branch Nodes': stats.branches,
+                    'Attractors': stats.attractors,
+                    'Segments': stats.segments,
+                    'Iteration': stats.iteration,
+                    'Seeds': params.seedCount,
+                    'Distribution': params.distribution,
+                    'Segment Length': params.segmentLength,
+                    'Kill Distance': params.killDistance,
+                    'Influence Radius': params.influenceRadius
+                });
+            }
+        }
+
+        // ============================================
+        // UI Event Handlers
+        // ============================================
+
+        function setupUI() {
+            // Slider controls with value display
+            const sliderMappings = [
+                { id: 'attractorCount', param: 'attractorCount', display: 'attractorCountValue' },
+                { id: 'distributionSize', param: 'distributionSize', display: 'distributionSizeValue' },
+                { id: 'seedCount', param: 'seedCount', display: 'seedCountValue' },
+                { id: 'segmentLength', param: 'segmentLength', display: 'segmentLengthValue' },
+                { id: 'killDistance', param: 'killDistance', display: 'killDistanceValue' },
+                { id: 'influenceRadius', param: 'influenceRadius', display: 'influenceRadiusValue' },
+                { id: 'maxIterations', param: 'maxIterations', display: 'maxIterationsValue' },
+                { id: 'baseThickness', param: 'baseThickness', display: 'baseThicknessValue', format: v => v.toFixed(1) },
+                { id: 'minThickness', param: 'minThickness', display: 'minThicknessValue', format: v => v.toFixed(1) }
+            ];
+
+            sliderMappings.forEach(({ id, param, display, format }) => {
+                const slider = document.getElementById(id);
+                if (slider) {
+                    slider.addEventListener('input', (e) => {
+                        const value = parseFloat(e.target.value);
+                        params[param] = value;
+                        const displayEl = document.getElementById(display);
+                        if (displayEl) {
+                            displayEl.textContent = format ? format(value) : value;
+                        }
+                    });
+                }
+            });
+
+            // Select controls
+            document.getElementById('distribution').addEventListener('change', (e) => {
+                params.distribution = e.target.value;
+            });
+
+            document.getElementById('seedPosition').addEventListener('change', (e) => {
+                params.seedPosition = e.target.value;
+            });
+
+            document.getElementById('thicknessMode').addEventListener('change', (e) => {
+                params.thicknessMode = e.target.value;
+                if (colonizationSystem) colonizationSystem.draw(window);
+            });
+
+            document.getElementById('paperSize').addEventListener('change', (e) => {
+                params.paperSize = e.target.value;
+                resetSimulation();
+            });
+
+            // Checkbox
+            document.getElementById('showAttractors').addEventListener('change', (e) => {
+                params.showAttractors = e.target.checked;
+                if (colonizationSystem) colonizationSystem.draw(window);
+            });
+
+            // Color inputs
+            document.getElementById('bgColor').addEventListener('input', (e) => {
+                params.bgColor = e.target.value;
+                if (colonizationSystem) colonizationSystem.draw(window);
+            });
+
+            document.getElementById('strokeColor').addEventListener('input', (e) => {
+                params.strokeColor = e.target.value;
+                if (colonizationSystem) colonizationSystem.draw(window);
+            });
+
+            // Control buttons
+            document.getElementById('playBtn').addEventListener('click', startSimulation);
+            document.getElementById('pauseBtn').addEventListener('click', stopSimulation);
+            document.getElementById('resetBtn').addEventListener('click', resetSimulation);
+            document.getElementById('stepBtn').addEventListener('click', stepSimulation);
+            document.getElementById('instantBtn').addEventListener('click', instantGenerate);
+
+            // Canvas controls for color randomization
+            canvasControls = new TSCanvasControls({
+                bgColor: params.bgColor,
+                strokeColor: params.strokeColor
+            });
+            canvasControls.bind(params, {
+                autoRegen: false,
+                regenCallback: () => {
+                    // Update color inputs
+                    document.getElementById('bgColor').value = params.bgColor;
+                    document.getElementById('strokeColor').value = params.strokeColor;
+                    if (colonizationSystem) colonizationSystem.draw(window);
+                }
+            });
+            canvasControls.setupRandomizeButton('randomizeAll');
+
+            // Preset manager
+            presetManager = new PresetManager({
+                algorithmId: 'space-colonization',
+                container: '#preset-container',
+                onSave: () => params,
+                onLoad: (preset) => {
+                    Object.assign(params, preset.data);
+                    updateUIFromParams();
+                    resetSimulation();
+                },
+                onRandomize: () => {
+                    params.attractorCount = 100 + Math.floor(Math.random() * 1900);
+                    params.segmentLength = 2 + Math.floor(Math.random() * 28);
+                    params.killDistance = 3 + Math.floor(Math.random() * 47);
+                    params.influenceRadius = 20 + Math.floor(Math.random() * 280);
+                    params.seedCount = 1 + Math.floor(Math.random() * 9);
+                    params.baseThickness = 0.5 + Math.random() * 9.5;
+                    params.minThickness = 0.1 + Math.random() * 2.9;
+                    params.distributionSize = 20 + Math.floor(Math.random() * 75);
+
+                    const distributions = ['random', 'circular', 'rectangular', 'triangular', 'elliptical', 'heart', 'ring'];
+                    params.distribution = distributions[Math.floor(Math.random() * distributions.length)];
+
+                    const seedPositions = ['bottom-center', 'bottom-spread', 'center', 'top-center', 'left-center', 'random', 'edges'];
+                    params.seedPosition = seedPositions[Math.floor(Math.random() * seedPositions.length)];
+
+                    const thicknessModes = ['constant', 'tapering', 'random'];
+                    params.thicknessMode = thicknessModes[Math.floor(Math.random() * thicknessModes.length)];
+
+                    updateUIFromParams();
+                    resetSimulation();
+                    startSimulation();
+                }
+            });
+
+            // Export buttons
+            TSExport.setupButtons({
+                svg: () => {
+                    if (colonizationSystem) {
+                        const svg = colonizationSystem.generateSVG();
+                        TSExport.downloadSVG(svg, 'space-colonization');
+                    }
+                },
+                png: () => {
+                    const cvs = document.querySelector('#canvas-container canvas');
+                    if (cvs) {
+                        TSExport.downloadPNG(cvs, 'space-colonization', { scale: 2 });
+                    }
+                },
+                gif: async () => {
+                    if (animationFrames.length > 0) {
+                        await TSExport.downloadGIF(animationFrames, 'space-colonization', { fps: 15 });
+                    } else {
+                        // Record a growth animation
+                        recordingGIF = true;
+                        animationFrames = [];
+                        resetSimulation();
+                        startSimulation();
+
+                        // Set a timeout to stop and export
+                        setTimeout(async () => {
+                            stopSimulation();
+                            if (animationFrames.length > 0) {
+                                await TSExport.downloadGIF(animationFrames, 'space-colonization', { fps: 15 });
+                            }
+                            animationFrames = [];
+                        }, 15000); // Record for 15 seconds
+                    }
+                }
+            });
+        }
+
+        function updateUIFromParams() {
+            // Update sliders
+            const sliderUpdates = [
+                { id: 'attractorCount', display: 'attractorCountValue' },
+                { id: 'distributionSize', display: 'distributionSizeValue' },
+                { id: 'seedCount', display: 'seedCountValue' },
+                { id: 'segmentLength', display: 'segmentLengthValue' },
+                { id: 'killDistance', display: 'killDistanceValue' },
+                { id: 'influenceRadius', display: 'influenceRadiusValue' },
+                { id: 'maxIterations', display: 'maxIterationsValue' },
+                { id: 'baseThickness', display: 'baseThicknessValue', format: v => v.toFixed(1) },
+                { id: 'minThickness', display: 'minThicknessValue', format: v => v.toFixed(1) }
+            ];
+
+            sliderUpdates.forEach(({ id, display, format }) => {
+                const slider = document.getElementById(id);
+                const displayEl = document.getElementById(display);
+                if (slider && params[id] !== undefined) {
+                    slider.value = params[id];
+                    if (displayEl) {
+                        displayEl.textContent = format ? format(params[id]) : params[id];
+                    }
+                }
+            });
+
+            // Update selects
+            document.getElementById('distribution').value = params.distribution;
+            document.getElementById('seedPosition').value = params.seedPosition;
+            document.getElementById('thicknessMode').value = params.thicknessMode;
+            document.getElementById('paperSize').value = params.paperSize;
+
+            // Update checkbox
+            document.getElementById('showAttractors').checked = params.showAttractors;
+
+            // Update colors
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
+        }
+
+        // ============================================
+        // Initialize when DOM is ready
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', setupUI);
+    </script>
+</body>
+</html>

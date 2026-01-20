@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Reaction-Diffusion System - Pen Plotter Edition</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+  
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Tufte Dark Theme - CSS Variables */
+    :root {
+      --bg-primary: #111111;
+      --bg-secondary: #1a1a1a;
+      --bg-tertiary: #242424;
+      --text-primary: #e8e8e8;
+      --text-secondary: #a0a0a0;
+      --text-muted: #666666;
+      --accent-primary: #d4a574;
+      --accent-secondary: #8b7355;
+      --accent-tertiary: #c9a66b;
+      --border-color: #333333;
+      --border-subtle: #2a2a2a;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', 'ET Book', Palatino, 'Palatino Linotype', serif;
+      display: flex;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--bg-secondary);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+      position: relative;
+    }
+
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--bg-primary);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--accent-primary);
+      font-weight: 400;
+      letter-spacing: 0.02em;
+    }
+
+    .control-group {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .control-group h3 {
+      margin: 0 0 14px 0;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .control {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent-primary);
+    }
+
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 13px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px 14px;
+      margin: 4px 0;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      border-radius: 4px;
+      transition: all 0.15s ease;
+    }
+
+    button:hover {
+      background: var(--accent-secondary);
+      border-color: var(--accent-primary);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .secondary {
+      background: var(--bg-secondary);
+      border-color: var(--border-subtle);
+    }
+
+    .secondary:hover {
+      background: var(--bg-tertiary);
+      border-color: var(--border-color);
+    }
+
+    .preset-btn {
+      background: var(--bg-tertiary);
+      border-color: var(--accent-secondary);
+      color: var(--accent-tertiary);
+    }
+
+    .preset-btn:hover {
+      background: var(--accent-secondary);
+      color: var(--text-primary);
+    }
+
+    .value {
+      font-weight: 500;
+      color: var(--accent-primary);
+    }
+
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-container input {
+      margin-right: 10px;
+      accent-color: var(--accent-primary);
+    }
+
+    #info-display {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(17, 17, 17, 0.9);
+      padding: 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .export-btn {
+      background: var(--bg-tertiary);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+
+    .export-btn:hover {
+      background: var(--accent-primary);
+      color: var(--bg-primary);
+    }
+
+    #gif-progress {
+      display: none;
+      background: var(--bg-tertiary);
+      padding: 10px;
+      border-radius: 4px;
+      margin-top: 10px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-secondary);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent-primary);
+      transition: width 0.3s;
+    }
+
+    .pattern-btn {
+      background: var(--bg-tertiary);
+      border-color: var(--border-color);
+    }
+
+    .pattern-btn:hover {
+      background: var(--accent-secondary);
+      border-color: var(--accent-primary);
+    }
+
+    .render-mode {
+      background: var(--bg-tertiary);
+      border-color: var(--accent-tertiary);
+    }
+
+    .render-mode:hover {
+      background: var(--accent-tertiary);
+      color: var(--bg-primary);
+    }
+
+    /* Preset container at bottom */
+    #preset-container {
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="info-display">
+      <div>Iteration: <span id="iteration-count">0</span></div>
+      <div>FPS: <span id="fps">60</span></div>
+      <div>A Concentration: <span id="a-concentration">0</span></div>
+      <div>B Concentration: <span id="b-concentration">0</span></div>
+    </div>
+  </div>
+  <div id="controls">
+    <h2>Reaction-Diffusion</h2>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="letter_landscape">Letter Landscape</option>
+          <option value="letter_portrait">Letter Portrait</option>
+          <option value="square_medium">Square Medium</option>
+          <option value="square_large">Square Large</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#1e1e1e">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Simulation</h3>
+      <button id="play-pause">⏸ Pause</button>
+      <button id="reset" class="secondary">Reset</button>
+      <button id="clear" class="secondary">Clear</button>
+      <div class="control">
+        <label>Speed: <span class="value" id="speed-val">10</span> iterations/frame</label>
+        <input type="range" id="speed" min="1" max="50" value="10">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>System Parameters</h3>
+      <div class="control">
+        <label>Feed Rate (f): <span class="value" id="feedRate-val">0.055</span></label>
+        <input type="range" id="feedRate" min="0.01" max="0.1" step="0.001" value="0.055">
+      </div>
+      <div class="control">
+        <label>Kill Rate (k): <span class="value" id="killRate-val">0.062</span></label>
+        <input type="range" id="killRate" min="0.01" max="0.1" step="0.001" value="0.062">
+      </div>
+      <div class="control">
+        <label>Diffusion A (dA): <span class="value" id="dA-val">1.0</span></label>
+        <input type="range" id="dA" min="0.5" max="1.5" step="0.01" value="1.0">
+      </div>
+      <div class="control">
+        <label>Diffusion B (dB): <span class="value" id="dB-val">0.5</span></label>
+        <input type="range" id="dB" min="0.1" max="0.8" step="0.01" value="0.5">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>View & Updates</h3>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="autoRegenerate">
+        <label for="autoRegenerate">Auto regenerate on change (heavy)</label>
+      </div>
+      <button id="fitViewBtn" class="secondary" style="margin-top:8px;">Toggle Fit / Manual</button>
+      <div class="control">
+        <label>Zoom: <span id="zoom-val">1.0x</span></label>
+        <input type="range" id="zoom" min="0.25" max="2.5" value="1" step="0.05">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">200</span></label>
+        <input type="range" id="gridSize" min="50" max="400" value="200">
+      </div>
+      <div class="control">
+        <label>Cell Size: <span class="value" id="cellSize-val">3</span>px</label>
+        <input type="range" id="cellSize" min="1" max="10" value="3">
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Initial Patterns</h3>
+      <button class="pattern-btn" onclick="addSeed('center')">Center Seed</button>
+      <button class="pattern-btn" onclick="addSeed('random')">Random Seeds</button>
+      <button class="pattern-btn" onclick="addSeed('cross')">Cross Pattern</button>
+      <button class="pattern-btn" onclick="addSeed('circle')">Circle</button>
+      <button class="pattern-btn" onclick="addSeed('spiral')">Spiral</button>
+      <button class="pattern-btn" onclick="addSeed('grid')">Grid Points</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Famous Parameters</h3>
+      <button class="preset-btn" onclick="loadPreset('mitosis')">Mitosis (f=0.0367, k=0.0649)</button>
+      <button class="preset-btn" onclick="loadPreset('coral')">Coral Growth (f=0.0545, k=0.062)</button>
+      <button class="preset-btn" onclick="loadPreset('fingerprint')">Fingerprints (f=0.055, k=0.062)</button>
+      <button class="preset-btn" onclick="loadPreset('spirals')">Spirals (f=0.018, k=0.051)</button>
+      <button class="preset-btn" onclick="loadPreset('worms')">Worms (f=0.078, k=0.061)</button>
+      <button class="preset-btn" onclick="loadPreset('bubbles')">Bubbles (f=0.098, k=0.057)</button>
+    </div>
+    
+    <div class="control-group">
+      <h3>Display Options</h3>
+      <div class="control">
+        <label>Render Mode:</label>
+        <select id="renderMode">
+          <option value="grayscale">Grayscale</option>
+          <option value="heatmap">Heat Map</option>
+          <option value="contour">Contour Lines</option>
+          <option value="threshold">Threshold</option>
+          <option value="gradient">Gradient Map</option>
+          <option value="duotone">Duotone</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Threshold: <span class="value" id="threshold-val">0.5</span></label>
+        <input type="range" id="threshold" min="0" max="1" step="0.01" value="0.5">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showConcentration" checked>
+        <label for="showConcentration">Show Concentration Info</label>
+      </div>
+    </div>
+    
+    <div class="control-group">
+      <h3>Export</h3>
+      <button onclick="exportSVG()">Export as SVG</button>
+      <button onclick="exportContours()">Export Contour Lines</button>
+      <button onclick="exportThreshold()">Export Threshold Pattern</button>
+      <button class="export-btn" onclick="exportGIF()">Export Animated GIF</button>
+      <div id="gif-progress" style="display: none;">
+        <div><span id="gif-status">Preparing...</span></div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="gif-progress-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+  </div>
+
+  <script>
+    // Reaction-Diffusion System
+    let grid, next;
+    let gridSize = 200;
+    let cellSize = 3;
+    let iteration = 0;
+    let isPaused = false;
+    let presetManager;
+    let autoRegenerate = false;
+    let regenTimer;
+    const REGEN_DEBOUNCE = 150;
+    let fitZoomCtl;
+    let panelController;
+    let statsDisplay;
+
+    // Parameters
+    let params = {
+      paperSize: 'A4_landscape',
+      bgColor: '#1e1e1e',
+      strokeColor: '#000000',
+      feedRate: 0.055,
+      killRate: 0.062,
+      dA: 1.0,
+      dB: 0.5,
+      speed: 10,
+      threshold: 0.5,
+      renderMode: 'grayscale'
+    };
+
+    // Canvas controls for color randomization with WCAG AA contrast
+    const canvasControls = new TSCanvasControls({
+      bgColor: params.bgColor || '#ffffff',
+      strokeColor: params.strokeColor || '#000000'
+    });
+    canvasControls.bind(params);
+
+    // Laplacian kernel for diffusion
+    const laplacian = [
+      [0.05, 0.2, 0.05],
+      [0.2, -1, 0.2],
+      [0.05, 0.2, 0.05]
+    ];
+    
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      let canvas = createCanvas(size.width * scale, size.height * scale);
+      canvas.parent('canvas-container');
+      if (window.CanvasLayout) {
+        fitZoomCtl = CanvasLayout.attachFitZoom({
+          container: document.getElementById('canvas-container'),
+          canvasEl: canvas.canvas,
+          fitToggle: document.getElementById('fitViewBtn'),
+          zoomInput: document.getElementById('zoom')
+        });
+      }
+
+      initializeGrid();
+      setupControls();
+      canvasControls.setupRandomizeButton();
+      const zoomLabel = document.getElementById('zoom-val');
+      if (zoomLabel) zoomLabel.textContent = '1.00x';
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'reaction-diffusion',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          initializeGrid();
+        },
+        onRandomize: () => {
+          params.feedRate = random(0.01, 0.1);
+          params.killRate = random(0.01, 0.1);
+          params.dA = random(0.5, 1.5);
+          params.dB = random(0.1, 0.8);
+          params.speed = Math.floor(random(1, 50));
+          params.threshold = random(0.1, 0.9);
+          updateUIFromParams();
+          initializeGrid();
+        }
+      });
+
+      // Add built-in famous presets if not already saved
+      const builtInPresets = {
+        '🧬 Mitosis': { feedRate: 0.0367, killRate: 0.0649, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🪸 Coral Growth': { feedRate: 0.0545, killRate: 0.062, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '👆 Fingerprints': { feedRate: 0.055, killRate: 0.062, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'contour' },
+        '🌀 Spirals': { feedRate: 0.018, killRate: 0.051, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🐛 Worms': { feedRate: 0.078, killRate: 0.061, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🫧 Bubbles': { feedRate: 0.098, killRate: 0.057, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🔬 Bacteria': { feedRate: 0.026, killRate: 0.052, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'threshold' },
+        '🌊 Waves': { feedRate: 0.014, killRate: 0.054, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'heatmap' },
+        '🕸️ Solitons': { feedRate: 0.03, killRate: 0.06, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'grayscale' },
+        '🌿 Turing Spots': { feedRate: 0.025, killRate: 0.06, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.6, renderMode: 'threshold' },
+        '🦓 Stripes': { feedRate: 0.022, killRate: 0.051, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.5, renderMode: 'duotone' },
+        '🌐 Labyrinth': { feedRate: 0.029, killRate: 0.057, dA: 1.0, dB: 0.5, speed: 10, threshold: 0.4, renderMode: 'contour' }
+      };
+
+      Object.entries(builtInPresets).forEach(([name, presetParams]) => {
+        if (!presetManager.presets[name]) {
+          presetManager.savePreset(name, presetParams);
+        }
+      });
+
+      const zoomInput = document.getElementById('zoom');
+      const fitBtn = document.getElementById('fitViewBtn');
+      if (window.CanvasLayout) {
+        fitZoomCtl = CanvasLayout.attachFitZoom({
+          container: document.getElementById('canvas-container'),
+          canvasEl: canvas.canvas,
+          fitToggle: fitBtn,
+          zoomInput
+        });
+      }
+
+      // Initialize TSPanelController
+      panelController = new TSPanelController({
+        panelSelector: '#controls',
+        onToggle: (isVisible) => {
+          console.log(`Controls panel ${isVisible ? 'shown' : 'hidden'}`);
+        }
+      });
+
+      // Initialize TSStatsDisplay
+      statsDisplay = new TSStatsDisplay({
+        containerId: 'canvas-container',
+        style: {
+          position: 'absolute',
+          top: '10px',
+          right: '10px'
+        }
+      });
+    }
+
+    // Helper function to update UI from params
+    function updateUIFromParams() {
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element) {
+          element.value = params[param];
+          const valueDisplay = document.getElementById(param + '-val');
+          if (valueDisplay) {
+            valueDisplay.textContent = params[param];
+          }
+        }
+      });
+    }
+    
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
+      resizeCanvas(size.width * scale, size.height * scale);
+      initializeGrid();
+    }
+
+    function initializeGrid() {
+      grid = [];
+      next = [];
+      
+      for (let x = 0; x < gridSize; x++) {
+        grid[x] = [];
+        next[x] = [];
+        for (let y = 0; y < gridSize; y++) {
+          grid[x][y] = { a: 1, b: 0 };
+          next[x][y] = { a: 1, b: 0 };
+        }
+      }
+      
+      // Add initial seed
+      addSeed('center');
+      iteration = 0;
+    }
+    
+    function setupControls() {
+      // Play/Pause
+      document.getElementById('play-pause').addEventListener('click', () => {
+        isPaused = !isPaused;
+        document.getElementById('play-pause').textContent = isPaused ? '▶ Play' : '⏸ Pause';
+      });
+      
+      // Reset
+      document.getElementById('reset').addEventListener('click', () => {
+        initializeGrid();
+      });
+      
+      // Clear
+      document.getElementById('clear').addEventListener('click', () => {
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            grid[x][y] = { a: 1, b: 0 };
+          }
+        }
+        iteration = 0;
+      });
+      
+      // Parameter controls
+      Object.keys(params).forEach(param => {
+        const element = document.getElementById(param);
+        if (element && element.type === 'range') {
+          element.addEventListener('input', (e) => {
+            params[param] = parseFloat(e.target.value);
+            document.getElementById(param + '-val').textContent = e.target.value;
+            queueRegenerate();
+          });
+        } else if (element && element.tagName === 'SELECT') {
+          element.addEventListener('change', (e) => {
+            params[param] = e.target.value;
+            if (param === 'paperSize') {
+              resizeCanvasForPaperSize();
+            } else {
+              queueRegenerate();
+            }
+          });
+        }
+      });
+      
+      // Grid size control
+      document.getElementById('gridSize').addEventListener('input', (e) => {
+        gridSize = parseInt(e.target.value);
+        document.getElementById('gridSize-val').textContent = gridSize;
+        queueRegenerate();
+      });
+      
+      document.getElementById('cellSize').addEventListener('input', (e) => {
+        cellSize = parseInt(e.target.value);
+        document.getElementById('cellSize-val').textContent = cellSize;
+        queueRegenerate();
+      });
+
+      const autoToggle = document.getElementById('autoRegenerate');
+      if (autoToggle) {
+        autoToggle.checked = autoRegenerate;
+        autoToggle.addEventListener('change', (e) => {
+          autoRegenerate = e.target.checked;
+          if (autoRegenerate) queueRegenerate();
+        });
+      }
+
+      const zoomInput = document.getElementById('zoom');
+      if (zoomInput) {
+        zoomInput.addEventListener('input', (e) => {
+          const label = document.getElementById('zoom-val');
+          if (label) label.textContent = `${parseFloat(e.target.value).toFixed(2)}x`;
+        });
+      }
+    }
+
+    function queueRegenerate() {
+      if (!autoRegenerate) return;
+      clearTimeout(regenTimer);
+      regenTimer = setTimeout(() => {
+        initializeGrid();
+        redraw();
+      }, REGEN_DEBOUNCE);
+    }
+    
+    function draw() {
+      // Update simulation
+      if (!isPaused) {
+        for (let i = 0; i < params.speed; i++) {
+          update();
+          iteration++;
+        }
+      }
+      
+      // Render
+      background(params.bgColor);
+      const totalSize = gridSize * cellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      // Calculate average concentrations
+      let avgA = 0, avgB = 0;
+      let count = 0;
+      
+      noStroke();
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          const cell = grid[x][y];
+          avgA += cell.a;
+          avgB += cell.b;
+          count++;
+          
+          const color = getRenderColor(cell);
+          fill(color);
+          rect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+        }
+      }
+      
+      // Update info display
+      document.getElementById('iteration-count').textContent = iteration;
+      document.getElementById('fps').textContent = Math.round(frameRate());
+
+      if (document.getElementById('showConcentration').checked) {
+        document.getElementById('a-concentration').textContent = (avgA / count).toFixed(3);
+        document.getElementById('b-concentration').textContent = (avgB / count).toFixed(3);
+      }
+
+      // Update TSStatsDisplay with relevant metrics
+      if (statsDisplay) {
+        statsDisplay.update({
+          'Iteration': iteration,
+          'FPS': Math.round(frameRate()),
+          'Grid Size': `${gridSize}x${gridSize}`,
+          'Cell Size': `${cellSize}px`,
+          'Feed Rate': params.feedRate.toFixed(3),
+          'Kill Rate': params.killRate.toFixed(3),
+          'Avg A': (avgA / count).toFixed(3),
+          'Avg B': (avgB / count).toFixed(3),
+          'Status': isPaused ? 'Paused' : 'Running'
+        });
+      }
+    }
+    
+    function update() {
+      // Calculate next state using Gray-Scott model
+      for (let x = 1; x < gridSize - 1; x++) {
+        for (let y = 1; y < gridSize - 1; y++) {
+          const a = grid[x][y].a;
+          const b = grid[x][y].b;
+          
+          // Calculate laplacian
+          let laplaceA = 0;
+          let laplaceB = 0;
+          
+          for (let i = -1; i <= 1; i++) {
+            for (let j = -1; j <= 1; j++) {
+              laplaceA += grid[x + i][y + j].a * laplacian[i + 1][j + 1];
+              laplaceB += grid[x + i][y + j].b * laplacian[i + 1][j + 1];
+            }
+          }
+          
+          // Apply reaction-diffusion equations
+          const abb = a * b * b;
+          next[x][y].a = a + (params.dA * laplaceA - abb + params.feedRate * (1 - a));
+          next[x][y].b = b + (params.dB * laplaceB + abb - (params.killRate + params.feedRate) * b);
+          
+          // Constrain values
+          next[x][y].a = constrain(next[x][y].a, 0, 1);
+          next[x][y].b = constrain(next[x][y].b, 0, 1);
+        }
+      }
+      
+      // Swap grids
+      [grid, next] = [next, grid];
+    }
+    
+    function getRenderColor(cell) {
+      const { a, b } = cell;
+      
+      switch (params.renderMode) {
+        case 'grayscale':
+          const gray = floor((a - b) * 255);
+          return color(gray);
+          
+        case 'heatmap':
+          // Blue to red heatmap based on B concentration
+          const r = floor(b * 255);
+          const blu = floor((1 - b) * 255);
+          return color(r, 0, blu);
+          
+        case 'contour':
+          // Contour lines at specific B concentrations
+          const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7];
+          for (let level of levels) {
+            if (abs(b - level) < 0.02) {
+              return color(255);
+            }
+          }
+          return color(0);
+          
+        case 'threshold':
+          // Binary threshold
+          return b > params.threshold ? color(255) : color(0);
+          
+        case 'gradient':
+          // Gradient based on both A and B
+          const r2 = floor(b * 255);
+          const g = floor((1 - abs(a - b)) * 255);
+          const b2 = floor(a * 255);
+          return color(r2, g, b2);
+          
+        case 'duotone':
+          // Two-tone based on threshold
+          if (b > params.threshold) {
+            return color(76, 175, 80); // Green
+          } else {
+            return color(33, 150, 243); // Blue
+          }
+          
+        default:
+          return color(255);
+      }
+    }
+    
+    function addSeed(type) {
+      const cx = floor(gridSize / 2);
+      const cy = floor(gridSize / 2);
+      
+      switch (type) {
+        case 'center':
+          // Single center seed
+          for (let i = -5; i <= 5; i++) {
+            for (let j = -5; j <= 5; j++) {
+              if (cx + i >= 0 && cx + i < gridSize && cy + j >= 0 && cy + j < gridSize) {
+                grid[cx + i][cy + j].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'random':
+          // Random seeds
+          for (let i = 0; i < 20; i++) {
+            const x = floor(random(gridSize));
+            const y = floor(random(gridSize));
+            for (let dx = -2; dx <= 2; dx++) {
+              for (let dy = -2; dy <= 2; dy++) {
+                if (x + dx >= 0 && x + dx < gridSize && y + dy >= 0 && y + dy < gridSize) {
+                  grid[x + dx][y + dy].b = 1;
+                }
+              }
+            }
+          }
+          break;
+          
+        case 'cross':
+          // Cross pattern
+          const size = 20;
+          for (let i = -size; i <= size; i++) {
+            if (cx + i >= 0 && cx + i < gridSize) {
+              grid[cx + i][cy].b = 1;
+              if (cy + i >= 0 && cy + i < gridSize) {
+                grid[cx][cy + i].b = 1;
+              }
+            }
+          }
+          break;
+          
+        case 'circle':
+          // Circle pattern
+          const radius = 30;
+          for (let angle = 0; angle < TWO_PI; angle += 0.1) {
+            const x = cx + floor(radius * cos(angle));
+            const y = cy + floor(radius * sin(angle));
+            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+              grid[x][y].b = 1;
+            }
+          }
+          break;
+          
+        case 'spiral':
+          // Spiral pattern
+          let r = 0;
+          for (let angle = 0; angle < TWO_PI * 4; angle += 0.1) {
+            r += 0.5;
+            const x = cx + floor(r * cos(angle));
+            const y = cy + floor(r * sin(angle));
+            if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+              grid[x][y].b = 1;
+            }
+          }
+          break;
+          
+        case 'grid':
+          // Grid of points
+          const spacing = 20;
+          for (let x = spacing; x < gridSize; x += spacing) {
+            for (let y = spacing; y < gridSize; y += spacing) {
+              for (let dx = -2; dx <= 2; dx++) {
+                for (let dy = -2; dy <= 2; dy++) {
+                  if (x + dx >= 0 && x + dx < gridSize && y + dy >= 0 && y + dy < gridSize) {
+                    grid[x + dx][y + dy].b = 1;
+                  }
+                }
+              }
+            }
+          }
+          break;
+      }
+    }
+    
+    function loadPreset(name) {
+      switch (name) {
+        case 'mitosis':
+          params.feedRate = 0.0367;
+          params.killRate = 0.0649;
+          break;
+        case 'coral':
+          params.feedRate = 0.0545;
+          params.killRate = 0.062;
+          break;
+        case 'fingerprint':
+          params.feedRate = 0.055;
+          params.killRate = 0.062;
+          break;
+        case 'spirals':
+          params.feedRate = 0.018;
+          params.killRate = 0.051;
+          break;
+        case 'worms':
+          params.feedRate = 0.078;
+          params.killRate = 0.061;
+          break;
+        case 'bubbles':
+          params.feedRate = 0.098;
+          params.killRate = 0.057;
+          break;
+      }
+      
+      // Update UI
+      document.getElementById('feedRate').value = params.feedRate;
+      document.getElementById('feedRate-val').textContent = params.feedRate;
+      document.getElementById('killRate').value = params.killRate;
+      document.getElementById('killRate-val').textContent = params.killRate;
+      
+      // Reset and start with new parameters
+      initializeGrid();
+    }
+    
+    // Export functions
+    function exportSVG() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      svg.noStroke();
+      svg.fill(0);
+      
+      // Draw pattern based on threshold
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (grid[x][y].b > params.threshold) {
+            svg.rect(x * 10, y * 10, 10, 10);
+          }
+        }
+      }
+      
+      save(svg, `reaction-diffusion-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function exportContours() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      svg.noFill();
+      svg.stroke(0);
+      svg.strokeWeight(1);
+      
+      // Extract contour lines at different levels
+      const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
+      
+      levels.forEach(level => {
+        // Simple contour extraction (marching squares would be better)
+        for (let x = 0; x < gridSize - 1; x++) {
+          for (let y = 0; y < gridSize - 1; y++) {
+            const a = grid[x][y].b > level;
+            const b = grid[x + 1][y].b > level;
+            const c = grid[x + 1][y + 1].b > level;
+            const d = grid[x][y + 1].b > level;
+            
+            const code = (a ? 8 : 0) + (b ? 4 : 0) + (c ? 2 : 0) + (d ? 1 : 0);
+            
+            // Draw contour segments based on marching squares cases
+            const px = x * 10;
+            const py = y * 10;
+            
+            switch (code) {
+              case 1:
+              case 14:
+                svg.line(px, py + 5, px + 5, py + 10);
+                break;
+              case 2:
+              case 13:
+                svg.line(px + 5, py + 10, px + 10, py + 5);
+                break;
+              case 3:
+              case 12:
+                svg.line(px, py + 5, px + 10, py + 5);
+                break;
+              case 4:
+              case 11:
+                svg.line(px + 10, py + 5, px + 5, py);
+                break;
+              case 5:
+                svg.line(px, py + 5, px + 5, py);
+                svg.line(px + 10, py + 5, px + 5, py + 10);
+                break;
+              case 6:
+              case 9:
+                svg.line(px + 5, py, px + 5, py + 10);
+                break;
+              case 7:
+              case 8:
+                svg.line(px, py + 5, px + 5, py);
+                break;
+              case 10:
+                svg.line(px + 5, py, px + 10, py + 5);
+                svg.line(px, py + 5, px + 5, py + 10);
+                break;
+            }
+          }
+        }
+      });
+      
+      save(svg, `reaction-diffusion-contours-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function exportThreshold() {
+      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
+      svg.background(255);
+      
+      // Group connected regions
+      const visited = Array(gridSize).fill(0).map(() => Array(gridSize).fill(false));
+      const regions = [];
+      
+      for (let x = 0; x < gridSize; x++) {
+        for (let y = 0; y < gridSize; y++) {
+          if (!visited[x][y] && grid[x][y].b > params.threshold) {
+            const region = [];
+            floodFill(x, y, visited, region);
+            if (region.length > 5) { // Minimum region size
+              regions.push(region);
+            }
+          }
+        }
+      }
+      
+      // Draw regions
+      svg.noStroke();
+      svg.fill(0);
+      
+      regions.forEach(region => {
+        region.forEach(point => {
+          svg.rect(point.x * 10, point.y * 10, 10, 10);
+        });
+      });
+      
+      // Add metadata
+      svg.push();
+      svg.stroke(0);
+      svg.strokeWeight(0.5);
+      svg.textSize(8);
+      svg.text(`Regions: ${regions.length}`, 10, svg.height - 10);
+      svg.text(`f=${params.feedRate}, k=${params.killRate}`, 10, svg.height - 20);
+      svg.pop();
+      
+      save(svg, `reaction-diffusion-threshold-${iteration}.svg`);
+      svg.remove();
+    }
+    
+    function floodFill(x, y, visited, region) {
+      if (x < 0 || x >= gridSize || y < 0 || y >= gridSize) return;
+      if (visited[x][y] || grid[x][y].b <= params.threshold) return;
+      
+      visited[x][y] = true;
+      region.push({ x, y });
+      
+      // Check 4 neighbors
+      floodFill(x + 1, y, visited, region);
+      floodFill(x - 1, y, visited, region);
+      floodFill(x, y + 1, visited, region);
+      floodFill(x, y - 1, visited, region);
+    }
+    
+    function exportGIF() {
+      const statusEl = document.getElementById('gif-status');
+      const progressBar = document.getElementById('gif-progress-bar');
+      const gifProgress = document.getElementById('gif-progress');
+
+      statusEl.textContent = 'Preparing GIF export...';
+      gifProgress.style.display = 'block';
+
+      const gif = new GIF({
+        workers: 2,
+        quality: 10,
+        width: width,
+        height: height,
+        workerScript: 'https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/dist/gif.worker.js'
+      });
+
+      // Store current state
+      const wasPlaying = !isPaused;
+      isPaused = false; // Ensure simulation runs for GIF
+
+      // Generate frames
+      const totalFrames = 60;
+      const frameDelay = 100;
+
+      for (let frame = 0; frame < totalFrames; frame++) {
+        // Update simulation for this frame
+        for (let i = 0; i < params.speed; i++) {
+          update();
+          iteration++;
+        }
+
+        // Create offscreen canvas for this frame
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = width;
+        offscreenCanvas.height = height;
+        const ctx = offscreenCanvas.getContext('2d');
+
+        // Draw current state
+        ctx.fillStyle = '#1e1e1e';
+        ctx.fillRect(0, 0, width, height);
+
+        const totalSize = gridSize * cellSize;
+        const offsetX = (width - totalSize) / 2;
+        const offsetY = (height - totalSize) / 2;
+
+        for (let x = 0; x < gridSize; x++) {
+          for (let y = 0; y < gridSize; y++) {
+            const cell = grid[x][y];
+            const colorVal = getRenderColor(cell);
+
+            // Convert p5 color to CSS
+            ctx.fillStyle = `rgb(${red(colorVal)}, ${green(colorVal)}, ${blue(colorVal)})`;
+            ctx.fillRect(offsetX + x * cellSize, offsetY + y * cellSize, cellSize, cellSize);
+          }
+        }
+
+        // Add frame to GIF
+        gif.addFrame(ctx, {copy: true, delay: frameDelay});
+
+        // Update status
+        const progress = Math.round((frame + 1) / totalFrames * 100);
+        statusEl.textContent = `Generating frames: ${progress}%`;
+        progressBar.style.width = progress + '%';
+      }
+
+      // Restore paused state
+      isPaused = !wasPlaying;
+
+      statusEl.textContent = 'Encoding GIF...';
+
+      gif.on('finished', function(blob) {
+        statusEl.textContent = 'GIF ready!';
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reaction-diffusion-${params.renderMode}.gif`;
+        a.click();
+
+        setTimeout(() => {
+          statusEl.textContent = '';
+          gifProgress.style.display = 'none';
+        }, 3000);
+      });
+
+      gif.render();
+    }
+    
+    // Mouse interaction for adding seeds
+    function mousePressed() {
+      const totalSize = gridSize * cellSize;
+      const offsetX = (width - totalSize) / 2;
+      const offsetY = (height - totalSize) / 2;
+      
+      const x = floor((mouseX - offsetX) / cellSize);
+      const y = floor((mouseY - offsetY) / cellSize);
+      
+      if (x >= 0 && x < gridSize && y >= 0 && y < gridSize) {
+        // Add B chemical at mouse position
+        for (let dx = -3; dx <= 3; dx++) {
+          for (let dy = -3; dy <= 3; dy++) {
+            const nx = x + dx;
+            const ny = y + dy;
+            if (nx >= 0 && nx < gridSize && ny >= 0 && ny < gridSize) {
+              const dist = sqrt(dx * dx + dy * dy);
+              if (dist <= 3) {
+                grid[nx][ny].b = 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>

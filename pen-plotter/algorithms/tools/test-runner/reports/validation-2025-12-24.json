@@ -1,0 +1,3113 @@
+{
+  "timestamp": "2025-12-24T06:33:03.661Z",
+  "passed": 24,
+  "failed": 42,
+  "warnings": 1,
+  "tests": [
+    {
+      "name": "chladni patterns",
+      "category": "advanced",
+      "filename": "chladni-patterns-gui.html",
+      "url": "http://localhost:8080/algorithms/advanced/chladni-patterns-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "450×560"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 3 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "2.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No console errors",
+          "pass": false,
+          "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+          "warn": true
+        }
+      },
+      "consoleErrors": [
+        "Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ],
+      "pageErrors": [],
+      "status": "warn"
+    },
+    {
+      "name": "lorenz attractor",
+      "category": "advanced",
+      "filename": "lorenz-attractor-gui.html",
+      "url": "http://localhost:8080/algorithms/advanced/lorenz-attractor-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.9% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "8000.00 → 15500.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "parametric surfaces",
+      "category": "advanced",
+      "filename": "parametric-surfaces-gui.html",
+      "url": "http://localhost:8080/algorithms/advanced/parametric-surfaces-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "450×560"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.8% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 2 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "30.00 → 55.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "sound waveform",
+      "category": "advanced",
+      "filename": "sound-waveform-gui.html",
+      "url": "http://localhost:8080/algorithms/advanced/sound-waveform-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "450×560"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 3 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "20.00 → 510.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "vortex street",
+      "category": "advanced",
+      "filename": "vortex-street-gui.html",
+      "url": "http://localhost:8080/algorithms/advanced/vortex-street-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "450×560"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 3 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "150.00 → 260.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Cannot read properties of undefined (reading '33')"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Cannot read properties of undefined (reading '33')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "ml5 patterns",
+      "category": "ai",
+      "filename": "ml5-patterns-gui.html",
+      "url": "http://localhost:8080/algorithms/ai/ml5-patterns-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 2 checkboxes, 6 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.50 → 1.10"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 's"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'slice')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "elementary ca layers",
+      "category": "cellular-automata",
+      "filename": "elementary-ca-layers.html",
+      "url": "http://localhost:8080/algorithms/cellular-automata/elementary-ca-layers.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 2 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "30.00 → 128.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "elementary ca",
+      "category": "cellular-automata",
+      "filename": "elementary-ca.html",
+      "url": "http://localhost:8080/algorithms/cellular-automata/elementary-ca.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 1 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "30.00 → 128.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "game of life",
+      "category": "cellular-automata",
+      "filename": "game-of-life-gui.html",
+      "url": "http://localhost:8080/algorithms/cellular-automata/game-of-life-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "3 sliders, 2 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "50.00 → 110.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "game of life layers",
+      "category": "cellular-automata",
+      "filename": "game-of-life-layers.html",
+      "url": "http://localhost:8080/algorithms/cellular-automata/game-of-life-layers.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "3 sliders, 3 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "50.00 → 85.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "belousov zhabotinsky",
+      "category": "chemical",
+      "filename": "belousov-zhabotinsky-gui.html",
+      "url": "http://localhost:8080/algorithms/chemical/belousov-zhabotinsky-gui.html",
+      "tests": {},
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail",
+      "error": "Navigation timeout of 15000 ms exceeded"
+    },
+    {
+      "name": "chromatography",
+      "category": "chemical",
+      "filename": "chromatography-gui.html",
+      "url": "http://localhost:8080/algorithms/chemical/chromatography-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 5 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "5000.00 → 7500.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "convection cells",
+      "category": "chemical",
+      "filename": "convection-cells-gui.html",
+      "url": "http://localhost:8080/algorithms/chemical/convection-cells-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.5% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 4 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "4.00 → 4.50"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "crystallization",
+      "category": "chemical",
+      "filename": "crystallization-gui.html",
+      "url": "http://localhost:8080/algorithms/chemical/crystallization-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "9 sliders, 3 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.50 → 1.10"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "liesegang rings",
+      "category": "chemical",
+      "filename": "liesegang-rings-gui.html",
+      "url": "http://localhost:8080/algorithms/chemical/liesegang-rings-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "11 sliders, 4 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.10 → 0.51"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "mixing patterns",
+      "category": "chemical",
+      "filename": "mixing-patterns-gui.html",
+      "url": "http://localhost:8080/algorithms/chemical/mixing-patterns-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 4 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "2.00 → 5.10"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "hilbert curve",
+      "category": "curves",
+      "filename": "hilbert-curve-gui.html",
+      "url": "http://localhost:8080/algorithms/curves/hilbert-curve-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "98.1% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "10 sliders, 4 checkboxes, 6 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "4.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "space filling curves",
+      "category": "curves",
+      "filename": "space-filling-curves-gui.html",
+      "url": "http://localhost:8080/algorithms/curves/space-filling-curves-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "4.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "flow field collision",
+      "category": "flow-fields",
+      "filename": "flow-field-collision.html",
+      "url": "http://localhost:8080/algorithms/flow-fields/flow-field-collision.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "11 sliders, 6 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.00 → 0.01"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "flow field p5",
+      "category": "flow-fields",
+      "filename": "flow-field-p5-gui.html",
+      "url": "http://localhost:8080/algorithms/flow-fields/flow-field-p5-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "424×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.5% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 2 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.00 → 0.01"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "mandelbrot julia",
+      "category": "fractals",
+      "filename": "mandelbrot-julia-gui.html",
+      "url": "http://localhost:8080/algorithms/fractals/mandelbrot-julia-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 1 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "-0.70 → 0.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "10print",
+      "category": "geometric",
+      "filename": "10print-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/10print-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "95.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 1 checkboxes, 6 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "20.00 → 53.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "10print simple",
+      "category": "geometric",
+      "filename": "10print-simple.html",
+      "url": "http://localhost:8080/algorithms/geometric/10print-simple.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "95.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "3 sliders, 0 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "20.00 → 28.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "circle rays",
+      "category": "geometric",
+      "filename": "circle-rays-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/circle-rays-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "10 sliders, 2 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "36.00 → 102.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "circle twist",
+      "category": "geometric",
+      "filename": "circle-twist-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/circle-twist-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "13 sliders, 5 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "10.00 → 16.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "grid landscape",
+      "category": "geometric",
+      "filename": "grid-landscape-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/grid-landscape-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.8% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 4 checkboxes, 5 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "40.00 → 55.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "hash tiles",
+      "category": "geometric",
+      "filename": "hash-tiles-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/hash-tiles-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.9% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 3 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "10.00 → 18.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "islamic patterns",
+      "category": "geometric",
+      "filename": "islamic-patterns-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/islamic-patterns-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "16 sliders, 6 checkboxes, 9 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "8.00 → 10.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "maze generator",
+      "category": "geometric",
+      "filename": "maze-generator-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/maze-generator-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "95.1% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "20.00 → 33.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "moire patterns",
+      "category": "geometric",
+      "filename": "moire-patterns-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/moire-patterns-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 3 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "8.00 → 11.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "penrose tiling",
+      "category": "geometric",
+      "filename": "penrose-tiling-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/penrose-tiling-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "9 sliders, 5 checkboxes, 8 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "4.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "perlin circles",
+      "category": "geometric",
+      "filename": "perlin-circles-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/perlin-circles-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "9 sliders, 4 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "5.00 → 11.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "perlin landscape",
+      "category": "geometric",
+      "filename": "perlin-landscape-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/perlin-landscape-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "9 sliders, 4 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.01 → 0.03"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "perlin spiral",
+      "category": "geometric",
+      "filename": "perlin-spiral-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/perlin-spiral-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "13 sliders, 6 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "10.00 → 25.50"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "snowflakes",
+      "category": "geometric",
+      "filename": "snowflakes-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/snowflakes-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "10 sliders, 6 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "3.00 → 4.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "spiral burst",
+      "category": "geometric",
+      "filename": "spiral-burst-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/spiral-burst-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "1600×1600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "26 sliders, 3 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "30.00 → 52.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "spiral fill",
+      "category": "geometric",
+      "filename": "spiral-fill.html",
+      "url": "http://localhost:8080/algorithms/geometric/spiral-fill.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 6 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "300.00 → 400.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "spirotron",
+      "category": "geometric",
+      "filename": "spirotron-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/spirotron-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.3% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 4 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "200.00 → 175.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "string art",
+      "category": "geometric",
+      "filename": "string-art-gui.html",
+      "url": "http://localhost:8080/algorithms/geometric/string-art-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "72.00 → 96.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "hybrid composer",
+      "category": "hybrid",
+      "filename": "hybrid-composer-gui.html",
+      "url": "http://localhost:8080/algorithms/hybrid/hybrid-composer-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 3 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "1.00 → 0.50"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No console errors",
+          "pass": false,
+          "detail": "Generation error: JSHandle@error",
+          "warn": true
+        }
+      },
+      "consoleErrors": [
+        "Generation error: JSHandle@error"
+      ],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "ascii art",
+      "category": "image-processing",
+      "filename": "ascii-art-gui.html",
+      "url": "http://localhost:8080/algorithms/image-processing/ascii-art-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "0.3% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 1 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "8.00 → 12.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "dithering",
+      "category": "image-processing",
+      "filename": "dithering-gui.html",
+      "url": "http://localhost:8080/algorithms/image-processing/dithering-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 0 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "128.00 → 191.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "halftone",
+      "category": "image-processing",
+      "filename": "halftone.html",
+      "url": "http://localhost:8080/algorithms/image-processing/halftone.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 6 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "10.00 → 18.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "hatching",
+      "category": "image-processing",
+      "filename": "hatching.html",
+      "url": "http://localhost:8080/algorithms/image-processing/hatching.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 4 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "5.00 → 11.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "image to ascii",
+      "category": "image-processing",
+      "filename": "image-to-ascii-gui.html",
+      "url": "http://localhost:8080/algorithms/image-processing/image-to-ascii-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "381×540"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "25.3% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 2 checkboxes, 6 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "80.00 → 160.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "squigglecam",
+      "category": "image-processing",
+      "filename": "squigglecam.html",
+      "url": "http://localhost:8080/algorithms/image-processing/squigglecam.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 4 checkboxes, 0 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "50.00 → 105.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "astronomy",
+      "category": "natural",
+      "filename": "astronomy-gui.html",
+      "url": "http://localhost:8080/algorithms/natural/astronomy-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "7.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 4 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "40.00 → 0.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "coral growth",
+      "category": "natural",
+      "filename": "coral-growth-gui.html",
+      "url": "http://localhost:8080/algorithms/natural/coral-growth-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "9 sliders, 1 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "2.00 → 2.80"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "crystal growth",
+      "category": "natural",
+      "filename": "crystal-growth-gui.html",
+      "url": "http://localhost:8080/algorithms/natural/crystal-growth-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 0 checkboxes, 5 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "10000.00 → 26000.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "differential growth",
+      "category": "natural",
+      "filename": "differential-growth-gui.html",
+      "url": "http://localhost:8080/algorithms/natural/differential-growth-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "32.00 → 68.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "lightning",
+      "category": "natural",
+      "filename": "lightning-gui.html",
+      "url": "http://localhost:8080/algorithms/natural/lightning-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "18.3% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 3 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "0.05 → 0.50"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "circle packing",
+      "category": "packing",
+      "filename": "circle-packing-gui.html",
+      "url": "http://localhost:8080/algorithms/packing/circle-packing-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 2 checkboxes, 4 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "1000.00 → 2600.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "particle system",
+      "category": "physics",
+      "filename": "particle-system-gui.html",
+      "url": "http://localhost:8080/algorithms/physics/particle-system-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "12 sliders, 4 checkboxes, 5 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "3.00 → 10.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "test color controls",
+      "category": "physics",
+      "filename": "test-color-controls.html",
+      "url": "http://localhost:8080/algorithms/physics/test-color-controls.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": false,
+          "detail": "No canvas element found"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "No canvas"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": false,
+          "detail": "0 sliders, 0 checkboxes, 0 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": null,
+          "detail": "No sliders to test"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": null,
+          "detail": "Could not capture canvas state"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "wave interference",
+      "category": "physics",
+      "filename": "wave-interference-gui.html",
+      "url": "http://localhost:8080/algorithms/physics/wave-interference-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 1 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "3.00 → 5.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "reaction diffusion enhanced",
+      "category": "reaction-diffusion",
+      "filename": "reaction-diffusion-enhanced.html",
+      "url": "http://localhost:8080/algorithms/reaction-diffusion/reaction-diffusion-enhanced.html",
+      "tests": {},
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail",
+      "error": "Navigation timeout of 15000 ms exceeded"
+    },
+    {
+      "name": "reaction diffusion",
+      "category": "reaction-diffusion",
+      "filename": "reaction-diffusion-gui.html",
+      "url": "http://localhost:8080/algorithms/reaction-diffusion/reaction-diffusion-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": false,
+          "detail": "No canvas element found"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "No canvas"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "9 sliders, 2 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "10.00 → 26.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": null,
+          "detail": "Could not capture canvas state"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Identifier 'autoRegenerate' has already been declared"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Identifier 'autoRegenerate' has already been declared"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "reaction diffusion layers",
+      "category": "reaction-diffusion",
+      "filename": "reaction-diffusion-layers.html",
+      "url": "http://localhost:8080/algorithms/reaction-diffusion/reaction-diffusion-layers.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 5 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "5.00 → 11.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "kumiko pattern",
+      "category": "symmetry",
+      "filename": "kumiko-pattern.html",
+      "url": "http://localhost:8080/algorithms/symmetry/kumiko-pattern.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 4 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "3.00 → 4.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "truchet tiles",
+      "category": "symmetry",
+      "filename": "truchet-tiles-gui.html",
+      "url": "http://localhost:8080/algorithms/symmetry/truchet-tiles-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "400×400"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "95.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "7 sliders, 2 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "20.00 → 28.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "zellige pattern",
+      "category": "symmetry",
+      "filename": "zellige-pattern.html",
+      "url": "http://localhost:8080/algorithms/symmetry/zellige-pattern.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "600×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "8 sliders, 4 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "3.00 → 4.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'e"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Uncaught (in promise) TypeError: Cannot read properties of undefined (reading 'elt')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "hatching demo",
+      "category": "textures",
+      "filename": "hatching-demo.html",
+      "url": "http://localhost:8080/algorithms/textures/hatching-demo.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": false,
+          "detail": "Only 0.0% filled - appears blank"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": false,
+          "detail": "0 sliders, 0 checkboxes, 0 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": null,
+          "detail": "No sliders to test"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": null,
+          "detail": "No regeneration method found"
+        },
+        "no-errors": {
+          "name": "No JS errors",
+          "pass": false,
+          "detail": "Cannot read properties of null (reading 'appendChild')"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [
+        "Cannot read properties of null (reading 'appendChild')"
+      ],
+      "status": "fail"
+    },
+    {
+      "name": "lsystem simple",
+      "category": "trees-lsystems",
+      "filename": "lsystem-simple.html",
+      "url": "http://localhost:8080/algorithms/trees-lsystems/lsystem-simple.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "98.5% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 0 checkboxes, 0 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "5.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "tree",
+      "category": "trees-lsystems",
+      "filename": "tree-gui.html",
+      "url": "http://localhost:8080/algorithms/trees-lsystems/tree-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "424×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "100.0% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "11 sliders, 1 checkboxes, 1 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "4.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "tree working",
+      "category": "trees-lsystems",
+      "filename": "tree-working.html",
+      "url": "http://localhost:8080/algorithms/trees-lsystems/tree-working.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×600"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.3% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "4 sliders, 0 checkboxes, 0 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "5.00 → 6.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": false,
+          "detail": "No change after slider"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "fail"
+    },
+    {
+      "name": "tsp art",
+      "category": "voronoi",
+      "filename": "tsp-art-gui.html",
+      "url": "http://localhost:8080/algorithms/voronoi/tsp-art-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.2% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "6 sliders, 3 checkboxes, 3 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "500.00 → 1010.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    },
+    {
+      "name": "voronoi stippling",
+      "category": "voronoi",
+      "filename": "voronoi-stippling-gui.html",
+      "url": "http://localhost:8080/algorithms/voronoi/voronoi-stippling-gui.html",
+      "tests": {
+        "canvas-exists": {
+          "name": "Canvas exists",
+          "pass": true,
+          "detail": "800×800"
+        },
+        "canvas-content": {
+          "name": "Canvas has content",
+          "pass": true,
+          "detail": "99.8% filled"
+        },
+        "controls-exist": {
+          "name": "Controls exist",
+          "pass": true,
+          "detail": "5 sliders, 5 checkboxes, 2 selects",
+          "warn": false
+        },
+        "ts-apis": {
+          "name": "TS APIs loaded",
+          "pass": null,
+          "detail": "No TS APIs (might be older algorithm)"
+        },
+        "slider-interaction": {
+          "name": "Slider interaction",
+          "pass": true,
+          "detail": "2000.00 → 5100.00"
+        },
+        "canvas-regen": {
+          "name": "Canvas regenerates",
+          "pass": true,
+          "detail": "Regenerated via button"
+        },
+        "no-errors": {
+          "name": "No errors",
+          "pass": true,
+          "detail": "Clean"
+        }
+      },
+      "consoleErrors": [],
+      "pageErrors": [],
+      "status": "pass"
+    }
+  ]
+}

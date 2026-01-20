@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Preset Manager Demo - Total Serialism</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="preset-manager.js"></script>
+    <link rel="stylesheet" href="preset-manager.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2a2a2a;
+        }
+
+        #controls {
+            width: 320px;
+            padding: 20px;
+            background: #1a1a1a;
+            height: 100vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            margin: 0 0 20px 0;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #333;
+        }
+
+        .control-group h3 {
+            margin: 0 0 15px 0;
+            color: #4CAF50;
+            font-size: 16px;
+        }
+
+        .control {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        input[type="color"] {
+            width: 100%;
+            height: 35px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            background: #2a2a2a;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .value-display {
+            color: #4CAF50;
+            font-weight: 600;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background: #4CAF50;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .info-box {
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid #4CAF50;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .info-box strong {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div id="controls">
+        <h2>🎨 Preset Manager Demo</h2>
+
+        <div class="info-box">
+            <strong>Try it out:</strong>
+            <br>1. Adjust the parameters below
+            <br>2. Save your configuration as a preset
+            <br>3. Export and share presets with others!
+        </div>
+
+        <div class="control-group">
+            <h3>Pattern Parameters</h3>
+
+            <div class="control">
+                <label>
+                    Density: <span class="value-display" id="densityValue">50</span>
+                </label>
+                <input type="range" id="density" min="10" max="200" value="50">
+            </div>
+
+            <div class="control">
+                <label>
+                    Speed: <span class="value-display" id="speedValue">2</span>
+                </label>
+                <input type="range" id="speed" min="1" max="10" value="2" step="0.1">
+            </div>
+
+            <div class="control">
+                <label>
+                    Scale: <span class="value-display" id="scaleValue">0.01</span>
+                </label>
+                <input type="range" id="scale" min="0.001" max="0.05" value="0.01" step="0.001">
+            </div>
+
+            <div class="control">
+                <label>Pattern Type</label>
+                <select id="patternType">
+                    <option value="flow">Flow Field</option>
+                    <option value="spiral">Spiral</option>
+                    <option value="waves">Waves</option>
+                    <option value="noise">Noise</option>
+                </select>
+            </div>
+
+            <div class="control">
+                <label>Color</label>
+                <input type="color" id="color" value="#4CAF50">
+            </div>
+
+            <div class="control">
+                <label>
+                    Line Weight: <span class="value-display" id="weightValue">2</span>
+                </label>
+                <input type="range" id="weight" min="1" max="10" value="2">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <button id="regenerate">🔄 Regenerate</button>
+        </div>
+
+        <!-- Preset Manager will be injected here -->
+        <div id="preset-container"></div>
+    </div>
+
+    <script>
+        // p5.js sketch
+        let params = {
+            density: 50,
+            speed: 2,
+            scale: 0.01,
+            patternType: 'flow',
+            color: '#4CAF50',
+            weight: 2
+        };
+
+        let particles = [];
+        let time = 0;
+
+        function setup() {
+            let canvas = createCanvas(800, 800);
+            canvas.parent('canvas-container');
+            background(26, 26, 26);
+            initParticles();
+        }
+
+        function draw() {
+            // Semi-transparent background for trails
+            fill(26, 26, 26, 10);
+            noStroke();
+            rect(0, 0, width, height);
+
+            // Draw particles
+            stroke(params.color);
+            strokeWeight(params.weight);
+
+            particles.forEach(particle => {
+                updateParticle(particle);
+                drawParticle(particle);
+            });
+
+            time += params.speed * 0.01;
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < params.density; i++) {
+                particles.push({
+                    x: random(width),
+                    y: random(height),
+                    prevX: random(width),
+                    prevY: random(height)
+                });
+            }
+        }
+
+        function updateParticle(p) {
+            p.prevX = p.x;
+            p.prevY = p.y;
+
+            let angle;
+            switch (params.patternType) {
+                case 'flow':
+                    angle = noise(p.x * params.scale, p.y * params.scale, time) * TWO_PI * 2;
+                    break;
+                case 'spiral':
+                    angle = atan2(p.y - height/2, p.x - width/2) + time;
+                    break;
+                case 'waves':
+                    angle = sin(p.x * params.scale + time) * PI;
+                    break;
+                case 'noise':
+                    angle = noise(p.x * params.scale) * TWO_PI;
+                    break;
+            }
+
+            p.x += cos(angle) * params.speed;
+            p.y += sin(angle) * params.speed;
+
+            // Wrap around
+            if (p.x < 0) p.x = width;
+            if (p.x > width) p.x = 0;
+            if (p.y < 0) p.y = height;
+            if (p.y > height) p.y = 0;
+        }
+
+        function drawParticle(p) {
+            line(p.prevX, p.prevY, p.x, p.y);
+        }
+
+        // UI Controls
+        function updateParam(id, value) {
+            params[id] = parseFloat(value) || value;
+            document.getElementById(id + 'Value').textContent = value;
+
+            if (id === 'density') {
+                initParticles();
+            }
+        }
+
+        document.getElementById('density').addEventListener('input', e => {
+            updateParam('density', e.target.value);
+        });
+
+        document.getElementById('speed').addEventListener('input', e => {
+            updateParam('speed', e.target.value);
+        });
+
+        document.getElementById('scale').addEventListener('input', e => {
+            updateParam('scale', e.target.value);
+        });
+
+        document.getElementById('patternType').addEventListener('change', e => {
+            params.patternType = e.target.value;
+        });
+
+        document.getElementById('color').addEventListener('input', e => {
+            params.color = e.target.value;
+        });
+
+        document.getElementById('weight').addEventListener('input', e => {
+            updateParam('weight', e.target.value);
+        });
+
+        document.getElementById('regenerate').addEventListener('click', () => {
+            background(26, 26, 26);
+            initParticles();
+        });
+
+        // Initialize Preset Manager
+        const presetManager = new PresetManager({
+            algorithmId: 'preset-demo',
+            container: '#preset-container',
+
+            // Called when saving - return current parameters
+            onSave: () => {
+                return {
+                    density: params.density,
+                    speed: params.speed,
+                    scale: params.scale,
+                    patternType: params.patternType,
+                    color: params.color,
+                    weight: params.weight
+                };
+            },
+
+            // Called when loading - apply parameters
+            onLoad: (preset) => {
+                const data = preset.data;
+
+                // Update parameters
+                params.density = data.density;
+                params.speed = data.speed;
+                params.scale = data.scale;
+                params.patternType = data.patternType;
+                params.color = data.color;
+                params.weight = data.weight;
+
+                // Update UI
+                document.getElementById('density').value = data.density;
+                document.getElementById('densityValue').textContent = data.density;
+
+                document.getElementById('speed').value = data.speed;
+                document.getElementById('speedValue').textContent = data.speed;
+
+                document.getElementById('scale').value = data.scale;
+                document.getElementById('scaleValue').textContent = data.scale;
+
+                document.getElementById('patternType').value = data.patternType;
+
+                document.getElementById('color').value = data.color;
+
+                document.getElementById('weight').value = data.weight;
+                document.getElementById('weightValue').textContent = data.weight;
+
+                // Regenerate
+                background(26, 26, 26);
+                initParticles();
+            },
+
+            // Optional: randomize function
+            onRandomize: () => {
+                params.density = Math.floor(Math.random() * 190) + 10;
+                params.speed = Math.random() * 9 + 1;
+                params.scale = Math.random() * 0.049 + 0.001;
+                params.patternType = ['flow', 'spiral', 'waves', 'noise'][Math.floor(Math.random() * 4)];
+                params.color = '#' + Math.floor(Math.random()*16777215).toString(16);
+                params.weight = Math.floor(Math.random() * 9) + 1;
+
+                // Update UI
+                document.getElementById('density').value = params.density;
+                document.getElementById('densityValue').textContent = params.density;
+                document.getElementById('speed').value = params.speed;
+                document.getElementById('speedValue').textContent = params.speed.toFixed(1);
+                document.getElementById('scale').value = params.scale;
+                document.getElementById('scaleValue').textContent = params.scale.toFixed(3);
+                document.getElementById('patternType').value = params.patternType;
+                document.getElementById('color').value = params.color;
+                document.getElementById('weight').value = params.weight;
+                document.getElementById('weightValue').textContent = params.weight;
+
+                background(26, 26, 26);
+                initParticles();
+            }
+        });
+    </script>
+</body>
+</html>

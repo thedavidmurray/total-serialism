@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Hybrid Algorithm Composer</title>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .section {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: var(--ts-bg-elevated, #1a1a2e);
+      border-radius: 8px;
+      border: 1px solid var(--ts-border, #2a2a38);
+    }
+    .layer {
+      background: var(--ts-bg-control, #22222e);
+      border: 1px solid var(--ts-border, #2a2a38);
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    .layer.disabled {
+      opacity: 0.5;
+    }
+    .layer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .layer-title {
+      font-weight: bold;
+      color: var(--ts-text-primary, #e8e8ec);
+    }
+    .layer-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    button.danger {
+      background: var(--ts-accent-danger, #ff4757);
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+    button.danger:hover {
+      background: #ff6b79;
+    }
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 10px 0;
+      font-size: 13px;
+    }
+    .checkbox-label input {
+      width: auto;
+    }
+    .parameter-group {
+      margin: 10px 0;
+      padding: 10px;
+      background: var(--ts-bg-panel, #13131b);
+      border-radius: 4px;
+      border: 1px solid var(--ts-border, #2a2a38);
+    }
+    .parameter-group h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary, #9898a8);
+    }
+    .range-value {
+      display: inline-block;
+      width: 50px;
+      text-align: right;
+      font-size: 12px;
+      color: var(--ts-accent-primary, #00d4aa);
+    }
+    .preset-section {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .preset-section select {
+      flex: 1;
+    }
+    .preset-section button {
+      width: auto;
+    }
+    .canvas-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+    }
+    #preview-canvas {
+      background: white;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      max-width: 100%;
+      max-height: 100%;
+    }
+    .canvas-controls {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .canvas-controls button {
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+    .status {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      padding: 10px 20px;
+      background: var(--ts-bg-elevated, #1a1a2e);
+      color: var(--ts-text-primary, #e8e8ec);
+      border-radius: 4px;
+      font-size: 14px;
+      border: 1px solid var(--ts-border, #2a2a38);
+    }
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      color: var(--ts-text-secondary, #9898a8);
+      display: none;
+    }
+    .loading.active {
+      display: block;
+    }
+    .export-options {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: var(--ts-bg-panel, #13131b);
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 1000;
+      border: 1px solid var(--ts-border, #2a2a38);
+    }
+    .export-options.active {
+      display: block;
+    }
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+    }
+    .overlay.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="controls">
+    <h2>Hybrid Algorithm Composer</h2>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+
+    <div class="section">
+      <h3>Presets</h3>
+      <div class="preset-section">
+        <select id="preset-selector">
+          <option value="">Select a preset...</option>
+          <option value="flow-cellular">Flow Fields + Cellular Automata</option>
+          <option value="reaction-geometric">Reaction-Diffusion + Geometric</option>
+          <option value="tree-noise">Tree Systems + Perlin Noise</option>
+          <option value="physics-hash">Physics Particles + Hash Tiles</option>
+        </select>
+        <button onclick="loadPreset()">Load</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Layers</h3>
+      <div id="layers-container"></div>
+      <button onclick="addLayer()">+ Add Layer</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="control">
+        <label>Stroke Color:</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <button onclick="generate()" style="width: 100%; padding: 12px; font-size: 16px;">
+        Generate Hybrid
+      </button>
+    </div>
+  </div>
+
+  <div id="canvas-container" class="canvas-area">
+    <div class="canvas-controls">
+      <button onclick="exportSVG()">Export SVG</button>
+      <button onclick="exportPNG()">Export PNG</button>
+      <button onclick="saveConfiguration()" class="secondary">Save Config</button>
+      <button onclick="loadConfiguration()" class="secondary">Load Config</button>
+    </div>
+
+    <canvas id="preview-canvas" width="800" height="800"></canvas>
+
+    <div class="loading" id="loading">Generating...</div>
+    <div class="status" id="status">Ready</div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeExportOptions()"></div>
+  <div class="export-options" id="export-options">
+    <h3>Export Options</h3>
+    <div style="margin: 20px 0;">
+      <label class="checkbox-label">
+        <input type="checkbox" id="include-layers" checked>
+        Include layer information
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="optimize-plotter" checked>
+        Optimize for pen plotter
+      </label>
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="closeExportOptions()" class="secondary">Cancel</button>
+      <button onclick="confirmExport()">Export</button>
+    </div>
+  </div>
+
+  <!-- Hybrid Engine for layer-based composition -->
+  <script src="../../shared/hybrid-engine.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+  <script>
+    // Global parameters
+    const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000'
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+    canvasControls.setupRandomizeButton();
+
+    // Initialize panel controller and stats display
+    window.panelController = new TSPanelController().attach();
+    window.statsDisplay = new TSStatsDisplay().attach();
+
+    // Initialize the hybrid engine
+    const engine = new HybridEngine();
+    const canvas = document.getElementById('preview-canvas');
+    const ctx = canvas.getContext('2d');
+    let presetManager;
+
+    // Initialize canvas size
+    function initCanvasSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      canvas.width = size.width;
+      canvas.height = size.height;
+    }
+    initCanvasSize();
+
+    // Initialize preset manager when page loads
+    window.addEventListener('DOMContentLoaded', () => {
+      presetManager = new PresetManager({
+        algorithmId: 'hybrid-composer',
+        container: '#preset-container',
+        onSave: () => engine.getConfiguration(),
+        onLoad: (preset) => {
+          if (preset.data && typeof engine.loadConfiguration === 'function') {
+            engine.loadConfiguration(preset.data);
+            renderPreview();
+          }
+        },
+        onRandomize: () => {
+          // Randomize is complex for hybrid composer - just regenerate
+          renderPreview();
+        }
+      });
+
+      // Canvas settings event handlers
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = CanvasLayout.getSize(params.paperSize);
+        canvas.width = size.width;
+        canvas.height = size.height;
+        renderPreview();
+      });
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        renderPreview();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        renderPreview();
+      });
+    });
+
+    // Algorithm implementations
+    const algorithms = {
+      flowField: {
+        name: 'Flow Field',
+        generate: async (params) => {
+          const paths = [];
+          const { width, height, resolution = 20, strength = 5, particles = 100 } = params;
+
+          // Create flow field
+          const field = [];
+          for (let x = 0; x < width; x += resolution) {
+            for (let y = 0; y < height; y += resolution) {
+              const angle = (Math.sin(x * 0.01) + Math.cos(y * 0.01)) * Math.PI;
+              field.push({ x, y, angle });
+            }
+          }
+
+          // Generate particle paths
+          for (let i = 0; i < particles; i++) {
+            const path = [];
+            let x = Math.random() * width;
+            let y = Math.random() * height;
+
+            for (let step = 0; step < 50; step++) {
+              path.push([x, y]);
+
+              // Find nearest field point
+              let minDist = Infinity;
+              let nearestField = null;
+
+              for (const f of field) {
+                const dist = Math.hypot(f.x - x, f.y - y);
+                if (dist < minDist) {
+                  minDist = dist;
+                  nearestField = f;
+                }
+              }
+
+              if (nearestField) {
+                x += Math.cos(nearestField.angle) * strength;
+                y += Math.sin(nearestField.angle) * strength;
+              }
+
+              // Bounds check
+              if (x < 0 || x > width || y < 0 || y > height) break;
+            }
+
+            if (path.length > 1) paths.push(path);
+          }
+
+          return { paths };
+        },
+        parameters: {
+          resolution: { type: 'range', min: 10, max: 50, default: 20, label: 'Field Resolution' },
+          strength: { type: 'range', min: 1, max: 20, default: 5, label: 'Flow Strength' },
+          particles: { type: 'range', min: 10, max: 500, default: 100, label: 'Particle Count' }
+        }
+      },
+
+      cellularAutomata: {
+        name: 'Cellular Automata',
+        generate: async (params) => {
+          const paths = [];
+          const { width, height, cellSize = 10, generations = 50, density = 0.3 } = params;
+
+          const gridWidth = Math.floor(width / cellSize);
+          const gridHeight = Math.floor(height / cellSize);
+
+          // Initialize grid
+          let grid = Array(gridWidth).fill(null).map(() =>
+            Array(gridHeight).fill(null).map(() => Math.random() < density)
+          );
+
+          // Run generations
+          for (let gen = 0; gen < generations; gen++) {
+            const newGrid = grid.map(row => [...row]);
+
+            for (let x = 1; x < gridWidth - 1; x++) {
+              for (let y = 1; y < gridHeight - 1; y++) {
+                let neighbors = 0;
+                for (let dx = -1; dx <= 1; dx++) {
+                  for (let dy = -1; dy <= 1; dy++) {
+                    if (dx === 0 && dy === 0) continue;
+                    if (grid[x + dx][y + dy]) neighbors++;
+                  }
+                }
+
+                // Conway's rules
+                if (grid[x][y]) {
+                  newGrid[x][y] = neighbors === 2 || neighbors === 3;
+                } else {
+                  newGrid[x][y] = neighbors === 3;
+                }
+              }
+            }
+
+            grid = newGrid;
+          }
+
+          // Convert to paths
+          for (let x = 0; x < gridWidth; x++) {
+            for (let y = 0; y < gridHeight; y++) {
+              if (grid[x][y]) {
+                const cx = x * cellSize + cellSize / 2;
+                const cy = y * cellSize + cellSize / 2;
+
+                // Draw cell as small square
+                const path = [
+                  [cx - cellSize/3, cy - cellSize/3],
+                  [cx + cellSize/3, cy - cellSize/3],
+                  [cx + cellSize/3, cy + cellSize/3],
+                  [cx - cellSize/3, cy + cellSize/3],
+                  [cx - cellSize/3, cy - cellSize/3]
+                ];
+                paths.push(path);
+              }
+            }
+          }
+
+          return { paths };
+        },
+        parameters: {
+          cellSize: { type: 'range', min: 5, max: 30, default: 10, label: 'Cell Size' },
+          generations: { type: 'range', min: 10, max: 100, default: 50, label: 'Generations' },
+          density: { type: 'range', min: 0.1, max: 0.9, default: 0.3, step: 0.1, label: 'Initial Density' }
+        }
+      },
+
+      geometric: {
+        name: 'Geometric Patterns',
+        generate: async (params) => {
+          const paths = [];
+          const { width, height, pattern = 'hexagon', size = 30, rotation = 0 } = params;
+
+          const rad = rotation * Math.PI / 180;
+
+          if (pattern === 'hexagon') {
+            const hexHeight = size * Math.sqrt(3);
+            const hexWidth = size * 2;
+
+            for (let row = 0; row < height / hexHeight + 1; row++) {
+              for (let col = 0; col < width / (hexWidth * 0.75) + 1; col++) {
+                const x = col * hexWidth * 0.75;
+                const y = row * hexHeight + (col % 2) * hexHeight / 2;
+
+                const hex = [];
+                for (let i = 0; i < 6; i++) {
+                  const angle = i * Math.PI / 3 + rad;
+                  hex.push([
+                    x + size * Math.cos(angle),
+                    y + size * Math.sin(angle)
+                  ]);
+                }
+                hex.push(hex[0]);
+                paths.push(hex);
+              }
+            }
+          } else if (pattern === 'triangle') {
+            const triHeight = size * Math.sqrt(3) / 2;
+
+            for (let row = 0; row < height / triHeight + 1; row++) {
+              for (let col = 0; col < width / size + 1; col++) {
+                const x = col * size + (row % 2) * size / 2;
+                const y = row * triHeight;
+
+                const tri = [];
+                for (let i = 0; i < 3; i++) {
+                  const angle = i * Math.PI * 2 / 3 + Math.PI / 2 + rad;
+                  tri.push([
+                    x + size / 2 * Math.cos(angle),
+                    y + size / 2 * Math.sin(angle)
+                  ]);
+                }
+                tri.push(tri[0]);
+                paths.push(tri);
+              }
+            }
+          } else if (pattern === 'square') {
+            for (let x = size/2; x < width; x += size) {
+              for (let y = size/2; y < height; y += size) {
+                const square = [];
+                for (let i = 0; i < 4; i++) {
+                  const angle = i * Math.PI / 2 + Math.PI / 4 + rad;
+                  square.push([
+                    x + size / Math.sqrt(2) * Math.cos(angle),
+                    y + size / Math.sqrt(2) * Math.sin(angle)
+                  ]);
+                }
+                square.push(square[0]);
+                paths.push(square);
+              }
+            }
+          }
+
+          return { paths };
+        },
+        parameters: {
+          pattern: {
+            type: 'select',
+            options: ['hexagon', 'triangle', 'square'],
+            default: 'hexagon',
+            label: 'Pattern Type'
+          },
+          size: { type: 'range', min: 10, max: 100, default: 30, label: 'Pattern Size' },
+          rotation: { type: 'range', min: 0, max: 360, default: 0, label: 'Rotation (degrees)' }
+        }
+      }
+    };
+
+    // Register all algorithms with the engine
+    for (const [key, algo] of Object.entries(algorithms)) {
+      engine.registerAlgorithm(key, algo);
+    }
+
+    // Layer management
+    let layerIdCounter = 0;
+
+    function addLayer(algorithmKey = null) {
+      const layerId = `layer-${layerIdCounter++}`;
+      const layerElement = document.createElement('div');
+      layerElement.className = 'layer';
+      layerElement.id = layerId;
+
+      const algorithmKeys = Object.keys(algorithms);
+      const selectedAlgorithm = algorithmKey || algorithmKeys[0];
+
+      layerElement.innerHTML = `
+        <div class="layer-header">
+          <span class="layer-title">Layer ${layerIdCounter}</span>
+          <div class="layer-controls">
+            <label class="checkbox-label">
+              <input type="checkbox" checked onchange="toggleLayer('${layerId}')">
+              Enabled
+            </label>
+            <button class="danger" onclick="removeLayer('${layerId}')">x</button>
+          </div>
+        </div>
+
+        <label>
+          Algorithm:
+          <select onchange="updateAlgorithm('${layerId}', this.value)">
+            ${algorithmKeys.map(key =>
+              `<option value="${key}" ${key === selectedAlgorithm ? 'selected' : ''}>
+                ${algorithms[key].name}
+              </option>`
+            ).join('')}
+          </select>
+        </label>
+
+        <label>
+          Blend Mode:
+          <select onchange="updateBlendMode('${layerId}', this.value)">
+            <option value="overlay">Overlay</option>
+            <option value="mask">Mask</option>
+            <option value="modulate">Modulate</option>
+            <option value="intersect">Intersect</option>
+            <option value="add">Add</option>
+            <option value="multiply">Multiply</option>
+            <option value="difference">Difference</option>
+          </select>
+        </label>
+
+        <label>
+          Opacity: <span class="range-value">1.0</span>
+          <input type="range" min="0" max="1" step="0.1" value="1"
+                 onchange="updateOpacity('${layerId}', this.value)"
+                 oninput="this.previousElementSibling.textContent = this.value">
+        </label>
+
+        <div class="parameter-group" id="${layerId}-params">
+          <h3>Algorithm Parameters</h3>
+        </div>
+      `;
+
+      document.getElementById('layers-container').appendChild(layerElement);
+
+      // Add layer to engine
+      const engineLayerId = engine.addLayer({
+        algorithm: selectedAlgorithm,
+        blendMode: 'overlay',
+        opacity: 1.0
+      });
+
+      layerElement.dataset.engineLayerId = engineLayerId;
+
+      // Update parameters
+      updateAlgorithmParameters(layerId, selectedAlgorithm);
+    }
+
+    function removeLayer(layerId) {
+      const layerElement = document.getElementById(layerId);
+      if (layerElement) {
+        const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+        engine.removeLayer(engineLayerId);
+        layerElement.remove();
+      }
+    }
+
+    function toggleLayer(layerId) {
+      const layerElement = document.getElementById(layerId);
+      const checkbox = layerElement.querySelector('input[type="checkbox"]');
+      const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+
+      engine.updateLayer(engineLayerId, { enabled: checkbox.checked });
+      layerElement.classList.toggle('disabled', !checkbox.checked);
+    }
+
+    function updateAlgorithm(layerId, algorithmKey) {
+      const layerElement = document.getElementById(layerId);
+      const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+
+      engine.updateLayer(engineLayerId, { algorithm: algorithmKey });
+      updateAlgorithmParameters(layerId, algorithmKey);
+    }
+
+    function updateBlendMode(layerId, blendMode) {
+      const layerElement = document.getElementById(layerId);
+      const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+
+      engine.updateLayer(engineLayerId, { blendMode });
+    }
+
+    function updateOpacity(layerId, opacity) {
+      const layerElement = document.getElementById(layerId);
+      const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+
+      engine.updateLayer(engineLayerId, { opacity: parseFloat(opacity) });
+    }
+
+    function updateAlgorithmParameters(layerId, algorithmKey) {
+      const paramsContainer = document.getElementById(`${layerId}-params`);
+      const algorithm = algorithms[algorithmKey];
+
+      let html = '<h3>Algorithm Parameters</h3>';
+
+      for (const [paramKey, param] of Object.entries(algorithm.parameters)) {
+        const inputId = `${layerId}-${paramKey}`;
+
+        if (param.type === 'range') {
+          html += `
+            <label>
+              ${param.label}: <span class="range-value">${param.default}</span>
+              <input type="range"
+                     id="${inputId}"
+                     min="${param.min}"
+                     max="${param.max}"
+                     step="${param.step || 1}"
+                     value="${param.default}"
+                     onchange="updateParameter('${layerId}', '${paramKey}', this.value)"
+                     oninput="this.previousElementSibling.textContent = this.value">
+            </label>
+          `;
+        } else if (param.type === 'select') {
+          html += `
+            <label>
+              ${param.label}:
+              <select id="${inputId}" onchange="updateParameter('${layerId}', '${paramKey}', this.value)">
+                ${param.options.map(opt =>
+                  `<option value="${opt}" ${opt === param.default ? 'selected' : ''}>${opt}</option>`
+                ).join('')}
+              </select>
+            </label>
+          `;
+        }
+      }
+
+      paramsContainer.innerHTML = html;
+    }
+
+    function updateParameter(layerId, paramKey, value) {
+      const layerElement = document.getElementById(layerId);
+      const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+
+      const layer = engine.layers.find(l => l.id === engineLayerId);
+      if (layer) {
+        if (!layer.parameters) layer.parameters = {};
+
+        // Convert value to appropriate type
+        const numValue = parseFloat(value);
+        layer.parameters[paramKey] = isNaN(numValue) ? value : numValue;
+      }
+    }
+
+    // Preset configurations
+    const presets = {
+      'flow-cellular': {
+        layers: [
+          {
+            algorithm: 'flowField',
+            blendMode: 'overlay',
+            opacity: 1.0,
+            parameters: { resolution: 25, strength: 8, particles: 150 }
+          },
+          {
+            algorithm: 'cellularAutomata',
+            blendMode: 'mask',
+            opacity: 0.8,
+            parameters: { cellSize: 15, generations: 60, density: 0.35 }
+          }
+        ]
+      },
+      'reaction-geometric': {
+        layers: [
+          {
+            algorithm: 'geometric',
+            blendMode: 'overlay',
+            opacity: 1.0,
+            parameters: { pattern: 'hexagon', size: 25, rotation: 15 }
+          }
+        ]
+      },
+      'tree-noise': {
+        layers: [
+          {
+            algorithm: 'geometric',
+            blendMode: 'overlay',
+            opacity: 1.0,
+            parameters: { pattern: 'triangle', size: 40, rotation: 0 }
+          }
+        ]
+      },
+      'physics-hash': {
+        layers: [
+          {
+            algorithm: 'cellularAutomata',
+            blendMode: 'overlay',
+            opacity: 1.0,
+            parameters: { cellSize: 20, generations: 30, density: 0.4 }
+          }
+        ]
+      }
+    };
+
+    function loadPreset() {
+      const selector = document.getElementById('preset-selector');
+      const presetKey = selector.value;
+
+      if (!presetKey || !presets[presetKey]) return;
+
+      // Clear existing layers
+      document.getElementById('layers-container').innerHTML = '';
+      engine.layers = [];
+
+      // Load preset configuration
+      const preset = presets[presetKey];
+
+      for (const layerConfig of preset.layers) {
+        addLayer(layerConfig.algorithm);
+
+        // Get the last added layer
+        const layerElements = document.querySelectorAll('.layer');
+        const layerElement = layerElements[layerElements.length - 1];
+        const layerId = layerElement.id;
+        const engineLayerId = parseFloat(layerElement.dataset.engineLayerId);
+
+        // Update layer settings
+        engine.updateLayer(engineLayerId, layerConfig);
+
+        // Update UI
+        layerElement.querySelector('select').value = layerConfig.algorithm;
+        layerElement.querySelectorAll('select')[1].value = layerConfig.blendMode;
+        layerElement.querySelector('input[type="range"]').value = layerConfig.opacity;
+        layerElement.querySelector('.range-value').textContent = layerConfig.opacity;
+
+        // Update parameters
+        for (const [paramKey, value] of Object.entries(layerConfig.parameters)) {
+          const paramInput = document.getElementById(`${layerId}-${paramKey}`);
+          if (paramInput) {
+            paramInput.value = value;
+            if (paramInput.type === 'range') {
+              paramInput.previousElementSibling.textContent = value;
+            }
+            updateParameter(layerId, paramKey, value);
+          }
+        }
+      }
+
+      // Reset selector
+      selector.value = '';
+    }
+
+    // Generation and rendering
+    async function generate() {
+      const loading = document.getElementById('loading');
+      const status = document.getElementById('status');
+
+      loading.classList.add('active');
+      status.textContent = 'Generating layers...';
+
+      // Update canvas size
+      const size = CanvasLayout.getSize(params.paperSize);
+
+      canvas.width = size.width;
+      canvas.height = size.height;
+      engine.width = size.width;
+      engine.height = size.height;
+
+      try {
+        // Generate all layers
+        await engine.generateLayers();
+
+        status.textContent = 'Composing layers...';
+
+        // Compose the final result
+        const result = engine.compose();
+
+        // Render to canvas
+        renderPaths(result.paths);
+
+        status.textContent = `Generated ${result.paths.length} paths`;
+
+        // Update stats display with composition metrics
+        if (window.statsDisplay) {
+          const activeLayers = engine.layers.filter(l => l.enabled);
+          const algorithms = activeLayers.map(l => algorithms[l.algorithm].name).join(', ');
+          const blendModes = [...new Set(activeLayers.map(l => l.blendMode))].join(', ');
+
+          window.statsDisplay.update({
+            'Layers': activeLayers.length,
+            'Total Paths': result.paths.length,
+            'Algorithms': algorithms,
+            'Blend Modes': blendModes,
+            'Canvas': `${canvas.width}x${canvas.height}`,
+            'Paper Size': params.paperSize
+          });
+        }
+      } catch (error) {
+        console.error('Generation error:', error);
+        status.textContent = 'Error: ' + error.message;
+      } finally {
+        loading.classList.remove('active');
+      }
+    }
+
+    function renderPreview() {
+      generate();
+    }
+
+    function renderPaths(paths) {
+      ctx.fillStyle = params.bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.strokeStyle = params.strokeColor;
+      ctx.lineWidth = 0.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      for (const path of paths) {
+        if (path.length < 2) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(path[0][0], path[0][1]);
+
+        for (let i = 1; i < path.length; i++) {
+          ctx.lineTo(path[i][0], path[i][1]);
+        }
+
+        ctx.stroke();
+      }
+    }
+
+    // Export functions
+    let exportType = 'svg';
+
+    function exportSVG() {
+      exportType = 'svg';
+      document.getElementById('overlay').classList.add('active');
+      document.getElementById('export-options').classList.add('active');
+    }
+
+    function exportPNG() {
+      exportType = 'png';
+      document.getElementById('overlay').classList.add('active');
+      document.getElementById('export-options').classList.add('active');
+    }
+
+    function closeExportOptions() {
+      document.getElementById('overlay').classList.remove('active');
+      document.getElementById('export-options').classList.remove('active');
+    }
+
+    function confirmExport() {
+      const includeLayers = document.getElementById('include-layers').checked;
+      const optimizePlotter = document.getElementById('optimize-plotter').checked;
+
+      if (exportType === 'svg') {
+        const svg = engine.exportSVG();
+        downloadFile('hybrid-composition.svg', svg, 'image/svg+xml');
+      } else if (exportType === 'png') {
+        canvas.toBlob(blob => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'hybrid-composition.png';
+          a.click();
+          URL.revokeObjectURL(url);
+        });
+      }
+
+      closeExportOptions();
+    }
+
+    function downloadFile(filename, content, mimeType) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Configuration save/load
+    function saveConfiguration() {
+      const config = engine.getConfiguration();
+      const json = JSON.stringify(config, null, 2);
+      downloadFile('hybrid-config.json', json, 'application/json');
+    }
+
+    function loadConfiguration() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+          const text = await file.text();
+          const config = JSON.parse(text);
+
+          // Clear existing layers
+          document.getElementById('layers-container').innerHTML = '';
+
+          // Load configuration
+          engine.loadConfiguration(config);
+
+          // Rebuild UI
+          location.reload();
+        } catch (error) {
+          console.error('Error loading configuration:', error);
+          alert('Failed to load configuration: ' + error.message);
+        }
+      };
+
+      input.click();
+    }
+
+    // Initialize with one layer
+    addLayer();
+  </script>
+</body>
+</html>

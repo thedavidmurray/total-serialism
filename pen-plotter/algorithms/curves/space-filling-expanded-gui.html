@@ -1,0 +1,1392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Space-Filling Curves Expanded - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../ui-utils.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    input[type="number"] {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      cursor: pointer;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .range-value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+    .button-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .button-row button {
+      margin: 0;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--ts-accent-primary);
+    }
+    .checkbox-group label {
+      margin-bottom: 0;
+    }
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .color-row label {
+      margin-bottom: 0;
+      min-width: 100px;
+    }
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .curve-description {
+      background: var(--ts-bg-deep);
+      padding: 10px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.75rem;
+      color: var(--ts-text-muted);
+      margin-top: 8px;
+      line-height: 1.4;
+      border-left: 2px solid var(--ts-accent-secondary);
+    }
+    .animation-controls {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      margin-bottom: 10px;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--ts-bg-control);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--ts-accent-primary);
+      transition: width 0.1s linear;
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stats .value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
+
+  <div id="controls">
+    <h2>Space-Filling Curves</h2>
+
+    <div class="algorithm-info">
+      <strong>Space-Filling Curves:</strong> Mathematical curves that pass through every point in a 2D region. Each produces a single continuous path - ideal for pen plotting!
+    </div>
+
+    <!-- Canvas Settings -->
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <label>
+        Paper Size
+        <select id="paperSize">
+          <option value="square800" selected>Square (800×800)</option>
+          <option value="landscape800x600">Landscape (800×600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </label>
+      <div class="color-row">
+        <label>Background</label>
+        <input type="color" id="bgColor" value="#ffffff">
+      </div>
+      <div class="color-row">
+        <label>Stroke Color</label>
+        <input type="color" id="strokeColor" value="#000000">
+      </div>
+      <button id="randomizeAll" class="ts-btn secondary">Randomize Colors</button>
+    </div>
+
+      <!-- Curve Type -->
+      <div class="control-group">
+        <h3>Curve Type</h3>
+        <label>
+          Algorithm
+          <select id="curveType">
+            <option value="hilbert">Hilbert Curve</option>
+            <option value="peano">Peano Curve</option>
+            <option value="moore">Moore Curve</option>
+            <option value="dragon">Dragon Curve</option>
+            <option value="gosper">Gosper Curve (Flowsnake)</option>
+            <option value="sierpinski">Sierpinski Curve</option>
+            <option value="levy">Levy C Curve</option>
+          </select>
+        </label>
+        <div class="curve-description" id="curveDescription">
+          Square-filling recursive curve with 4-fold symmetry. Creates a continuous path through a 2^n x 2^n grid.
+        </div>
+
+        <label>
+          Iterations / Depth: <span class="range-value" id="iterations-val">4</span>
+          <input type="range" id="iterations" min="1" max="8" value="4" step="1">
+        </label>
+      </div>
+
+      <!-- Appearance -->
+      <div class="control-group">
+        <h3>Appearance</h3>
+        <label>
+          Line Style
+          <select id="lineStyle">
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+            <option value="dotted">Dotted</option>
+          </select>
+        </label>
+
+        <label>
+          Line Thickness: <span class="range-value" id="strokeWeight-val">1.5</span>
+          <input type="range" id="strokeWeight" min="0.3" max="8" value="1.5" step="0.1">
+        </label>
+
+        <label>
+          Rotation: <span class="range-value" id="rotation-val">0</span>deg
+          <input type="range" id="rotation" min="0" max="360" value="0" step="15">
+        </label>
+
+        <label>
+          Scale: <span class="range-value" id="scale-val">0.9</span>
+          <input type="range" id="scale" min="0.3" max="1.2" value="0.9" step="0.05">
+        </label>
+
+        <label>
+          Margin: <span class="range-value" id="margin-val">40</span>
+          <input type="range" id="margin" min="10" max="120" value="40" step="5">
+        </label>
+      </div>
+
+      <!-- Visual Options -->
+      <div class="control-group">
+        <h3>Visual Options</h3>
+        <div class="checkbox-group">
+          <input type="checkbox" id="showConstructionLines">
+          <label for="showConstructionLines">Show Construction Grid</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="showStartEnd">
+          <label for="showStartEnd">Highlight Start/End Points</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="smoothCurve">
+          <label for="smoothCurve">Smooth Curve (Catmull-Rom)</label>
+        </div>
+        <div class="checkbox-group">
+          <input type="checkbox" id="colorGradient">
+          <label for="colorGradient">Color Gradient Along Path</label>
+        </div>
+        <div class="color-row" id="gradientEndRow" style="display: none;">
+          <label>Gradient End</label>
+          <input type="color" id="gradientEndColor" value="#ff0066">
+        </div>
+      </div>
+
+      <!-- Animation -->
+      <div class="control-group">
+        <h3>Animation</h3>
+        <div class="animation-controls">
+          <div class="checkbox-group">
+            <input type="checkbox" id="animationMode">
+            <label for="animationMode">Progressive Draw Mode</label>
+          </div>
+          <label>
+            Animation Speed: <span class="range-value" id="animationSpeed-val">50</span>
+            <input type="range" id="animationSpeed" min="1" max="200" value="50" step="1">
+          </label>
+          <div class="progress-bar" id="progressBar" style="display: none;">
+            <div class="progress-bar-fill" id="progressFill" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="button-row">
+          <button id="playBtn" class="secondary">Play</button>
+          <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="control-group">
+        <h3>Actions</h3>
+        <button id="generateBtn">Generate Curve</button>
+        <div class="button-row">
+          <button id="exportSVG">Export SVG</button>
+          <button id="exportPNG">Export PNG</button>
+        </div>
+        <button id="exportGIF" class="secondary">Export GIF (Animation)</button>
+      </div>
+
+      <!-- Statistics -->
+      <div class="stats" id="stats">
+        <div>
+          <span>Curve Type:</span>
+          <span class="value" id="statType">Hilbert</span>
+        </div>
+        <div>
+          <span>Iterations:</span>
+          <span class="value" id="statIterations">4</span>
+        </div>
+        <div>
+          <span>Total Points:</span>
+          <span class="value" id="statPoints">0</span>
+        </div>
+        <div>
+          <span>Path Length:</span>
+          <span class="value" id="statLength">0</span>
+        </div>
+        <div>
+          <span>Complexity:</span>
+          <span class="value" id="statComplexity">-</span>
+        </div>
+      </div>
+
+      <!-- Preset Manager (at bottom) -->
+      <div id="preset-container" style="margin-top: 20px;"></div>
+    </div>
+
+  <script>
+    // Global variables
+    let curvePath = [];
+    let presetManager;
+    let animationIndex = 0;
+    let isAnimating = false;
+    let animationFrameId = null;
+    let gifFrames = [];
+
+    // Curve descriptions
+    const curveDescriptions = {
+      hilbert: "Square-filling recursive curve with 4-fold symmetry. Creates a continuous path through a 2^n x 2^n grid.",
+      peano: "3x3 subdivision pattern filling a square. Each iteration creates 9 sub-regions, producing 3^n x 3^n grid.",
+      moore: "Closed variant of Hilbert curve that forms a loop. Returns to starting point - ideal for continuous plotting.",
+      dragon: "Iterative folding pattern - like folding paper in half repeatedly. Creates a self-similar fractal boundary.",
+      gosper: "Hexagonal space-filling 'Flowsnake' curve. Based on 60-degree angles, tiles the plane with hexagons.",
+      sierpinski: "Triangle-based space-filling curve. Related to Sierpinski triangle, uses 60-degree angles.",
+      levy: "Self-similar fractal C-curve. Each segment replaced by two segments at 45-degree angles."
+    };
+
+    // Maximum iterations per curve type (to prevent browser hang)
+    const maxIterations = {
+      hilbert: 8,
+      peano: 5,
+      moore: 8,
+      dragon: 16,
+      gosper: 5,
+      sierpinski: 9,
+      levy: 16
+    };
+
+    // Parameters
+    const params = {
+      paperSize: 'square800',
+      bgColor: '#ffffff',
+      strokeColor: '#000000',
+      curveType: 'hilbert',
+      iterations: 4,
+      lineStyle: 'solid',
+      strokeWeight: 1.5,
+      rotation: 0,
+      scale: 0.9,
+      margin: 40,
+      showConstructionLines: false,
+      showStartEnd: false,
+      smoothCurve: false,
+      colorGradient: false,
+      gradientEndColor: '#ff0066',
+      animationMode: false,
+      animationSpeed: 50
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    // p5.js setup
+    function setup() {
+      const size = getCanvasSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas');
+
+      setupEventListeners();
+      canvasControls.setupRandomizeButton();
+
+      // Initial generation
+      generateCurve();
+    }
+
+    function getCanvasSize(preset) {
+      const sizes = {
+        'square800': { width: 800, height: 800 },
+        'landscape800x600': { width: 800, height: 600 },
+        'a4portrait': { width: 595, height: 842 },
+        'a4landscape': { width: 842, height: 595 },
+        'a3portrait': { width: 842, height: 1191 },
+        'a3landscape': { width: 1191, height: 842 },
+        'letterportrait': { width: 612, height: 792 },
+        'letterlandscape': { width: 792, height: 612 }
+      };
+      return sizes[preset] || sizes['square800'];
+    }
+
+    function setupEventListeners() {
+      // Paper size
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        const size = getCanvasSize(params.paperSize);
+        resizeCanvas(size.width, size.height);
+        generateCurve();
+      });
+
+      // Colors
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        redraw();
+      });
+      document.getElementById('strokeColor').addEventListener('input', (e) => {
+        params.strokeColor = e.target.value;
+        redraw();
+      });
+      document.getElementById('gradientEndColor').addEventListener('input', (e) => {
+        params.gradientEndColor = e.target.value;
+        redraw();
+      });
+
+      // Curve type
+      document.getElementById('curveType').addEventListener('change', (e) => {
+        params.curveType = e.target.value;
+        updateCurveDescription();
+        updateIterationLimits();
+        generateCurve();
+      });
+
+      // Range inputs
+      setupRangeInput('iterations', (v) => { params.iterations = v; generateCurve(); });
+      setupRangeInput('strokeWeight', (v) => { params.strokeWeight = v; redraw(); });
+      setupRangeInput('rotation', (v) => { params.rotation = v; redraw(); });
+      setupRangeInput('scale', (v) => { params.scale = v; redraw(); });
+      setupRangeInput('margin', (v) => { params.margin = v; redraw(); });
+      setupRangeInput('animationSpeed', (v) => { params.animationSpeed = v; });
+
+      // Line style
+      document.getElementById('lineStyle').addEventListener('change', (e) => {
+        params.lineStyle = e.target.value;
+        redraw();
+      });
+
+      // Checkboxes
+      setupCheckbox('showConstructionLines', (v) => { params.showConstructionLines = v; redraw(); });
+      setupCheckbox('showStartEnd', (v) => { params.showStartEnd = v; redraw(); });
+      setupCheckbox('smoothCurve', (v) => { params.smoothCurve = v; redraw(); });
+      setupCheckbox('colorGradient', (v) => {
+        params.colorGradient = v;
+        document.getElementById('gradientEndRow').style.display = v ? 'flex' : 'none';
+        redraw();
+      });
+      setupCheckbox('animationMode', (v) => {
+        params.animationMode = v;
+        document.getElementById('progressBar').style.display = v ? 'block' : 'none';
+        if (v) {
+          animationIndex = 0;
+          updateProgress();
+        }
+        redraw();
+      });
+
+      // Buttons
+      document.getElementById('generateBtn').addEventListener('click', generateCurve);
+      document.getElementById('playBtn').addEventListener('click', toggleAnimation);
+      document.getElementById('resetBtn').addEventListener('click', resetAnimation);
+      document.getElementById('exportSVG').addEventListener('click', exportSVG);
+      document.getElementById('exportPNG').addEventListener('click', exportPNG);
+      document.getElementById('exportGIF').addEventListener('click', exportGIF);
+
+      // Initialize preset manager
+      presetManager = new PresetManager({
+        algorithmId: 'space-filling-curves-expanded',
+        container: '#preset-container',
+        onSave: () => params,
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateAllUI();
+          generateCurve();
+        },
+        onRandomize: () => {
+          const curves = ['hilbert', 'peano', 'moore', 'dragon', 'gosper', 'sierpinski', 'levy'];
+          params.curveType = random(curves);
+          params.iterations = floor(random(2, maxIterations[params.curveType]));
+          params.rotation = floor(random(0, 24)) * 15;
+          params.scale = random(0.5, 1.1);
+          params.lineStyle = random(['solid', 'dashed', 'dotted']);
+          params.strokeWeight = random(0.5, 4);
+          params.colorGradient = random() > 0.5;
+          params.smoothCurve = random() > 0.7;
+          updateAllUI();
+          generateCurve();
+        }
+      });
+    }
+
+    function setupRangeInput(id, callback) {
+      const input = document.getElementById(id);
+      const display = document.getElementById(`${id}-val`);
+      input.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value);
+        if (display) display.textContent = value;
+        callback(value);
+      });
+    }
+
+    function setupCheckbox(id, callback) {
+      const input = document.getElementById(id);
+      input.addEventListener('change', (e) => {
+        callback(e.target.checked);
+      });
+    }
+
+    function updateAllUI() {
+      // Update all UI elements from params
+      document.getElementById('paperSize').value = params.paperSize;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+      document.getElementById('curveType').value = params.curveType;
+      document.getElementById('iterations').value = params.iterations;
+      document.getElementById('iterations-val').textContent = params.iterations;
+      document.getElementById('lineStyle').value = params.lineStyle;
+      document.getElementById('strokeWeight').value = params.strokeWeight;
+      document.getElementById('strokeWeight-val').textContent = params.strokeWeight;
+      document.getElementById('rotation').value = params.rotation;
+      document.getElementById('rotation-val').textContent = params.rotation;
+      document.getElementById('scale').value = params.scale;
+      document.getElementById('scale-val').textContent = params.scale;
+      document.getElementById('margin').value = params.margin;
+      document.getElementById('margin-val').textContent = params.margin;
+      document.getElementById('showConstructionLines').checked = params.showConstructionLines;
+      document.getElementById('showStartEnd').checked = params.showStartEnd;
+      document.getElementById('smoothCurve').checked = params.smoothCurve;
+      document.getElementById('colorGradient').checked = params.colorGradient;
+      document.getElementById('gradientEndColor').value = params.gradientEndColor;
+      document.getElementById('gradientEndRow').style.display = params.colorGradient ? 'flex' : 'none';
+      document.getElementById('animationMode').checked = params.animationMode;
+      document.getElementById('animationSpeed').value = params.animationSpeed;
+      document.getElementById('animationSpeed-val').textContent = params.animationSpeed;
+      updateCurveDescription();
+      updateIterationLimits();
+    }
+
+    function updateCurveDescription() {
+      const desc = document.getElementById('curveDescription');
+      desc.textContent = curveDescriptions[params.curveType] || '';
+    }
+
+    function updateIterationLimits() {
+      const input = document.getElementById('iterations');
+      const max = maxIterations[params.curveType] || 8;
+      input.max = max;
+      if (params.iterations > max) {
+        params.iterations = max;
+        input.value = max;
+        document.getElementById('iterations-val').textContent = max;
+      }
+    }
+
+    // ========================
+    // CURVE GENERATION
+    // ========================
+
+    function generateCurve() {
+      curvePath = [];
+
+      switch (params.curveType) {
+        case 'hilbert':
+          curvePath = generateHilbert(params.iterations);
+          break;
+        case 'peano':
+          curvePath = generatePeano(params.iterations);
+          break;
+        case 'moore':
+          curvePath = generateMoore(params.iterations);
+          break;
+        case 'dragon':
+          curvePath = generateDragon(params.iterations);
+          break;
+        case 'gosper':
+          curvePath = generateGosper(params.iterations);
+          break;
+        case 'sierpinski':
+          curvePath = generateSierpinski(params.iterations);
+          break;
+        case 'levy':
+          curvePath = generateLevy(params.iterations);
+          break;
+      }
+
+      normalizePoints();
+      updateStats();
+
+      if (params.animationMode) {
+        animationIndex = 0;
+        updateProgress();
+      }
+
+      redraw();
+    }
+
+    // ========================
+    // HILBERT CURVE
+    // ========================
+    function generateHilbert(order) {
+      const points = [];
+      const n = pow(2, order);
+
+      for (let i = 0; i < n * n; i++) {
+        const [x, y] = hilbertD2xy(n, i);
+        points.push({ x, y });
+      }
+
+      return points;
+    }
+
+    function hilbertD2xy(n, d) {
+      let rx, ry, s, t = d;
+      let x = 0, y = 0;
+
+      for (s = 1; s < n; s *= 2) {
+        rx = 1 & (t / 2);
+        ry = 1 & (t ^ rx);
+        [x, y] = hilbertRot(s, x, y, rx, ry);
+        x += s * rx;
+        y += s * ry;
+        t = floor(t / 4);
+      }
+
+      return [x, y];
+    }
+
+    function hilbertRot(n, x, y, rx, ry) {
+      if (ry === 0) {
+        if (rx === 1) {
+          x = n - 1 - x;
+          y = n - 1 - y;
+        }
+        [x, y] = [y, x];
+      }
+      return [x, y];
+    }
+
+    // ========================
+    // PEANO CURVE
+    // ========================
+    function generatePeano(order) {
+      let axiom = 'L';
+      const rules = {
+        'L': 'LFRFL-F-RFLFR+F+LFRFL',
+        'R': 'RFLFR+F+LFRFL-F-RFLFR'
+      };
+
+      let result = axiom;
+      for (let i = 0; i < order; i++) {
+        let next = '';
+        for (const c of result) {
+          next += rules[c] || c;
+        }
+        result = next;
+      }
+
+      return traceLSystem(result, 90);
+    }
+
+    // ========================
+    // MOORE CURVE (Closed Hilbert variant)
+    // ========================
+    function generateMoore(order) {
+      let axiom = 'LFL+F+LFL';
+      const rules = {
+        'L': '-RF+LFL+FR-',
+        'R': '+LF-RFR-FL+'
+      };
+
+      let result = axiom;
+      for (let i = 0; i < order; i++) {
+        let next = '';
+        for (const c of result) {
+          next += rules[c] || c;
+        }
+        result = next;
+      }
+
+      return traceLSystem(result, 90);
+    }
+
+    // ========================
+    // DRAGON CURVE
+    // ========================
+    function generateDragon(order) {
+      // Build turn sequence using folding algorithm
+      let sequence = [1]; // 1 = right turn, 0 = left turn
+
+      for (let i = 0; i < order; i++) {
+        const newSeq = [...sequence, 1];
+        for (let j = sequence.length - 1; j >= 0; j--) {
+          newSeq.push(1 - sequence[j]);
+        }
+        sequence = newSeq;
+      }
+
+      // Convert to points
+      const points = [{ x: 0, y: 0 }];
+      let angle = 0;
+      let x = 0, y = 0;
+
+      for (const turn of sequence) {
+        angle += turn === 1 ? 90 : -90;
+        const rad = radians(angle);
+        x += cos(rad);
+        y += sin(rad);
+        points.push({ x, y });
+      }
+
+      return points;
+    }
+
+    // ========================
+    // GOSPER CURVE (Flowsnake)
+    // ========================
+    function generateGosper(order) {
+      let axiom = 'A';
+      const rules = {
+        'A': 'A-B--B+A++AA+B-',
+        'B': '+A-BB--B-A++A+B'
+      };
+
+      let result = axiom;
+      for (let i = 0; i < order; i++) {
+        let next = '';
+        for (const c of result) {
+          next += rules[c] || c;
+        }
+        result = next;
+      }
+
+      // Trace with 60-degree angles
+      const points = [{ x: 0, y: 0 }];
+      let angle = 0;
+      let x = 0, y = 0;
+
+      for (const c of result) {
+        if (c === 'A' || c === 'B') {
+          const rad = radians(angle);
+          x += cos(rad);
+          y += sin(rad);
+          points.push({ x, y });
+        } else if (c === '+') {
+          angle += 60;
+        } else if (c === '-') {
+          angle -= 60;
+        }
+      }
+
+      return points;
+    }
+
+    // ========================
+    // SIERPINSKI CURVE
+    // ========================
+    function generateSierpinski(order) {
+      let axiom = 'A';
+      const rules = {
+        'A': 'B-A-B',
+        'B': 'A+B+A'
+      };
+
+      let result = axiom;
+      for (let i = 0; i < order; i++) {
+        let next = '';
+        for (const c of result) {
+          next += rules[c] || c;
+        }
+        result = next;
+      }
+
+      // Trace with 60-degree angles
+      const points = [{ x: 0, y: 0 }];
+      let angle = 0;
+      let x = 0, y = 0;
+
+      for (const c of result) {
+        if (c === 'A' || c === 'B') {
+          const rad = radians(angle);
+          x += cos(rad);
+          y += sin(rad);
+          points.push({ x, y });
+        } else if (c === '+') {
+          angle += 60;
+        } else if (c === '-') {
+          angle -= 60;
+        }
+      }
+
+      return points;
+    }
+
+    // ========================
+    // LEVY C CURVE
+    // ========================
+    function generateLevy(order) {
+      let axiom = 'F';
+      const rules = {
+        'F': '+F--F+'
+      };
+
+      let result = axiom;
+      for (let i = 0; i < order; i++) {
+        let next = '';
+        for (const c of result) {
+          next += rules[c] || c;
+        }
+        result = next;
+      }
+
+      // Trace with 45-degree angles
+      const points = [{ x: 0, y: 0 }];
+      let angle = 0;
+      let x = 0, y = 0;
+
+      for (const c of result) {
+        if (c === 'F') {
+          const rad = radians(angle);
+          x += cos(rad);
+          y += sin(rad);
+          points.push({ x, y });
+        } else if (c === '+') {
+          angle += 45;
+        } else if (c === '-') {
+          angle -= 45;
+        }
+      }
+
+      return points;
+    }
+
+    // ========================
+    // L-SYSTEM TRACER
+    // ========================
+    function traceLSystem(instructions, angleStep) {
+      const points = [{ x: 0, y: 0 }];
+      let angle = 0;
+      let x = 0, y = 0;
+
+      for (const c of instructions) {
+        if (c === 'F') {
+          const rad = radians(angle);
+          x += cos(rad);
+          y += sin(rad);
+          points.push({ x, y });
+        } else if (c === '+') {
+          angle += angleStep;
+        } else if (c === '-') {
+          angle -= angleStep;
+        }
+      }
+
+      return points;
+    }
+
+    // ========================
+    // NORMALIZE POINTS
+    // ========================
+    function normalizePoints() {
+      if (curvePath.length === 0) return;
+
+      let minX = Infinity, maxX = -Infinity;
+      let minY = Infinity, maxY = -Infinity;
+
+      for (const p of curvePath) {
+        minX = min(minX, p.x);
+        maxX = max(maxX, p.x);
+        minY = min(minY, p.y);
+        maxY = max(maxY, p.y);
+      }
+
+      const rangeX = maxX - minX || 1;
+      const rangeY = maxY - minY || 1;
+      const margin = params.margin;
+      const availW = width - margin * 2;
+      const availH = height - margin * 2;
+      const scale = min(availW / rangeX, availH / rangeY) * params.scale;
+
+      const offsetX = margin + (availW - rangeX * scale) / 2;
+      const offsetY = margin + (availH - rangeY * scale) / 2;
+
+      for (const p of curvePath) {
+        p.x = (p.x - minX) * scale + offsetX;
+        p.y = (p.y - minY) * scale + offsetY;
+      }
+
+      // Apply rotation around center
+      if (params.rotation !== 0) {
+        const cx = width / 2;
+        const cy = height / 2;
+        const rad = radians(params.rotation);
+        const cosA = cos(rad);
+        const sinA = sin(rad);
+
+        for (const p of curvePath) {
+          const dx = p.x - cx;
+          const dy = p.y - cy;
+          p.x = cx + dx * cosA - dy * sinA;
+          p.y = cy + dx * sinA + dy * cosA;
+        }
+      }
+    }
+
+    // ========================
+    // DRAWING
+    // ========================
+    function draw() {
+      background(params.bgColor);
+
+      if (curvePath.length < 2) return;
+
+      // Draw construction lines
+      if (params.showConstructionLines) {
+        drawConstructionLines();
+      }
+
+      // Determine how many points to draw
+      const pointsToDraw = params.animationMode ?
+        min(animationIndex, curvePath.length) : curvePath.length;
+
+      if (pointsToDraw < 2) return;
+
+      // Draw the curve
+      noFill();
+      strokeWeight(params.strokeWeight);
+
+      if (params.smoothCurve) {
+        drawSmoothCurve(pointsToDraw);
+      } else {
+        drawSegmentedCurve(pointsToDraw);
+      }
+
+      // Draw start/end markers
+      if (params.showStartEnd && pointsToDraw > 0) {
+        drawStartEndMarkers(pointsToDraw);
+      }
+
+      // Animation loop
+      if (isAnimating && animationIndex < curvePath.length) {
+        animationIndex += params.animationSpeed;
+        updateProgress();
+      } else if (isAnimating && animationIndex >= curvePath.length) {
+        isAnimating = false;
+        document.getElementById('playBtn').textContent = 'Play';
+      }
+    }
+
+    function drawSegmentedCurve(pointsToDraw) {
+      if (params.colorGradient) {
+        // Draw with gradient
+        for (let i = 0; i < pointsToDraw - 1; i++) {
+          const t = i / (curvePath.length - 1);
+          const c = lerpColor(
+            color(params.strokeColor),
+            color(params.gradientEndColor),
+            t
+          );
+          stroke(c);
+          applyLineStyle(i);
+          line(curvePath[i].x, curvePath[i].y,
+               curvePath[i + 1].x, curvePath[i + 1].y);
+        }
+      } else {
+        stroke(params.strokeColor);
+        for (let i = 0; i < pointsToDraw - 1; i++) {
+          applyLineStyle(i);
+          line(curvePath[i].x, curvePath[i].y,
+               curvePath[i + 1].x, curvePath[i + 1].y);
+        }
+      }
+    }
+
+    function drawSmoothCurve(pointsToDraw) {
+      stroke(params.strokeColor);
+
+      if (params.colorGradient) {
+        // Draw smooth curve with gradient (approximate)
+        for (let i = 0; i < pointsToDraw - 1; i++) {
+          const t = i / (curvePath.length - 1);
+          const c = lerpColor(
+            color(params.strokeColor),
+            color(params.gradientEndColor),
+            t
+          );
+          stroke(c);
+
+          // Use curveVertex for smoothing
+          beginShape();
+          const start = max(0, i - 1);
+          const end = min(pointsToDraw - 1, i + 2);
+          for (let j = start; j <= end; j++) {
+            curveVertex(curvePath[j].x, curvePath[j].y);
+          }
+          endShape();
+        }
+      } else {
+        beginShape();
+        // Double first point for curveVertex
+        curveVertex(curvePath[0].x, curvePath[0].y);
+        for (let i = 0; i < pointsToDraw; i++) {
+          curveVertex(curvePath[i].x, curvePath[i].y);
+        }
+        // Double last point
+        const last = curvePath[pointsToDraw - 1];
+        curveVertex(last.x, last.y);
+        endShape();
+      }
+    }
+
+    function applyLineStyle(index) {
+      if (params.lineStyle === 'solid') {
+        // Nothing to do
+      } else if (params.lineStyle === 'dashed') {
+        if (floor(index / 5) % 2 === 1) {
+          stroke(params.bgColor);
+        } else {
+          stroke(params.colorGradient ?
+            lerpColor(color(params.strokeColor), color(params.gradientEndColor), index / curvePath.length) :
+            params.strokeColor);
+        }
+      } else if (params.lineStyle === 'dotted') {
+        if (index % 3 !== 0) {
+          stroke(params.bgColor);
+        } else {
+          stroke(params.colorGradient ?
+            lerpColor(color(params.strokeColor), color(params.gradientEndColor), index / curvePath.length) :
+            params.strokeColor);
+        }
+      }
+    }
+
+    function drawConstructionLines() {
+      push();
+      stroke(200, 200, 255, 100);
+      strokeWeight(0.5);
+      noFill();
+
+      // Draw grid based on curve type
+      const gridSize = params.curveType === 'peano' ?
+        pow(3, params.iterations) : pow(2, params.iterations);
+
+      const m = params.margin;
+      const w = (width - 2 * m) * params.scale;
+      const h = (height - 2 * m) * params.scale;
+      const offsetX = m + (width - 2 * m - w) / 2;
+      const offsetY = m + (height - 2 * m - h) / 2;
+
+      for (let i = 0; i <= gridSize; i++) {
+        const x = offsetX + (i / gridSize) * w;
+        const y = offsetY + (i / gridSize) * h;
+        line(x, offsetY, x, offsetY + h);
+        line(offsetX, y, offsetX + w, y);
+      }
+
+      pop();
+    }
+
+    function drawStartEndMarkers(pointsToDraw) {
+      push();
+      noStroke();
+
+      // Start point (green)
+      fill(0, 200, 100);
+      circle(curvePath[0].x, curvePath[0].y, 12);
+      fill(255);
+      textAlign(CENTER, CENTER);
+      textSize(8);
+      text('S', curvePath[0].x, curvePath[0].y);
+
+      // End point (red)
+      const endIdx = pointsToDraw - 1;
+      fill(255, 80, 80);
+      circle(curvePath[endIdx].x, curvePath[endIdx].y, 12);
+      fill(255);
+      text('E', curvePath[endIdx].x, curvePath[endIdx].y);
+
+      pop();
+    }
+
+    // ========================
+    // ANIMATION
+    // ========================
+    function toggleAnimation() {
+      if (isAnimating) {
+        isAnimating = false;
+        document.getElementById('playBtn').textContent = 'Play';
+      } else {
+        if (animationIndex >= curvePath.length) {
+          animationIndex = 0;
+        }
+        isAnimating = true;
+        document.getElementById('playBtn').textContent = 'Pause';
+      }
+    }
+
+    function resetAnimation() {
+      isAnimating = false;
+      animationIndex = 0;
+      updateProgress();
+      document.getElementById('playBtn').textContent = 'Play';
+      redraw();
+    }
+
+    function updateProgress() {
+      const progress = curvePath.length > 0 ?
+        (animationIndex / curvePath.length) * 100 : 0;
+      document.getElementById('progressFill').style.width = `${min(progress, 100)}%`;
+    }
+
+    // ========================
+    // STATISTICS
+    // ========================
+    function updateStats() {
+      document.getElementById('statType').textContent =
+        params.curveType.charAt(0).toUpperCase() + params.curveType.slice(1);
+      document.getElementById('statIterations').textContent = params.iterations;
+      document.getElementById('statPoints').textContent = curvePath.length.toLocaleString();
+
+      // Calculate path length
+      let length = 0;
+      for (let i = 0; i < curvePath.length - 1; i++) {
+        const dx = curvePath[i + 1].x - curvePath[i].x;
+        const dy = curvePath[i + 1].y - curvePath[i].y;
+        length += sqrt(dx * dx + dy * dy);
+      }
+      document.getElementById('statLength').textContent = length.toFixed(0) + ' px';
+
+      // Complexity based on curve type
+      let complexity;
+      if (params.curveType === 'peano') {
+        const n = pow(3, params.iterations);
+        complexity = `${n}x${n}`;
+      } else if (params.curveType === 'hilbert' || params.curveType === 'moore') {
+        const n = pow(2, params.iterations);
+        complexity = `${n}x${n}`;
+      } else {
+        complexity = `${curvePath.length - 1} segments`;
+      }
+      document.getElementById('statComplexity').textContent = complexity;
+    }
+
+    // ========================
+    // EXPORT FUNCTIONS
+    // ========================
+    function exportSVG() {
+      if (curvePath.length < 2) {
+        alert('Generate a curve first!');
+        return;
+      }
+
+      // Build path data
+      let pathD = `M ${curvePath[0].x.toFixed(2)} ${curvePath[0].y.toFixed(2)}`;
+
+      if (params.smoothCurve) {
+        // Generate smooth curve using Catmull-Rom approximation
+        const smoothPoints = [];
+        for (let i = 0; i < curvePath.length - 1; i++) {
+          const p0 = curvePath[max(0, i - 1)];
+          const p1 = curvePath[i];
+          const p2 = curvePath[min(curvePath.length - 1, i + 1)];
+          const p3 = curvePath[min(curvePath.length - 1, i + 2)];
+
+          for (let t = 0; t < 1; t += 0.2) {
+            const x = 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t +
+                      (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t * t +
+                      (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t * t * t);
+            const y = 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t +
+                      (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t * t +
+                      (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t * t * t);
+            smoothPoints.push({ x, y });
+          }
+        }
+        smoothPoints.push(curvePath[curvePath.length - 1]);
+
+        for (let i = 1; i < smoothPoints.length; i++) {
+          pathD += ` L ${smoothPoints[i].x.toFixed(2)} ${smoothPoints[i].y.toFixed(2)}`;
+        }
+      } else {
+        for (let i = 1; i < curvePath.length; i++) {
+          pathD += ` L ${curvePath[i].x.toFixed(2)} ${curvePath[i].y.toFixed(2)}`;
+        }
+      }
+
+      // Handle dashed/dotted styles
+      let dashArray = '';
+      if (params.lineStyle === 'dashed') {
+        dashArray = `stroke-dasharray="${params.strokeWeight * 4} ${params.strokeWeight * 4}"`;
+      } else if (params.lineStyle === 'dotted') {
+        dashArray = `stroke-dasharray="${params.strokeWeight} ${params.strokeWeight * 2}"`;
+      }
+
+      const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+  <rect width="100%" height="100%" fill="${params.bgColor}"/>
+  <path d="${pathD}"
+        stroke="${params.strokeColor}"
+        stroke-width="${params.strokeWeight}"
+        fill="none"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        ${dashArray}/>
+</svg>`;
+
+      TSExport.downloadSVG(svgContent, `space-filling-${params.curveType}`);
+    }
+
+    function exportPNG() {
+      const canvas = document.querySelector('#canvas canvas');
+      if (canvas) {
+        TSExport.downloadPNG(canvas, `space-filling-${params.curveType}`, { scale: 2 });
+      }
+    }
+
+    async function exportGIF() {
+      if (curvePath.length < 2) {
+        alert('Generate a curve first!');
+        return;
+      }
+
+      const btn = document.getElementById('exportGIF');
+      btn.textContent = 'Creating GIF...';
+      btn.disabled = true;
+
+      // Capture frames
+      const totalFrames = 60;
+      const frames = [];
+      const originalIndex = animationIndex;
+      const originalAnimating = isAnimating;
+      isAnimating = false;
+
+      for (let i = 0; i <= totalFrames; i++) {
+        animationIndex = floor((i / totalFrames) * curvePath.length);
+        redraw();
+
+        // Capture canvas
+        const canvas = document.querySelector('#canvas canvas');
+        if (canvas) {
+          const frameCanvas = document.createElement('canvas');
+          frameCanvas.width = canvas.width;
+          frameCanvas.height = canvas.height;
+          const ctx = frameCanvas.getContext('2d');
+          ctx.drawImage(canvas, 0, 0);
+          frames.push(frameCanvas);
+        }
+
+        // Allow UI to update
+        await new Promise(r => setTimeout(r, 10));
+      }
+
+      // Restore state
+      animationIndex = originalIndex;
+      isAnimating = originalAnimating;
+      redraw();
+
+      try {
+        await TSExport.downloadGIF(frames, `space-filling-${params.curveType}`, { fps: 30 });
+        btn.textContent = 'Export GIF (Animation)';
+        btn.disabled = false;
+      } catch (error) {
+        console.error('GIF export failed:', error);
+        btn.textContent = 'Export GIF (Animation)';
+        btn.disabled = false;
+        alert('GIF export failed. Make sure gif.js is loaded.');
+      }
+    }
+  </script>
+</body>
+</html>
