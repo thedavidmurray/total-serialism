@@ -1,0 +1,86 @@
+{
+  "algorithmId": "game-of-life",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "id": "glider-showcase",
+      "name": "Glider Showcase",
+      "description": "Classic glider pattern on medium grid with wrap boundaries for infinite movement",
+      "featured": true,
+      "data": {
+        "gridSize": 50,
+        "cellSize": 10,
+        "speed": 10,
+        "boundary": "wrap",
+        "renderStyle": "squares",
+        "showGrid": true,
+        "showTrails": false,
+        "pattern": "glider"
+      }
+    },
+    {
+      "id": "pulsar-oscillator",
+      "name": "Pulsar Oscillator",
+      "description": "Beautiful period-3 oscillator with perfect symmetry, best viewed with trails",
+      "featured": true,
+      "data": {
+        "gridSize": 60,
+        "cellSize": 8,
+        "speed": 6,
+        "boundary": "dead",
+        "renderStyle": "circles",
+        "showGrid": true,
+        "showTrails": true,
+        "pattern": "pulsar"
+      }
+    },
+    {
+      "id": "gosper-gun-infinite",
+      "name": "Gosper Glider Gun",
+      "description": "First discovered infinite growth pattern, endlessly spawning gliders",
+      "featured": true,
+      "data": {
+        "gridSize": 120,
+        "cellSize": 5,
+        "speed": 15,
+        "boundary": "wrap",
+        "renderStyle": "squares",
+        "showGrid": false,
+        "showTrails": false,
+        "pattern": "gosper"
+      }
+    },
+    {
+      "id": "primordial-soup",
+      "name": "Primordial Soup",
+      "description": "Random 30% density creating chaotic emergence and stabilization, plotter-style rendering",
+      "featured": false,
+      "data": {
+        "gridSize": 100,
+        "cellSize": 6,
+        "speed": 20,
+        "boundary": "dead",
+        "renderStyle": "lines",
+        "showGrid": false,
+        "showTrails": true,
+        "pattern": "random"
+      }
+    },
+    {
+      "id": "r-pentomino-chaos",
+      "name": "R-Pentomino Chaos",
+      "description": "Methuselah pattern that stabilizes after 1103 generations, fascinating to watch evolve",
+      "featured": false,
+      "data": {
+        "gridSize": 80,
+        "cellSize": 7,
+        "speed": 30,
+        "boundary": "wrap",
+        "renderStyle": "dots",
+        "showGrid": true,
+        "showTrails": false,
+        "pattern": "rpentomino"
+      }
+    }
+  ]
+}

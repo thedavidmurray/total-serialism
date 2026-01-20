@@ -1,0 +1,96 @@
+{
+  "algorithmId": "reaction-diffusion",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "id": "coral-reef",
+      "name": "Coral Reef",
+      "description": "Organic coral growth patterns with center seed initialization",
+      "featured": true,
+      "data": {
+        "feedRate": 0.0545,
+        "killRate": 0.062,
+        "dA": 1.0,
+        "dB": 0.5,
+        "speed": 10,
+        "gridSize": 200,
+        "cellSize": 3,
+        "threshold": 0.5,
+        "renderMode": "grayscale",
+        "seedPattern": "center"
+      }
+    },
+    {
+      "id": "mitosis-cells",
+      "name": "Mitosis Cells",
+      "description": "Self-replicating spots resembling cell division with random seed points",
+      "featured": true,
+      "data": {
+        "feedRate": 0.0367,
+        "killRate": 0.0649,
+        "dA": 1.0,
+        "dB": 0.5,
+        "speed": 15,
+        "gridSize": 200,
+        "cellSize": 3,
+        "threshold": 0.5,
+        "renderMode": "threshold",
+        "seedPattern": "random"
+      }
+    },
+    {
+      "id": "spiral-waves",
+      "name": "Spiral Waves",
+      "description": "Mesmerizing spiral patterns that continuously rotate and evolve",
+      "featured": true,
+      "data": {
+        "feedRate": 0.018,
+        "killRate": 0.051,
+        "dA": 1.0,
+        "dB": 0.5,
+        "speed": 12,
+        "gridSize": 200,
+        "cellSize": 3,
+        "threshold": 0.5,
+        "renderMode": "heatmap",
+        "seedPattern": "spiral"
+      }
+    },
+    {
+      "id": "fingerprint-maze",
+      "name": "Fingerprint Maze",
+      "description": "Intricate maze-like patterns resembling fingerprints, great for contour export",
+      "featured": false,
+      "data": {
+        "feedRate": 0.055,
+        "killRate": 0.062,
+        "dA": 1.0,
+        "dB": 0.5,
+        "speed": 10,
+        "gridSize": 250,
+        "cellSize": 2,
+        "threshold": 0.5,
+        "renderMode": "contour",
+        "seedPattern": "grid"
+      }
+    },
+    {
+      "id": "bubble-clusters",
+      "name": "Bubble Clusters",
+      "description": "Large bubble-like formations with duotone rendering, perfect for plotting",
+      "featured": false,
+      "data": {
+        "feedRate": 0.098,
+        "killRate": 0.057,
+        "dA": 1.0,
+        "dB": 0.5,
+        "speed": 8,
+        "gridSize": 180,
+        "cellSize": 3,
+        "threshold": 0.45,
+        "renderMode": "duotone",
+        "seedPattern": "circle"
+      }
+    }
+  ]
+}

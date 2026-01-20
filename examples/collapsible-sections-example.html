@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collapsible Sections - Example Integration</title>
+    <script src="../preset-manager.js"></script>
+    <script src="../collapsible-sections.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        #canvas-container {
+            margin-left: 350px;
+        }
+
+        #controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 320px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        #controls h2 {
+            margin-top: 0;
+            font-size: 18px;
+            color: #333;
+        }
+
+        /* Control group styles */
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control {
+            margin-bottom: 10px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        input[type="range"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        button {
+            width: 100%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            margin-top: 5px;
+            transition: background-color 0.15s ease;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:active {
+            background: #3d8b40;
+        }
+
+        .value-display {
+            display: inline-block;
+            min-width: 40px;
+            text-align: right;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 15px 0;
+        }
+
+        /* Canvas area */
+        canvas {
+            border: 1px solid #ccc;
+            background: white;
+        }
+
+        /* Scrollbar styling for controls panel */
+        #controls::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #controls::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        #controls::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        #controls::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <h2>Star Field Algorithm</h2>
+
+        <!-- These control groups will be converted to collapsible sections -->
+        <div class="control-group">
+            <h3>Canvas Settings</h3>
+            <div class="control">
+                <label>
+                    Width: <span class="value-display" id="widthValue">800</span>px
+                </label>
+                <input type="range" id="width" min="400" max="2000" value="800" step="50">
+            </div>
+            <div class="control">
+                <label>
+                    Height: <span class="value-display" id="heightValue">600</span>px
+                </label>
+                <input type="range" id="height" min="300" max="1500" value="600" step="50">
+            </div>
+            <div class="control">
+                <label>Background Color:</label>
+                <select id="bgColor">
+                    <option value="white">White</option>
+                    <option value="black">Black</option>
+                    <option value="transparent">Transparent</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Pattern Style</h3>
+            <div class="control">
+                <label>Pattern Type:</label>
+                <select id="patternType">
+                    <option value="regular">Regular Grid</option>
+                    <option value="random">Random</option>
+                    <option value="concentric">Concentric</option>
+                    <option value="spiral">Spiral</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>
+                    Complexity: <span class="value-display" id="complexityValue">5</span>
+                </label>
+                <input type="range" id="complexity" min="1" max="10" value="5" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Grid & Layout</h3>
+            <div class="control">
+                <label>
+                    Grid Columns: <span class="value-display" id="colsValue">10</span>
+                </label>
+                <input type="range" id="cols" min="3" max="30" value="10" step="1">
+            </div>
+            <div class="control">
+                <label>
+                    Grid Rows: <span class="value-display" id="rowsValue">8</span>
+                </label>
+                <input type="range" id="rows" min="3" max="30" value="8" step="1">
+            </div>
+            <div class="control">
+                <label>
+                    Spacing: <span class="value-display" id="spacingValue">50</span>px
+                </label>
+                <input type="range" id="spacing" min="10" max="200" value="50" step="5">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Star Configuration</h3>
+            <div class="control">
+                <label>
+                    Points: <span class="value-display" id="pointsValue">5</span>
+                </label>
+                <input type="range" id="points" min="3" max="12" value="5" step="1">
+            </div>
+            <div class="control">
+                <label>
+                    Outer Radius: <span class="value-display" id="outerValue">20</span>px
+                </label>
+                <input type="range" id="outer" min="5" max="100" value="20" step="1">
+            </div>
+            <div class="control">
+                <label>
+                    Inner Radius: <span class="value-display" id="innerValue">10</span>px
+                </label>
+                <input type="range" id="inner" min="2" max="50" value="10" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Interlacing</h3>
+            <div class="control">
+                <label>
+                    <input type="checkbox" id="enableInterlace">
+                    Enable Interlacing
+                </label>
+            </div>
+            <div class="control">
+                <label>
+                    Interlace Pattern:
+                </label>
+                <select id="interlacePattern">
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                    <option value="diagonal">Diagonal</option>
+                    <option value="checkerboard">Checkerboard</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>
+                    Offset: <span class="value-display" id="interlaceOffsetValue">5</span>px
+                </label>
+                <input type="range" id="interlaceOffset" min="0" max="50" value="5" step="1">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Appearance</h3>
+            <div class="control">
+                <label>
+                    Rotation: <span class="value-display" id="rotationValue">0</span>°
+                </label>
+                <input type="range" id="rotation" min="0" max="360" value="0" step="5">
+            </div>
+            <div class="control">
+                <label>
+                    Line Weight: <span class="value-display" id="lineWeightValue">1.5</span>
+                </label>
+                <input type="range" id="lineWeight" min="0.1" max="5" value="1.5" step="0.1">
+            </div>
+            <div class="control">
+                <label>
+                    <input type="checkbox" id="fillStars" checked>
+                    Fill Stars
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Advanced Options</h3>
+            <div class="control">
+                <label>
+                    Random Seed: <span class="value-display" id="seedValue">42</span>
+                </label>
+                <input type="number" id="seed" value="42">
+            </div>
+            <div class="control">
+                <label>
+                    Noise Scale: <span class="value-display" id="noiseScaleValue">0.5</span>
+                </label>
+                <input type="range" id="noiseScale" min="0.1" max="2" value="0.5" step="0.1">
+            </div>
+            <div class="control">
+                <label>
+                    <input type="checkbox" id="addNoise">
+                    Add Perlin Noise
+                </label>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Generation</h3>
+            <div class="control">
+                <button id="generateBtn">Generate</button>
+            </div>
+            <div class="control">
+                <button id="randomizeBtn" style="background: #2196F3;">Randomize Parameters</button>
+            </div>
+        </div>
+
+        <div class="control-group">
+            <h3>Export</h3>
+            <div class="control">
+                <button id="exportSVGBtn" style="background: #FF9800;">Export SVG</button>
+            </div>
+            <div class="control">
+                <button id="exportPNGBtn" style="background: #9C27B0;">Export PNG</button>
+            </div>
+        </div>
+
+        <!-- Preset manager will be injected here by PresetManager -->
+        <div id="preset-container"></div>
+    </div>
+
+    <div id="canvas-container">
+        <canvas id="canvas" width="800" height="600"></canvas>
+    </div>
+
+    <script>
+        // ========================================
+        // Example Integration
+        // ========================================
+
+        // Initialize parameters
+        const params = {
+            width: 800,
+            height: 600,
+            bgColor: 'white',
+            patternType: 'regular',
+            complexity: 5,
+            cols: 10,
+            rows: 8,
+            spacing: 50,
+            points: 5,
+            outer: 20,
+            inner: 10,
+            enableInterlace: false,
+            interlacePattern: 'horizontal',
+            interlaceOffset: 5,
+            rotation: 0,
+            lineWeight: 1.5,
+            fillStars: true,
+            seed: 42,
+            noiseScale: 0.5,
+            addNoise: false
+        };
+
+        // ========================================
+        // 1. Initialize Collapsible Sections
+        // ========================================
+
+        const sections = new CollapsibleSections({
+            container: '#controls',
+            storageKey: 'star-field-sections',
+            defaultState: 'expanded', // Start with all sections expanded
+            animationDuration: 300
+        });
+
+        // Convert existing flat control groups to collapsible sections
+        sections.convertFlatStructure({
+            selector: '.control-group',
+            getTitleFromElement: (element) => {
+                const heading = element.querySelector('h3');
+                return heading ? heading.textContent : 'Section';
+            }
+        });
+
+        // Add global expand/collapse controls at the top
+        sections.addGlobalControls({
+            position: 'top',
+            showResetButton: true
+        });
+
+        // ========================================
+        // 2. Initialize Preset Manager
+        // ========================================
+
+        const presetManager = new PresetManager({
+            algorithmId: 'star-field-example',
+            container: '#preset-container',
+            onSave: () => {
+                return params; // Return current parameters
+            },
+            onLoad: (preset) => {
+                // Apply preset parameters
+                Object.assign(params, preset.data);
+                updateUIFromParams();
+                generate();
+            }
+        });
+
+        // Integrate with collapsible sections
+        // (automatically expands all sections when preset is loaded)
+        sections.integrateWithPresetManager(presetManager);
+
+        // ========================================
+        // 3. Setup UI Event Listeners
+        // ========================================
+
+        // Helper function to sync range inputs with value displays
+        function setupRangeInput(id, paramName, suffix = '') {
+            const input = document.getElementById(id);
+            const valueDisplay = document.getElementById(`${id}Value`);
+
+            input.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                params[paramName] = value;
+                valueDisplay.textContent = value + suffix;
+                generate();
+            });
+        }
+
+        // Setup all range inputs
+        setupRangeInput('width', 'width', 'px');
+        setupRangeInput('height', 'height', 'px');
+        setupRangeInput('complexity', 'complexity');
+        setupRangeInput('cols', 'cols');
+        setupRangeInput('rows', 'rows');
+        setupRangeInput('spacing', 'spacing', 'px');
+        setupRangeInput('points', 'points');
+        setupRangeInput('outer', 'outer', 'px');
+        setupRangeInput('inner', 'inner', 'px');
+        setupRangeInput('interlaceOffset', 'interlaceOffset', 'px');
+        setupRangeInput('rotation', 'rotation', '°');
+        setupRangeInput('lineWeight', 'lineWeight');
+        setupRangeInput('noiseScale', 'noiseScale');
+
+        // Setup select inputs
+        document.getElementById('bgColor').addEventListener('change', (e) => {
+            params.bgColor = e.target.value;
+            generate();
+        });
+
+        document.getElementById('patternType').addEventListener('change', (e) => {
+            params.patternType = e.target.value;
+            generate();
+        });
+
+        document.getElementById('interlacePattern').addEventListener('change', (e) => {
+            params.interlacePattern = e.target.value;
+            generate();
+        });
+
+        // Setup checkboxes
+        document.getElementById('enableInterlace').addEventListener('change', (e) => {
+            params.enableInterlace = e.target.checked;
+            generate();
+        });
+
+        document.getElementById('fillStars').addEventListener('change', (e) => {
+            params.fillStars = e.target.checked;
+            generate();
+        });
+
+        document.getElementById('addNoise').addEventListener('change', (e) => {
+            params.addNoise = e.target.checked;
+            generate();
+        });
+
+        // Setup number input
+        document.getElementById('seed').addEventListener('change', (e) => {
+            params.seed = parseInt(e.target.value);
+            document.getElementById('seedValue').textContent = e.target.value;
+            generate();
+        });
+
+        // Setup buttons
+        document.getElementById('generateBtn').addEventListener('click', generate);
+
+        document.getElementById('randomizeBtn').addEventListener('click', () => {
+            // Randomize parameters
+            params.points = Math.floor(Math.random() * 10) + 3;
+            params.outer = Math.floor(Math.random() * 95) + 5;
+            params.inner = Math.floor(Math.random() * (params.outer - 2)) + 2;
+            params.rotation = Math.floor(Math.random() * 360);
+            params.complexity = Math.floor(Math.random() * 10) + 1;
+            params.cols = Math.floor(Math.random() * 27) + 3;
+            params.rows = Math.floor(Math.random() * 27) + 3;
+
+            updateUIFromParams();
+            generate();
+        });
+
+        document.getElementById('exportSVGBtn').addEventListener('click', () => {
+            alert('SVG export functionality would go here');
+        });
+
+        document.getElementById('exportPNGBtn').addEventListener('click', () => {
+            alert('PNG export functionality would go here');
+        });
+
+        // ========================================
+        // 4. Helper Functions
+        // ========================================
+
+        function updateUIFromParams() {
+            // Update all inputs from params object
+            Object.keys(params).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    if (input.type === 'checkbox') {
+                        input.checked = params[key];
+                    } else {
+                        input.value = params[key];
+                    }
+
+                    // Update value displays
+                    const valueDisplay = document.getElementById(`${key}Value`);
+                    if (valueDisplay) {
+                        valueDisplay.textContent = params[key];
+                    }
+                }
+            });
+        }
+
+        function generate() {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = params.width;
+            canvas.height = params.height;
+
+            // Clear canvas
+            ctx.fillStyle = params.bgColor === 'transparent' ? 'white' : params.bgColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Simple star drawing example
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+
+            for (let row = 0; row < params.rows; row++) {
+                for (let col = 0; col < params.cols; col++) {
+                    const x = (col - params.cols / 2 + 0.5) * params.spacing;
+                    const y = (row - params.rows / 2 + 0.5) * params.spacing;
+
+                    drawStar(ctx, x, y, params.points, params.outer, params.inner, params.rotation);
+                }
+            }
+
+            ctx.restore();
+        }
+
+        function drawStar(ctx, x, y, points, outerRadius, innerRadius, rotation) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate((rotation * Math.PI) / 180);
+
+            ctx.beginPath();
+            ctx.lineWidth = params.lineWeight;
+            ctx.strokeStyle = 'black';
+
+            for (let i = 0; i < points * 2; i++) {
+                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const angle = (i * Math.PI) / points - Math.PI / 2;
+                const px = radius * Math.cos(angle);
+                const py = radius * Math.sin(angle);
+
+                if (i === 0) {
+                    ctx.moveTo(px, py);
+                } else {
+                    ctx.lineTo(px, py);
+                }
+            }
+
+            ctx.closePath();
+            ctx.stroke();
+
+            if (params.fillStars) {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.fill();
+            }
+
+            ctx.restore();
+        }
+
+        // ========================================
+        // 5. Listen to section toggle events
+        // ========================================
+
+        document.getElementById('controls').addEventListener('sectionToggle', (e) => {
+            console.log(`Section ${e.detail.sectionId} ${e.detail.expanded ? 'expanded' : 'collapsed'}`);
+        });
+
+        // ========================================
+        // 6. Initial render
+        // ========================================
+
+        generate();
+
+        console.log('Collapsible Sections initialized with', sections.getSectionCount(), 'sections');
+    </script>
+</body>
+</html>

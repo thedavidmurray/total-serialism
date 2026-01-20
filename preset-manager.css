@@ -1,0 +1,275 @@
+/* Preset Manager Styles */
+.preset-manager {
+  margin-top: 20px;
+}
+
+.preset-manager .control-group {
+  background: rgba(255, 255, 255, 0.02);
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(76, 175, 80, 0.2);
+}
+
+.preset-manager h3 {
+  color: #4CAF50;
+  margin-bottom: 15px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.preset-manager select {
+  width: 100%;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.preset-manager select:hover {
+  border-color: #4CAF50;
+}
+
+.preset-manager input[type="text"] {
+  width: 100%;
+  padding: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  border: 1px solid #444;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.preset-manager input[type="text"]:focus {
+  outline: none;
+  border-color: #4CAF50;
+}
+
+.preset-manager button {
+  width: 100%;
+  padding: 10px;
+  margin: 5px 0;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.preset-manager button:hover {
+  background: #45a049;
+}
+
+.preset-manager #delete-preset-btn {
+  background: #f44336;
+}
+
+.preset-manager #delete-preset-btn:hover {
+  background: #da190b;
+}
+
+.preset-manager #export-presets-btn,
+.preset-manager #import-presets-btn {
+  background: #2196F3;
+}
+
+.preset-manager #export-presets-btn:hover,
+.preset-manager #import-presets-btn:hover {
+  background: #0b7dda;
+}
+
+.preset-manager hr {
+  border: none;
+  border-top: 1px solid #333;
+  margin: 20px 0;
+}
+
+/* Animation for preset loading */
+.preset-loading {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* Tooltip styles */
+.preset-tooltip {
+  position: relative;
+  display: inline-block;
+}
+
+.preset-tooltip .tooltiptext {
+  visibility: hidden;
+  width: 200px;
+  background-color: #555;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%;
+  left: 50%;
+  margin-left: -100px;
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 12px;
+}
+
+.preset-tooltip:hover .tooltiptext {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Quickbar Styles */
+.preset-quickbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: rgba(26, 26, 26, 0.98);
+  backdrop-filter: blur(10px);
+  border-bottom: 2px solid rgba(76, 175, 80, 0.3);
+  padding: 10px 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.quickbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.quickbar-label {
+  color: #4CAF50;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.quickbar-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.quickbar-btn {
+  min-width: 44px;
+  height: 36px;
+  padding: 0 12px;
+  background: rgba(76, 175, 80, 0.15);
+  color: #4CAF50;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: 'Monaco', 'Courier New', monospace;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.quickbar-btn:hover {
+  background: rgba(76, 175, 80, 0.25);
+  border-color: rgba(76, 175, 80, 0.6);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+.quickbar-btn:active {
+  transform: translateY(0);
+}
+
+.quickbar-btn.active {
+  background: #4CAF50;
+  color: #1a1a1a;
+  border-color: #4CAF50;
+  box-shadow: 0 0 12px rgba(76, 175, 80, 0.5);
+}
+
+.quickbar-btn.builtin::before {
+  content: '📦';
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  font-size: 10px;
+  background: rgba(33, 150, 243, 0.9);
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover preview tooltip */
+.quickbar-btn::after {
+  content: attr(title);
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.95);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 1001;
+  border: 1px solid rgba(76, 175, 80, 0.3);
+}
+
+.quickbar-btn:hover::after {
+  opacity: 1;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .preset-manager .control-group {
+    padding: 10px;
+  }
+
+  .preset-manager button {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .preset-quickbar {
+    padding: 8px 10px;
+  }
+
+  .quickbar-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .quickbar-label {
+    font-size: 13px;
+  }
+
+  .quickbar-btn {
+    min-width: 40px;
+    height: 32px;
+    font-size: 12px;
+    padding: 0 10px;
+  }
+}

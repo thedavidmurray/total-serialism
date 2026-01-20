@@ -1,0 +1,17 @@
+{
+  "name": "pen-plotter-art",
+  "version": "2.0.0",
+  "description": "Total Serialism - Pen Plotter Art Algorithms",
+  "main": "index.html",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "serve": "python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "author": "Total Serialism",
+  "license": "MIT"
+}

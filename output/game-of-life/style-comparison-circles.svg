@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="330" height="330" 
+     viewBox="0 0 330 330"
+     xmlns="http://www.w3.org/2000/svg"
+     data-paper-width="210mm"
+     data-paper-height="297mm">
+  <g stroke="#000000" 
+     stroke-width="1" 
+     fill="none">
+    <circle cx="129" cy="117" r="5"/>
+    <circle cx="141" cy="117" r="5"/>
+    <circle cx="189" cy="117" r="5"/>
+    <circle cx="201" cy="117" r="5"/>
+    <circle cx="129" cy="129" r="5"/>
+    <circle cx="141" cy="129" r="5"/>
+    <circle cx="189" cy="129" r="5"/>
+    <circle cx="201" cy="129" r="5"/>
+    <circle cx="117" cy="153" r="5"/>
+    <circle cx="129" cy="153" r="5"/>
+    <circle cx="141" cy="153" r="5"/>
+    <circle cx="189" cy="153" r="5"/>
+    <circle cx="201" cy="153" r="5"/>
+    <circle cx="213" cy="153" r="5"/>
+    <circle cx="129" cy="165" r="5"/>
+    <circle cx="201" cy="165" r="5"/>
+    <circle cx="153" cy="189" r="5"/>
+    <circle cx="165" cy="189" r="5"/>
+    <circle cx="177" cy="189" r="5"/>
+    <circle cx="153" cy="201" r="5"/>
+    <circle cx="177" cy="201" r="5"/>
+    <circle cx="153" cy="213" r="5"/>
+    <circle cx="165" cy="213" r="5"/>
+    <circle cx="177" cy="213" r="5"/>
+  </g>
+</svg>

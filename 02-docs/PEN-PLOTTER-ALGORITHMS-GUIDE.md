@@ -1,0 +1,1 @@
+/Users/djm/claude-projects/02-docs/guides/PEN-PLOTTER-ALGORITHMS-GUIDE.md

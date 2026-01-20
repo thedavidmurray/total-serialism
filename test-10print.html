@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>10PRINT Test - Simplified</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #1a1a1a;
+      color: white;
+    }
+    #canvas-container {
+      border: 2px solid #4CAF50;
+      display: inline-block;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1>10PRINT Pattern Test</h1>
+  <div id="canvas-container"></div>
+  <br>
+  <button onclick="regenerate()">Regenerate Pattern</button>
+  <button onclick="location.href='https://thedavidmurray.github.io/total-serialism/pen-plotter/algorithms/geometric/10print-gui.html'">Go to Full Version</button>
+  
+  <script>
+    let cellSize = 20;
+    let probability = 0.5;
+    
+    function setup() {
+      console.log('Setup called!');
+      let canvas = createCanvas(800, 600);
+      canvas.parent('canvas-container');
+      noLoop();
+      drawPattern();
+    }
+    
+    function drawPattern() {
+      background(255);
+      stroke(0);
+      strokeWeight(2);
+      
+      for (let x = 0; x < width; x += cellSize) {
+        for (let y = 0; y < height; y += cellSize) {
+          if (random() < probability) {
+            // Draw / line
+            line(x, y, x + cellSize, y + cellSize);
+          } else {
+            // Draw \ line
+            line(x + cellSize, y, x, y + cellSize);
+          }
+        }
+      }
+    }
+    
+    function regenerate() {
+      drawPattern();
+    }
+  </script>
+</body>
+</html>

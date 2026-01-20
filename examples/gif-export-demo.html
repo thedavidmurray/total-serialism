@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GIF Export Demo - Pen Plotter Art</title>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.7.0/lib/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../src/utils/gif-exporter.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .controls h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .control-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .control-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .control-item label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+    }
+    
+    .control-item input,
+    .control-item select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #0066cc;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #0052a3;
+    }
+    
+    .btn-primary:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .btn-secondary {
+      background: #666;
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: #555;
+    }
+    
+    .recording {
+      background: #dc3545 !important;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+    
+    .progress-container {
+      margin-top: 15px;
+      display: none;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: #e0e0e0;
+      border-radius: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: #0066cc;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+    
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 12px;
+      color: #333;
+      font-weight: 500;
+      width: 100%;
+      text-align: center;
+    }
+    
+    .canvas-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: inline-block;
+    }
+    
+    #sketch-container {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    
+    .preview-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: none;
+    }
+    
+    .preview-container h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    
+    .preview-container img {
+      max-width: 300px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .stats {
+      font-size: 12px;
+      color: #666;
+      margin-top: 10px;
+    }
+    
+    .code-example {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      margin-top: 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+    
+    .instructions {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 4px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    
+    .instructions h3 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+    
+    .instructions ul {
+      margin: 10px 0;
+      padding-left: 20px;
+    }
+    
+    .instructions li {
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>GIF Export Demo - Pen Plotter Art</h1>
+    
+    <div class="instructions">
+      <h3>Quick Start</h3>
+      <ul>
+        <li>Press <strong>R</strong> key or click "Start Recording" to begin</li>
+        <li>The animation will be recorded for the specified duration</li>
+        <li>GIF will be automatically downloaded when complete</li>
+        <li>Adjust settings below for different output options</li>
+      </ul>
+    </div>
+    
+    <div class="controls">
+      <h2>GIF Export Controls</h2>
+      
+      <div class="control-group">
+        <div class="control-item">
+          <label>Frame Rate (FPS)</label>
+          <input type="number" id="fps" value="30" min="1" max="60">
+        </div>
+        
+        <div class="control-item">
+          <label>Duration (seconds)</label>
+          <input type="number" id="duration" value="3" min="0.5" max="10" step="0.5">
+        </div>
+        
+        <div class="control-item">
+          <label>Quality (1-20, lower is better)</label>
+          <input type="number" id="quality" value="10" min="1" max="20">
+        </div>
+        
+        <div class="control-item">
+          <label>Size (pixels)</label>
+          <select id="size">
+            <option value="200">200x200</option>
+            <option value="400">400x400</option>
+            <option value="600" selected>600x600</option>
+            <option value="800">800x800</option>
+          </select>
+        </div>
+        
+        <div class="control-item">
+          <label>Animation Type</label>
+          <select id="animationType">
+            <option value="spiral">Spiral Pattern</option>
+            <option value="waves">Wave Forms</option>
+            <option value="particles">Particle System</option>
+            <option value="geometric">Geometric Shapes</option>
+          </select>
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <button id="recordBtn" class="btn-primary">Start Recording</button>
+        <button id="resetBtn" class="btn-secondary">Reset Animation</button>
+      </div>
+      
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill">
+            <div class="progress-text" id="progressText">Recording: 0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="sketch-container">
+      <div class="canvas-container" id="canvasContainer"></div>
+      
+      <div class="preview-container" id="previewContainer">
+        <h3>GIF Preview</h3>
+        <img id="previewImg" alt="GIF preview">
+        <div class="stats" id="stats"></div>
+        <button id="downloadBtn" class="btn-primary" style="margin-top: 10px;">Download GIF</button>
+      </div>
+    </div>
+    
+    <div class="code-example">
+      <h3>Integration Example</h3>
+      <pre>// 1. Include the GIF exporter script
+&lt;script src="gif-exporter.js"&gt;&lt;/script&gt;
+
+// 2. Create exporter instance
+const exporter = new GifExporter({
+  fps: 30,
+  duration: 3,
+  quality: 10,
+  width: 600,
+  height: 600
+});
+
+// 3. Initialize with your canvas
+exporter.init(canvas, {
+  onProgress: (data) => {
+    console.log(`Progress: ${Math.round(data.progress * 100)}%`);
+  },
+  onComplete: (result) => {
+    console.log('GIF created!', result);
+  }
+});
+
+// 4. Start/stop recording
+exporter.start(); // Begin recording
+exporter.stop();  // End and process
+
+// Or use the quick setup for p5.js:
+const exporter = setupGifExporter(sketch, {
+  fps: 30,
+  duration: 3,
+  autoDownload: true,
+  recordKey: 'r'  // Press 'r' to toggle recording
+});</pre>
+    </div>
+  </div>
+  
+  <script>
+    // Animation variables
+    let angle = 0;
+    let particles = [];
+    let waves = [];
+    let shapes = [];
+    let animationType = 'spiral';
+    
+    // GIF exporter instance
+    let exporter;
+    let currentBlob;
+    
+    function setup() {
+      const canvas = createCanvas(600, 600);
+      canvas.parent('canvasContainer');
+      
+      // Initialize particles, waves, and shapes
+      for (let i = 0; i < 50; i++) {
+        particles.push({
+          x: random(width),
+          y: random(height),
+          vx: random(-2, 2),
+          vy: random(-2, 2),
+          size: random(2, 8)
+        });
+      }
+      
+      for (let i = 0; i < 5; i++) {
+        waves.push({
+          amplitude: random(50, 150),
+          frequency: random(0.01, 0.05),
+          phase: random(TWO_PI),
+          y: height / 5 * (i + 1)
+        });
+      }
+      
+      for (let i = 0; i < 8; i++) {
+        shapes.push({
+          x: random(width),
+          y: random(height),
+          size: random(20, 60),
+          rotation: random(TWO_PI),
+          rotationSpeed: random(-0.02, 0.02),
+          sides: floor(random(3, 8))
+        });
+      }
+      
+      // Setup GIF exporter
+      setupExporter();
+    }
+    
+    function setupExporter() {
+      const fps = parseInt(document.getElementById('fps').value);
+      const duration = parseFloat(document.getElementById('duration').value);
+      const quality = parseInt(document.getElementById('quality').value);
+      const size = parseInt(document.getElementById('size').value);
+      
+      exporter = new GifExporter({
+        fps: fps,
+        duration: duration,
+        quality: quality,
+        width: size,
+        height: size,
+        autoDownload: true,
+        background: '#FFFFFF'
+      });
+      
+      exporter.init(canvas.canvas, {
+        onProgress: updateProgress,
+        onComplete: onExportComplete
+      });
+    }
+    
+    function draw() {
+      background(255);
+      
+      switch (animationType) {
+        case 'spiral':
+          drawSpiral();
+          break;
+        case 'waves':
+          drawWaves();
+          break;
+        case 'particles':
+          drawParticles();
+          break;
+        case 'geometric':
+          drawGeometric();
+          break;
+      }
+      
+      angle += 0.02;
+    }
+    
+    function drawSpiral() {
+      push();
+      translate(width / 2, height / 2);
+      noFill();
+      
+      for (let i = 0; i < 20; i++) {
+        stroke(0, map(i, 0, 20, 255, 50));
+        strokeWeight(map(i, 0, 20, 3, 1));
+        
+        beginShape();
+        for (let a = 0; a < TWO_PI * 3; a += 0.1) {
+          let r = i * 10 + a * 5;
+          let x = r * cos(a + angle + i * 0.1);
+          let y = r * sin(a + angle + i * 0.1);
+          vertex(x, y);
+        }
+        endShape();
+      }
+      pop();
+    }
+    
+    function drawWaves() {
+      noFill();
+      
+      waves.forEach((wave, index) => {
+        stroke(0, map(index, 0, waves.length, 200, 50));
+        strokeWeight(2);
+        
+        beginShape();
+        for (let x = 0; x <= width; x += 5) {
+          let y = wave.y + sin(x * wave.frequency + angle + wave.phase) * wave.amplitude;
+          vertex(x, y);
+        }
+        endShape();
+      });
+    }
+    
+    function drawParticles() {
+      particles.forEach(p => {
+        // Update position
+        p.x += p.vx;
+        p.y += p.vy;
+        
+        // Bounce off walls
+        if (p.x < 0 || p.x > width) p.vx *= -1;
+        if (p.y < 0 || p.y > height) p.vy *= -1;
+        
+        // Draw particle with trail
+        fill(0, 100);
+        noStroke();
+        circle(p.x, p.y, p.size);
+        
+        // Draw connections
+        particles.forEach(other => {
+          let d = dist(p.x, p.y, other.x, other.y);
+          if (d < 100 && d > 0) {
+            stroke(0, map(d, 0, 100, 100, 0));
+            strokeWeight(0.5);
+            line(p.x, p.y, other.x, other.y);
+          }
+        });
+      });
+    }
+    
+    function drawGeometric() {
+      shapes.forEach(shape => {
+        push();
+        translate(shape.x, shape.y);
+        rotate(shape.rotation);
+        shape.rotation += shape.rotationSpeed;
+        
+        noFill();
+        stroke(0, 150);
+        strokeWeight(2);
+        
+        beginShape();
+        for (let i = 0; i < shape.sides; i++) {
+          let angle = TWO_PI / shape.sides * i;
+          let x = cos(angle) * shape.size;
+          let y = sin(angle) * shape.size;
+          vertex(x, y);
+        }
+        endShape(CLOSE);
+        pop();
+      });
+    }
+    
+    function updateProgress(data) {
+      const progressContainer = document.getElementById('progressContainer');
+      const progressFill = document.getElementById('progressFill');
+      const progressText = document.getElementById('progressText');
+      
+      progressContainer.style.display = 'block';
+      progressFill.style.width = `${data.progress * 100}%`;
+      
+      if (data.phase === 'recording') {
+        progressText.textContent = `Recording: ${Math.round(data.progress * 100)}% (${data.capturedFrames}/${data.totalFrames} frames)`;
+      } else if (data.phase === 'encoding') {
+        progressText.textContent = `Encoding: ${Math.round(data.progress * 100)}%`;
+      } else {
+        progressText.textContent = 'Processing...';
+      }
+    }
+    
+    function onExportComplete(result) {
+      currentBlob = result.blob;
+      
+      // Hide progress
+      document.getElementById('progressContainer').style.display = 'none';
+      
+      // Show preview
+      const previewContainer = document.getElementById('previewContainer');
+      const previewImg = document.getElementById('previewImg');
+      const stats = document.getElementById('stats');
+      
+      previewContainer.style.display = 'block';
+      previewImg.src = result.url;
+      
+      const sizeKB = (result.size / 1024).toFixed(2);
+      stats.innerHTML = `
+        <strong>Frames:</strong> ${result.frames}<br>
+        <strong>Duration:</strong> ${result.duration}s<br>
+        <strong>Size:</strong> ${sizeKB} KB
+      `;
+      
+      // Update button state
+      const recordBtn = document.getElementById('recordBtn');
+      recordBtn.textContent = 'Start Recording';
+      recordBtn.classList.remove('recording');
+      recordBtn.disabled = false;
+    }
+    
+    // Control event listeners
+    document.getElementById('recordBtn').addEventListener('click', () => {
+      const btn = document.getElementById('recordBtn');
+      
+      if (exporter.isRecording()) {
+        exporter.stop();
+        btn.textContent = 'Processing...';
+        btn.disabled = true;
+      } else {
+        // Update exporter settings
+        setupExporter();
+        
+        exporter.start();
+        btn.textContent = 'Stop Recording';
+        btn.classList.add('recording');
+        
+        // Hide preview
+        document.getElementById('previewContainer').style.display = 'none';
+      }
+    });
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      angle = 0;
+      
+      // Reset particles
+      particles.forEach(p => {
+        p.x = random(width);
+        p.y = random(height);
+      });
+      
+      // Reset shapes
+      shapes.forEach(shape => {
+        shape.rotation = random(TWO_PI);
+      });
+    });
+    
+    document.getElementById('animationType').addEventListener('change', (e) => {
+      animationType = e.target.value;
+    });
+    
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      if (currentBlob) {
+        exporter.download(currentBlob, `pen-plotter-${animationType}-${Date.now()}.gif`);
+      }
+    });
+    
+    // Keyboard shortcut
+    document.addEventListener('keypress', (e) => {
+      if (e.key === 'r' || e.key === 'R') {
+        document.getElementById('recordBtn').click();
+      }
+    });
+  </script>
+</body>
+</html>

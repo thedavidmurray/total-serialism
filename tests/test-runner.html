@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pen Plotter Art - Test Runner</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+        
+        .test-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .test-controls button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        .test-controls button:hover {
+            background: #45a049;
+        }
+        
+        .test-controls button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        #test-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            min-height: 300px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        
+        .test-section {
+            margin-top: 30px;
+        }
+        
+        .test-section h2 {
+            color: #333;
+            font-size: 20px;
+        }
+        
+        .test-list {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-item {
+            padding: 8px;
+            margin: 5px 0;
+            border-left: 3px solid #ddd;
+            padding-left: 15px;
+        }
+        
+        .test-item.loaded {
+            border-left-color: #4CAF50;
+        }
+        
+        .test-item.error {
+            border-left-color: #f44336;
+            color: #f44336;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .status.running {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .status.passed {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .status.failed {
+            background: #f44336;
+            color: white;
+        }
+        
+        #visualization-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            display: none;
+        }
+        
+        #visualization-container canvas,
+        #visualization-container svg {
+            max-width: 100%;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Pen Plotter Art - Test Runner</h1>
+    
+    <div class="test-controls">
+        <button id="run-all-tests">Run All Tests</button>
+        <button id="run-unit-tests">Run Unit Tests</button>
+        <button id="run-integration-tests">Run Integration Tests</button>
+        <button id="clear-output">Clear Output</button>
+        <span id="test-status" class="status"></span>
+    </div>
+    
+    <div id="test-output"></div>
+    
+    <div class="test-section">
+        <h2>Available Test Suites</h2>
+        <div class="test-list" id="test-list">
+            <div class="test-item">Loading test suites...</div>
+        </div>
+    </div>
+    
+    <div id="visualization-container">
+        <h3>Test Visualization</h3>
+        <div id="visualization-content"></div>
+    </div>
+
+    <!-- Load test framework and utilities -->
+    <script src="utils/test-framework.js"></script>
+    <script src="utils/svg-validator.js"></script>
+    <script src="utils/determinism-tester.js"></script>
+    <script src="utils/performance-benchmark.js"></script>
+    <script src="utils/parameter-validator.js"></script>
+    
+    <!-- Load p5.js for testing sketches -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <!-- Test runner logic -->
+    <script>
+        // Console output capture
+        const outputElement = document.getElementById('test-output');
+        const originalConsole = {
+            log: console.log,
+            error: console.error,
+            warn: console.warn
+        };
+        
+        function captureConsole() {
+            console.log = function(...args) {
+                originalConsole.log(...args);
+                outputElement.textContent += args.join(' ') + '\n';
+                outputElement.scrollTop = outputElement.scrollHeight;
+            };
+            
+            console.error = function(...args) {
+                originalConsole.error(...args);
+                outputElement.textContent += '❌ ' + args.join(' ') + '\n';
+                outputElement.scrollTop = outputElement.scrollHeight;
+            };
+            
+            console.warn = function(...args) {
+                originalConsole.warn(...args);
+                outputElement.textContent += '⚠️ ' + args.join(' ') + '\n';
+                outputElement.scrollTop = outputElement.scrollHeight;
+            };
+        }
+        
+        function restoreConsole() {
+            console.log = originalConsole.log;
+            console.error = originalConsole.error;
+            console.warn = originalConsole.warn;
+        }
+        
+        // Test suite loader
+        const testSuites = [
+            { name: 'SVG Validation Tests', path: 'unit/test-svg-validation.js' },
+            { name: 'Determinism Tests', path: 'unit/test-determinism.js' },
+            { name: 'Performance Tests', path: 'unit/test-performance.js' },
+            { name: 'Parameter Validation Tests', path: 'unit/test-parameters.js' },
+            { name: 'Algorithm Tests', path: 'integration/test-algorithms.js' },
+            { name: 'Example Algorithm Tests', path: 'fixtures/example-algorithm.js' }
+        ];
+        
+        async function loadTestSuites() {
+            const testListElement = document.getElementById('test-list');
+            testListElement.innerHTML = '';
+            
+            for (const suite of testSuites) {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'test-item';
+                itemElement.textContent = `📁 ${suite.name}`;
+                
+                try {
+                    const script = document.createElement('script');
+                    script.src = suite.path;
+                    script.onerror = () => {
+                        itemElement.className = 'test-item error';
+                        itemElement.textContent = `❌ ${suite.name} - Failed to load`;
+                    };
+                    script.onload = () => {
+                        itemElement.className = 'test-item loaded';
+                        itemElement.textContent = `✅ ${suite.name} - Ready`;
+                    };
+                    document.body.appendChild(script);
+                } catch (error) {
+                    itemElement.className = 'test-item error';
+                    itemElement.textContent = `❌ ${suite.name} - ${error.message}`;
+                }
+                
+                testListElement.appendChild(itemElement);
+            }
+        }
+        
+        // Test runners
+        document.getElementById('run-all-tests').addEventListener('click', async () => {
+            captureConsole();
+            document.getElementById('test-status').className = 'status running';
+            document.getElementById('test-status').textContent = 'Running...';
+            
+            try {
+                await runTests();
+                document.getElementById('test-status').className = 'status passed';
+                document.getElementById('test-status').textContent = 'Completed';
+            } catch (error) {
+                document.getElementById('test-status').className = 'status failed';
+                document.getElementById('test-status').textContent = 'Failed';
+                console.error('Test execution error:', error);
+            } finally {
+                restoreConsole();
+            }
+        });
+        
+        document.getElementById('clear-output').addEventListener('click', () => {
+            outputElement.textContent = '';
+            document.getElementById('test-status').textContent = '';
+            document.getElementById('test-status').className = 'status';
+        });
+        
+        // Initialize
+        loadTestSuites();
+        
+        // Example test registration (this would normally be in separate test files)
+        describe('Example Tests', () => {
+            it('should pass a simple test', () => {
+                expect(1 + 1).toBe(2);
+            });
+            
+            it('should validate basic SVG', () => {
+                const svg = '<svg width="100" height="100"><path d="M 10 10 L 90 90" stroke="black"/></svg>';
+                const result = SVGValidator.isValidSVG(svg);
+                expect(result.valid).toBeTruthy();
+            });
+        });
+    </script>
+</body>
+</html>

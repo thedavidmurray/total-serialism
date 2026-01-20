@@ -1,0 +1,101 @@
+{
+  "algorithmId": "flow-field-p5",
+  "version": "1.0.0",
+  "presets": [
+    {
+      "id": "turbulent-ocean",
+      "name": "Turbulent Ocean",
+      "description": "Chaotic turbulent flow resembling ocean currents with high particle density",
+      "featured": true,
+      "data": {
+        "noiseScale": 0.003,
+        "noiseStrength": 1.5,
+        "fieldType": "turbulent",
+        "particleCount": 3000,
+        "stepLength": 1.5,
+        "steps": 150,
+        "lineWidth": 0.4,
+        "startPattern": "random",
+        "margin": 30,
+        "fadeEdges": true,
+        "fadeStrength": 60
+      }
+    },
+    {
+      "id": "gentle-curl",
+      "name": "Gentle Curl",
+      "description": "Smooth curl noise with circular starting pattern creating flowing concentric shapes",
+      "featured": true,
+      "data": {
+        "noiseScale": 0.0015,
+        "noiseStrength": 0.8,
+        "fieldType": "curl",
+        "particleCount": 1500,
+        "stepLength": 2.5,
+        "steps": 200,
+        "lineWidth": 0.6,
+        "startPattern": "circle",
+        "margin": 40,
+        "fadeEdges": true,
+        "fadeStrength": 80
+      }
+    },
+    {
+      "id": "edge-convergence",
+      "name": "Edge Convergence",
+      "description": "Particles flow from edges towards center with perlin noise guidance",
+      "featured": false,
+      "data": {
+        "noiseScale": 0.0025,
+        "noiseStrength": 1.2,
+        "fieldType": "perlin",
+        "particleCount": 2500,
+        "stepLength": 2,
+        "steps": 120,
+        "lineWidth": 0.5,
+        "startPattern": "edge",
+        "margin": 20,
+        "fadeEdges": false,
+        "fadeStrength": 50
+      }
+    },
+    {
+      "id": "grid-waves",
+      "name": "Grid Waves",
+      "description": "Regular grid starting points with fine curl noise creating wave-like patterns",
+      "featured": false,
+      "data": {
+        "noiseScale": 0.004,
+        "noiseStrength": 1.0,
+        "fieldType": "curl",
+        "particleCount": 2000,
+        "stepLength": 1.8,
+        "steps": 100,
+        "lineWidth": 0.5,
+        "startPattern": "grid",
+        "margin": 25,
+        "fadeEdges": true,
+        "fadeStrength": 50
+      }
+    },
+    {
+      "id": "minimal-flow",
+      "name": "Minimal Flow",
+      "description": "Sparse particles with strong curl creating clean, minimal line work",
+      "featured": true,
+      "data": {
+        "noiseScale": 0.002,
+        "noiseStrength": 1.8,
+        "fieldType": "curl",
+        "particleCount": 800,
+        "stepLength": 3,
+        "steps": 250,
+        "lineWidth": 0.8,
+        "startPattern": "random",
+        "margin": 50,
+        "fadeEdges": true,
+        "fadeStrength": 100
+      }
+    }
+  ]
+}

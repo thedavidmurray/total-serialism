@@ -1,0 +1,29 @@
+Collapsible Sections System - Complete File List
+================================================
+
+Core Module:
+-----------
+/Users/djm/claude-projects/pen-plotter-art/collapsible-sections.js
+
+Documentation:
+-------------
+/Users/djm/claude-projects/pen-plotter-art/COLLAPSIBLE-SECTIONS-README.md
+/Users/djm/claude-projects/pen-plotter-art/COLLAPSIBLE-SECTIONS-DELIVERABLES.md
+/Users/djm/claude-projects/pen-plotter-art/docs/collapsible-sections-migration-guide.md
+/Users/djm/claude-projects/pen-plotter-art/docs/collapsible-sections-accessibility.md
+/Users/djm/claude-projects/pen-plotter-art/docs/collapsible-sections-quick-reference.md
+
+Examples:
+---------
+/Users/djm/claude-projects/pen-plotter-art/examples/collapsible-sections-example.html
+
+Tests:
+------
+/Users/djm/claude-projects/pen-plotter-art/tests/collapsible-sections.test.html
+
+To Get Started:
+--------------
+1. Open examples/collapsible-sections-example.html in a browser
+2. Read COLLAPSIBLE-SECTIONS-README.md for overview
+3. Review docs/collapsible-sections-quick-reference.md for quick setup
+4. Run tests/collapsible-sections.test.html to verify functionality

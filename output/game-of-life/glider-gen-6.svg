@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="260" height="260" 
+     viewBox="0 0 260 260"
+     xmlns="http://www.w3.org/2000/svg"
+     data-paper-width="210mm"
+     data-paper-height="297mm">
+  <g stroke="#000000" 
+     stroke-width="1" 
+     fill="none">
+    <circle cx="86" cy="78" r="1.3333333333333333" fill="#000000"/>
+    <circle cx="70" cy="86" r="1.3333333333333333" fill="#000000"/>
+    <circle cx="86" cy="86" r="1.3333333333333333" fill="#000000"/>
+    <circle cx="78" cy="94" r="1.3333333333333333" fill="#000000"/>
+    <circle cx="86" cy="94" r="1.3333333333333333" fill="#000000"/>
+  </g>
+</svg>

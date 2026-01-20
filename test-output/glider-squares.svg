@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="170" height="170" 
+     viewBox="0 0 170 170"
+     xmlns="http://www.w3.org/2000/svg"
+     data-paper-width="210mm"
+     data-paper-height="297mm">
+  <g stroke="#000000" 
+     stroke-width="1" 
+     fill="none">
+    <rect x="40" y="25" width="15" height="15"/>
+    <rect x="55" y="40" width="15" height="30"/>
+    <rect x="25" y="55" width="30" height="15"/>
+  </g>
+</svg>
