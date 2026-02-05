@@ -632,20 +632,20 @@
       contours.forEach((contour, index) => {
         applyContourStyle(contour, index);
 
-        contour.lines.forEach(line => {
+        contour.lines.forEach(seg => {
           if (params.smoothing > 1) {
             // Smooth the line
             noFill();
             beginShape();
-            vertex(line.x1, line.y1);
+            vertex(seg.x1, seg.y1);
             bezierVertex(
-              line.x1 + (line.x2 - line.x1) * 0.25, line.y1,
-              line.x1 + (line.x2 - line.x1) * 0.75, line.y2,
-              line.x2, line.y2
+              seg.x1 + (seg.x2 - seg.x1) * 0.25, seg.y1,
+              seg.x1 + (seg.x2 - seg.x1) * 0.75, seg.y2,
+              seg.x2, seg.y2
             );
             endShape();
           } else {
-            line(line.x1, line.y1, line.x2, line.y2);
+            line(seg.x1, seg.y1, seg.x2, seg.y2);
           }
         });
 
@@ -670,8 +670,8 @@
         applyContourStyle(contour, index);
         const yOffset = -index * 5;
 
-        contour.lines.forEach(line => {
-          line(line.x1, line.y1 + yOffset, line.x2, line.y2 + yOffset);
+        contour.lines.forEach(seg => {
+          line(seg.x1, seg.y1 + yOffset, seg.x2, seg.y2 + yOffset);
         });
       });
 

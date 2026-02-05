@@ -1059,7 +1059,7 @@
         a.href = url;
         a.download = `spiral-burst-${currentMode}-${seed}.gif`;
         a.click();
-        URL.createObjectURL(url);
+        URL.revokeObjectURL(url);
         
         updateExportStatus('GIF exported!');
         setTimeout(() => updateExportStatus(''), 3000);

@@ -344,7 +344,7 @@
             </div>
             <div class="button-row">
                 <button onclick="regenerate()">Regenerate</button>
-                <button onclick="randomSeed()">Random Seed</button>
+                <button onclick="generateNewSeed()">Random Seed</button>
             </div>
             <button onclick="animatePattern()">Animate Growth</button>
         </div>
@@ -907,7 +907,7 @@
             loop();
         }
 
-        function randomSeed() {
+        function generateNewSeed() {
             params.seed = Math.floor(Math.random() * 1000000);
             document.getElementById('seed-display').textContent = params.seed;
             regenerate();

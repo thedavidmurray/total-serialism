@@ -671,15 +671,17 @@
       return points;
     }
 
-    // Gosper curve (placeholder - simplified)
+    // Gosper curve (not yet implemented - falls back to Hilbert)
     function generateGosper(order) {
-      // Simplified Gosper curve
+      console.warn('Gosper curve not yet implemented - showing Hilbert curve as placeholder');
+      if (typeof showStatus === 'function') showStatus('Gosper curve not yet implemented - showing Hilbert', 'warning');
       return generateHilbert(order);
     }
 
-    // Sierpinski curve (placeholder - simplified)
+    // Sierpinski curve (not yet implemented - falls back to Hilbert)
     function generateSierpinski(order) {
-      // Simplified Sierpinski curve
+      console.warn('Sierpinski curve not yet implemented - showing Hilbert curve as placeholder');
+      if (typeof showStatus === 'function') showStatus('Sierpinski curve not yet implemented - showing Hilbert', 'warning');
       return generateHilbert(order);
     }
 
