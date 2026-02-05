@@ -126,6 +126,11 @@
             Vortex Frequency: <span id="vortexFreq">2.1</span> Hz
         </div>
 
+        <div class="control">
+            <label>Seed: <span id="seed-display">-</span></label>
+            <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+        </div>
+
         <button onclick="resetSimulation()">Reset Flow</button>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="toggleAnimation()" id="animButton" class="stop">Pause</button>
@@ -155,7 +160,8 @@
             shedding: 0.2,
             showVectors: true,
             showTrails: false,
-            animate: true
+            animate: true,
+            seed: Math.floor(Math.random() * 1000000)
         };
 
     // Canvas controls for color randomization with WCAG AA contrast
@@ -452,6 +458,7 @@
                     params.showVectors = random() > 0.5;
                     params.showTrails = random() > 0.5;
                     params.animate = true;
+                    params.seed = Math.floor(Math.random() * 1000000);
                     updateUIFromParams();
                     resetSimulation();
                 }
@@ -488,6 +495,10 @@
             document.getElementById('obstacleSizeValue').textContent = params.obstacleSize;
             document.getElementById('resolutionValue').textContent = params.resolution;
             document.getElementById('sheddingValue').textContent = params.shedding.toFixed(2);
+
+            // Update seed display
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
         }
 
         function setupControls() {
@@ -551,9 +562,23 @@
             document.getElementById('animate').addEventListener('change', (e) => {
                 params.animate = e.target.checked;
             });
+
+            // Seed control
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
+            document.getElementById('seed').addEventListener('change', (e) => {
+                params.seed = parseInt(e.target.value);
+                document.getElementById('seed-display').textContent = params.seed;
+                randomSeed(params.seed);
+                noiseSeed(params.seed);
+                resetSimulation();
+            });
         }
 
         function resetSimulation() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+
             fluid = new FluidSimulation(params.resolution);
             particles = [];
             streamlines = [];

@@ -398,6 +398,11 @@
       <div class="control-group">
         <h3>⚡ Actions</h3>
 
+        <div class="control">
+          <label>Seed: <span id="seed-display">-</span></label>
+          <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+        </div>
+
         <button onclick="generateCurve()">Generate Curve</button>
 
         <div class="button-group">
@@ -464,7 +469,8 @@
       showStartPoint: false,
       showEndPoint: false,
       showDirection: false,
-      gradientEffect: 'none'
+      gradientEffect: 'none',
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Canvas controls for unified color handling
@@ -505,6 +511,8 @@
         },
         onRandomize: () => {
           const curves = ['hilbert', 'peano', 'moore', 'dragon', 'gosper', 'sierpinski'];
+          params.seed = Math.floor(Math.random() * 1000000);
+          randomSeed(params.seed);
           params.curveType = random(curves);
           params.iteration = Math.floor(random(2, 7));
           params.orientation = Math.floor(random(0, 8)) * 45;
@@ -524,6 +532,12 @@
 
       // Setup param sync with auto-regenerate
       UIUtils.setupParamSync(params, () => generateCurve());
+
+      // Setup seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        generateCurve();
+      });
 
       // Initial generation
       generateCurve();
@@ -584,6 +598,10 @@
           'Complexity': pow(2, params.iteration) + 'x' + pow(2, params.iteration)
         });
       }
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
 
       redraw();
     }

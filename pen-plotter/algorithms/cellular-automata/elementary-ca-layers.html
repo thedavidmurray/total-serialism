@@ -257,6 +257,10 @@
           <option value="symmetric">Symmetric</option>
         </select>
       </div>
+      <div class="control">
+        <label>Seed: <span id="seed-display" class="value">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
     </div>
 
     <div class="control-group">
@@ -293,6 +297,7 @@
       { color: '#45B7D1', start: 50, end: 75 },
       { color: '#96CEB4', start: 75, end: 100 }
     ];
+    let seed = Math.floor(Math.random() * 1000000);
 
     function setup() {
       let canvas = createCanvas(800, 600);
@@ -309,6 +314,10 @@
       history = [];
       cellAge = [];
       generation = 0;
+
+      // Initialize seed
+      randomSeed(seed);
+      noiseSeed(seed);
 
       // Initialize cell age tracking
       for (let i = 0; i < cellWidth; i++) {
@@ -377,6 +386,12 @@
       document.getElementById('cellSize').addEventListener('input', (e) => {
         cellSize = parseInt(e.target.value);
         document.getElementById('cellSize-val').textContent = cellSize;
+      });
+
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        seed = parseInt(e.target.value);
+        generate();
       });
     }
 
@@ -483,6 +498,10 @@
       for (let g = 0; g < cellHeight - 1; g++) {
         stepGeneration();
       }
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = seed;
+      document.getElementById('seed').value = seed;
 
       updateGenerationDisplay();
     }

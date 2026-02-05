@@ -9,6 +9,7 @@
   <title>L-System Tree Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -298,48 +299,85 @@
     }
 
     function exportSVG() {
-      // Create SVG version
-      let svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
-
-      svgCanvas.background(255);
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(2);
-
-      svgCanvas.push();
-      svgCanvas.translate(canvasWidth / 2, canvasHeight - 50);
-
-      // Draw to SVG
+      // Collect line segments by traversing the L-system
+      const segments = [];
       const system = generateLSystem();
-      let len = params.length;
+
+      // State tracking for turtle graphics
+      const state = {
+        x: canvasWidth / 2,
+        y: canvasHeight - 50,
+        angle: -90, // pointing up
+        length: params.length
+      };
+      const stack = [];
 
       for (let char of system) {
         switch (char) {
           case 'F':
-            svgCanvas.line(0, 0, 0, -len);
-            svgCanvas.translate(0, -len);
+            // Draw line from current position
+            const x1 = state.x;
+            const y1 = state.y;
+            const radAngle = radians(state.angle);
+            const x2 = state.x + state.length * cos(radAngle);
+            const y2 = state.y + state.length * sin(radAngle);
+            segments.push({ x1, y1, x2, y2 });
+            state.x = x2;
+            state.y = y2;
             break;
           case '+':
-            svgCanvas.rotate(radians(params.angle));
+            state.angle += params.angle;
             break;
           case '-':
-            svgCanvas.rotate(radians(-params.angle));
+            state.angle -= params.angle;
             break;
           case '[':
-            svgCanvas.push();
-            len *= params.decay;
+            // Save state
+            stack.push({
+              x: state.x,
+              y: state.y,
+              angle: state.angle,
+              length: state.length
+            });
+            state.length *= params.decay;
             break;
           case ']':
-            len /= params.decay;
-            svgCanvas.pop();
+            // Restore state
+            const saved = stack.pop();
+            state.x = saved.x;
+            state.y = saved.y;
+            state.angle = saved.angle;
+            state.length = saved.length;
             break;
         }
       }
 
-      svgCanvas.pop();
+      // Generate SVG from segments
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}">
+<rect width="100%" height="100%" fill="#ffffff"/>
+`;
 
-      // Save the SVG
-      save(svgCanvas, 'lsystem-tree.svg');
-      svgCanvas.remove();
+      for (const seg of segments) {
+        svg += `<line x1="${seg.x1}" y1="${seg.y1}" x2="${seg.x2}" y2="${seg.y2}" stroke="#000000" stroke-width="2" stroke-linecap="round"/>
+`;
+      }
+
+      svg += '</svg>';
+
+      // Need to add import for TSExport if not already present in the HTML
+      if (typeof TSExport !== 'undefined') {
+        TSExport.downloadSVG(svg, 'lsystem-tree');
+      } else {
+        // Fallback download method
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'lsystem-tree.svg';
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
   </script>
 </body>

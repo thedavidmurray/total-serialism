@@ -260,6 +260,10 @@
       <button class="preset-btn" onclick="loadPreset('threeLayer')">Three Layer Ecosystem</button>
       <button class="preset-btn" onclick="loadPreset('rainbow')">Rainbow Cascade</button>
       <button class="preset-btn" onclick="loadPreset('lifeWar')">Life War (4 Teams)</button>
+      <div class="control">
+        <label>Seed: <span id="seed-display" class="value">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
     </div>
 
     <div class="control-group">
@@ -286,6 +290,7 @@
     let cellSize = 10;
     let speed = 5;
     let currentDrawLayer = 0; // Layer ID to draw on
+    let seed = Math.floor(Math.random() * 1000000);
 
     // Layer class
     class Layer {
@@ -440,6 +445,12 @@
       // Draw layer select
       document.getElementById('draw-layer-select').addEventListener('change', (e) => {
         currentDrawLayer = parseInt(e.target.value);
+      });
+
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        seed = parseInt(e.target.value);
+        loadPreset('twoSpecies');
       });
     }
 
@@ -691,6 +702,10 @@
       generation = 0;
       updateGenerationDisplay();
 
+      // Initialize seed
+      randomSeed(seed);
+      noiseSeed(seed);
+
       switch (name) {
         case 'twoSpecies':
           layers = [
@@ -788,6 +803,10 @@
       if (layers.length > 0) {
         currentDrawLayer = layers[0].id;
       }
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = seed;
+      document.getElementById('seed').value = seed;
 
       updateLayerControls();
       updateLayerPreview();

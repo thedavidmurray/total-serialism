@@ -996,47 +996,38 @@
         return;
       }
 
-      // Create temporary SVG canvas
-      const svgCanvas = createGraphics(width, height, SVG);
-
-      svgCanvas.background(params.bgColor);
-
-      // Show source image if requested
-      if (params.showSourceImage && sourceImage) {
-        svgCanvas.push();
-        svgCanvas.tint(255, 100);
-        svgCanvas.image(sourceImage, 0, 0, width, height);
-        svgCanvas.pop();
-      }
+      // Generate manual SVG
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="${params.bgColor}"/>
+`;
 
       // Draw TSP path
-      svgCanvas.stroke(params.strokeColor);
-      svgCanvas.strokeWeight(params.lineWeight);
-      svgCanvas.noFill();
-
-      svgCanvas.beginShape();
-      for (let i = 0; i < tspPath.length; i++) {
-        const p = points[tspPath[i]];
-        svgCanvas.vertex(p.x, p.y);
-      }
-      // Close the loop
       if (tspPath.length > 0) {
-        const p = points[tspPath[0]];
-        svgCanvas.vertex(p.x, p.y);
+        let pathData = '';
+        for (let i = 0; i < tspPath.length; i++) {
+          const p = points[tspPath[i]];
+          pathData += (i === 0 ? 'M ' : 'L ') + p.x + ' ' + p.y + ' ';
+        }
+        // Close the loop
+        const p0 = points[tspPath[0]];
+        pathData += 'L ' + p0.x + ' ' + p0.y;
+
+        svg += `<path d="${pathData}" stroke="${params.strokeColor}" stroke-width="${params.lineWeight}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+`;
       }
-      svgCanvas.endShape();
 
       // Draw points if requested
       if (params.showPoints) {
-        svgCanvas.fill(255, 0, 0);
-        svgCanvas.noStroke();
         for (let p of points) {
-          svgCanvas.circle(p.x, p.y, params.pointSize);
+          svg += `<circle cx="${p.x}" cy="${p.y}" r="${params.pointSize / 2}" fill="#ff0000" stroke="none"/>
+`;
         }
       }
 
-      // Save SVG
-      save(svgCanvas, `tsp-art-${Date.now()}.svg`);
+      svg += '</svg>';
+
+      TSExport.downloadSVG(svg, `tsp-art-${Date.now()}`);
     }
 
     // Export PNG

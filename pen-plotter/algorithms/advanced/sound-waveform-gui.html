@@ -121,6 +121,11 @@
             Peak Amplitude: -- dB
         </div>
 
+        <div class="control">
+            <label>Seed: <span id="seed-display">-</span></label>
+            <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+        </div>
+
         <button onclick="toggleMic()">Start Microphone</button>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="clearCanvas()" class="stop">Clear</button>
@@ -152,7 +157,8 @@
             lineWeight: 2,
             showPeaks: true,
             trails: true,
-            recording: false
+            recording: false,
+            seed: Math.floor(Math.random() * 1000000)
         };
 
     // Canvas controls for color randomization with WCAG AA contrast
@@ -212,6 +218,7 @@
                     params.lineWeight = random(1, 5);
                     params.showPeaks = random() > 0.5;
                     params.trails = random() > 0.5;
+                    params.seed = Math.floor(Math.random() * 1000000);
                     updateUIFromParams();
                     if (micActive) {
                         fft = new p5.FFT(params.smoothing, params.fftBins);
@@ -244,6 +251,12 @@
             document.getElementById('smoothingValue').textContent = params.smoothing.toFixed(2);
             document.getElementById('scaleValue').textContent = params.scale.toFixed(1);
             document.getElementById('lineWeightValue').textContent = params.lineWeight.toFixed(1);
+
+            // Update seed display
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
 
             // Clear history when changing styles
             history = [];
@@ -314,6 +327,16 @@
                     console.log('Recorded', recordedPaths.length, 'paths');
                 }
             });
+
+            // Seed control
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
+            document.getElementById('seed').addEventListener('change', (e) => {
+                params.seed = parseInt(e.target.value);
+                document.getElementById('seed-display').textContent = params.seed;
+                randomSeed(params.seed);
+                noiseSeed(params.seed);
+            });
         }
 
         function toggleMic() {
@@ -346,6 +369,9 @@
         }
 
         function draw() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+
             if (!params.trails) {
                 background(params.bgColor);
             } else {

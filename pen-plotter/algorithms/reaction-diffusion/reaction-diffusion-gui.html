@@ -931,99 +931,142 @@
     
     // Export functions
     function exportSVG() {
-      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
-      svg.background(255);
-      svg.noStroke();
-      svg.fill(0);
-      
+      const scale = 10;
+      const svgWidth = gridSize * scale;
+      const svgHeight = gridSize * scale;
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+<rect width="100%" height="100%" fill="white"/>
+`;
+
       // Draw pattern based on threshold
       for (let x = 0; x < gridSize; x++) {
         for (let y = 0; y < gridSize; y++) {
           if (grid[x][y].b > params.threshold) {
-            svg.rect(x * 10, y * 10, 10, 10);
+            svg += `<rect x="${x * scale}" y="${y * scale}" width="${scale}" height="${scale}" fill="black" stroke="none"/>
+`;
           }
         }
       }
-      
-      save(svg, `reaction-diffusion-${iteration}.svg`);
-      svg.remove();
+
+      svg += '</svg>';
+
+      // Use TSExport if available, otherwise manual download
+      if (typeof TSExport !== 'undefined') {
+        TSExport.downloadSVG(svg, `reaction-diffusion-${iteration}`);
+      } else {
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reaction-diffusion-${iteration}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
     
     function exportContours() {
-      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
-      svg.background(255);
-      svg.noFill();
-      svg.stroke(0);
-      svg.strokeWeight(1);
-      
+      const scale = 10;
+      const svgWidth = gridSize * scale;
+      const svgHeight = gridSize * scale;
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+<rect width="100%" height="100%" fill="white"/>
+`;
+
       // Extract contour lines at different levels
       const levels = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8];
-      
+
       levels.forEach(level => {
-        // Simple contour extraction (marching squares would be better)
+        // Simple contour extraction (marching squares)
         for (let x = 0; x < gridSize - 1; x++) {
           for (let y = 0; y < gridSize - 1; y++) {
             const a = grid[x][y].b > level;
             const b = grid[x + 1][y].b > level;
             const c = grid[x + 1][y + 1].b > level;
             const d = grid[x][y + 1].b > level;
-            
+
             const code = (a ? 8 : 0) + (b ? 4 : 0) + (c ? 2 : 0) + (d ? 1 : 0);
-            
+
             // Draw contour segments based on marching squares cases
-            const px = x * 10;
-            const py = y * 10;
-            
+            const px = x * scale;
+            const py = y * scale;
+
             switch (code) {
               case 1:
               case 14:
-                svg.line(px, py + 5, px + 5, py + 10);
+                svg += `<line x1="${px}" y1="${py + 5}" x2="${px + 5}" y2="${py + 10}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 2:
               case 13:
-                svg.line(px + 5, py + 10, px + 10, py + 5);
+                svg += `<line x1="${px + 5}" y1="${py + 10}" x2="${px + 10}" y2="${py + 5}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 3:
               case 12:
-                svg.line(px, py + 5, px + 10, py + 5);
+                svg += `<line x1="${px}" y1="${py + 5}" x2="${px + 10}" y2="${py + 5}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 4:
               case 11:
-                svg.line(px + 10, py + 5, px + 5, py);
+                svg += `<line x1="${px + 10}" y1="${py + 5}" x2="${px + 5}" y2="${py}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 5:
-                svg.line(px, py + 5, px + 5, py);
-                svg.line(px + 10, py + 5, px + 5, py + 10);
+                svg += `<line x1="${px}" y1="${py + 5}" x2="${px + 5}" y2="${py}" stroke="black" stroke-width="1"/>
+`;
+                svg += `<line x1="${px + 10}" y1="${py + 5}" x2="${px + 5}" y2="${py + 10}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 6:
               case 9:
-                svg.line(px + 5, py, px + 5, py + 10);
+                svg += `<line x1="${px + 5}" y1="${py}" x2="${px + 5}" y2="${py + 10}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 7:
               case 8:
-                svg.line(px, py + 5, px + 5, py);
+                svg += `<line x1="${px}" y1="${py + 5}" x2="${px + 5}" y2="${py}" stroke="black" stroke-width="1"/>
+`;
                 break;
               case 10:
-                svg.line(px + 5, py, px + 10, py + 5);
-                svg.line(px, py + 5, px + 5, py + 10);
+                svg += `<line x1="${px + 5}" y1="${py}" x2="${px + 10}" y2="${py + 5}" stroke="black" stroke-width="1"/>
+`;
+                svg += `<line x1="${px}" y1="${py + 5}" x2="${px + 5}" y2="${py + 10}" stroke="black" stroke-width="1"/>
+`;
                 break;
             }
           }
         }
       });
-      
-      save(svg, `reaction-diffusion-contours-${iteration}.svg`);
-      svg.remove();
+
+      svg += '</svg>';
+
+      // Use TSExport if available, otherwise manual download
+      if (typeof TSExport !== 'undefined') {
+        TSExport.downloadSVG(svg, `reaction-diffusion-contours-${iteration}`);
+      } else {
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reaction-diffusion-contours-${iteration}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
     
     function exportThreshold() {
-      let svg = createGraphics(gridSize * 10, gridSize * 10, SVG);
-      svg.background(255);
-      
+      const scale = 10;
+      const svgWidth = gridSize * scale;
+      const svgHeight = gridSize * scale;
+
       // Group connected regions
       const visited = Array(gridSize).fill(0).map(() => Array(gridSize).fill(false));
       const regions = [];
-      
+
       for (let x = 0; x < gridSize; x++) {
         for (let y = 0; y < gridSize; y++) {
           if (!visited[x][y] && grid[x][y].b > params.threshold) {
@@ -1035,28 +1078,40 @@
           }
         }
       }
-      
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+<rect width="100%" height="100%" fill="white"/>
+`;
+
       // Draw regions
-      svg.noStroke();
-      svg.fill(0);
-      
       regions.forEach(region => {
         region.forEach(point => {
-          svg.rect(point.x * 10, point.y * 10, 10, 10);
+          svg += `<rect x="${point.x * scale}" y="${point.y * scale}" width="${scale}" height="${scale}" fill="black" stroke="none"/>
+`;
         });
       });
-      
+
       // Add metadata
-      svg.push();
-      svg.stroke(0);
-      svg.strokeWeight(0.5);
-      svg.textSize(8);
-      svg.text(`Regions: ${regions.length}`, 10, svg.height - 10);
-      svg.text(`f=${params.feedRate}, k=${params.killRate}`, 10, svg.height - 20);
-      svg.pop();
-      
-      save(svg, `reaction-diffusion-threshold-${iteration}.svg`);
-      svg.remove();
+      svg += `<text x="10" y="${svgHeight - 10}" font-family="monospace" font-size="8" fill="black">Regions: ${regions.length}</text>
+`;
+      svg += `<text x="10" y="${svgHeight - 20}" font-family="monospace" font-size="8" fill="black">f=${params.feedRate}, k=${params.killRate}</text>
+`;
+
+      svg += '</svg>';
+
+      // Use TSExport if available, otherwise manual download
+      if (typeof TSExport !== 'undefined') {
+        TSExport.downloadSVG(svg, `reaction-diffusion-threshold-${iteration}`);
+      } else {
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reaction-diffusion-threshold-${iteration}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
     
     function floodFill(x, y, visited, region) {

@@ -253,6 +253,10 @@
 
     <div class="control-group">
       <h3>Actions</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
       <button id="regenerateBtn">Regenerate</button>
     </div>
 
@@ -312,7 +316,8 @@
       showSources: true,
       paperSize: 'custom',
       bgColor: '#ffffff',
-      strokeColor: '#000000'
+      strokeColor: '#000000',
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Global instances
@@ -370,6 +375,11 @@
         });
       });
 
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        generateWaves();
+      });
+
       document.getElementById('patternType').addEventListener('change', (e) => {
         params.patternType = e.target.value;
         document.getElementById('pattern-info').textContent = patternInfo[params.patternType];
@@ -382,7 +392,8 @@
       });
 
       document.getElementById('regenerateBtn').addEventListener('click', () => {
-        // Randomize phase for visible change
+        // Randomize seed and phase for visible change
+        params.seed = Math.floor(Math.random() * 1000000);
         params.phase = Math.floor(Math.random() * 360);
         document.getElementById('phase').value = params.phase;
         document.getElementById('phase-val').textContent = params.phase;
@@ -424,14 +435,18 @@
       const n = params.sources;
       const margin = 100;
 
+      // Initialize seeded random
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
       switch (params.patternType) {
         case 'circular':
           // Random positions
           for (let i = 0; i < n; i++) {
             sourcePositions.push({
-              x: margin + Math.random() * (SIZE - 2 * margin),
-              y: margin + Math.random() * (SIZE - 2 * margin),
-              amplitude: 0.8 + Math.random() * 0.4
+              x: margin + random(SIZE - 2 * margin),
+              y: margin + random(SIZE - 2 * margin),
+              amplitude: 0.8 + random(0.4)
             });
           }
           break;
@@ -537,6 +552,10 @@
           resolution: { value: `${RESOLUTION}×${RESOLUTION}`, label: 'Grid' }
         });
       }
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
 
       drawWaves();
     }

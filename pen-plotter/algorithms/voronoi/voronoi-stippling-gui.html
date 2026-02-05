@@ -192,6 +192,10 @@
       <button onclick="generate()">Generate</button>
       <button onclick="step()">Step Once</button>
       <button onclick="autoRelax()">Auto Relax</button>
+      <div class="control">
+        <label>Seed: <span id="seed-display" class="value">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
     </div>
 
     <div class="control-group">
@@ -218,7 +222,8 @@
       invertImage: false,
       showVoronoi: false,
       showDelaunay: false,
-      showImage: true
+      showImage: true,
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Canvas controls for color randomization with WCAG AA contrast
@@ -377,6 +382,12 @@
         drawStipples();
       });
 
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        generate();
+      });
+
       // Image upload
       document.getElementById('imageInput').addEventListener('change', handleImageUpload);
 
@@ -486,6 +497,10 @@
 
     function initializePoints() {
       points = [];
+
+      // Initialize seed
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
 
       for (let i = 0; i < params.pointCount; i++) {
         let x, y;
@@ -693,6 +708,10 @@
       currentIteration = 0;
       drawStipples();
 
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
+
       // Update stats display
       if (statsDisplay) {
         statsDisplay.update({
@@ -732,53 +751,41 @@
     }
 
     function exportSVG() {
-      // Create temporary SVG canvas
-      const prevCanvas = canvas;
-      const svgCanvas = createGraphics(width, height, SVG);
+      // Generate manual SVG with circles
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="#ffffff"/>
+`;
 
-      // Draw to SVG canvas
-      svgCanvas.background(255);
-
-      // Draw source image
-      if (params.showImage && sourceImage) {
-        svgCanvas.push();
-        svgCanvas.tint(255, 100);
-        svgCanvas.image(sourceImage, 0, 0, width, height);
-        svgCanvas.pop();
-      }
-
-      // Draw stipples
-      svgCanvas.fill(0);
-      svgCanvas.noStroke();
+      // Draw stipples as circles
       for (const p of points) {
-        svgCanvas.circle(p.x, p.y, params.pointSize);
+        svg += `<circle cx="${p.x}" cy="${p.y}" r="${params.pointSize / 2}" fill="${params.strokeColor}" stroke="none"/>
+`;
       }
 
-      // Save SVG
-      save(svgCanvas, `voronoi-stippling-${Date.now()}.svg`);
+      svg += '</svg>';
+
+      TSExport.downloadSVG(svg, `voronoi-stippling-${Date.now()}`);
     }
 
     // Plotter-ready SVG export (stroke-only, no fills)
     function exportPlotterSVG() {
-      // Create temporary SVG canvas
-      const prevCanvas = canvas;
-      const svgCanvas = createGraphics(width, height, SVG);
+      // Generate manual SVG optimized for pen plotting
+      // NO background - transparent for plotter
+      // NO fills - only strokes
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+`;
 
-      // NO background() call - transparent background for plotter
-      // NO source image rendering for plotter
-
-      // Draw stipples as stroke outlines only
-      svgCanvas.stroke(0); // Black ink
-      svgCanvas.strokeWeight(0.5); // Standard pen weight
-      svgCanvas.noFill(); // No fills, only strokes
-
+      // Draw stipples as stroke circles (no fill)
       for (const p of points) {
-        // Convert filled circles to stroke outlines
-        svgCanvas.circle(p.x, p.y, params.pointSize);
+        svg += `<circle cx="${p.x}" cy="${p.y}" r="${params.pointSize / 2}" stroke="#000000" stroke-width="0.5" fill="none"/>
+`;
       }
 
-      // Save plotter-ready SVG (no background, no fills)
-      save(svgCanvas, `voronoi-stippling-plotter-${Date.now()}.svg`);
+      svg += '</svg>';
+
+      TSExport.downloadSVG(svg, `voronoi-stippling-plotter-${Date.now()}`);
     }
 
     function exportPNG() {
@@ -825,6 +832,7 @@
         params.pointSize = random(0.5, 5);
         params.iterations = Math.floor(random(10, 100));
         params.densityBias = random(0.5, 4);
+        params.seed = Math.floor(Math.random() * 1000000);
 
         // Update UI
         Object.keys(params).forEach(key => {

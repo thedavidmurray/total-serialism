@@ -357,6 +357,14 @@
     </div>
 
     <div class="control-group">
+      <h3>Reproducibility</h3>
+      <div class="control">
+        <label>Seed: <span class="value" id="seed-display">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" value="12345" style="width: 100%; padding: 6px; background: var(--ts-bg-deep, #0a0a1a); border: 1px solid var(--ts-border-default, #2a2a4a); border-radius: 4px; color: var(--ts-text-primary, #e0e0e0); font-family: monospace;">
+      </div>
+    </div>
+
+    <div class="control-group">
       <h3>Presets</h3>
       <button class="preset-btn" onclick="loadPreset('classic')">Classic Slime</button>
       <button class="preset-btn" onclick="loadPreset('web')">Spider Web</button>
@@ -415,6 +423,7 @@
       paperSize: 'a3',
       bgColor: '#ffffff',
       strokeColor: '#000000',
+      seed: Math.floor(Math.random() * 1000000),
       numAgents: 10000,
       sensorAngle: 45,
       sensorDistance: 9,
@@ -541,6 +550,7 @@
           resetSimulation();
         },
         onRandomize: () => {
+          params.seed = Math.floor(Math.random() * 1000000);
           params.numAgents = Math.floor(random(5000, 30000));
           params.sensorAngle = Math.floor(random(10, 80));
           params.sensorDistance = Math.floor(random(3, 30));
@@ -556,6 +566,10 @@
     }
 
     function initializeAgents() {
+      // Seed the random number generator
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
       agents = [];
       const cx = simWidth / 2;
       const cy = simHeight / 2;
@@ -638,6 +652,10 @@
       frameNum = 0;
       initializeAgents();
       addFoodSources();
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
     }
 
     function setupControls() {
@@ -704,6 +722,12 @@
 
       document.getElementById('invertColors').addEventListener('change', (e) => {
         params.invertColors = e.target.checked;
+      });
+
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        resetSimulation();
       });
 
       // Auto regenerate

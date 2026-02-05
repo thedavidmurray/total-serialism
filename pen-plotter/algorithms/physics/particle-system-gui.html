@@ -247,6 +247,10 @@
       <button class="preset-btn" onclick="loadPreset('springs')">Spring Network</button>
       <button class="preset-btn" onclick="loadPreset('planets')">Planetary System</button>
       <button class="preset-btn" onclick="loadPreset('windtunnel')">Wind Tunnel</button>
+      <div class="control">
+        <label>Seed: <span id="seed-display" class="value">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
     </div>
 
     <div class="control-group">
@@ -424,7 +428,8 @@
       trailOpacity: 0.8,
       baseHue: 120,
       saturation: 70,
-      brightness: 80
+      brightness: 80,
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Canvas controls for unified color handling
@@ -535,6 +540,7 @@
           params.baseHue = Math.floor(random(0, 361));
           params.saturation = Math.floor(random(0, 101));
           params.brightness = Math.floor(random(0, 101));
+          params.seed = Math.floor(Math.random() * 1000000);
 
           // Randomize forces
           forces = [];
@@ -658,6 +664,13 @@
       document.getElementById('showForceField').addEventListener('change', (e) => {
         showForceField = e.target.checked;
       });
+
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        particles = [];
+        initializePoints();
+      });
     }
 
     function draw() {
@@ -773,6 +786,10 @@
     }
 
     function spawnParticle() {
+      // Initialize seed for spawning
+      randomSeed(params.seed + frameCount);
+      noiseSeed(params.seed);
+
       let x, y, vx, vy;
 
       switch (params.spawnPattern) {
@@ -1025,6 +1042,10 @@
       particles = [];
       forces = [];
 
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
+
       switch (name) {
         case 'gravity':
           forces.push(new Force('gravity', width/2, height/2));
@@ -1105,71 +1126,77 @@
 
     // Export functions
     function exportSVG() {
-      let svg = createGraphics(width, height, SVG);
-
-      // Set background color based on mode
+      // Generate manual SVG
+      let bgFill = '#ffffff';
       switch (params.backgroundMode) {
         case 'white':
-          svg.background(255);
+          bgFill = '#ffffff';
           break;
         case 'black':
-          svg.background(30);
+          bgFill = '#1e1e1e';
           break;
         case 'gradient':
-          svg.background(30, 30, 60); // Average gradient color
+          bgFill = '#1e1e3c'; // Average gradient color
           break;
       }
 
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="${bgFill}"/>
+`;
+
       // Draw particle trails with colors
-      svg.noFill();
       particles.forEach(p => {
         if (p.trail.length > 1) {
           // Apply particle color to trail
           applyColorMode(p);
-          svg.stroke(red(p.color), green(p.color), blue(p.color));
-          svg.strokeWeight(0.5);
-          svg.beginShape();
-          p.trail.forEach(point => {
-            svg.vertex(point.x, point.y);
+          const r = red(p.color);
+          const g = green(p.color);
+          const b = blue(p.color);
+          const colorStr = `rgb(${Math.round(r)},${Math.round(g)},${Math.round(b)})`;
+
+          let pathData = '';
+          p.trail.forEach((point, idx) => {
+            pathData += (idx === 0 ? 'M ' : 'L ') + point.x + ' ' + point.y + ' ';
           });
-          svg.endShape();
+
+          svg += `<path d="${pathData}" stroke="${colorStr}" stroke-width="0.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+`;
         }
       });
 
-      // Draw force positions
-      const svgForceColor = params.backgroundMode === 'white' ? color(0) : color(255);
-      svg.fill(svgForceColor);
-      svg.noStroke();
-      forces.forEach((force, idx) => {
+      // Draw force positions (simple markers)
+      const forceColor = params.backgroundMode === 'white' ? '#000000' : '#ffffff';
+      forces.forEach((force) => {
         if (force.active) {
-          svg.push();
-          svg.translate(force.position.x, force.position.y);
-          svg.textAlign(CENTER, CENTER);
-          svg.textSize(10);
-          svg.text(force.type, 0, -15);
+          const x = force.position.x;
+          const y = force.position.y;
 
           switch (force.type) {
             case 'gravity':
-              svg.ellipse(0, 0, 10);
+              svg += `<circle cx="${x}" cy="${y}" r="5" fill="${forceColor}" stroke="none"/>
+`;
               break;
             case 'repeller':
-              svg.rectMode(CENTER);
-              svg.rect(0, 0, 10, 10);
+              svg += `<rect x="${x - 5}" y="${y - 5}" width="10" height="10" fill="${forceColor}" stroke="none"/>
+`;
               break;
             case 'vortex':
-              svg.stroke(svgForceColor);
-              svg.strokeWeight(1);
+              // Draw star pattern for vortex
               for (let a = 0; a < TWO_PI; a += PI/3) {
-                svg.line(0, 0, cos(a) * 5, sin(a) * 5);
+                const x2 = x + cos(a) * 5;
+                const y2 = y + sin(a) * 5;
+                svg += `<line x1="${x}" y1="${y}" x2="${x2}" y2="${y2}" stroke="${forceColor}" stroke-width="1"/>
+`;
               }
               break;
           }
-          svg.pop();
         }
       });
 
-      save(svg, `particle-system-${Date.now()}.svg`);
-      svg.remove();
+      svg += '</svg>';
+
+      TSExport.downloadSVG(svg, `particle-system-${Date.now()}`);
     }
 
     function exportSnapshot() {

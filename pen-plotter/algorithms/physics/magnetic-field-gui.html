@@ -284,6 +284,14 @@
     </div>
 
     <div class="control-group">
+      <h3>Seed</h3>
+      <div class="control">
+        <label>Seed: <span class="value" id="seed-display">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
+    </div>
+
+    <div class="control-group">
       <h3>Actions</h3>
       <div class="btn-group">
         <button id="regenerate">Regenerate</button>
@@ -534,7 +542,8 @@
       bgColor: '#ffffff',
       strokeColor: '#000000',
       northColor: '#ff4444',
-      southColor: '#4444ff'
+      southColor: '#4444ff',
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Canvas controls for unified color handling
@@ -616,9 +625,19 @@
       setupControls();
       canvasControls.setupRandomizeButton();
       updateVizModeControls();
+
+      // Wire up seed input
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        initializePoles();
+        generateField();
+      });
     }
 
     function initializePoles() {
+      // Initialize seeded random
+      randomSeed(params.seed);
+
       poles = [];
       const arrangement = params.poleArrangement;
       const n = params.numPoles;
@@ -680,6 +699,8 @@
       }
 
       document.getElementById('pole-count').textContent = poles.length;
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
       updateStats();
     }
 
@@ -814,6 +835,9 @@
     }
 
     function generateIronFilings() {
+      // Initialize seeded random
+      randomSeed(params.seed);
+
       ironFilings = [];
       const count = params.filingCount;
 
@@ -926,6 +950,7 @@
 
       // Randomize poles
       document.getElementById('randomize-poles').addEventListener('click', () => {
+        params.seed = Math.floor(Math.random() * 1000000);
         const savedArrangement = params.poleArrangement;
         params.poleArrangement = 'random';
         initializePoles();

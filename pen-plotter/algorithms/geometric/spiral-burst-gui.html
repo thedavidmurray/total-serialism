@@ -782,29 +782,31 @@
     }
 
     function exportSVG() {
-      // Create SVG version
-      let svgCanvas = createGraphics(width, height, SVG);
-      
-      // Reproduce the current drawing on SVG canvas
+      // Generate manual SVG
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="${params.bgColor}"/>
+`;
+
       if (currentMode === "spiral") {
-        drawSpiralSVG(svgCanvas);
+        svg += generateSpiralSVGPaths();
       } else {
-        drawBurstSVG(svgCanvas);
+        svg += generateBurstSVGPaths();
       }
-      
-      save(svgCanvas, `spiral-burst-${currentMode}-${seed}.svg`);
-      svgCanvas.remove();
+
+      svg += '</svg>';
+
+      TSExport.downloadSVG(svg, `spiral-burst-${currentMode}-${seed}`);
     }
 
-    function drawSpiralSVG(canvas) {
+    function generateSpiralSVGPaths() {
       const p = params;
-      canvas.background(p.bgColor);
-      canvas.noStroke();
-      canvas.fill(p.dotColor);
+      let svgContent = '';
 
-      const cx = p.centerX * canvas.width;
-      const cy = p.centerY * canvas.height;
+      const cx = p.centerX * width;
+      const cy = p.centerY * height;
 
+      // Draw spiral dots
       for (let arm = 0; arm < p.numArms; arm++) {
         const armPhase = map(arm, 0, p.numArms, 0, TWO_PI);
         for (let i = 0; i < p.dotsPerArm; i++) {
@@ -821,24 +823,26 @@
           if (dCenter < p.holeRadius) continue;
 
           const dotSize = p.baseDotSize * (1 + p.dotSizeGrowth * t);
-          canvas.circle(x, y, dotSize);
+          svgContent += `<circle cx="${x}" cy="${y}" r="${dotSize / 2}" fill="${p.dotColor}" stroke="none"/>
+`;
         }
       }
 
-      canvas.fill(p.bgColor);
-      canvas.circle(cx, cy, p.holeRadius * 2);
+      // Draw center hole
+      svgContent += `<circle cx="${cx}" cy="${cy}" r="${p.holeRadius}" fill="${p.bgColor}" stroke="none"/>
+`;
+
+      return svgContent;
     }
 
-    function drawBurstSVG(canvas) {
+    function generateBurstSVGPaths() {
       const p = params;
-      canvas.background(p.bgColor);
-      canvas.strokeCap(SQUARE);
-      canvas.noFill();
+      let svgContent = '';
 
-      const cx = p.centerX * canvas.width;
-      const cy = p.centerY * canvas.height;
+      const cx = p.centerX * width;
+      const cy = p.centerY * height;
 
-      canvas.noiseDetail(3, 0.5);
+      noiseDetail(3, 0.5);
 
       for (let i = 0; i < p.numRays; i++) {
         const baseAngle = map(i, 0, p.numRays, 0, TWO_PI);
@@ -856,45 +860,49 @@
         );
 
         const sw = p.strokeBase + random(p.strokeVariation);
-        canvas.strokeWeight(sw);
 
-        if (i % 3 === 0) canvas.stroke(p.lineColorA);
-        else if (i % 5 === 0) canvas.stroke(p.lineColorB);
-        else canvas.stroke(p.lineColorA + "AA");
+        let strokeColor;
+        if (i % 3 === 0) strokeColor = p.lineColorA;
+        else if (i % 5 === 0) strokeColor = p.lineColorB;
+        else strokeColor = p.lineColorA + "AA";
 
         const x2 = cx + rayLen * cos(angle);
         const y2 = cy + rayLen * sin(angle);
 
-        canvas.line(cx, cy, x2, y2);
+        svgContent += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="${strokeColor}" stroke-width="${sw}" stroke-linecap="square"/>
+`;
       }
+
+      return svgContent;
     }
 
     // NEW: Plotter-ready SVG export (stroke-only, no fills)
     function exportPlotterSVG() {
-      // Create SVG version optimized for pen plotting
-      let svgCanvas = createGraphics(width, height, SVG);
-      
-      // Reproduce the current drawing with plotter-ready settings
+      // Generate manual SVG optimized for pen plotting
+      // NO background - transparent for plotter
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+`;
+
       if (currentMode === "spiral") {
-        drawSpiralPlotter(svgCanvas);
+        svg += generateSpiralPlotterPaths();
       } else {
-        drawBurstPlotter(svgCanvas);
+        svg += generateBurstPlotterPaths();
       }
-      
-      save(svgCanvas, `spiral-burst-${currentMode}-plotter-${seed}.svg`);
-      svgCanvas.remove();
+
+      svg += '</svg>';
+
+      TSExport.downloadSVG(svg, `spiral-burst-${currentMode}-plotter-${seed}`);
     }
 
-    function drawSpiralPlotter(canvas) {
+    function generateSpiralPlotterPaths() {
       const p = params;
-      // NO background() call - transparent background for plotter
-      canvas.stroke(0); // Black ink
-      canvas.strokeWeight(1); // Standard pen weight
-      canvas.noFill(); // No fills, only strokes
+      let svgContent = '';
 
-      const cx = p.centerX * canvas.width;
-      const cy = p.centerY * canvas.height;
+      const cx = p.centerX * width;
+      const cy = p.centerY * height;
 
+      // Draw spiral dots as stroke circles (no fill)
       for (let arm = 0; arm < p.numArms; arm++) {
         const armPhase = map(arm, 0, p.numArms, 0, TWO_PI);
         for (let i = 0; i < p.dotsPerArm; i++) {
@@ -911,26 +919,26 @@
           if (dCenter < p.holeRadius) continue;
 
           const dotSize = p.baseDotSize * (1 + p.dotSizeGrowth * t);
-          // Convert filled dots to stroke circles
-          canvas.circle(x, y, dotSize);
+          svgContent += `<circle cx="${x}" cy="${y}" r="${dotSize / 2}" stroke="#000000" stroke-width="1" fill="none"/>
+`;
         }
       }
 
-      // Convert hole to stroke circle instead of fill
-      canvas.circle(cx, cy, p.holeRadius * 2);
+      // Center hole as stroke circle
+      svgContent += `<circle cx="${cx}" cy="${cy}" r="${p.holeRadius}" stroke="#000000" stroke-width="1" fill="none"/>
+`;
+
+      return svgContent;
     }
 
-    function drawBurstPlotter(canvas) {
+    function generateBurstPlotterPaths() {
       const p = params;
-      // NO background() call - transparent background for plotter
-      canvas.strokeCap(SQUARE);
-      canvas.noFill(); // Ensure no fills
-      canvas.stroke(0); // Black ink only for plotter
+      let svgContent = '';
 
-      const cx = p.centerX * canvas.width;
-      const cy = p.centerY * canvas.height;
+      const cx = p.centerX * width;
+      const cy = p.centerY * height;
 
-      canvas.noiseDetail(3, 0.5);
+      noiseDetail(3, 0.5);
 
       for (let i = 0; i < p.numRays; i++) {
         const baseAngle = map(i, 0, p.numRays, 0, TWO_PI);
@@ -948,13 +956,15 @@
         );
 
         const sw = p.strokeBase + random(p.strokeVariation);
-        canvas.strokeWeight(sw);
 
         const x2 = cx + rayLen * cos(angle);
         const y2 = cy + rayLen * sin(angle);
 
-        canvas.line(cx, cy, x2, y2);
+        svgContent += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="#000000" stroke-width="${sw}" stroke-linecap="square"/>
+`;
       }
+
+      return svgContent;
     }
 
     function exportPNG() {
@@ -969,16 +979,16 @@
 
     function exportLayers() {
       updateExportStatus('Generating layers...');
-      
-      if (currentMode === 'spiral') {
-        // Layer 1: Dots
-        let dotsLayer = createGraphics(width, height, SVG);
-        const p = params;
-        dotsLayer.noStroke();
-        dotsLayer.fill(p.dotColor);
 
+      if (currentMode === 'spiral') {
+        const p = params;
         const cx = p.centerX * width;
         const cy = p.centerY * height;
+
+        // Layer 1: Dots
+        let dotsLayerSVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+`;
 
         for (let arm = 0; arm < p.numArms; arm++) {
           const armPhase = map(arm, 0, p.numArms, 0, TWO_PI);
@@ -996,21 +1006,22 @@
             if (dCenter < p.holeRadius) continue;
 
             const dotSize = p.baseDotSize * (1 + p.dotSizeGrowth * t);
-            dotsLayer.circle(x, y, dotSize);
+            dotsLayerSVG += `<circle cx="${x}" cy="${y}" r="${dotSize / 2}" fill="${p.dotColor}" stroke="none"/>
+`;
           }
         }
 
-        save(dotsLayer, `spiral-layer-dots-${seed}.svg`);
-        dotsLayer.remove();
+        dotsLayerSVG += '</svg>';
+        TSExport.downloadSVG(dotsLayerSVG, `spiral-layer-dots-${seed}`);
 
         // Layer 2: Hole
-        let holeLayer = createGraphics(width, height, SVG);
-        holeLayer.fill(p.bgColor);
-        holeLayer.circle(cx, cy, p.holeRadius * 2);
-        save(holeLayer, `spiral-layer-hole-${seed}.svg`);
-        holeLayer.remove();
+        let holeLayerSVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<circle cx="${cx}" cy="${cy}" r="${p.holeRadius}" fill="${p.bgColor}" stroke="none"/>
+</svg>`;
+        TSExport.downloadSVG(holeLayerSVG, `spiral-layer-hole-${seed}`);
       }
-      
+
       updateExportStatus('Layers exported!');
       setTimeout(() => updateExportStatus(''), 2000);
     }

@@ -250,6 +250,10 @@
 
     <div class="control-group">
       <h3>Export</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
       <button onclick="generateSquiggles()">Generate Squiggles</button>
       <div class="button-group" style="margin-top: 10px;">
         <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
@@ -277,7 +281,8 @@
       amplitude: 20,
       frequency: 0.1,
       spacing: 3,
-      threshold: 128
+      threshold: 128,
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // P5.js setup
@@ -310,6 +315,7 @@
           params.amplitude = Math.floor(Math.random() * 80) + 5;
           params.frequency = Math.random() * 0.4 + 0.02;
           params.spacing = Math.floor(Math.random() * 8) + 1;
+          params.seed = Math.floor(Math.random() * 1000000);
           updateUIFromParams();
           if (img) generateSquiggles();
         }
@@ -356,6 +362,14 @@
       // Checkbox handlers
       document.getElementById('showOriginal').addEventListener('change', () => redraw());
       document.getElementById('showPreview').addEventListener('change', () => redraw());
+
+      // Seed
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        if (img) generateSquiggles();
+      });
+      document.getElementById('seed').value = params.seed;
+      document.getElementById('seed-display').textContent = params.seed;
     }
 
     function draw() {
@@ -424,6 +438,10 @@
       processing = true;
       showStatus('Generating squiggles...', 'processing');
 
+      // Initialize seeded RNG
+      let _s = params.seed;
+      const seededRandom = () => { _s |= 0; _s = _s + 0x6D2B79F5 | 0; let t = Math.imul(_s ^ _s >>> 15, 1 | _s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
       // Clear previous lines
       squiggleLines = [];
 
@@ -487,6 +505,9 @@
       showStatus('Squiggles generated successfully!', 'success');
       document.getElementById('exportBtn').disabled = false;
       document.getElementById('exportPNGBtn').disabled = false;
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
 
       redraw();
     }

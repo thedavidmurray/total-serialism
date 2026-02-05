@@ -110,6 +110,11 @@
             </label>
         </div>
 
+        <div class="control">
+            <label>Seed: <span id="seed-display">-</span></label>
+            <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+        </div>
+
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="generateNew()">Generate New</button>
 
@@ -133,7 +138,8 @@
             rotY: 0,
             rotZ: 0,
             hiddenLines: true,
-            autoRotate: false
+            autoRotate: false,
+            seed: Math.floor(Math.random() * 1000000)
         };
 
     // Canvas controls for color randomization with WCAG AA contrast
@@ -190,6 +196,7 @@
                     params.rotZ = Math.floor(random(0, 360));
                     params.hiddenLines = random() > 0.5;
                     params.autoRotate = random() > 0.5;
+                    params.seed = Math.floor(Math.random() * 1000000);
                     updateUIFromParams();
                     generateSurface();
                 }
@@ -217,6 +224,10 @@
             document.getElementById('rotXValue').textContent = params.rotX;
             document.getElementById('rotYValue').textContent = params.rotY;
             document.getElementById('rotZValue').textContent = params.rotZ;
+
+            // Update seed display
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
         }
 
         function resizeCanvasForPaperSize() {
@@ -275,9 +286,23 @@
                 params.autoRotate = e.target.checked;
                 updateStats();
             });
+
+            // Seed control
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
+            document.getElementById('seed').addEventListener('change', (e) => {
+                params.seed = parseInt(e.target.value);
+                document.getElementById('seed-display').textContent = params.seed;
+                randomSeed(params.seed);
+                noiseSeed(params.seed);
+                generateSurface();
+            });
         }
 
         function generateSurface() {
+            randomSeed(params.seed);
+            noiseSeed(params.seed);
+
             surface = [];
             edges = [];
 

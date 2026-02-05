@@ -104,6 +104,11 @@
             <option value="artistic">Artistic</option>
         </select>
 
+        <div class="control">
+          <label>Seed: <span id="seed-display">-</span></label>
+          <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+        </div>
+
         <h3>Actions</h3>
         <button id="generateBtn">Generate Pattern</button>
         <button id="animateBtn">Animate Formation</button>
@@ -127,7 +132,8 @@
         const params = {
             paperSize: 'square800',
             bgColor: '#ffffff',
-            strokeColor: '#000000'
+            strokeColor: '#000000',
+            seed: Math.floor(Math.random() * 1000000)
         };
 
         // Canvas controls for unified color handling
@@ -220,6 +226,17 @@
             drawPattern();
         });
 
+        document.getElementById('seed').addEventListener('change', (e) => {
+            params.seed = parseInt(e.target.value);
+            currentSeed = params.seed;
+            initializeFields();
+            const steps = parseInt(timeSteps.value);
+            for (let t = 0; t < steps; t++) {
+                simulate();
+            }
+            drawPattern();
+        });
+
         function initializeFields() {
             const gridSize = 100;
             concentrationFieldA = [];
@@ -291,6 +308,10 @@
         }
 
         function diffuse() {
+            // Initialize PRNG at the start of diffuse
+            let _s = params.seed;
+            const seededRandom = () => { _s |= 0; _s = _s + 0x6D2B79F5 | 0; let t = Math.imul(_s ^ _s >>> 15, 1 | _s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+
             const gridSize = 100;
             const DA = parseFloat(diffusionA.value) * 1e-9;
             const DB = parseFloat(diffusionB.value) * 1e-9;
@@ -337,7 +358,7 @@
                     const S = parseFloat(supersaturation.value);
                     const threshold = parseFloat(nucleationThreshold.value);
 
-                    if (ionProduct > Ksp * S && Math.random() < threshold) {
+                    if (ionProduct > Ksp * S && seededRandom() < threshold) {
                         // Precipitation occurs
                         const precipitateAmount = (ionProduct - Ksp) * 0.1;
                         precipitateField[i][j] += precipitateAmount;
@@ -614,7 +635,8 @@
 
         generateBtn.addEventListener('click', () => {
             currentTime = 0;
-            currentSeed = Math.floor(Math.random() * 1000000);
+            params.seed = Math.floor(Math.random() * 1000000);
+            currentSeed = params.seed;
             initializeFields();
 
             // Run full simulation
@@ -624,6 +646,11 @@
             }
 
             drawPattern();
+
+            // Update seed display
+            document.getElementById('seed-display').textContent = params.seed;
+            document.getElementById('seed').value = params.seed;
+
             status.textContent = 'Pattern generated';
         });
 
@@ -744,6 +771,7 @@
 
         // Initialize and generate initial pattern
         currentTime = 0;
+        currentSeed = params.seed;
         initializeFields();
 
         // Run initial simulation to create visible pattern
@@ -753,6 +781,10 @@
         }
 
         drawPattern();
+
+        // Initialize seed display
+        document.getElementById('seed-display').textContent = params.seed;
+        document.getElementById('seed').value = params.seed;
     </script>
 </body>
 </html>

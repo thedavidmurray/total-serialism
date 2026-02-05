@@ -177,6 +177,10 @@
       <button class="pattern-btn" onclick="loadPattern('rpentomino')">R-Pentomino</button>
       <button class="pattern-btn" onclick="loadPattern('acorn')">Acorn</button>
       <button class="pattern-btn" onclick="loadPattern('random')">Random (30%)</button>
+      <div class="control">
+        <label>Seed: <span id="seed-display" class="value">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
     </div>
 
     <div class="control-group">
@@ -240,7 +244,8 @@
       boundary: 'wrap',
       renderStyle: 'squares',
       showGrid: true,
-      showTrails: false
+      showTrails: false,
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     // Canvas controls for color randomization with WCAG AA contrast
@@ -333,6 +338,7 @@
           params.boundary = random(boundaries);
           const styles = ['squares', 'circles', 'diamonds'];
           params.renderStyle = random(styles);
+          params.seed = Math.floor(Math.random() * 1000000);
           updateUIFromParams();
           initializeGrid();
         }
@@ -445,6 +451,12 @@
             }
           }
         });
+      });
+
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        loadPattern('random');
       });
     }
 
@@ -604,6 +616,10 @@
     function loadPattern(patternName) {
       initializeGrid();
 
+      // Initialize seed
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+
       if (patternName === 'random') {
         for (let i = 0; i < params.gridSize; i++) {
           for (let j = 0; j < params.gridSize; j++) {
@@ -639,6 +655,10 @@
           boundary: { value: params.boundary, format: 'raw' }
         });
       }
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
     }
 
     function updateGenerationDisplay() {
@@ -646,39 +666,56 @@
     }
 
     function exportSVG() {
-      let svg = createGraphics(params.gridSize * 10, params.gridSize * 10, SVG);
+      const scale = 10;
+      const svgWidth = params.gridSize * scale;
+      const svgHeight = params.gridSize * scale;
 
-      svg.background(255);
-      svg.noStroke();
-      svg.fill(0);
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="0 0 ${svgWidth} ${svgHeight}">
+<rect width="100%" height="100%" fill="white"/>
+`;
 
       for (let i = 0; i < params.gridSize; i++) {
         for (let j = 0; j < params.gridSize; j++) {
           if (grid[i][j] === 1) {
             switch (params.renderStyle) {
               case 'squares':
-                svg.rect(i * 10, j * 10, 10, 10);
+                svg += `<rect x="${i * scale}" y="${j * scale}" width="${scale}" height="${scale}" fill="black" stroke="none"/>
+`;
                 break;
               case 'circles':
-                svg.ellipse(i * 10 + 5, j * 10 + 5, 8, 8);
+                svg += `<circle cx="${i * scale + 5}" cy="${j * scale + 5}" r="4" fill="black" stroke="none"/>
+`;
                 break;
               case 'dots':
-                svg.ellipse(i * 10 + 5, j * 10 + 5, 3, 3);
+                svg += `<circle cx="${i * scale + 5}" cy="${j * scale + 5}" r="1.5" fill="black" stroke="none"/>
+`;
                 break;
               case 'lines':
-                svg.stroke(0);
-                svg.strokeWeight(1);
-                svg.line(i * 10 + 2, j * 10 + 2, i * 10 + 8, j * 10 + 8);
-                svg.line(i * 10 + 8, j * 10 + 2, i * 10 + 2, j * 10 + 8);
-                svg.noStroke();
+                svg += `<line x1="${i * scale + 2}" y1="${j * scale + 2}" x2="${i * scale + 8}" y2="${j * scale + 8}" stroke="black" stroke-width="1"/>
+`;
+                svg += `<line x1="${i * scale + 8}" y1="${j * scale + 2}" x2="${i * scale + 2}" y2="${j * scale + 8}" stroke="black" stroke-width="1"/>
+`;
                 break;
             }
           }
         }
       }
 
-      save(svg, `game-of-life-gen${generation}.svg`);
-      svg.remove();
+      svg += '</svg>';
+
+      // Use TSExport if available, otherwise manual download
+      if (typeof TSExport !== 'undefined') {
+        TSExport.downloadSVG(svg, `game-of-life-gen${generation}`);
+      } else {
+        const blob = new Blob([svg], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `game-of-life-gen${generation}.svg`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
     }
 
     function exportAnimation() {

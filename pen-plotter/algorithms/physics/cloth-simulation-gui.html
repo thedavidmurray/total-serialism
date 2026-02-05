@@ -289,6 +289,14 @@
     </div>
 
     <div class="control-group">
+      <h3>Seed</h3>
+      <div class="control">
+        <label>Seed: <span class="value" id="seed-display">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
+      </div>
+    </div>
+
+    <div class="control-group">
       <h3>Simulation</h3>
       <div class="btn-group">
         <button id="play-pause">Pause</button>
@@ -838,7 +846,8 @@
       showPins: true,
       showStress: false,
       bgColor: '#ffffff',
-      strokeColor: '#000000'
+      strokeColor: '#000000',
+      seed: Math.floor(Math.random() * 1000000)
     };
 
     canvasControls.bind(params);
@@ -910,9 +919,18 @@
 
       setupControls();
       canvasControls.setupRandomizeButton();
+
+      // Wire up seed input
+      document.getElementById('seed').addEventListener('change', (e) => {
+        params.seed = parseInt(e.target.value);
+        initializeCloth();
+      });
     }
 
     function initializeCloth() {
+      // Initialize seeded random
+      randomSeed(params.seed);
+
       const margin = 60;
       const availWidth = width - margin * 2;
       const availHeight = height - margin * 2;
@@ -941,6 +959,9 @@
           cloth.createHammock(startX, startY, params.gridWidth, params.gridHeight, params.restLength);
           break;
       }
+
+      document.getElementById('seed-display').textContent = params.seed;
+      document.getElementById('seed').value = params.seed;
 
       updateInfoDisplay();
     }
@@ -1245,6 +1266,9 @@
     }
 
     function randomizeParams() {
+      // Randomize seed
+      params.seed = Math.floor(Math.random() * 1000000);
+
       // Randomize colors
       canvasControls.randomizeColors();
       params.bgColor = canvasControls.params.bgColor;

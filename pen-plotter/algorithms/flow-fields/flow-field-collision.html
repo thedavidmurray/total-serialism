@@ -194,6 +194,14 @@
     </div>
 
     <div class="control-group">
+      <h3>Seed</h3>
+      <div class="control">
+        <label>Seed: <span id="seed-display">-</span></label>
+        <input type="number" id="seed" min="1" max="999999" value="12345" style="width: 100%; padding: 6px; background: var(--ts-bg-deep, #0a0a1a); border: 1px solid var(--ts-border-default, #2a2a4a); border-radius: 4px; color: var(--ts-text-primary, #e0e0e0); font-family: monospace;">
+      </div>
+    </div>
+
+    <div class="control-group">
       <h3>Controls</h3>
       <button onclick="generateFlowField()">Generate New Field</button>
       <button onclick="clearCanvas()">Clear Canvas</button>
@@ -224,6 +232,7 @@
     let isPaused = false;
     let totalCollisionsAvoided = 0;
     let svgCanvas;
+    let currentSeed = Math.floor(Math.random() * 1000000);
 
     // Particle class with collision detection
     class Particle {
@@ -402,6 +411,14 @@
     }
 
     function generateFlowField() {
+      // Initialize random seed for reproducibility
+      randomSeed(currentSeed);
+      noiseSeed(currentSeed);
+
+      // Update seed display
+      document.getElementById('seed-display').textContent = currentSeed;
+      document.getElementById('seed').value = currentSeed;
+
       // Clear everything
       particles = [];
       background(255);
@@ -712,6 +729,12 @@
     }
 
     function setupEventListeners() {
+      // Seed control
+      document.getElementById('seed').addEventListener('change', (e) => {
+        currentSeed = parseInt(e.target.value);
+        generateFlowField();
+      });
+
       // Update value displays
       document.querySelectorAll('input[type="range"]').forEach(input => {
         input.addEventListener('input', (e) => {
@@ -728,7 +751,10 @@
       });
 
       // Regenerate field on type change
-      document.getElementById('fieldType').addEventListener('change', generateFlowField);
+      document.getElementById('fieldType').addEventListener('change', () => {
+        currentSeed = Math.floor(Math.random() * 1000000);
+        generateFlowField();
+      });
     }
   </script>
 
