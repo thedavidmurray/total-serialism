@@ -8,6 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>10PRINT Pattern Generator - Total Serialism</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/url-state.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -90,6 +91,8 @@
       <h3>Actions</h3>
       <button onclick="regenerate()">Regenerate Pattern</button>
       <button onclick="exportCanvas()">Export as PNG</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset Container at bottom -->
@@ -115,6 +118,23 @@
       paperSize: 'custom',
       seed: Math.floor(Math.random() * 1000000)
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: '10print-simple',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'cellSize', type: 'int', bytes: 1 },
+        { key: 'probability', type: 'float', bytes: 2, min: 0, max: 1 },
+        { key: 'lineType', type: 'enum', options: ['diagonal', 'straight', 'curved'] },
+        { key: 'strokeWeight', type: 'float', bytes: 2, min: 0.5, max: 5 }
+      ]
+    });
+
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     let canvas;
 
@@ -187,6 +207,9 @@
       document.getElementById('seed-display').textContent = params.seed;
       document.getElementById('seed').value = params.seed;
 
+      // Update URL state
+      urlState.replaceState(params);
+
       for (let x = 0; x < width; x += params.cellSize) {
         for (let y = 0; y < height; y += params.cellSize) {
           if (params.lineType === 'diagonal') {
@@ -220,6 +243,15 @@
 
     function exportCanvas() {
       saveCanvas('10print-pattern', 'png');
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
 </body>

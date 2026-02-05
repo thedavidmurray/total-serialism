@@ -14,6 +14,7 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
@@ -130,6 +131,8 @@
       <button id="reset" class="secondary">Reset</button>
       <button id="clear" class="secondary">Clear Particles</button>
       <button id="clear-trails" class="secondary">Clear Trails</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <div class="control-group">
@@ -435,6 +438,34 @@
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'particle-system',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'paperSize', type: 'enum', options: ['square800', 'landscape800x600', 'a4portrait', 'a4landscape', 'a3portrait', 'a3landscape', 'letterportrait', 'letterlandscape'] },
+        { key: 'spawnRate', type: 'int', bytes: 1 },
+        { key: 'maxParticles', type: 'int', bytes: 2 },
+        { key: 'initialVel', type: 'float', bytes: 2, min: 0, max: 10 },
+        { key: 'particleSize', type: 'int', bytes: 1 },
+        { key: 'spawnPattern', type: 'enum', options: ['point', 'line', 'circle', 'random', 'grid'] },
+        { key: 'trailLength', type: 'int', bytes: 1 },
+        { key: 'colorMode', type: 'enum', options: ['monochrome', 'velocity', 'force', 'age', 'random'] },
+        { key: 'colorPalette', type: 'enum', options: ['default', 'warm', 'cool', 'rainbow', 'custom'] },
+        { key: 'backgroundMode', type: 'enum', options: ['white', 'black', 'gradient'] },
+        { key: 'trailOpacity', type: 'float', bytes: 1, min: 0.1, max: 1 },
+        { key: 'baseHue', type: 'int', bytes: 2 },
+        { key: 'saturation', type: 'int', bytes: 1 },
+        { key: 'brightness', type: 'int', bytes: 1 }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
@@ -1113,6 +1144,9 @@
 
       updateForceControls();
 
+      // Update URL with current state
+      urlState.replaceState(params);
+
       // Update UI
       Object.keys(params).forEach(key => {
         const element = document.getElementById(key);
@@ -1121,6 +1155,18 @@
           const valueDisplay = document.getElementById(key + '-val');
           if (valueDisplay) valueDisplay.textContent = params[key];
         }
+      });
+    }
+
+    // Copy share URL function
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
       });
     }
 

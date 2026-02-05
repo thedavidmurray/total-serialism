@@ -15,6 +15,7 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -395,6 +396,9 @@
 
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="exportPNG()">Export PNG</button>
+
+        <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+        <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
       </div>
 
     <!-- Statistics -->
@@ -449,7 +453,34 @@
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
-        canvasControls.setupRandomizeButton();
+    canvasControls.setupRandomizeButton();
+
+    // URL State Management
+    const urlState = new TSUrlState({
+      algorithmId: 'tsp-art',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'pointCount', type: 'int', bytes: 2 },
+        { key: 'threshold', type: 'int', bytes: 1 },
+        { key: 'densityBias', type: 'float', bytes: 2, min: 0.5, max: 3 },
+        { key: 'optIterations', type: 'int', bytes: 2 },
+        { key: 'lineWeight', type: 'float', bytes: 2, min: 0.5, max: 5 },
+        { key: 'pointSize', type: 'float', bytes: 2, min: 1, max: 10 },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'pointMode', type: 'enum', options: ['random', 'image', 'grid', 'poisson', 'manual'] },
+        { key: 'tspAlgorithm', type: 'enum', options: ['nearestNeighbor', '2opt', 'both'] },
+        { key: 'showPoints', type: 'bool' },
+        { key: 'showPath', type: 'bool' },
+        { key: 'showSourceImage', type: 'bool' }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // p5.js setup
     function setup() {
@@ -501,6 +532,11 @@
           solveTSP();
         }
       });
+
+      // Apply URL params to UI if loaded
+      if (window.location.search.includes('s=')) {
+        updateUIFromParams();
+      }
 
       generatePoints();
       solveTSP();
@@ -722,9 +758,13 @@
           const improvement = ((initialLength - finalLength) / initialLength * 100).toFixed(1);
           updateStats(finalLength, initialLength, '2-Opt');
           showProgress(false);
+          // Update URL state
+          urlState.replaceState(params);
         }, 100);
       } else {
         showProgress(false);
+        // Update URL state
+        urlState.replaceState(params);
       }
     }
 
@@ -1041,6 +1081,17 @@
         points.push({ x: mouseX, y: mouseY });
         updateStats();
       }
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
     }
   </script>
 </body>

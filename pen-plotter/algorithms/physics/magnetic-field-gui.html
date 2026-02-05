@@ -14,6 +14,7 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
@@ -456,6 +457,8 @@
       <button class="export-btn" onclick="toggleGifRecording()">
         <span id="gif-record-text">Record GIF</span>
       </button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
       <div id="gif-progress">
         <div>Recording: <span id="gif-status">Preparing...</span></div>
         <div class="progress-bar">
@@ -545,6 +548,42 @@
       southColor: '#4444ff',
       seed: Math.floor(Math.random() * 1000000)
     };
+
+    // URL State Management
+    const urlState = new TSUrlState({
+      algorithmId: 'magnetic-field',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'paperSize', type: 'enum', options: ['square', 'a4', 'a3', 'a3-landscape', 'letter'] },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'northColor', type: 'color' },
+        { key: 'southColor', type: 'color' },
+        { key: 'numPoles', type: 'int', bytes: 1, min: 1, max: 8 },
+        { key: 'poleStrength', type: 'int', bytes: 2, min: 10, max: 500 },
+        { key: 'poleArrangement', type: 'enum', options: ['dipole', 'random', 'circle', 'line', 'grid'] },
+        { key: 'alternatePoles', type: 'bool' },
+        { key: 'linesPerPole', type: 'int', bytes: 1, min: 4, max: 48 },
+        { key: 'maxLineLength', type: 'int', bytes: 2, min: 100, max: 2000 },
+        { key: 'stepSize', type: 'int', bytes: 1, min: 1, max: 10 },
+        { key: 'integrationMethod', type: 'enum', options: ['rk4', 'euler'] },
+        { key: 'vizMode', type: 'enum', options: ['fieldLines', 'ironFilings', 'both', 'vectors'] },
+        { key: 'filingCount', type: 'int', bytes: 2, min: 500, max: 10000 },
+        { key: 'filingSize', type: 'int', bytes: 1, min: 2, max: 20 },
+        { key: 'filingWeight', type: 'float', bytes: 1, min: 0.3, max: 3 },
+        { key: 'vectorGrid', type: 'int', bytes: 1, min: 10, max: 60 },
+        { key: 'arrowScale', type: 'int', bytes: 1, min: 5, max: 40 },
+        { key: 'showPoles', type: 'bool' },
+        { key: 'poleSize', type: 'int', bytes: 1, min: 5, max: 40 },
+        { key: 'lineWeight', type: 'float', bytes: 1, min: 0.3, max: 4 }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
@@ -872,6 +911,21 @@
       }
       needsRedraw = true;
       updateStats();
+
+      // Update URL
+      urlState.replaceState(params);
+    }
+
+    // Copy Share URL
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
     }
 
     function updateStats() {

@@ -13,6 +13,7 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -392,6 +393,8 @@
       <button id="exportSVG">Export SVG</button>
       <button id="exportPNG">Export PNG</button>
       <button id="exportGIF" class="export-btn">Export Animated GIF</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
       <div id="gif-progress">
         <div id="gif-status">Preparing...</div>
         <div class="progress-bar">
@@ -438,6 +441,36 @@
       trailThreshold: 10,
       invertColors: false
     };
+
+    // URL State Management
+    const urlState = new TSUrlState({
+      algorithmId: 'physarum',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'paperSize', type: 'enum', options: ['a4', 'a3', 'letter', 'square', 'a5'] },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'numAgents', type: 'int', bytes: 2, min: 1000, max: 50000 },
+        { key: 'sensorAngle', type: 'int', bytes: 1, min: 0, max: 90 },
+        { key: 'sensorDistance', type: 'int', bytes: 1, min: 1, max: 50 },
+        { key: 'turnAngle', type: 'int', bytes: 1, min: 0, max: 90 },
+        { key: 'moveSpeed', type: 'float', bytes: 1, min: 0.5, max: 5 },
+        { key: 'depositAmount', type: 'int', bytes: 1, min: 1, max: 50 },
+        { key: 'decayRate', type: 'float', bytes: 2, min: 0.8, max: 0.999 },
+        { key: 'diffusionRate', type: 'float', bytes: 1, min: 0, max: 3 },
+        { key: 'foodSource', type: 'enum', options: ['none', 'center', 'edges', 'random', 'ring', 'grid'] },
+        { key: 'foodStrength', type: 'int', bytes: 1, min: 0, max: 255 },
+        { key: 'renderMode', type: 'enum', options: ['trail', 'agents', 'both', 'network'] },
+        { key: 'trailThreshold', type: 'int', bytes: 1, min: 1, max: 100 },
+        { key: 'invertColors', type: 'bool' }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls({
@@ -656,6 +689,21 @@
       // Update seed display
       document.getElementById('seed-display').textContent = params.seed;
       document.getElementById('seed').value = params.seed;
+
+      // Update URL
+      urlState.replaceState(params);
+    }
+
+    // Copy Share URL
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
     }
 
     function setupControls() {

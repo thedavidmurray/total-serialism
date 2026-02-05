@@ -15,6 +15,7 @@
     <script src="../../shared/export-utils.js"></script>
     <script src="../../shared/panel-controller.js"></script>
     <script src="../../shared/stats-display.js"></script>
+    <script src="../../shared/url-state.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -129,6 +130,8 @@
         <button onclick="toggleMic()">Start Microphone</button>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="clearCanvas()" class="stop">Clear</button>
+        <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+        <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
 
         <!-- Preset Manager Container -->
         <div id="preset-container"></div>
@@ -160,6 +163,31 @@
             recording: false,
             seed: Math.floor(Math.random() * 1000000)
         };
+
+        // URL state management
+        const urlState = new TSUrlState({
+            algorithmId: 'sound-waveform',
+            schema: [
+                { key: 'vizStyle', type: 'enum', options: ['oscilloscope', 'radial', 'spiral', 'waterfall', 'frequency', 'circular'] },
+                { key: 'fftBins', type: 'int', bytes: 2, min: 64, max: 1024 },
+                { key: 'freqMin', type: 'int', bytes: 2, min: 20, max: 1000 },
+                { key: 'freqMax', type: 'int', bytes: 2, min: 1000, max: 20000 },
+                { key: 'smoothing', type: 'float', bytes: 2, min: 0, max: 0.99 },
+                { key: 'scale', type: 'float', bytes: 2, min: 0.5, max: 3 },
+                { key: 'lineWeight', type: 'float', bytes: 2, min: 1, max: 5 },
+                { key: 'showPeaks', type: 'bool' },
+                { key: 'trails', type: 'bool' },
+                { key: 'recording', type: 'bool' },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'seed', type: 'int', bytes: 4 }
+            ]
+        });
+
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+        }
 
     // Canvas controls for color randomization with WCAG AA contrast
     const canvasControls = new TSCanvasControls({
@@ -260,6 +288,16 @@
 
             // Clear history when changing styles
             history = [];
+            urlState.replaceState(params);
+        }
+
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl(params);
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => { statusEl.textContent = 'Copy failed'; });
         }
 
         function setupControls() {

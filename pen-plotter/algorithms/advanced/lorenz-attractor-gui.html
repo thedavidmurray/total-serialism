@@ -87,6 +87,11 @@
       <button class="secondary" id="exportPNG">Export PNG</button>
     </div>
 
+    <div class="btn-row">
+      <button class="secondary" onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
+    </div>
+
     <hr style="border-color: var(--ts-border-default); margin: 12px 0;">
 
     <div class="control-group">
@@ -127,6 +132,7 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <script>
     const params = {
       attractorType: 'lorenz',
@@ -143,6 +149,30 @@
       strokeColor: '#000000',
       seed: Math.floor(Math.random() * 1000000)
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'lorenz-attractor',
+      schema: [
+        { key: 'attractorType', type: 'enum', options: ['lorenz', 'rossler', 'thomas', 'aizawa', 'halvorsen'] },
+        { key: 'iterations', type: 'int', bytes: 4 },
+        { key: 'dt', type: 'float', bytes: 2, min: 0.001, max: 0.02 },
+        { key: 'scale', type: 'float', bytes: 2, min: 3, max: 25 },
+        { key: 'rotX', type: 'int', bytes: 2, min: -90, max: 90 },
+        { key: 'rotZ', type: 'int', bytes: 2, min: -180, max: 180 },
+        { key: 'strokeWeight', type: 'float', bytes: 2, min: 0.2, max: 2 },
+        { key: 'showAxes', type: 'bool' },
+        { key: 'multiPath', type: 'bool' },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'seed', type: 'int', bytes: 4 }
+      ]
+    });
+
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
@@ -316,6 +346,16 @@
       }
 
       drawAttractor();
+      urlState.replaceState(params);
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
 
     function computePath(x0, y0, z0) {

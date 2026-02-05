@@ -14,6 +14,7 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/path-optimizer.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -298,6 +299,8 @@
       <h3>Controls</h3>
       <button onclick="generatePattern()">Generate New Pattern</button>
       <button onclick="randomizePattern()">Randomize</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
       <label><input type="checkbox" id="optimizeForPlotter" checked> Optimize for Plotter</label>
       <div class="button-group">
         <button onclick="exportSVG()">Export SVG</button>
@@ -316,6 +319,44 @@
     // svgCanvas removed - using manual SVG generation
     let currentSeed;
     let currentPaperSize = 'square800';
+
+    // Initialize URL state
+    const urlState = new TSUrlState({
+      algorithmId: 'zellige-pattern',
+      schema: [
+        { key: 'patternType', type: 'enum', options: ['classic8', 'hexagonal', 'star16', 'safavid', 'geometric'] },
+        { key: 'complexity', type: 'int', bytes: 1 },
+        { key: 'tileSize', type: 'int', bytes: 1 },
+        { key: 'spacing', type: 'float', bytes: 1, min: 0, max: 10 },
+        { key: 'rotationOffset', type: 'int', bytes: 1 },
+        { key: 'lineWeight', type: 'float', bytes: 1, min: 0.1, max: 3 },
+        { key: 'repetitions', type: 'int', bytes: 1 },
+        { key: 'innerRadius', type: 'int', bytes: 2 },
+        { key: 'outerRadius', type: 'int', bytes: 2 },
+        { key: 'showConstruction', type: 'bool' },
+        { key: 'fillShapes', type: 'bool' },
+        { key: 'colorCode', type: 'bool' },
+        { key: 'showSymmetry', type: 'bool' }
+      ]
+    });
+
+    // Load URL params if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      if (urlParams.patternType) document.getElementById('patternType').value = urlParams.patternType;
+      if (urlParams.complexity) document.getElementById('complexity').value = urlParams.complexity;
+      if (urlParams.tileSize) document.getElementById('tileSize').value = urlParams.tileSize;
+      if (urlParams.spacing !== undefined) document.getElementById('spacing').value = urlParams.spacing;
+      if (urlParams.rotationOffset !== undefined) document.getElementById('rotationOffset').value = urlParams.rotationOffset;
+      if (urlParams.lineWeight) document.getElementById('lineWeight').value = urlParams.lineWeight;
+      if (urlParams.repetitions) document.getElementById('repetitions').value = urlParams.repetitions;
+      if (urlParams.innerRadius) document.getElementById('innerRadius').value = urlParams.innerRadius;
+      if (urlParams.outerRadius) document.getElementById('outerRadius').value = urlParams.outerRadius;
+      if (urlParams.showConstruction !== undefined) document.getElementById('showConstruction').checked = urlParams.showConstruction;
+      if (urlParams.fillShapes !== undefined) document.getElementById('fillShapes').checked = urlParams.fillShapes;
+      if (urlParams.colorCode !== undefined) document.getElementById('colorCode').checked = urlParams.colorCode;
+      if (urlParams.showSymmetry !== undefined) document.getElementById('showSymmetry').checked = urlParams.showSymmetry;
+    }
 
     // Paper size definitions
     const PAPER_SIZES = {
@@ -413,6 +454,9 @@
       const repetitions = parseInt(document.getElementById('repetitions').value);
       const innerRadius = parseFloat(document.getElementById('innerRadius').value);
       const outerRadius = parseFloat(document.getElementById('outerRadius').value);
+
+      // Update URL state
+      updateUrlState();
 
       // Generate tiles based on pattern type
       switch (patternType) {
@@ -843,6 +887,49 @@ ${svgContent}</svg>`;
       setTimeout(() => {
         status.style.display = 'none';
       }, 3000);
+    }
+
+    function updateUrlState() {
+      const params = {
+        patternType: document.getElementById('patternType').value,
+        complexity: parseInt(document.getElementById('complexity').value),
+        tileSize: parseInt(document.getElementById('tileSize').value),
+        spacing: parseFloat(document.getElementById('spacing').value),
+        rotationOffset: parseInt(document.getElementById('rotationOffset').value),
+        lineWeight: parseFloat(document.getElementById('lineWeight').value),
+        repetitions: parseInt(document.getElementById('repetitions').value),
+        innerRadius: parseInt(document.getElementById('innerRadius').value),
+        outerRadius: parseInt(document.getElementById('outerRadius').value),
+        showConstruction: document.getElementById('showConstruction').checked,
+        fillShapes: document.getElementById('fillShapes').checked,
+        colorCode: document.getElementById('colorCode').checked,
+        showSymmetry: document.getElementById('showSymmetry').checked
+      };
+      urlState.replaceState(params);
+    }
+
+    function copyShareUrl() {
+      const params = {
+        patternType: document.getElementById('patternType').value,
+        complexity: parseInt(document.getElementById('complexity').value),
+        tileSize: parseInt(document.getElementById('tileSize').value),
+        spacing: parseFloat(document.getElementById('spacing').value),
+        rotationOffset: parseInt(document.getElementById('rotationOffset').value),
+        lineWeight: parseFloat(document.getElementById('lineWeight').value),
+        repetitions: parseInt(document.getElementById('repetitions').value),
+        innerRadius: parseInt(document.getElementById('innerRadius').value),
+        outerRadius: parseInt(document.getElementById('outerRadius').value),
+        showConstruction: document.getElementById('showConstruction').checked,
+        fillShapes: document.getElementById('fillShapes').checked,
+        colorCode: document.getElementById('colorCode').checked,
+        showSymmetry: document.getElementById('showSymmetry').checked
+      };
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
 </body>

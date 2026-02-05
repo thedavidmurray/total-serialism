@@ -14,6 +14,7 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/path-optimizer.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -299,6 +300,8 @@
       <h3>Controls</h3>
       <button onclick="generatePattern()">Generate New Pattern</button>
       <button onclick="randomizePattern()">Randomize</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
       <label><input type="checkbox" id="optimizeForPlotter" checked> Optimize for Plotter</label>
       <div class="button-group">
         <button onclick="exportSVG()">Export SVG</button>
@@ -317,6 +320,45 @@
     // svgCanvas removed - using manual SVG generation
     let currentSeed;
     let currentPaperSize = 'square800';
+
+    // Initialize URL state
+    const urlState = new TSUrlState({
+      algorithmId: 'kumiko-pattern',
+      schema: [
+        { key: 'patternType', type: 'enum', options: ['asanoha', 'seigaiha', 'shippo', 'yosegi', 'kikko', 'sakura'] },
+        { key: 'density', type: 'int', bytes: 1 },
+        { key: 'moduleSize', type: 'int', bytes: 1 },
+        { key: 'lineThickness', type: 'float', bytes: 1, min: 1, max: 8 },
+        { key: 'jointSize', type: 'int', bytes: 1 },
+        { key: 'strokeWeight', type: 'float', bytes: 1, min: 0.1, max: 3 },
+        { key: 'rotation', type: 'int', bytes: 1 },
+        { key: 'offsetX', type: 'int', bytes: 1 },
+        { key: 'offsetY', type: 'int', bytes: 1 },
+        { key: 'showJoints', type: 'bool' },
+        { key: 'showOverUnder', type: 'bool' },
+        { key: 'showGrid', type: 'bool' },
+        { key: 'doubleLines', type: 'bool' }
+      ]
+    });
+
+    // Load URL params if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      // Apply URL params to controls
+      if (urlParams.patternType) document.getElementById('patternType').value = urlParams.patternType;
+      if (urlParams.density) document.getElementById('density').value = urlParams.density;
+      if (urlParams.moduleSize) document.getElementById('moduleSize').value = urlParams.moduleSize;
+      if (urlParams.lineThickness) document.getElementById('lineThickness').value = urlParams.lineThickness;
+      if (urlParams.jointSize) document.getElementById('jointSize').value = urlParams.jointSize;
+      if (urlParams.strokeWeight) document.getElementById('strokeWeight').value = urlParams.strokeWeight;
+      if (urlParams.rotation !== undefined) document.getElementById('rotation').value = urlParams.rotation;
+      if (urlParams.offsetX !== undefined) document.getElementById('offsetX').value = urlParams.offsetX;
+      if (urlParams.offsetY !== undefined) document.getElementById('offsetY').value = urlParams.offsetY;
+      if (urlParams.showJoints !== undefined) document.getElementById('showJoints').checked = urlParams.showJoints;
+      if (urlParams.showOverUnder !== undefined) document.getElementById('showOverUnder').checked = urlParams.showOverUnder;
+      if (urlParams.showGrid !== undefined) document.getElementById('showGrid').checked = urlParams.showGrid;
+      if (urlParams.doubleLines !== undefined) document.getElementById('doubleLines').checked = urlParams.doubleLines;
+    }
 
     // Paper size definitions
     const PAPER_SIZES = {
@@ -354,6 +396,9 @@
       const patternType = document.getElementById('patternType').value;
       const density = parseInt(document.getElementById('density').value);
       const moduleSize = parseFloat(document.getElementById('moduleSize').value);
+
+      // Update URL state
+      updateUrlState();
 
       // Generate pattern based on type
       switch (patternType) {
@@ -1020,6 +1065,49 @@ ${svgElements}  </g>
       setTimeout(() => {
         status.style.display = 'none';
       }, 3000);
+    }
+
+    function updateUrlState() {
+      const params = {
+        patternType: document.getElementById('patternType').value,
+        density: parseInt(document.getElementById('density').value),
+        moduleSize: parseInt(document.getElementById('moduleSize').value),
+        lineThickness: parseFloat(document.getElementById('lineThickness').value),
+        jointSize: parseInt(document.getElementById('jointSize').value),
+        strokeWeight: parseFloat(document.getElementById('strokeWeight').value),
+        rotation: parseInt(document.getElementById('rotation').value),
+        offsetX: parseInt(document.getElementById('offsetX').value),
+        offsetY: parseInt(document.getElementById('offsetY').value),
+        showJoints: document.getElementById('showJoints').checked,
+        showOverUnder: document.getElementById('showOverUnder').checked,
+        showGrid: document.getElementById('showGrid').checked,
+        doubleLines: document.getElementById('doubleLines').checked
+      };
+      urlState.replaceState(params);
+    }
+
+    function copyShareUrl() {
+      const params = {
+        patternType: document.getElementById('patternType').value,
+        density: parseInt(document.getElementById('density').value),
+        moduleSize: parseInt(document.getElementById('moduleSize').value),
+        lineThickness: parseFloat(document.getElementById('lineThickness').value),
+        jointSize: parseInt(document.getElementById('jointSize').value),
+        strokeWeight: parseFloat(document.getElementById('strokeWeight').value),
+        rotation: parseInt(document.getElementById('rotation').value),
+        offsetX: parseInt(document.getElementById('offsetX').value),
+        offsetY: parseInt(document.getElementById('offsetY').value),
+        showJoints: document.getElementById('showJoints').checked,
+        showOverUnder: document.getElementById('showOverUnder').checked,
+        showGrid: document.getElementById('showGrid').checked,
+        doubleLines: document.getElementById('doubleLines').checked
+      };
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
 </body>

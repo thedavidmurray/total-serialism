@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -120,6 +121,8 @@
     <div class="buttons-row">
       <button id="regenerate">Regenerate</button>
       <button id="export">Export SVG</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset container at bottom -->
@@ -144,6 +147,22 @@
       axiom: 'F',
       rules: { 'F': 'FF+[+F-F-F]-[-F+F+F]' }
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'tree-lsystem',
+      schema: [
+        { key: 'iterations', type: 'int', bytes: 1 },
+        { key: 'length', type: 'int', bytes: 1 },
+        { key: 'angle', type: 'int', bytes: 1 },
+        { key: 'decay', type: 'float', bytes: 2, min: 0.5, max: 0.9 }
+      ]
+    });
+
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     const presets = {
       simple: {
@@ -253,6 +272,9 @@
       drawLSystem(system);
 
       pop();
+
+      // Update URL state after drawing
+      urlState.replaceState(params);
     }
 
     function drawLSystem(system) {
@@ -296,6 +318,15 @@
       });
 
       drawTree();
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
 
     function exportSVG() {

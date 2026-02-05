@@ -15,6 +15,7 @@
     <script src="../../shared/export-utils.js"></script>
     <script src="../../shared/panel-controller.js"></script>
     <script src="../../shared/stats-display.js"></script>
+    <script src="../../shared/url-state.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -134,6 +135,8 @@
         <button onclick="resetSimulation()">Reset Flow</button>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="toggleAnimation()" id="animButton" class="stop">Pause</button>
+        <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+        <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
 
         <!-- Preset Manager Container -->
         <div id="preset-container"></div>
@@ -163,6 +166,31 @@
             animate: true,
             seed: Math.floor(Math.random() * 1000000)
         };
+
+        // URL state management
+        const urlState = new TSUrlState({
+            algorithmId: 'vortex-street',
+            schema: [
+                { key: 'obstacleShape', type: 'enum', options: ['cylinder', 'square', 'airfoil', 'triangle'] },
+                { key: 'reynolds', type: 'int', bytes: 2, min: 10, max: 500 },
+                { key: 'flowSpeed', type: 'float', bytes: 2, min: 0.5, max: 5 },
+                { key: 'obstacleSize', type: 'int', bytes: 1, min: 20, max: 80 },
+                { key: 'vizMode', type: 'enum', options: ['streamlines', 'vorticity', 'pressure', 'velocity', 'combined'] },
+                { key: 'resolution', type: 'int', bytes: 1, min: 32, max: 128 },
+                { key: 'shedding', type: 'float', bytes: 2, min: 0.1, max: 0.5 },
+                { key: 'showVectors', type: 'bool' },
+                { key: 'showTrails', type: 'bool' },
+                { key: 'animate', type: 'bool' },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'seed', type: 'int', bytes: 4 }
+            ]
+        });
+
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+        }
 
     // Canvas controls for color randomization with WCAG AA contrast
     const canvasControls = new TSCanvasControls({
@@ -608,6 +636,16 @@
 
             document.getElementById('strouhalNumber').textContent = St.toFixed(2);
             document.getElementById('vortexFreq').textContent = f.toFixed(1);
+            urlState.replaceState(params);
+        }
+
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl(params);
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => { statusEl.textContent = 'Copy failed'; });
         }
 
         function draw() {

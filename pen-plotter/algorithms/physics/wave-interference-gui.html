@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
 
@@ -258,6 +259,8 @@
         <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
       </div>
       <button id="regenerateBtn">Regenerate</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <div class="control-group">
@@ -327,6 +330,31 @@
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'wave-interference',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'patternType', type: 'enum', options: ['circular', 'linear', 'radial', 'grid'] },
+        { key: 'sources', type: 'int', bytes: 1 },
+        { key: 'wavelength', type: 'int', bytes: 1 },
+        { key: 'contourLevels', type: 'int', bytes: 1 },
+        { key: 'decay', type: 'float', bytes: 2, min: 0, max: 0.01 },
+        { key: 'phase', type: 'int', bytes: 2 },
+        { key: 'strokeWeight', type: 'float', bytes: 2, min: 0.2, max: 2 },
+        { key: 'showSources', type: 'bool' },
+        { key: 'paperSize', type: 'enum', options: ['custom', 'a5', 'a4', 'a3', 'a3-landscape', 'square'] },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     const patternInfo = {
       circular: 'Multiple circular wave sources',
@@ -557,7 +585,22 @@
       document.getElementById('seed-display').textContent = params.seed;
       document.getElementById('seed').value = params.seed;
 
+      // Update URL with current state
+      urlState.replaceState(params);
+
       drawWaves();
+    }
+
+    // Copy share URL function
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
     }
 
     function marchingSquares(grid, threshold) {

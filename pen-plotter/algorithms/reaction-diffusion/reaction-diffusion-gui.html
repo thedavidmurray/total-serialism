@@ -15,6 +15,7 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
   <!-- Total Serialism Design System -->
@@ -287,6 +288,10 @@
       <div class="control">
         <button id="randomizeAll" class="ts-btn">🎨 Randomize Colors</button>
       </div>
+      <div class="control">
+        <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+        <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
+      </div>
     </div>
 
     <div class="control-group">
@@ -441,6 +446,33 @@
       strokeColor: params.strokeColor || '#000000'
     });
     canvasControls.bind(params);
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'reaction-diffusion-gui',
+      schema: [
+        { key: 'paperSize', type: 'enum', options: ['A4_landscape', 'A4_portrait', 'A3_landscape', 'A3_portrait', 'letter_landscape', 'letter_portrait', 'square_medium', 'square_large'] },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'feedRate', type: 'float', bytes: 2, min: 0.01, max: 0.1 },
+        { key: 'killRate', type: 'float', bytes: 2, min: 0.01, max: 0.1 },
+        { key: 'dA', type: 'float', bytes: 2, min: 0.5, max: 1.5 },
+        { key: 'dB', type: 'float', bytes: 2, min: 0.1, max: 0.8 },
+        { key: 'speed', type: 'int', bytes: 1 },
+        { key: 'threshold', type: 'float', bytes: 2, min: 0, max: 1 },
+        { key: 'renderMode', type: 'enum', options: ['grayscale', 'heatmap', 'contour', 'threshold', 'gradient', 'duotone'] },
+        { key: 'gridSize', type: 'int', bytes: 2 },
+        { key: 'cellSize', type: 'int', bytes: 1 }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+      gridSize = params.gridSize || gridSize;
+      cellSize = params.cellSize || cellSize;
+    }
 
     // Laplacian kernel for diffusion
     const laplacian = [
@@ -721,6 +753,13 @@
           'Status': isPaused ? 'Paused' : 'Running'
         });
       }
+
+      // Update URL state
+      urlState.replaceState({
+        ...params,
+        gridSize,
+        cellSize
+      });
     }
     
     function update() {
@@ -1215,6 +1254,21 @@
       gif.render();
     }
     
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl({
+        ...params,
+        gridSize,
+        cellSize
+      });
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
+    }
+
     // Mouse interaction for adding seeds
     function mousePressed() {
       const totalSize = gridSize * cellSize;

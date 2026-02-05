@@ -14,6 +14,7 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <script src="../../preset-manager.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   <script src="../../shared/panel-controller.js"></script>
@@ -306,6 +307,8 @@
       <div class="interaction-hint">
         Click and drag particles to interact. Hold SHIFT to pin/unpin points.
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <div class="control-group">
@@ -852,6 +855,39 @@
 
     canvasControls.bind(params);
 
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'cloth-simulation',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'paperSize', type: 'enum', options: ['square', 'a4', 'a3', 'a4-landscape', 'a3-landscape', 'letter'] },
+        { key: 'simMode', type: 'enum', options: ['string', 'cloth', 'net', 'curtain', 'hammock'] },
+        { key: 'gridWidth', type: 'int', bytes: 1 },
+        { key: 'gridHeight', type: 'int', bytes: 1 },
+        { key: 'restLength', type: 'int', bytes: 1 },
+        { key: 'gravity', type: 'float', bytes: 2, min: 0, max: 2 },
+        { key: 'windStrength', type: 'float', bytes: 2, min: 0, max: 2 },
+        { key: 'windDirection', type: 'int', bytes: 2 },
+        { key: 'stiffness', type: 'int', bytes: 1 },
+        { key: 'damping', type: 'float', bytes: 2, min: 0.9, max: 1 },
+        { key: 'pinMode', type: 'enum', options: ['top', 'corners', 'topCorners', 'sides', 'hammock', 'none'] },
+        { key: 'enableTearing', type: 'bool' },
+        { key: 'tearThreshold', type: 'int', bytes: 1 },
+        { key: 'drawMode', type: 'enum', options: ['mesh', 'horizontal', 'vertical', 'fill', 'points'] },
+        { key: 'lineThickness', type: 'float', bytes: 1, min: 0.5, max: 5 },
+        { key: 'showPins', type: 'bool' },
+        { key: 'showStress', type: 'bool' },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
+
     // ============================================
     // P5.JS SETUP
     // ============================================
@@ -964,6 +1000,9 @@
       document.getElementById('seed').value = params.seed;
 
       updateInfoDisplay();
+
+      // Update URL with current state
+      urlState.replaceState(params);
     }
 
     function resizeCanvasForPaperSize() {
@@ -1382,6 +1421,20 @@
 
       updateUIFromParams();
       initializeCloth();
+    }
+
+    // ============================================
+    // SHARE URL FUNCTION
+    // ============================================
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
     }
 
     // ============================================

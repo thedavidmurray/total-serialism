@@ -14,6 +14,7 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -176,6 +177,8 @@
         <button id="exportSVG">Export SVG</button>
         <button id="exportPNG">Export PNG</button>
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset Container -->
@@ -204,6 +207,34 @@
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
     canvasControls.bind(params);
+
+    // URL State - compact shareable URLs
+    const urlState = new TSUrlState({
+      algorithmId: 'mandelbrot-julia',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'paperSize', type: 'enum', options: ['square800', 'landscape800x600', 'a4portrait', 'a4landscape', 'a3portrait', 'a3landscape', 'letterportrait', 'letterlandscape'], default: 'square800' },
+        { key: 'bgColor', type: 'color', default: '#ffffff' },
+        { key: 'strokeColor', type: 'color', default: '#000000' },
+        { key: 'fractalType', type: 'enum', options: ['mandelbrot', 'julia'], default: 'mandelbrot' },
+        { key: 'juliaReal', type: 'float', bytes: 2, min: -1.5, max: 1.5, default: -0.7 },
+        { key: 'juliaImag', type: 'float', bytes: 2, min: -1.5, max: 1.5, default: 0.27 },
+        { key: 'maxIter', type: 'int', bytes: 1, default: 50 },
+        { key: 'contourLevels', type: 'int', bytes: 1, default: 12 },
+        { key: 'zoom', type: 'float', bytes: 2, min: 0.5, max: 100, default: 1 },
+        { key: 'centerX', type: 'float', bytes: 2, min: -2, max: 2, default: 0 },
+        { key: 'centerY', type: 'float', bytes: 2, min: -2, max: 2, default: 0 },
+        { key: 'strokeWeight', type: 'float', bytes: 1, min: 0.2, max: 2, default: 0.5 },
+        { key: 'showBoundary', type: 'bool', default: true },
+        { key: 'rotation', type: 'int', bytes: 2, default: 0 }
+      ]
+    });
+
+    // Load params from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // Famous Julia set constants
     const juliaPresets = [
@@ -280,6 +311,36 @@
 
       setupControls();
       canvasControls.setupRandomizeButton();
+
+      // Sync UI controls with URL params
+      if (window.location.search.includes('s=')) {
+        document.getElementById('paperSize').value = params.paperSize;
+        document.getElementById('bgColor').value = params.bgColor;
+        document.getElementById('strokeColor').value = params.strokeColor;
+        document.getElementById('fractalType').value = params.fractalType;
+        document.getElementById('juliaReal').value = params.juliaReal;
+        document.getElementById('juliaReal-val').textContent = params.juliaReal;
+        document.getElementById('juliaImag').value = params.juliaImag;
+        document.getElementById('juliaImag-val').textContent = params.juliaImag;
+        document.getElementById('maxIter').value = params.maxIter;
+        document.getElementById('maxIter-val').textContent = params.maxIter;
+        document.getElementById('contourLevels').value = params.contourLevels;
+        document.getElementById('contourLevels-val').textContent = params.contourLevels;
+        document.getElementById('zoom').value = params.zoom;
+        document.getElementById('zoom-val').textContent = params.zoom;
+        document.getElementById('centerX').value = params.centerX;
+        document.getElementById('centerX-val').textContent = params.centerX;
+        document.getElementById('centerY').value = params.centerY;
+        document.getElementById('centerY-val').textContent = params.centerY;
+        document.getElementById('strokeWeight').value = params.strokeWeight;
+        document.getElementById('strokeWeight-val').textContent = params.strokeWeight;
+        document.getElementById('showBoundary').checked = params.showBoundary;
+        document.getElementById('rotation').value = params.rotation;
+        document.getElementById('rotation-val').textContent = params.rotation;
+        document.getElementById('seed').value = params.seed;
+        document.getElementById('juliaParams').classList.toggle('visible', params.fractalType === 'julia');
+      }
+
       generateFractal();
     }
 
@@ -515,6 +576,9 @@
       document.getElementById('seed-display').textContent = params.seed;
       document.getElementById('seed').value = params.seed;
 
+      // Update URL state
+      urlState.replaceState(params);
+
       drawFractal();
     }
 
@@ -604,6 +668,17 @@
       return TSExport.createSVG(paths, width, height, {
         backgroundColor: params.bgColor,
         strokeWidth: params.strokeWeight
+      });
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
       });
     }
   </script>

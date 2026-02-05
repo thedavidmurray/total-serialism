@@ -264,6 +264,8 @@
         <label>Seed: <span id="seed-display" class="value">-</span></label>
         <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <div class="control-group">
@@ -291,6 +293,33 @@
     let speed = 5;
     let currentDrawLayer = 0; // Layer ID to draw on
     let seed = Math.floor(Math.random() * 1000000);
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'game-of-life-layers',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'gridSize', type: 'int', bytes: 1 },
+        { key: 'cellSize', type: 'int', bytes: 1 },
+        { key: 'speed', type: 'int', bytes: 1 }
+      ]
+    });
+
+    // Load from URL if present
+    if (window.location.search.includes('s=')) {
+      const urlParams = urlState.fromUrl();
+      if (urlParams.seed !== undefined) seed = urlParams.seed;
+      if (urlParams.gridSize !== undefined) gridSize = urlParams.gridSize;
+      if (urlParams.cellSize !== undefined) cellSize = urlParams.cellSize;
+      if (urlParams.speed !== undefined) speed = urlParams.speed;
+      // Update UI elements with loaded values
+      document.getElementById('gridSize').value = gridSize;
+      document.getElementById('gridSize-val').textContent = gridSize;
+      document.getElementById('cellSize').value = cellSize;
+      document.getElementById('cellSize-val').textContent = cellSize;
+      document.getElementById('speed').value = speed;
+      document.getElementById('speed-val').textContent = speed;
+    }
 
     // Layer class
     class Layer {
@@ -808,6 +837,9 @@
       document.getElementById('seed-display').textContent = seed;
       document.getElementById('seed').value = seed;
 
+      // Update URL state
+      urlState.replaceState({ seed, gridSize, cellSize, speed });
+
       updateLayerControls();
       updateLayerPreview();
       updateDrawLayerSelect();
@@ -1057,6 +1089,18 @@ ${content}
 
       gif.render();
     }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl({ seed, gridSize, cellSize, speed });
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
+    }
   </script>
+  <script src="../../shared/url-state.js"></script>
 </body>
 </html>

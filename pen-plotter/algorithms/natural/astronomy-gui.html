@@ -317,6 +317,8 @@
       <button onclick="exportPNG()">PNG</button>
       <button onclick="exportGIF()">GIF</button>
     </div>
+    <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+    <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
 
     <div class="preset-container">
       <!-- Preset controls can be added here -->
@@ -326,6 +328,7 @@
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/url-state.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script src="../../shared/panel-controller.js"></script>
     <script src="../../shared/stats-display.js"></script>
@@ -334,8 +337,59 @@
             paperSize: 'square800',
             bgColor: '#000000',
             strokeColor: '#ffffff',
-            seed: Math.floor(Math.random() * 1000000)
+            seed: Math.floor(Math.random() * 1000000),
+            viewType: 'starmap',
+            latitude: 40,
+            longitude: -74,
+            projection: 'stereographic',
+            magnitude: 4,
+            starSize: 2,
+            showGrid: true,
+            showLabels: true,
+            showConstellationLines: true,
+            showPlanets: true,
+            animationSpeed: 10
         };
+
+        // URL State Management
+        const urlState = new TSUrlState({
+            algorithmId: 'astronomy',
+            schema: [
+                { key: 'seed', type: 'int', bytes: 4 },
+                { key: 'paperSize', type: 'enum', options: ['square800', 'landscape800x600', 'a4portrait', 'a4landscape', 'a3portrait', 'a3landscape', 'letterportrait', 'letterlandscape'] },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'viewType', type: 'enum', options: ['starmap', 'constellations', 'solar-system', 'moon-phases', 'eclipse'] },
+                { key: 'latitude', type: 'int', bytes: 1, min: -90, max: 90 },
+                { key: 'longitude', type: 'int', bytes: 2, min: -180, max: 180 },
+                { key: 'projection', type: 'enum', options: ['stereographic', 'orthographic', 'mercator', 'azimuthal'] },
+                { key: 'magnitude', type: 'float', bytes: 1, min: 1, max: 6 },
+                { key: 'starSize', type: 'float', bytes: 1, min: 0.5, max: 5 },
+                { key: 'showGrid', type: 'bool' },
+                { key: 'showLabels', type: 'bool' },
+                { key: 'showConstellationLines', type: 'bool' },
+                { key: 'showPlanets', type: 'bool' },
+                { key: 'animationSpeed', type: 'int', bytes: 1, min: 1, max: 100 }
+            ]
+        });
+
+        // Load from URL if present
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+            // Apply initial URL params to inputs
+            if (urlParams.viewType) document.getElementById('viewType').value = urlParams.viewType;
+            if (urlParams.latitude !== undefined) document.getElementById('latitude').value = urlParams.latitude;
+            if (urlParams.longitude !== undefined) document.getElementById('longitude').value = urlParams.longitude;
+            if (urlParams.projection) document.getElementById('projection').value = urlParams.projection;
+            if (urlParams.magnitude !== undefined) document.getElementById('magnitude').value = urlParams.magnitude;
+            if (urlParams.starSize !== undefined) document.getElementById('starSize').value = urlParams.starSize;
+            if (urlParams.showGrid !== undefined) document.getElementById('showGrid').checked = urlParams.showGrid;
+            if (urlParams.showLabels !== undefined) document.getElementById('showLabels').checked = urlParams.showLabels;
+            if (urlParams.showConstellationLines !== undefined) document.getElementById('showConstellationLines').checked = urlParams.showConstellationLines;
+            if (urlParams.showPlanets !== undefined) document.getElementById('showPlanets').checked = urlParams.showPlanets;
+            if (urlParams.animationSpeed !== undefined) document.getElementById('animationSpeed').value = urlParams.animationSpeed;
+        }
 
         // Canvas controls for unified color handling
         const canvasControls = new TSCanvasControls();
@@ -886,6 +940,22 @@
             document.getElementById('seed-display').textContent = params.seed;
             document.getElementById('seed').value = params.seed;
 
+            // Update params from UI
+            params.viewType = document.getElementById('viewType').value;
+            params.latitude = parseFloat(document.getElementById('latitude').value);
+            params.longitude = parseFloat(document.getElementById('longitude').value);
+            params.projection = document.getElementById('projection').value;
+            params.magnitude = parseFloat(document.getElementById('magnitude').value);
+            params.starSize = parseFloat(document.getElementById('starSize').value);
+            params.showGrid = document.getElementById('showGrid').checked;
+            params.showLabels = document.getElementById('showLabels').checked;
+            params.showConstellationLines = document.getElementById('showConstellationLines').checked;
+            params.showPlanets = document.getElementById('showPlanets').checked;
+            params.animationSpeed = parseInt(document.getElementById('animationSpeed').value);
+
+            // Update URL
+            urlState.replaceState(params);
+
             // Update stats display
             if (window.statsDisplay) {
                 const stats = {};
@@ -1100,6 +1170,18 @@
             }
         });
         
+        // Copy Share URL
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl(params);
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => {
+                statusEl.textContent = 'Copy failed';
+            });
+        }
+
         // Initial generation
         generateView();
     </script>

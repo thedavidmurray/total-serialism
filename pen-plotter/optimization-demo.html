@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pen Plotter Optimization Demo</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.min.js"></script>
+  <script src="shared/path-optimizer.js"></script>
+  <script src="shared/serial-composer.js"></script>
+  <script src="shared/workflow-utils.js"></script>
+  <script src="shared/algorithm-optimizers.js"></script>
+  <script src="shared/smart-presets.js"></script>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .control-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: inline-block;
+      width: 150px;
+      font-weight: 500;
+      color: #333;
+    }
+
+    select, input[type="number"] {
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+
+    button:hover {
+      background: #1976D2;
+    }
+
+    button.secondary {
+      background: #4CAF50;
+    }
+
+    button.secondary:hover {
+      background: #45a049;
+    }
+
+    .canvas-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .canvas-panel {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .canvas-panel h3 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    #stats {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .stat-card {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2196F3;
+      margin-bottom: 5px;
+    }
+
+    .stat-detail {
+      font-size: 11px;
+      color: #999;
+    }
+
+    #comparison {
+      margin-top: 20px;
+    }
+
+    .log {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 10px;
+    }
+
+    .log-entry {
+      margin: 2px 0;
+    }
+
+    .log-entry.info {
+      color: #4EC9B0;
+    }
+
+    .log-entry.success {
+      color: #4CAF50;
+    }
+
+    .log-entry.warning {
+      color: #FFA500;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🖊️ Pen Plotter Optimization Demo</h1>
+    <p class="subtitle">Demonstrates all advanced optimization features</p>
+
+    <div class="controls">
+      <h3>Algorithm Settings</h3>
+
+      <div class="control-group">
+        <label>Algorithm:</label>
+        <select id="algorithmSelect">
+          <option value="serialFlowField">Serial Flow Field</option>
+          <option value="serialGeometric">Serial Geometric</option>
+          <option value="adaptiveFlow">Adaptive Flow Field</option>
+          <option value="smartHatching">Smart Hatching</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Paper Size:</label>
+        <select id="paperSize">
+          <option value="A6">A6 (105x148mm)</option>
+          <option value="A5">A5 (148x210mm)</option>
+          <option value="A4" selected>A4 (210x297mm)</option>
+          <option value="A3">A3 (297x420mm)</option>
+          <option value="Letter">Letter</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Optimization Preset:</label>
+        <select id="presetSelect">
+          <option value="draft">Draft (Fast)</option>
+          <option value="balanced" selected>Balanced (Recommended)</option>
+          <option value="highQuality">High Quality (Slow)</option>
+          <option value="largeFormat">Large Format</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Order Method:</label>
+        <select id="orderMethod">
+          <option value="nearestNeighbor">Nearest Neighbor</option>
+          <option value="lookAhead" selected>Look-Ahead</option>
+          <option value="multiStart">Multi-Start TSP</option>
+          <option value="twoOpt">2-Opt TSP</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>Complexity:</label>
+        <input type="number" id="complexity" value="50" min="10" max="500">
+      </div>
+
+      <div style="margin-top: 20px;">
+        <button onclick="generate()">🎨 Generate</button>
+        <button onclick="optimize()">⚡ Optimize</button>
+        <button class="secondary" onclick="exportToVpypeline()">🔧 Export to vpypeline</button>
+        <button class="secondary" onclick="batchGenerate()">📦 Batch Generate (10)</button>
+      </div>
+    </div>
+
+    <div class="canvas-container">
+      <div class="canvas-panel">
+        <h3>Original</h3>
+        <div id="originalCanvas"></div>
+      </div>
+
+      <div class="canvas-panel">
+        <h3>Optimized</h3>
+        <div id="optimizedCanvas"></div>
+      </div>
+    </div>
+
+    <div id="stats">
+      <h3>Optimization Statistics</h3>
+      <div id="statsContent">
+        <p style="color: #999;">Generate an algorithm to see statistics</p>
+      </div>
+    </div>
+
+    <div id="comparison"></div>
+
+    <div class="controls">
+      <h3>Console Log</h3>
+      <div id="log" class="log"></div>
+    </div>
+  </div>
+
+  <script>
+    // Global state
+    let originalPaths = [];
+    let optimizedPaths = [];
+    let currentAlgorithm = 'serialFlowField';
+
+    // Override console.log to show in UI
+    const originalLog = console.log;
+    console.log = function(...args) {
+      originalLog.apply(console, args);
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = 'log-entry info';
+      entry.textContent = args.join(' ');
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    };
+
+    // p5.js sketches
+    let originalSketch, optimizedSketch;
+
+    function setupP5() {
+      // Original canvas
+      originalSketch = new p5(sketch => {
+        sketch.setup = () => {
+          sketch.createCanvas(400, 400);
+          sketch.background(255);
+          sketch.noLoop();
+        };
+
+        sketch.draw = () => {
+          sketch.background(255);
+          sketch.stroke(0);
+          sketch.strokeWeight(1);
+          sketch.noFill();
+
+          drawPaths(sketch, originalPaths);
+        };
+      }, 'originalCanvas');
+
+      // Optimized canvas
+      optimizedSketch = new p5(sketch => {
+        sketch.setup = () => {
+          sketch.createCanvas(400, 400);
+          sketch.background(255);
+          sketch.noLoop();
+        };
+
+        sketch.draw = () => {
+          sketch.background(255);
+          sketch.stroke(0);
+          sketch.strokeWeight(1);
+          sketch.noFill();
+
+          drawPaths(sketch, optimizedPaths);
+
+          // Draw pen-up travel in light gray
+          sketch.stroke(200);
+          sketch.strokeWeight(0.5);
+          for (let i = 0; i < optimizedPaths.length - 1; i++) {
+            const end = optimizedPaths[i][optimizedPaths[i].length - 1];
+            const start = optimizedPaths[i + 1][0];
+            sketch.line(end.x, end.y, start.x, start.y);
+          }
+        };
+      }, 'optimizedCanvas');
+    }
+
+    function drawPaths(sketch, paths) {
+      paths.forEach(path => {
+        if (path.length < 2) return;
+
+        sketch.beginShape();
+        path.forEach(point => {
+          sketch.vertex(point.x, point.y);
+        });
+        sketch.endShape();
+      });
+    }
+
+    function generate() {
+      const algorithm = document.getElementById('algorithmSelect').value;
+      const complexity = parseInt(document.getElementById('complexity').value);
+
+      console.log(`Generating ${algorithm} with complexity ${complexity}...`);
+
+      switch (algorithm) {
+        case 'serialFlowField':
+          originalPaths = generateSerialFlowField(complexity);
+          break;
+        case 'serialGeometric':
+          originalPaths = generateSerialGeometric(complexity);
+          break;
+        case 'adaptiveFlow':
+          originalPaths = generateAdaptiveFlow(complexity);
+          break;
+        case 'smartHatching':
+          originalPaths = generateSmartHatching(complexity);
+          break;
+      }
+
+      console.log(`✓ Generated ${originalPaths.length} paths`);
+
+      optimizedPaths = [...originalPaths];
+      originalSketch.redraw();
+      optimizedSketch.redraw();
+
+      updateStats();
+    }
+
+    function generateSerialFlowField(complexity) {
+      const steps = Math.floor(Math.sqrt(complexity));
+
+      // Use serial composer for structured variation
+      const result = serialComposer.serialFlowField({
+        width: 400,
+        height: 400
+      }, {
+        xSteps: steps,
+        ySteps: steps
+      });
+
+      return result;
+    }
+
+    function generateSerialGeometric(complexity) {
+      return serialComposer.serialGeometric({
+        width: 400,
+        height: 400
+      }, {
+        shapeCount: complexity
+      });
+    }
+
+    function generateAdaptiveFlow(complexity) {
+      // Flow function
+      const flowFunc = (x, y) => ({
+        vx: Math.sin(x * 0.01) * Math.cos(y * 0.01),
+        vy: Math.cos(x * 0.01) * Math.sin(y * 0.01)
+      });
+
+      // Generate start points
+      const startPoints = [];
+      const gridSize = Math.sqrt(complexity);
+      for (let i = 0; i < gridSize; i++) {
+        for (let j = 0; j < gridSize; j++) {
+          startPoints.push({
+            x: (i / gridSize) * 400,
+            y: (j / gridSize) * 400
+          });
+        }
+      }
+
+      return algorithmOptimizers.adaptiveFlowField(flowFunc, startPoints, {
+        canvas: { width: 400, height: 400 }
+      });
+    }
+
+    function generateSmartHatching(complexity) {
+      // Create a simple polygon
+      const polygon = [];
+      const sides = 6;
+      const radius = 150;
+      const cx = 200;
+      const cy = 200;
+
+      for (let i = 0; i < sides; i++) {
+        const angle = (i / sides) * Math.PI * 2;
+        polygon.push({
+          x: cx + Math.cos(angle) * radius,
+          y: cy + Math.sin(angle) * radius
+        });
+      }
+
+      const spacing = 400 / complexity;
+
+      return algorithmOptimizers.smartHatch(polygon, {
+        spacing: spacing,
+        angle: 45,
+        crossHatch: true,
+        clipToShape: true
+      });
+    }
+
+    function optimize() {
+      if (originalPaths.length === 0) {
+        console.log('⚠ Generate an algorithm first!');
+        return;
+      }
+
+      const presetName = document.getElementById('presetSelect').value;
+      const paperSize = document.getElementById('paperSize').value;
+      const orderMethod = document.getElementById('orderMethod').value;
+
+      console.log(`Optimizing with ${presetName} preset for ${paperSize}...`);
+
+      // Get preset and scale for paper size
+      let preset = smartPresets.getPreset(presetName);
+      preset = smartPresets.scaleSettingsForPaper(preset, paperSize);
+
+      // Override order method
+      preset.settings.orderMethod = orderMethod;
+
+      // Optimize
+      const startTime = Date.now();
+      optimizedPaths = pathOptimizer.optimizeAllPaths(originalPaths, preset.settings);
+      const duration = Date.now() - startTime;
+
+      console.log(`✓ Optimization complete in ${(duration/1000).toFixed(2)}s`);
+
+      optimizedSketch.redraw();
+      updateStats();
+    }
+
+    function updateStats() {
+      if (originalPaths.length === 0) return;
+
+      const presetName = document.getElementById('presetSelect').value;
+      const preset = smartPresets.getPreset(presetName);
+
+      const report = pathOptimizer.generateReport(
+        originalPaths,
+        optimizedPaths,
+        preset
+      );
+
+      const statsDiv = document.getElementById('statsContent');
+      statsDiv.innerHTML = `
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-label">Path Reduction</div>
+            <div class="stat-value">${report.pathReduction}%</div>
+            <div class="stat-detail">${report.savings.pathsSaved} paths saved</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Length Reduction</div>
+            <div class="stat-value">${report.lengthReduction}%</div>
+            <div class="stat-detail">${report.savings.mmSaved}mm saved</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Travel Reduction</div>
+            <div class="stat-value">${report.penUpReduction}%</div>
+            <div class="stat-detail">${report.savings.penUpSaved}mm saved</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Estimated Plot Time</div>
+            <div class="stat-value">${report.estimatedTime.totalMinutes}m</div>
+            <div class="stat-detail">${report.estimatedTime.penLifts} pen lifts</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Drawing Time</div>
+            <div class="stat-value">${report.estimatedTime.drawingMinutes}m</div>
+            <div class="stat-detail">${report.estimatedTime.drawingLength}mm</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Travel Time</div>
+            <div class="stat-value">${report.estimatedTime.travelMinutes}m</div>
+            <div class="stat-detail">${report.estimatedTime.travelLength}mm</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function exportToVpypeline() {
+      if (optimizedPaths.length === 0) {
+        console.log('⚠ Optimize first!');
+        return;
+      }
+
+      // Convert paths to SVG (simplified)
+      const svg = pathsToSVG(optimizedPaths);
+
+      // Export to vpypeline
+      workflowUtils.exportToVpypeline(svg);
+      console.log('✓ Exported to vpypeline.ayrep.fr');
+    }
+
+    function pathsToSVG(paths) {
+      let svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">';
+
+      paths.forEach(path => {
+        if (path.length < 2) return;
+
+        let pathData = `M ${path[0].x} ${path[0].y}`;
+        for (let i = 1; i < path.length; i++) {
+          pathData += ` L ${path[i].x} ${path[i].y}`;
+        }
+
+        svg += `<path d="${pathData}" stroke="black" fill="none"/>`;
+      });
+
+      svg += '</svg>';
+      return svg;
+    }
+
+    async function batchGenerate() {
+      console.log('Starting batch generation of 10 variations...');
+
+      const algorithm = document.getElementById('algorithmSelect').value;
+
+      // Define parameter ranges
+      const paramRanges = {
+        complexity: { min: 20, max: 100, type: 'int' }
+      };
+
+      // Create simple algorithm function
+      const algorithmFunc = async (params) => {
+        // Generate based on selected algorithm
+        let paths;
+        switch (algorithm) {
+          case 'serialFlowField':
+            paths = generateSerialFlowField(params.complexity);
+            break;
+          case 'serialGeometric':
+            paths = generateSerialGeometric(params.complexity);
+            break;
+          default:
+            paths = generateSerialFlowField(params.complexity);
+        }
+
+        return { paths: paths };
+      };
+
+      // Run batch
+      const batch = await workflowUtils.batchGenerate(
+        algorithmFunc,
+        paramRanges,
+        10,
+        {
+          autoOptimize: true,
+          optimizeOptions: smartPresets.getPreset('balanced').settings,
+          onProgress: (current, total) => {
+            console.log(`Batch progress: ${current}/${total}`);
+          }
+        }
+      );
+
+      // Sort by plot time
+      const sorted = workflowUtils.sortBatchResults(batch.id, 'plotTime');
+
+      console.log(`✓ Batch complete! Fastest plot: ${sorted[0].timeEstimate.totalMinutes} minutes`);
+
+      // Load the fastest result
+      originalPaths = sorted[0].paths;
+      optimizedPaths = sorted[0].optimizedPaths;
+
+      originalSketch.redraw();
+      optimizedSketch.redraw();
+      updateStats();
+    }
+
+    // Initialize
+    setupP5();
+    console.log('🎨 Pen Plotter Optimization Demo Ready!');
+    console.log('📖 Click Generate to create artwork, then Optimize to see improvements');
+  </script>
+</body>
+</html>

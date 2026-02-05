@@ -10,6 +10,7 @@
     <script src="../../shared/canvas-layout.js"></script>
     <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/url-state.js"></script>
 
     <!-- Total Serialism Design System -->
     <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -125,6 +126,8 @@
         <button id="exportSVG">Export SVG</button>
         <button id="exportPNG">Export PNG</button>
         <button id="exportGIF">Export Animation GIF</button>
+        <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+        <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
         <progress id="animationProgress" value="0" max="100" style="display: none; width: 100%; margin-top: 10px;"></progress>
         <div class="status" id="status" style="font-size: 12px; color: var(--ts-text-muted); margin-top: 10px;"></div>
 
@@ -143,6 +146,47 @@
             strokeColor: '#000000',
             seed: Math.floor(Math.random() * 1000000)
         };
+
+        // URL state configuration
+        const urlState = new TSUrlState({
+            algorithmId: 'chromatography',
+            schema: [
+                { key: 'seed', type: 'int', bytes: 4 },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'chromType', type: 'enum', options: ['tlc', 'column', 'hplc', 'gc', '2d'] },
+                { key: 'plateCount', type: 'int', bytes: 2 },
+                { key: 'columnLength', type: 'int', bytes: 1 },
+                { key: 'flowRate', type: 'float', bytes: 2, min: 0.1, max: 5 },
+                { key: 'mobilePhase', type: 'enum', options: ['isocratic', 'gradient', 'step'] },
+                { key: 'solventStrength', type: 'int', bytes: 1 },
+                { key: 'temperature', type: 'int', bytes: 1 },
+                { key: 'showPeaks', type: 'bool' },
+                { key: 'showBands', type: 'bool' },
+                { key: 'showBaseline', type: 'bool' },
+                { key: 'showResolution', type: 'bool' },
+                { key: 'showTailing', type: 'bool' }
+            ]
+        });
+
+        // Load URL params if present
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+            // Apply URL params to UI controls
+            if (urlParams.chromType) document.getElementById('chromType').value = urlParams.chromType;
+            if (urlParams.plateCount) document.getElementById('plateCount').value = urlParams.plateCount;
+            if (urlParams.columnLength) document.getElementById('columnLength').value = urlParams.columnLength;
+            if (urlParams.flowRate) document.getElementById('flowRate').value = urlParams.flowRate;
+            if (urlParams.mobilePhase) document.getElementById('mobilePhase').value = urlParams.mobilePhase;
+            if (urlParams.solventStrength) document.getElementById('solventStrength').value = urlParams.solventStrength;
+            if (urlParams.temperature) document.getElementById('temperature').value = urlParams.temperature;
+            if (urlParams.showPeaks !== undefined) document.getElementById('showPeaks').checked = urlParams.showPeaks;
+            if (urlParams.showBands !== undefined) document.getElementById('showBands').checked = urlParams.showBands;
+            if (urlParams.showBaseline !== undefined) document.getElementById('showBaseline').checked = urlParams.showBaseline;
+            if (urlParams.showResolution !== undefined) document.getElementById('showResolution').checked = urlParams.showResolution;
+            if (urlParams.showTailing !== undefined) document.getElementById('showTailing').checked = urlParams.showTailing;
+        }
 
         // Canvas controls for unified color handling
         const canvasControls = new TSCanvasControls();
@@ -557,6 +601,25 @@
             document.getElementById('seed-display').textContent = params.seed;
             document.getElementById('seed').value = params.seed;
 
+            // Update URL with current state
+            urlState.replaceState({
+                seed: params.seed,
+                bgColor: params.bgColor,
+                strokeColor: params.strokeColor,
+                chromType: chromType.value,
+                plateCount: parseInt(plateCount.value),
+                columnLength: parseInt(columnLength.value),
+                flowRate: parseFloat(flowRate.value),
+                mobilePhase: mobilePhase.value,
+                solventStrength: parseInt(solventStrength.value),
+                temperature: parseInt(temperature.value),
+                showPeaks: showPeaks.checked,
+                showBands: showBands.checked,
+                showBaseline: showBaseline.checked,
+                showResolution: showResolution.checked,
+                showTailing: showTailing.checked
+            });
+
             status.textContent = 'Pattern generated';
         });
 
@@ -694,6 +757,34 @@
         // Initialize seed display
         document.getElementById('seed-display').textContent = params.seed;
         document.getElementById('seed').value = params.seed;
+
+        // Copy share URL function
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl({
+                seed: params.seed,
+                bgColor: params.bgColor,
+                strokeColor: params.strokeColor,
+                chromType: chromType.value,
+                plateCount: parseInt(plateCount.value),
+                columnLength: parseInt(columnLength.value),
+                flowRate: parseFloat(flowRate.value),
+                mobilePhase: mobilePhase.value,
+                solventStrength: parseInt(solventStrength.value),
+                temperature: parseInt(temperature.value),
+                showPeaks: showPeaks.checked,
+                showBands: showBands.checked,
+                showBaseline: showBaseline.checked,
+                showResolution: showResolution.checked,
+                showTailing: showTailing.checked
+            });
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => {
+                statusEl.textContent = 'Copy failed';
+            });
+        }
     </script>
 </body>
 </html>

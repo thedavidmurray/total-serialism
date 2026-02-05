@@ -195,6 +195,8 @@
       </div>
       <button onclick="generate()">Generate</button>
       <button onclick="reset()">Reset</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <div class="control-group">
@@ -258,6 +260,28 @@
       showHistory: true,
       seed: Math.floor(Math.random() * 1000000)
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'elementary-ca',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'rule', type: 'int', bytes: 1 },
+        { key: 'cellWidth', type: 'int', bytes: 2 },
+        { key: 'cellHeight', type: 'int', bytes: 2 },
+        { key: 'cellSize', type: 'int', bytes: 1 },
+        { key: 'startPattern', type: 'enum', options: ['single', 'random', 'random25', 'random75', 'alternating', 'symmetric', 'custom'] },
+        { key: 'colorScheme', type: 'enum', options: ['bw', 'green', 'blue', 'heat', 'rainbow'] },
+        { key: 'showHistory', type: 'bool' },
+        { key: 'paperSize', type: 'enum', options: ['A4_landscape', 'A4_portrait', 'A3_landscape', 'A3_portrait', 'letter_landscape', 'letter_portrait', 'square_medium', 'square_large', 'custom'] }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // Color schemes
     const colorSchemes = {
@@ -530,6 +554,9 @@
       document.getElementById('seed-display').textContent = params.seed;
       document.getElementById('seed').value = params.seed;
 
+      // Update URL state
+      urlState.replaceState(params);
+
       // Update stats
       if (window.statsDisplay) {
         const activeCells = history.flat().filter(c => c === 1).length;
@@ -746,10 +773,22 @@
 
       gif.render();
     }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
+    }
   </script>
 
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
 </body>
 </html>

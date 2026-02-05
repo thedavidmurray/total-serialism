@@ -91,6 +91,8 @@
         <button id="exportSVG">Export SVG</button>
         <button id="exportPNG">Export PNG</button>
         <button id="exportGIF">Export Animation GIF</button>
+        <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+        <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
         <progress id="animationProgress" value="0" max="100" style="display: none; width: 100%; margin-top: 10px;"></progress>
         <div class="status" id="status" style="font-size: 12px; color: var(--ts-text-muted); margin-top: 10px;"></div>
 
@@ -103,6 +105,7 @@
     <script src="../../shared/export-utils.js"></script>
     <script src="../../shared/panel-controller.js"></script>
     <script src="../../shared/stats-display.js"></script>
+    <script src="../../shared/url-state.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
         const params = {
@@ -111,6 +114,45 @@
             strokeColor: '#000000',
             seed: Math.floor(Math.random() * 1000000)
         };
+
+        // URL state configuration
+        const urlState = new TSUrlState({
+            algorithmId: 'mixing-patterns',
+            schema: [
+                { key: 'seed', type: 'int', bytes: 4 },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'mixerType', type: 'enum', options: ['single', 'double', 'rushton', 'anchor', 'helical'] },
+                { key: 'viscosityRatio', type: 'float', bytes: 2, min: 0.1, max: 10 },
+                { key: 'reynolds', type: 'int', bytes: 2 },
+                { key: 'schmidt', type: 'int', bytes: 2 },
+                { key: 'rotationSpeed', type: 'int', bytes: 2 },
+                { key: 'timeSteps', type: 'int', bytes: 2 },
+                { key: 'particleCount', type: 'int', bytes: 2 },
+                { key: 'showStreamlines', type: 'bool' },
+                { key: 'showVorticity', type: 'bool' },
+                { key: 'showMixingIndex', type: 'bool' },
+                { key: 'colorByAge', type: 'bool' }
+            ]
+        });
+
+        // Load URL params if present
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+            // Apply URL params to UI controls
+            if (urlParams.mixerType) document.getElementById('mixerType').value = urlParams.mixerType;
+            if (urlParams.viscosityRatio) document.getElementById('viscosityRatio').value = urlParams.viscosityRatio;
+            if (urlParams.reynolds) document.getElementById('reynolds').value = urlParams.reynolds;
+            if (urlParams.schmidt) document.getElementById('schmidt').value = urlParams.schmidt;
+            if (urlParams.rotationSpeed) document.getElementById('rotationSpeed').value = urlParams.rotationSpeed;
+            if (urlParams.timeSteps) document.getElementById('timeSteps').value = urlParams.timeSteps;
+            if (urlParams.particleCount) document.getElementById('particleCount').value = urlParams.particleCount;
+            if (urlParams.showStreamlines !== undefined) document.getElementById('showStreamlines').checked = urlParams.showStreamlines;
+            if (urlParams.showVorticity !== undefined) document.getElementById('showVorticity').checked = urlParams.showVorticity;
+            if (urlParams.showMixingIndex !== undefined) document.getElementById('showMixingIndex').checked = urlParams.showMixingIndex;
+            if (urlParams.colorByAge !== undefined) document.getElementById('colorByAge').checked = urlParams.colorByAge;
+        }
 
         // Canvas controls for unified color handling
         const canvasControls = new TSCanvasControls();
@@ -522,6 +564,24 @@
             document.getElementById('seed-display').textContent = params.seed;
             document.getElementById('seed').value = params.seed;
 
+            // Update URL with current state
+            urlState.replaceState({
+                seed: params.seed,
+                bgColor: params.bgColor,
+                strokeColor: params.strokeColor,
+                mixerType: mixerType.value,
+                viscosityRatio: parseFloat(viscosityRatio.value),
+                reynolds: parseInt(reynolds.value),
+                schmidt: parseInt(schmidt.value),
+                rotationSpeed: parseInt(rotationSpeed.value),
+                timeSteps: parseInt(timeSteps.value),
+                particleCount: parseInt(particleCount.value),
+                showStreamlines: showStreamlines.checked,
+                showVorticity: showVorticity.checked,
+                showMixingIndex: showMixingIndex.checked,
+                colorByAge: colorByAge.checked
+            });
+
             status.textContent = 'Pattern generated';
         });
 
@@ -660,6 +720,33 @@
         // Initialize seed display
         document.getElementById('seed-display').textContent = params.seed;
         document.getElementById('seed').value = params.seed;
+
+        // Copy share URL function
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl({
+                seed: params.seed,
+                bgColor: params.bgColor,
+                strokeColor: params.strokeColor,
+                mixerType: mixerType.value,
+                viscosityRatio: parseFloat(viscosityRatio.value),
+                reynolds: parseInt(reynolds.value),
+                schmidt: parseInt(schmidt.value),
+                rotationSpeed: parseInt(rotationSpeed.value),
+                timeSteps: parseInt(timeSteps.value),
+                particleCount: parseInt(particleCount.value),
+                showStreamlines: showStreamlines.checked,
+                showVorticity: showVorticity.checked,
+                showMixingIndex: showMixingIndex.checked,
+                colorByAge: colorByAge.checked
+            });
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => {
+                statusEl.textContent = 'Copy failed';
+            });
+        }
     </script>
 </body>
 </html>

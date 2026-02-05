@@ -289,6 +289,8 @@
         <button onclick="exportPNG()">PNG</button>
         <button onclick="exportGIF()">GIF</button>
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset Manager (at bottom) -->
@@ -298,6 +300,7 @@
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/url-state.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     <script>
         const canvas = document.getElementById('canvas');
@@ -326,6 +329,34 @@
             animationSpeed: 50,
             seed: Math.floor(Math.random() * 1000000)
         };
+
+        // URL State Management
+        const urlState = new TSUrlState({
+            algorithmId: 'lightning',
+            schema: [
+                { key: 'seed', type: 'int', bytes: 4 },
+                { key: 'paperSize', type: 'enum', options: ['square800', 'landscape800x600', 'a4portrait', 'a4landscape', 'a3portrait', 'a3landscape', 'letterportrait', 'letterlandscape'] },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'lightningType', type: 'enum', options: ['cloud-to-ground', 'horizontal', 'ball', 'upward'] },
+                { key: 'branchProb', type: 'float', bytes: 2, min: 0, max: 1 },
+                { key: 'branchAngle', type: 'int', bytes: 1, min: 10, max: 90 },
+                { key: 'stepSize', type: 'int', bytes: 1, min: 1, max: 20 },
+                { key: 'maxSteps', type: 'int', bytes: 2, min: 50, max: 1000 },
+                { key: 'lineWidth', type: 'float', bytes: 1, min: 0.5, max: 5 },
+                { key: 'fadeout', type: 'bool' },
+                { key: 'glow', type: 'bool' },
+                { key: 'multiStrike', type: 'bool' },
+                { key: 'strikeCount', type: 'int', bytes: 1, min: 1, max: 10 },
+                { key: 'animationSpeed', type: 'int', bytes: 1, min: 10, max: 200 }
+            ]
+        });
+
+        // Load from URL if present
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+        }
 
     // Canvas controls for color randomization with WCAG AA contrast
     const canvasControls = new TSCanvasControls({
@@ -634,8 +665,23 @@
                     segments: totalSegments
                 });
             }
+
+            // Update URL
+            urlState.replaceState(params);
         }
-        
+
+        // Copy Share URL
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl(params);
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => {
+                statusEl.textContent = 'Copy failed';
+            });
+        }
+
         function animateLightning() {
             if (currentPaths.length === 0) {
                 generateLightning();

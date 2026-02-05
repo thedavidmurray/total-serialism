@@ -11,6 +11,7 @@
     <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
     <script src="../../shared/export-utils.js"></script>
+    <script src="../../shared/url-state.js"></script>
     <script src="../../shared/panel-controller.js"></script>
     <script src="../../shared/stats-display.js"></script>
     <link rel="stylesheet" href="../../preset-manager.css">
@@ -454,6 +455,8 @@
         <button class="secondary" onclick="exportPNG()">PNG</button>
         <button class="secondary" onclick="exportGIF()">GIF</button>
       </div>
+      <button class="secondary" onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset Manager Container -->
@@ -489,6 +492,35 @@
             speciesCount: 3,
             seed: Math.floor(Math.random() * 1000000)
         };
+
+        // URL State Management
+        const urlState = new TSUrlState({
+            algorithmId: 'coral-growth',
+            schema: [
+                { key: 'seed', type: 'int', bytes: 4 },
+                { key: 'paperSize', type: 'enum', options: ['square800', 'landscape800x600', 'a4portrait', 'a4landscape', 'a3portrait', 'a3landscape', 'letterportrait', 'letterlandscape'] },
+                { key: 'bgColor', type: 'color' },
+                { key: 'strokeColor', type: 'color' },
+                { key: 'coralType', type: 'enum', options: ['branching', 'brain', 'staghorn', 'table', 'fan'] },
+                { key: 'growthRate', type: 'float', bytes: 1, min: 0.5, max: 5 },
+                { key: 'branchProbability', type: 'float', bytes: 2, min: 0.01, max: 0.3 },
+                { key: 'branchAngle', type: 'int', bytes: 1, min: 10, max: 90 },
+                { key: 'maxDepth', type: 'int', bytes: 1, min: 3, max: 10 },
+                { key: 'generations', type: 'int', bytes: 1, min: 10, max: 200 },
+                { key: 'lightDirection', type: 'int', bytes: 2, min: 0, max: 360 },
+                { key: 'lightIntensity', type: 'float', bytes: 1, min: 0, max: 1 },
+                { key: 'currentStrength', type: 'float', bytes: 1, min: 0, max: 1 },
+                { key: 'currentDirection', type: 'int', bytes: 2, min: 0, max: 360 },
+                { key: 'multiSpecies', type: 'bool' },
+                { key: 'speciesCount', type: 'int', bytes: 1, min: 1, max: 5 }
+            ]
+        });
+
+        // Load from URL if present
+        const urlParams = urlState.fromUrl();
+        if (window.location.search.includes('s=')) {
+            Object.assign(params, urlParams);
+        }
 
     // Canvas controls for color randomization with WCAG AA contrast
     const canvasControls = new TSCanvasControls({
@@ -883,6 +915,21 @@
                     type: { value: stats.type, label: 'Type' }
                 });
             }
+
+            // Update URL
+            urlState.replaceState(params);
+        }
+
+        // Copy Share URL
+        function copyShareUrl() {
+            const shareUrl = urlState.getShareUrl(params);
+            const statusEl = document.getElementById('share-status');
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                statusEl.textContent = '✓ Copied!';
+                setTimeout(() => statusEl.textContent = '', 2000);
+            }).catch(() => {
+                statusEl.textContent = 'Copy failed';
+            });
         }
 
         function animateGrowth() {

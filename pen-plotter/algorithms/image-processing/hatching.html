@@ -14,6 +14,7 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../upload-helper.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -268,6 +269,8 @@
         <button onclick="exportSVG()" id="exportBtn" disabled>Export SVG</button>
         <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset Manager -->
@@ -294,6 +297,25 @@
       threshold: 128,
       seed: Math.floor(Math.random() * 1000000)
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'hatching',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'spacing', type: 'int', bytes: 1 },
+        { key: 'angle', type: 'int', bytes: 1 },
+        { key: 'levels', type: 'int', bytes: 1 },
+        { key: 'minLength', type: 'int', bytes: 1 },
+        { key: 'threshold', type: 'int', bytes: 1 },
+        { key: 'hatchStyle', type: 'enum', options: ['linear', 'crosshatch', 'contour', 'stipple'] }
+      ]
+    });
+
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // P5.js setup
     function setup() {
@@ -510,6 +532,9 @@
 
       // Update seed display
       document.getElementById('seed-display').textContent = params.seed;
+
+      // Update URL state
+      urlState.replaceState(params);
 
       redraw();
     }
@@ -829,6 +854,15 @@
           status.style.display = 'none';
         }, 3000);
       }
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
 </body>

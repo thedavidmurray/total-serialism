@@ -16,6 +16,7 @@
   <script src="../../upload-helper.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -196,6 +197,8 @@
         <label>Seed: <span id="seed-display" class="value">-</span></label>
         <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <div class="control-group">
@@ -233,6 +236,47 @@
     });
     canvasControls.bind(params);
     canvasControls.setupRandomizeButton();
+
+    // URL State Management
+    const urlState = new TSUrlState({
+      algorithmId: 'voronoi-stippling',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'pointCount', type: 'int', bytes: 2 },
+        { key: 'pointSize', type: 'float', bytes: 2, min: 0.5, max: 10 },
+        { key: 'iterations', type: 'int', bytes: 1 },
+        { key: 'densityBias', type: 'float', bytes: 2, min: 0.1, max: 5 },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'mode', type: 'enum', options: ['weighted', 'uniform', 'random', 'grid'] },
+        { key: 'invertImage', type: 'bool' },
+        { key: 'showVoronoi', type: 'bool' },
+        { key: 'showDelaunay', type: 'bool' },
+        { key: 'showImage', type: 'bool' }
+      ]
+    });
+
+    // Load from URL if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+      // Update UI elements from URL params
+      document.getElementById('pointCount').value = params.pointCount;
+      document.getElementById('pointCount-val').textContent = params.pointCount;
+      document.getElementById('pointSize').value = params.pointSize;
+      document.getElementById('pointSize-val').textContent = params.pointSize;
+      document.getElementById('iterations').value = params.iterations;
+      document.getElementById('iterations-val').textContent = params.iterations;
+      document.getElementById('densityBias').value = params.densityBias;
+      document.getElementById('densityBias-val').textContent = params.densityBias;
+      document.getElementById('bgColor').value = params.bgColor;
+      document.getElementById('strokeColor').value = params.strokeColor;
+      document.getElementById('mode').value = params.mode;
+      document.getElementById('invertImage').checked = params.invertImage;
+      document.getElementById('showVoronoi').checked = params.showVoronoi;
+      document.getElementById('showDelaunay').checked = params.showDelaunay;
+      document.getElementById('showImage').checked = params.showImage;
+    }
 
     let points = [];
     let sourceImage = null;
@@ -723,6 +767,9 @@
           'Image': sourceImage ? `${sourceImage.width}x${sourceImage.height}` : 'None'
         });
       }
+
+      // Update URL state
+      urlState.replaceState(params);
     }
 
     function step() {
@@ -790,6 +837,17 @@
 
     function exportPNG() {
       save(`voronoi-stippling-${Date.now()}.png`);
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => {
+        statusEl.textContent = 'Copy failed';
+      });
     }
 
     // Initialize Preset Manager

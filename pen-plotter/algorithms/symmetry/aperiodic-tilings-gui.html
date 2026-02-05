@@ -9,6 +9,7 @@
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   <link rel="stylesheet" href="../../shared/algorithm.css">
 </head>
@@ -176,6 +177,9 @@
 
       <button id="randomizeAll" class="ts-btn ts-btn-secondary ts-btn-block" style="margin-top: var(--ts-space-sm);">Randomize Colors</button>
 
+      <button onclick="copyShareUrl()" class="ts-btn ts-btn-secondary ts-btn-block" style="margin-top: var(--ts-space-sm);">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
+
       <h3>Export</h3>
 
       <div class="ts-export-group">
@@ -254,6 +258,38 @@
       fillOpacity: 80,
       seed: 42
     };
+
+    // Initialize URL state
+    const urlState = new TSUrlState({
+      algorithmId: 'aperiodic-tilings',
+      schema: [
+        { key: 'tilingType', type: 'enum', options: ['einstein', 'penrose', 'ammann', 'wang'] },
+        { key: 'depth', type: 'int', bytes: 1 },
+        { key: 'scale', type: 'float', bytes: 2, min: 0.2, max: 3 },
+        { key: 'rotation', type: 'int', bytes: 2 },
+        { key: 'centerX', type: 'int', bytes: 1 },
+        { key: 'centerY', type: 'int', bytes: 1 },
+        { key: 'lineWeight', type: 'float', bytes: 2, min: 0.25, max: 5 },
+        { key: 'gap', type: 'float', bytes: 1, min: 0, max: 10 },
+        { key: 'colorMode', type: 'enum', options: ['monochrome', 'tileType', 'rainbow', 'gradient'] },
+        { key: 'showEdges', type: 'bool' },
+        { key: 'showFill', type: 'bool' },
+        { key: 'bgColor', type: 'color' },
+        { key: 'strokeColor', type: 'color' },
+        { key: 'fillColor1', type: 'color' },
+        { key: 'fillColor2', type: 'color' },
+        { key: 'fillColor3', type: 'color' },
+        { key: 'fillColor4', type: 'color' },
+        { key: 'fillOpacity', type: 'int', bytes: 1 },
+        { key: 'seed', type: 'int', bytes: 4 }
+      ]
+    });
+
+    // Load URL params if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // ============================================
     // P5.JS SETUP
@@ -438,6 +474,7 @@
 
       pop();
       updateStats();
+      updateUrlState();
     }
 
     // ============================================
@@ -1249,6 +1286,19 @@
         default:
           return colors[0];
       }
+    }
+
+    function updateUrlState() {
+      urlState.replaceState(params);
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
   <script src="../../shared/panel-controller.js"></script>

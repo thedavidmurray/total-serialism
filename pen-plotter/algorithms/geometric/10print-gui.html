@@ -13,6 +13,7 @@
   <script src="../../shared/canvas-controls.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -229,6 +230,8 @@
       <button class="export-btn" onclick="toggleGifRecording()">
         <span id="gif-record-text">Record GIF</span>
       </button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
       <div id="gif-progress">
         <div>Recording: <span id="gif-status">Preparing...</span></div>
         <div class="progress-bar">
@@ -266,6 +269,29 @@
       rotation: 0,
       bgColor: '#ffffff'
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: '10print',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'gridSize', type: 'int', bytes: 1 },
+        { key: 'cellSize', type: 'int', bytes: 1 },
+        { key: 'lineType', type: 'enum', options: ['diagonal', 'straight', 'curved', 'mixed'] },
+        { key: 'probability', type: 'float', bytes: 2, min: 0, max: 1 },
+        { key: 'strokeWeight', type: 'float', bytes: 2, min: 0.5, max: 10 },
+        { key: 'lineCap', type: 'enum', options: ['round', 'square', 'project'] },
+        { key: 'colorMode', type: 'enum', options: ['mono', 'gradient', 'random', 'zones'] },
+        { key: 'variation', type: 'enum', options: ['classic', 'triangular', 'hexagonal', 'truchet'] },
+        { key: 'rotation', type: 'int', bytes: 2 },
+        { key: 'bgColor', type: 'color' }
+      ]
+    });
+
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // Canvas controls for unified color handling
     const canvasControls = new TSCanvasControls();
@@ -438,6 +464,9 @@
       randomSeed(params.seed);
       generatePattern();
       redraw();
+
+      // Update URL state
+      urlState.replaceState(params);
 
       // Update stats display with pattern metrics
       if (statsDisplay) {
@@ -770,6 +799,15 @@
 
     function toggleGifRecording() {
       alert('GIF recording feature coming soon! Use PNG export for now.');
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
 </body>

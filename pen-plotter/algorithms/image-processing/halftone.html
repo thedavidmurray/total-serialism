@@ -14,6 +14,7 @@
   <script src="../../shared/export-utils.js"></script>
   <script src="../../upload-helper.js"></script>
   <script src="../../preset-manager.js"></script>
+  <script src="../../shared/url-state.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
   <!-- Total Serialism Design System -->
@@ -298,6 +299,8 @@
         <button onclick="exportPlotterSVG()" id="exportPlotterBtn" disabled style="background-color: #4CAF50;">Plotter SVG</button>
         <button onclick="exportPNG()" id="exportPNGBtn" disabled>Export PNG</button>
       </div>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
     </div>
 
     <!-- Preset Manager -->
@@ -329,6 +332,26 @@
       invertBrightness: false,
       seed: Math.floor(Math.random() * 1000000)
     };
+
+    // URL state management
+    const urlState = new TSUrlState({
+      algorithmId: 'halftone',
+      schema: [
+        { key: 'seed', type: 'int', bytes: 4 },
+        { key: 'spacing', type: 'int', bytes: 1 },
+        { key: 'maxSize', type: 'int', bytes: 1 },
+        { key: 'minSize', type: 'float', bytes: 2, min: 0, max: 10 },
+        { key: 'invertBrightness', type: 'bool' },
+        { key: 'gridType', type: 'enum', options: ['square', 'hex', 'triangle'] },
+        { key: 'curve', type: 'enum', options: ['linear', 'sqrt', 'squared', 'sigmoid'] },
+        { key: 'shapeType', type: 'enum', options: ['circle', 'square', 'diamond', 'star'] }
+      ]
+    });
+
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      Object.assign(params, urlParams);
+    }
 
     // P5.js setup
     function setup() {
@@ -672,6 +695,9 @@
       // Update seed display
       document.getElementById('seed-display').textContent = params.seed;
 
+      // Update URL state
+      urlState.replaceState(params);
+
       redraw();
     }
 
@@ -967,6 +993,15 @@
           status.style.display = 'none';
         }, 3000);
       }
+    }
+
+    function copyShareUrl() {
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
     }
   </script>
 </body>
