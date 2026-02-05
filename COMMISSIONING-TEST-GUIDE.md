@@ -1,1 +1,0 @@
-/Users/djm/claude-projects/02-docs/guides/COMMISSIONING-TEST-GUIDE.md

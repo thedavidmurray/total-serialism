@@ -1,1 +1,0 @@
-/Users/djm/claude-projects/01-tools/scripts/sync-to-drive.sh
