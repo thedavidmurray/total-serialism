@@ -679,6 +679,177 @@ ${pathsMarkup}</svg>`;
         '#ffff00': 5, '#ff00ff': 6, '#00ffff': 7, '#ffffff': 8
       };
       return map[color.toLowerCase()] || 1;
+    },
+
+    // ==========================================
+    // PATH OPTIMIZATION (Pen Plotter)
+    // ==========================================
+
+    /**
+     * Optimize paths for pen plotting using PathOptimizer.
+     * Reorders paths to minimize pen travel, merges nearby endpoints,
+     * removes short paths, and simplifies geometry.
+     *
+     * Requires shared/path-optimizer.js to be loaded.
+     * Falls back gracefully (returns original paths) if not available.
+     *
+     * @param {Array} paths Array of paths. Each path is an array of points [{x,y}] or [[x,y]]
+     * @param {Object} options Optimization options
+     * @param {number} options.mergeThreshold Distance threshold for merging endpoints (default: 2)
+     * @param {number} options.minPathLength Minimum path length to keep (default: 3)
+     * @param {number} options.simplifyTolerance Douglas-Peucker tolerance (default: 0.5)
+     * @param {boolean} options.reorder Whether to reorder paths via TSP (default: true)
+     * @param {boolean} options.merge Whether to merge nearby endpoints (default: true)
+     * @param {boolean} options.simplify Whether to simplify paths (default: false)
+     * @returns {Object} { paths: optimizedPaths, report: { original, optimized, reduction, travelSaved } }
+     */
+    optimizePaths: function(paths, options = {}) {
+      if (!paths || paths.length === 0) {
+        return { paths: [], report: null };
+      }
+
+      // Check if PathOptimizer is available
+      if (typeof PathOptimizer === 'undefined') {
+        console.warn('[TSExport] PathOptimizer not loaded. Include shared/path-optimizer.js for optimization.');
+        return { paths: paths, report: null };
+      }
+
+      const opts = {
+        mergeThreshold: options.mergeThreshold || 2,
+        minPathLength: options.minPathLength || 3,
+        simplifyTolerance: options.simplifyTolerance || 0.5,
+        reorder: options.reorder !== false,
+        merge: options.merge !== false,
+        simplify: options.simplify || false,
+        ...options
+      };
+
+      try {
+        const optimizer = new PathOptimizer();
+
+        // Normalize paths to [{x,y}] format for the optimizer
+        const normalized = paths.map(path => {
+          if (!Array.isArray(path)) return path;
+          return path.map(p => {
+            if (Array.isArray(p)) return { x: p[0], y: p[1] };
+            return p;
+          });
+        });
+
+        let result = normalized;
+
+        if (opts.merge) {
+          result = optimizer.mergeNearbyEndpoints(result, opts.mergeThreshold);
+        }
+        if (opts.reorder) {
+          result = optimizer.optimizePathOrder(result);
+          result = optimizer.twoOptOptimize(result, 100);
+        }
+        if (opts.simplify) {
+          result = result.map(path => optimizer.simplifyPath(path, opts.simplifyTolerance));
+        }
+
+        result = optimizer.removeShortPaths(result, opts.minPathLength);
+
+        const report = optimizer.generateReport(normalized, result);
+        console.log(`[TSExport] Optimization: ${normalized.length} → ${result.length} paths (${report.pathReduction || 'N/A'}% reduction)`);
+
+        return { paths: result, report: report };
+      } catch (e) {
+        console.error('[TSExport] Optimization failed, using original paths:', e);
+        return { paths: paths, report: null };
+      }
+    },
+
+    /**
+     * Create an optimized SVG for pen plotting.
+     * Runs path optimization then serializes to SVG.
+     *
+     * @param {Array} paths Array of paths (arrays of points)
+     * @param {number} width SVG width
+     * @param {number} height SVG height
+     * @param {Object} options Includes optimization options + SVG options
+     * @param {string} options.strokeColor Stroke color (default: '#000000')
+     * @param {number} options.strokeWidth Stroke width (default: 1)
+     * @param {string} options.backgroundColor Background fill (default: 'white')
+     * @param {boolean} options.optimize Whether to optimize (default: true)
+     * @returns {Object} { svg: svgString, report: optimizationReport }
+     */
+    createOptimizedSVG: function(paths, width, height, options = {}) {
+      const shouldOptimize = options.optimize !== false;
+
+      let finalPaths = paths;
+      let report = null;
+
+      if (shouldOptimize) {
+        const result = this.optimizePaths(paths, options);
+        finalPaths = result.paths;
+        report = result.report;
+      }
+
+      // Convert to SVG path data
+      const svgPaths = finalPaths.map(path => {
+        const d = this.pointsToPath(path);
+        return { d: d };
+      }).filter(p => p.d);
+
+      const svg = this.createSVG(svgPaths, width, height, {
+        backgroundColor: options.backgroundColor || 'white',
+        strokeColor: options.strokeColor || '#000000',
+        strokeWidth: options.strokeWidth || 1
+      });
+
+      return { svg: svg, report: report };
+    },
+
+    /**
+     * Reorder an array of elements using nearest-neighbor to minimize pen travel.
+     * Works with any element type - just needs a function to extract position.
+     *
+     * @param {Array} elements Array of elements to reorder
+     * @param {Function} getStart Function(element) returning {x, y} start position
+     * @param {Function} getEnd Function(element) returning {x, y} end position (optional, defaults to getStart)
+     * @returns {Array} Reordered copy of the elements array
+     */
+    reorderElements: function(elements, getStart, getEnd) {
+      if (!elements || elements.length <= 1) return elements.slice();
+
+      getEnd = getEnd || getStart;
+      const remaining = new Set(elements.map((_, i) => i));
+      const result = [];
+
+      // Start with element nearest to origin
+      let bestIdx = 0;
+      let bestDist = Infinity;
+      for (const idx of remaining) {
+        const pos = getStart(elements[idx]);
+        const d = pos.x * pos.x + pos.y * pos.y;
+        if (d < bestDist) { bestDist = d; bestIdx = idx; }
+      }
+
+      remaining.delete(bestIdx);
+      result.push(elements[bestIdx]);
+      let currentEnd = getEnd(elements[bestIdx]);
+
+      while (remaining.size > 0) {
+        let nearestIdx = -1;
+        let nearestDist = Infinity;
+
+        for (const idx of remaining) {
+          const pos = getStart(elements[idx]);
+          const dx = pos.x - currentEnd.x;
+          const dy = pos.y - currentEnd.y;
+          const d = dx * dx + dy * dy;
+          if (d < nearestDist) { nearestDist = d; nearestIdx = idx; }
+        }
+
+        remaining.delete(nearestIdx);
+        result.push(elements[nearestIdx]);
+        currentEnd = getEnd(elements[nearestIdx]);
+      }
+
+      console.log(`[TSExport] Reordered ${elements.length} elements for plotter`);
+      return result;
     }
   };
 

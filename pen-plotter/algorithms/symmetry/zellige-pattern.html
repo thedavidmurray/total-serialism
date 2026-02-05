@@ -12,6 +12,7 @@
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/path-optimizer.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
@@ -297,6 +298,7 @@
       <h3>Controls</h3>
       <button onclick="generatePattern()">Generate New Pattern</button>
       <button onclick="randomizePattern()">Randomize</button>
+      <label><input type="checkbox" id="optimizeForPlotter" checked> Optimize for Plotter</label>
       <div class="button-group">
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="exportPNG()">Export PNG</button>
@@ -728,8 +730,17 @@
       const rotationOffsetDeg = parseFloat(document.getElementById('rotationOffset').value);
       const fillShapes = document.getElementById('fillShapes').checked;
 
+      // Reorder tiles for plotter if optimization enabled
+      let drawOrder = tiles;
+      if (document.getElementById('optimizeForPlotter').checked) {
+        drawOrder = TSExport.reorderElements(tiles,
+          (tile) => ({ x: tile.x, y: tile.y }),
+          (tile) => ({ x: tile.x, y: tile.y })
+        );
+      }
+
       let svgContent = '';
-      tiles.forEach(tile => {
+      drawOrder.forEach(tile => {
         const scale = 1 - (spacing / 100);
         const totalRotDeg = tile.rotation * (180 / Math.PI) + rotationOffsetDeg;
         const pts = tile.points.map(p => `${p.x * scale},${p.y * scale}`).join(' ');

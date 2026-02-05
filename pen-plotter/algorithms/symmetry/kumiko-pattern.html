@@ -12,6 +12,7 @@
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/path-optimizer.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
 
@@ -298,6 +299,7 @@
       <h3>Controls</h3>
       <button onclick="generatePattern()">Generate New Pattern</button>
       <button onclick="randomizePattern()">Randomize</button>
+      <label><input type="checkbox" id="optimizeForPlotter" checked> Optimize for Plotter</label>
       <div class="button-group">
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="exportPNG()">Export PNG</button>
@@ -815,8 +817,26 @@
       const offsetY = parseFloat(document.getElementById('offsetY').value);
       const doubleLines = document.getElementById('doubleLines').checked;
 
+      // Reorder elements for plotter if optimization enabled
+      let drawOrder = pattern;
+      if (document.getElementById('optimizeForPlotter').checked) {
+        drawOrder = TSExport.reorderElements(pattern,
+          (el) => {
+            if (el.points && el.points.length > 0) return el.points[0];
+            if (el.center) return el.center;
+            return { x: 0, y: 0 };
+          },
+          (el) => {
+            if (el.points && el.points.length > 1) return el.points[el.points.length - 1];
+            if (el.points && el.points.length === 1) return el.points[0];
+            if (el.center) return el.center;
+            return { x: 0, y: 0 };
+          }
+        );
+      }
+
       let svgElements = '';
-      pattern.forEach(element => {
+      drawOrder.forEach(element => {
         const sw = doubleLines && element.type === 'line' ? strokeWeightVal * 0.5 : strokeWeightVal;
         switch (element.type) {
           case 'line':

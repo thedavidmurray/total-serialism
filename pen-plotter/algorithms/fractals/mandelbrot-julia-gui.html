@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/path-optimizer.js"></script>
   <script src="../../shared/export-utils.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
@@ -147,6 +148,10 @@
         <label>Center Y: <span class="value" id="centerY-val">0</span></label>
         <input type="range" id="centerY" min="-2" max="2" value="0" step="0.01">
       </div>
+      <div class="control">
+        <label>Rotation: <span class="value" id="rotation-val">0</span>&deg;</label>
+        <input type="range" id="rotation" min="-180" max="180" value="0" step="1">
+      </div>
     </div>
 
     <div class="control-group">
@@ -160,6 +165,9 @@
 
     <div class="control-group">
       <h3>Export</h3>
+      <div class="control">
+        <label><input type="checkbox" id="optimizeForPlotter" checked> Optimize for Plotter</label>
+      </div>
       <div class="btn-row">
         <button id="exportSVG">Export SVG</button>
         <button id="exportPNG">Export PNG</button>
@@ -184,7 +192,8 @@
       centerX: 0,
       centerY: 0,
       strokeWeight: 0.5,
-      showBoundary: true
+      showBoundary: true,
+      rotation: 0
     };
 
     // Canvas controls for unified color handling
@@ -220,7 +229,12 @@
     let canvas;
     let contours = [];
     let SIZE = 800;
-    let RESOLUTION = 400; // Grid resolution for marching squares
+    let RESOLUTION = 400;
+
+    function calculateResolution(size) {
+      // ~2px per cell for good detail, capped for performance
+      return Math.max(200, Math.min(Math.floor(size / 2), 800));
+    }
 
     // Global instances for panel and stats
     let panelController;
@@ -229,6 +243,7 @@
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
       SIZE = Math.min(size.width, size.height);
+      RESOLUTION = calculateResolution(SIZE);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
@@ -266,12 +281,13 @@
     function resizeCanvasForPaperSize() {
       const size = CanvasLayout.getSize(params.paperSize);
       SIZE = Math.min(size.width, size.height);
+      RESOLUTION = calculateResolution(SIZE);
       resizeCanvas(size.width, size.height);
       generateFractal();
     }
 
     function setupControls() {
-      const rangeControls = ['maxIter', 'contourLevels', 'zoom', 'centerX', 'centerY', 'strokeWeight', 'juliaReal', 'juliaImag'];
+      const rangeControls = ['maxIter', 'contourLevels', 'zoom', 'centerX', 'centerY', 'rotation', 'strokeWeight', 'juliaReal', 'juliaImag'];
       rangeControls.forEach(id => {
         const el = document.getElementById(id);
         const display = document.getElementById(`${id}-val`);
@@ -309,8 +325,11 @@
       document.getElementById('regenerateBtn').addEventListener('click', () => {
         // Randomize slightly
         params.zoom = 1 + Math.random() * 2;
+        params.rotation = Math.floor(Math.random() * 361) - 180;
         document.getElementById('zoom').value = params.zoom;
         document.getElementById('zoom-val').textContent = params.zoom.toFixed(1);
+        document.getElementById('rotation').value = params.rotation;
+        document.getElementById('rotation-val').textContent = params.rotation;
         generateFractal();
       });
 
@@ -320,15 +339,18 @@
         params.centerX = preset.x;
         params.centerY = preset.y;
         params.zoom = preset.zoom * (0.8 + Math.random() * 0.4); // Add slight variation
+        params.rotation = Math.floor(Math.random() * 61) - 30; // Subtle rotation for presets
 
         document.getElementById('fractalType').value = 'mandelbrot';
         document.getElementById('juliaParams').classList.remove('visible');
         document.getElementById('centerX').value = params.centerX;
         document.getElementById('centerY').value = params.centerY;
         document.getElementById('zoom').value = params.zoom;
+        document.getElementById('rotation').value = params.rotation;
         document.getElementById('centerX-val').textContent = params.centerX.toFixed(2);
         document.getElementById('centerY-val').textContent = params.centerY.toFixed(2);
         document.getElementById('zoom-val').textContent = params.zoom.toFixed(1);
+        document.getElementById('rotation-val').textContent = params.rotation;
         document.getElementById('fractal-info').textContent = preset.name;
 
         generateFractal();
@@ -352,8 +374,23 @@
       });
 
       document.getElementById('exportSVG').addEventListener('click', () => {
-        const svg = generateSVG();
-        TSExport.downloadSVG(svg, `${params.fractalType}-fractal`);
+        const optimize = document.getElementById('optimizeForPlotter').checked;
+        if (optimize) {
+          // Convert contour segments to paths for optimizer
+          const paths = contours.map(seg => [seg[0], seg[1]]);
+          const result = TSExport.createOptimizedSVG(paths, width, height, {
+            strokeColor: params.strokeColor,
+            strokeWidth: params.strokeWeight,
+            backgroundColor: params.bgColor,
+            optimize: true,
+            mergeThreshold: 3,
+            minPathLength: 2
+          });
+          TSExport.downloadSVG(result.svg, `${params.fractalType}-fractal-optimized`);
+        } else {
+          const svg = generateSVG();
+          TSExport.downloadSVG(svg, `${params.fractalType}-fractal`);
+        }
       });
 
       document.getElementById('exportPNG').addEventListener('click', () => {
@@ -405,12 +442,17 @@
       const grid = [];
       const scale = 3 / params.zoom;
       const offsetX = params.fractalType === 'mandelbrot' ? -0.5 : 0;
+      const rotRad = params.rotation * Math.PI / 180;
+      const cosR = Math.cos(rotRad);
+      const sinR = Math.sin(rotRad);
 
       for (let j = 0; j <= RESOLUTION; j++) {
         const row = [];
         for (let i = 0; i <= RESOLUTION; i++) {
-          const x = (i / RESOLUTION - 0.5) * scale + params.centerX + offsetX;
-          const y = (j / RESOLUTION - 0.5) * scale + params.centerY;
+          const cx = (i / RESOLUTION - 0.5) * scale;
+          const cy = (j / RESOLUTION - 0.5) * scale;
+          const x = cx * cosR - cy * sinR + params.centerX + offsetX;
+          const y = cx * sinR + cy * cosR + params.centerY;
 
           const iter = params.fractalType === 'mandelbrot' ? mandelbrot(x, y) : julia(x, y);
           row.push(iter);
@@ -439,6 +481,7 @@
           levels: { value: params.contourLevels, label: 'Levels' },
           iterations: { value: params.maxIter, label: 'Max Iter' },
           zoom: { value: params.zoom.toFixed(1), label: 'Zoom' },
+          rotation: { value: `${params.rotation}°`, label: 'Rotation' },
           center: { value: `(${params.centerX.toFixed(2)}, ${params.centerY.toFixed(2)})`, label: 'Center' },
           genTime: { value: genTime, label: 'Gen Time', format: 'time' }
         };
