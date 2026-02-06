@@ -143,6 +143,177 @@
       color: var(--ts-text-muted);
     }
 
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-left: 1.5rem;
+    }
+
+    .header-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.75rem;
+      background: var(--ts-bg-panel);
+      border: 1px solid var(--ts-border);
+      border-radius: 4px;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .header-btn:hover {
+      background: var(--ts-bg-card);
+      border-color: var(--ts-accent);
+      color: var(--ts-text-primary);
+    }
+
+    .header-btn svg {
+      opacity: 0.7;
+    }
+
+    .header-btn:hover svg {
+      opacity: 1;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--ts-bg-panel);
+      border: 1px solid var(--ts-border);
+      border-radius: 8px;
+      max-width: 600px;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--ts-text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.25rem 0.5rem;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--ts-text-primary);
+    }
+
+    .modal-content h2 {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: var(--ts-accent);
+      margin: 0 0 0.5rem;
+    }
+
+    .modal-intro {
+      color: var(--ts-text-secondary);
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .help-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .help-section h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ts-text-primary);
+      margin: 0 0 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .help-section ol,
+    .help-section ul {
+      margin: 0;
+      padding-left: 1.25rem;
+      color: var(--ts-text-secondary);
+      font-size: 0.85rem;
+      line-height: 1.7;
+    }
+
+    .help-section li {
+      margin-bottom: 0.4rem;
+    }
+
+    .help-section strong {
+      color: var(--ts-text-primary);
+    }
+
+    .help-section a {
+      color: var(--ts-accent);
+      text-decoration: none;
+    }
+
+    .help-section a:hover {
+      text-decoration: underline;
+    }
+
+    .algo-suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .algo-suggestions a {
+      padding: 0.4rem 0.75rem;
+      background: var(--ts-bg-card);
+      border: 1px solid var(--ts-border);
+      border-radius: 4px;
+      color: var(--ts-text-secondary);
+      font-size: 0.8rem;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+
+    .algo-suggestions a:hover {
+      border-color: var(--ts-accent);
+      color: var(--ts-accent);
+    }
+
+    .help-footer {
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--ts-border);
+      font-size: 0.8rem;
+      color: var(--ts-text-muted);
+    }
+
+    .help-footer a {
+      color: var(--ts-accent);
+      text-decoration: none;
+    }
+
+    .help-footer a:hover {
+      text-decoration: underline;
+    }
+
     /* ============================================
        SEARCH & FILTERS - Clean, functional
        ============================================ */
@@ -300,6 +471,10 @@
       .controls { padding: 0.75rem 1rem; top: 44px; }
       .view-toggle { display: none; }
       .main { padding: 0.75rem; }
+      .header-actions { margin-left: 0.75rem; gap: 0.4rem; }
+      .header-btn span { display: none; }
+      .header-btn { padding: 0.4rem; }
+      .modal-content { padding: 1.5rem; }
       .card-link { padding: 0.5rem 0.6rem; }
       .card-title { font-size: 0.7rem; }
       .card-badge { font-size: 0.45rem; padding: 0.1rem 0.25rem; }
@@ -312,6 +487,10 @@
       .logo-title { font-size: 0.75rem; }
       .logo-subtitle { display: none; }
       .logo-mark { width: 24px; height: 24px; }
+      .header-actions { margin-left: 0.5rem; }
+      .header-btn svg { width: 16px; height: 16px; }
+      .modal-content { padding: 1.25rem; }
+      .modal-content h2 { font-size: 1.2rem; }
       .logo-mark::before { width: 10px; height: 10px; }
       .stats { gap: 1rem; }
       .stat-value { font-size: 0.9rem; }
@@ -496,8 +675,77 @@
           <div class="stat-label">Categories</div>
         </div>
       </div>
+      <div class="header-actions">
+        <button class="header-btn" onclick="showHelp()" title="How to use">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+          <span>Help</span>
+        </button>
+        <a href="https://github.com/thedavidmurray/total-serialism/issues" target="_blank" class="header-btn" title="Report issues or contribute">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+          </svg>
+          <span>Feedback</span>
+        </a>
+      </div>
     </div>
   </header>
+
+  <!-- Help Modal -->
+  <div id="help-modal" class="modal-overlay" onclick="if(event.target===this)closeHelp()">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeHelp()">&times;</button>
+      <h2>Welcome to Total Serialism</h2>
+      <p class="modal-intro">A collection of algorithms for creating generative art optimized for pen plotters.</p>
+
+      <div class="help-section">
+        <h3>Getting Started</h3>
+        <ol>
+          <li><strong>Browse</strong> - Use the category filters or search to find an algorithm</li>
+          <li><strong>Experiment</strong> - Adjust parameters using the controls panel</li>
+          <li><strong>Regenerate</strong> - Click "Regenerate" or use a new seed for variations</li>
+          <li><strong>Export</strong> - Download as SVG for pen plotting or PNG for sharing</li>
+        </ol>
+      </div>
+
+      <div class="help-section">
+        <h3>Key Features</h3>
+        <ul>
+          <li><strong>Shareable URLs</strong> - Copy your exact configuration to share with others</li>
+          <li><strong>Seed Control</strong> - Use the same seed to reproduce exact outputs</li>
+          <li><strong>SVG Export</strong> - Vector output optimized for pen plotters</li>
+          <li><strong>Paper Sizes</strong> - Preset sizes for A4, A3, Letter, and custom dimensions</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3>For Pen Plotter Users</h3>
+        <ul>
+          <li>SVGs use stroke-only rendering (no fills) for clean plotting</li>
+          <li>Path optimization reduces pen travel distance</li>
+          <li>Use the <a href="tools/plotter-preview-gui.html">Plotter Preview</a> tool to simulate drawing</li>
+          <li>Layer export available for multi-color plotting</li>
+        </ul>
+      </div>
+
+      <div class="help-section">
+        <h3>Recommended Algorithms for Beginners</h3>
+        <div class="algo-suggestions">
+          <a href="algorithms/geometric/spirotron-gui.html">Spirotron</a>
+          <a href="algorithms/curves/lissajous-gui.html">Lissajous Curves</a>
+          <a href="algorithms/voronoi/voronoi-stippling-gui.html">Voronoi Stippling</a>
+          <a href="algorithms/fractals/mandelbrot-julia-gui.html">Mandelbrot/Julia</a>
+        </div>
+      </div>
+
+      <div class="help-footer">
+        <p>Questions or ideas? <a href="https://github.com/thedavidmurray/total-serialism/issues" target="_blank">Open an issue</a> or <a href="https://github.com/thedavidmurray/total-serialism/pulls" target="_blank">submit a PR</a> on GitHub.</p>
+      </div>
+    </div>
+  </div>
 
   <div class="controls">
     <div class="controls-inner">
@@ -781,6 +1029,22 @@
         const view = e.target.dataset.view;
         grid.classList.toggle('list-view', view === 'list');
       }
+    });
+
+    // Help modal
+    function showHelp() {
+      document.getElementById('help-modal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeHelp() {
+      document.getElementById('help-modal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeHelp();
     });
 
     // Initialize
