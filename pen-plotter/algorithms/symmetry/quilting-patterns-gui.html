@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Quilting Pattern Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/path-optimizer.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 380px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 20px 0;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 12px 0;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    .control label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    .control span {
+      font-weight: 500;
+      color: var(--ts-accent-primary);
+      font-size: 0.85rem;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+    }
+    select {
+      width: 100%;
+      padding: 8px 12px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.85rem;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    button:active {
+      transform: scale(0.98);
+    }
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .button-group button {
+      flex: 1;
+    }
+    .checkbox-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+      accent-color: var(--ts-accent-primary);
+    }
+    #processing-status {
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.85rem;
+      text-align: center;
+      display: none;
+    }
+    #processing-status.success {
+      background: rgba(0, 212, 170, 0.15);
+      color: var(--ts-accent-primary);
+      border: 1px solid var(--ts-accent-primary);
+    }
+    #processing-status.error {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--ts-accent-danger);
+      border: 1px solid var(--ts-accent-danger);
+    }
+    #canvas-wrapper {
+      background: white;
+      box-shadow: var(--ts-shadow-panel);
+      border-radius: var(--ts-radius-lg);
+      padding: 20px;
+    }
+    .pattern-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: var(--ts-text-secondary);
+      line-height: 1.5;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="canvas-wrapper"></div>
+  </div>
+
+  <div id="controls">
+    <h2>Quilting Pattern Generator</h2>
+    <div class="pattern-info">
+      <strong>Traditional quilting patterns</strong> adapted for pen plotting.
+      These geometric patterns are designed with continuous strokes for plotter-friendly rendering.
+    </div>
+
+    <div class="control-group">
+      <h3>Pattern Type</h3>
+      <div class="control">
+        <label>Quilt Block:</label>
+        <select id="patternType">
+          <option value="logCabin">Log Cabin (concentric rectangles)</option>
+          <option value="flyingGeese">Flying Geese (triangular)</option>
+          <option value="ninePatch">Nine Patch (3x3 grid)</option>
+          <option value="starBlock">Star Block (8-pointed star)</option>
+          <option value="bearPaw">Bear Paw (claw pattern)</option>
+          <option value="pinwheel">Pinwheel (rotating triangles)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Grid Properties</h3>
+      <div class="control">
+        <label>Block Size: <span id="blockSize-value">100</span>px</label>
+        <input type="range" id="blockSize" min="50" max="200" step="10" value="100">
+      </div>
+      <div class="control">
+        <label>Grid Columns: <span id="gridCols-value">4</span></label>
+        <input type="range" id="gridCols" min="1" max="8" step="1" value="4">
+      </div>
+      <div class="control">
+        <label>Grid Rows: <span id="gridRows-value">4</span></label>
+        <input type="range" id="gridRows" min="1" max="8" step="1" value="4">
+      </div>
+      <div class="control">
+        <label>Gap Between Blocks: <span id="blockGap-value">10</span>px</label>
+        <input type="range" id="blockGap" min="0" max="30" step="2" value="10">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Visual Style</h3>
+      <div class="control">
+        <label>Stroke Weight: <span id="strokeWeight-value">1.5</span>px</label>
+        <input type="range" id="strokeWeight" min="0.5" max="4" step="0.1" value="1.5">
+      </div>
+      <div class="control">
+        <label>Rotation: <span id="rotation-value">0</span>deg</label>
+        <input type="range" id="rotation" min="0" max="360" step="15" value="0">
+      </div>
+      <div class="checkbox-group">
+        <label>
+          <input type="checkbox" id="showBlockOutlines" checked> Show Block Outlines
+        </label>
+        <label>
+          <input type="checkbox" id="randomizeColors"> Randomize Colors per Block
+        </label>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Colors</h3>
+      <div class="control">
+        <label>Background:</label>
+        <input type="color" id="bgColor" value="#ffffff" style="width: 100%; height: 36px;">
+      </div>
+      <div class="control">
+        <label>Primary:</label>
+        <input type="color" id="primaryColor" value="#000000" style="width: 100%; height: 36px;">
+      </div>
+      <div class="control">
+        <label>Secondary:</label>
+        <input type="color" id="secondaryColor" value="#444444" style="width: 100%; height: 36px;">
+      </div>
+      <div class="control">
+        <label>Accent:</label>
+        <input type="color" id="accentColor" value="#888888" style="width: 100%; height: 36px;">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Randomization</h3>
+      <div class="control">
+        <label>Random Seed: <span id="seed-value">12345</span></label>
+        <input type="range" id="seed" min="1" max="99999" step="1" value="12345">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Controls</h3>
+      <button onclick="generatePattern()">Generate Pattern</button>
+      <button onclick="randomizePattern()">Randomize</button>
+      <button onclick="copyShareUrl()">📋 Copy Share URL</button>
+      <span id="share-status" style="margin-left:8px;color:#4a9;font-size:12px;"></span>
+      <label><input type="checkbox" id="optimizeForPlotter" checked> Optimize for Plotter</label>
+      <div class="button-group">
+        <button onclick="exportSVG()">Export SVG</button>
+        <button onclick="exportPNG()">Export PNG</button>
+      </div>
+      <div id="processing-status"></div>
+    </div>
+
+    <!-- Preset Manager Container -->
+    <div id="preset-container"></div>
+  </div>
+
+  <script>
+    // Global variables
+    let pattern = [];
+    let currentSeed = 12345;
+    let currentPaperSize = 'square800';
+
+    // Initialize URL state
+    const urlState = new TSUrlState({
+      algorithmId: 'quilting-patterns',
+      schema: [
+        { key: 'patternType', type: 'enum', options: ['logCabin', 'flyingGeese', 'ninePatch', 'starBlock', 'bearPaw', 'pinwheel'] },
+        { key: 'blockSize', type: 'int', bytes: 1 },
+        { key: 'gridCols', type: 'int', bytes: 1 },
+        { key: 'gridRows', type: 'int', bytes: 1 },
+        { key: 'blockGap', type: 'int', bytes: 1 },
+        { key: 'strokeWeight', type: 'float', bytes: 1, min: 0.5, max: 4 },
+        { key: 'rotation', type: 'int', bytes: 2 },
+        { key: 'seed', type: 'int', bytes: 2 },
+        { key: 'showBlockOutlines', type: 'bool' },
+        { key: 'randomizeColors', type: 'bool' }
+      ]
+    });
+
+    // Load URL params if present
+    const urlParams = urlState.fromUrl();
+    if (window.location.search.includes('s=')) {
+      if (urlParams.patternType) document.getElementById('patternType').value = urlParams.patternType;
+      if (urlParams.blockSize) document.getElementById('blockSize').value = urlParams.blockSize;
+      if (urlParams.gridCols) document.getElementById('gridCols').value = urlParams.gridCols;
+      if (urlParams.gridRows) document.getElementById('gridRows').value = urlParams.gridRows;
+      if (urlParams.blockGap !== undefined) document.getElementById('blockGap').value = urlParams.blockGap;
+      if (urlParams.strokeWeight) document.getElementById('strokeWeight').value = urlParams.strokeWeight;
+      if (urlParams.rotation !== undefined) document.getElementById('rotation').value = urlParams.rotation;
+      if (urlParams.seed) document.getElementById('seed').value = urlParams.seed;
+      if (urlParams.showBlockOutlines !== undefined) document.getElementById('showBlockOutlines').checked = urlParams.showBlockOutlines;
+      if (urlParams.randomizeColors !== undefined) document.getElementById('randomizeColors').checked = urlParams.randomizeColors;
+    }
+
+    // Paper size definitions
+    const PAPER_SIZES = {
+      'square800': { width: 800, height: 800 },
+      'landscape800x600': { width: 800, height: 600 },
+      'a4portrait': { width: 595, height: 842 },
+      'a4landscape': { width: 842, height: 595 },
+      'a3portrait': { width: 842, height: 1191 },
+      'a3landscape': { width: 1191, height: 842 },
+      'letterportrait': { width: 612, height: 792 },
+      'letterlandscape': { width: 792, height: 612 }
+    };
+
+    function setup() {
+      const size = PAPER_SIZES[currentPaperSize];
+      const canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-wrapper');
+
+      angleMode(DEGREES);
+      setupEventListeners();
+      generatePattern();
+    }
+
+    function updateCanvasSize() {
+      const size = PAPER_SIZES[currentPaperSize];
+      resizeCanvas(size.width, size.height);
+      generatePattern();
+    }
+
+    function generatePattern() {
+      currentSeed = parseInt(document.getElementById('seed').value);
+      randomSeed(currentSeed);
+
+      pattern = [];
+      const patternType = document.getElementById('patternType').value;
+      const blockSize = parseInt(document.getElementById('blockSize').value);
+      const gridCols = parseInt(document.getElementById('gridCols').value);
+      const gridRows = parseInt(document.getElementById('gridRows').value);
+      const blockGap = parseInt(document.getElementById('blockGap').value);
+
+      // Update URL state
+      updateUrlState();
+
+      // Generate pattern based on type
+      switch (patternType) {
+        case 'logCabin':
+          generateLogCabin(blockSize, gridCols, gridRows, blockGap);
+          break;
+        case 'flyingGeese':
+          generateFlyingGeese(blockSize, gridCols, gridRows, blockGap);
+          break;
+        case 'ninePatch':
+          generateNinePatch(blockSize, gridCols, gridRows, blockGap);
+          break;
+        case 'starBlock':
+          generateStarBlock(blockSize, gridCols, gridRows, blockGap);
+          break;
+        case 'bearPaw':
+          generateBearPaw(blockSize, gridCols, gridRows, blockGap);
+          break;
+        case 'pinwheel':
+          generatePinwheel(blockSize, gridCols, gridRows, blockGap);
+          break;
+      }
+
+      redraw();
+      showStatus('Pattern generated', 'success');
+    }
+
+    function generateLogCabin(blockSize, cols, rows, gap) {
+      // Log Cabin - concentric rectangles
+      const totalWidth = cols * blockSize + (cols - 1) * gap;
+      const totalHeight = rows * blockSize + (rows - 1) * gap;
+      const startX = (width - totalWidth) / 2;
+      const startY = (height - totalHeight) / 2;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * (blockSize + gap);
+          const y = startY + row * (blockSize + gap);
+
+          // Generate concentric rectangles
+          const layers = 4 + floor(random(2));
+          for (let i = 0; i < layers; i++) {
+            const inset = (i * blockSize) / (layers * 2);
+            const x1 = x + inset;
+            const y1 = y + inset;
+            const w = blockSize - 2 * inset;
+            const h = blockSize - 2 * inset;
+
+            if (w > 0 && h > 0) {
+              pattern.push({
+                type: 'rect',
+                points: [
+                  { x: x1, y: y1 },
+                  { x: x1 + w, y: y1 },
+                  { x: x1 + w, y: y1 + h },
+                  { x: x1, y: y1 + h }
+                ],
+                layer: i,
+                blockId: row * cols + col
+              });
+            }
+          }
+        }
+      }
+    }
+
+    function generateFlyingGeese(blockSize, cols, rows, gap) {
+      // Flying Geese - triangular patterns
+      const totalWidth = cols * blockSize + (cols - 1) * gap;
+      const totalHeight = rows * blockSize + (rows - 1) * gap;
+      const startX = (width - totalWidth) / 2;
+      const startY = (height - totalHeight) / 2;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * (blockSize + gap);
+          const y = startY + row * (blockSize + gap);
+
+          // Main triangle pointing right
+          pattern.push({
+            type: 'line',
+            points: [
+              { x: x, y: y },
+              { x: x + blockSize, y: y + blockSize / 2 }
+            ],
+            layer: 0,
+            blockId: row * cols + col
+          });
+
+          pattern.push({
+            type: 'line',
+            points: [
+              { x: x + blockSize, y: y + blockSize / 2 },
+              { x: x, y: y + blockSize }
+            ],
+            layer: 0,
+            blockId: row * cols + col
+          });
+
+          pattern.push({
+            type: 'line',
+            points: [
+              { x: x, y: y + blockSize },
+              { x: x, y: y }
+            ],
+            layer: 0,
+            blockId: row * cols + col
+          });
+
+          // Interior triangles
+          pattern.push({
+            type: 'line',
+            points: [
+              { x: x + blockSize / 2, y: y },
+              { x: x + blockSize, y: y + blockSize / 2 }
+            ],
+            layer: 1,
+            blockId: row * cols + col
+          });
+
+          pattern.push({
+            type: 'line',
+            points: [
+              { x: x + blockSize / 2, y: y + blockSize },
+              { x: x + blockSize, y: y + blockSize / 2 }
+            ],
+            layer: 1,
+            blockId: row * cols + col
+          });
+        }
+      }
+    }
+
+    function generateNinePatch(blockSize, cols, rows, gap) {
+      // Nine Patch - 3x3 grid blocks
+      const totalWidth = cols * blockSize + (cols - 1) * gap;
+      const totalHeight = rows * blockSize + (rows - 1) * gap;
+      const startX = (width - totalWidth) / 2;
+      const startY = (height - totalHeight) / 2;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * (blockSize + gap);
+          const y = startY + row * (blockSize + gap);
+
+          const patchSize = blockSize / 3;
+
+          // Draw 3x3 grid
+          for (let pr = 0; pr < 3; pr++) {
+            for (let pc = 0; pc < 3; pc++) {
+              const px = x + pc * patchSize;
+              const py = y + pr * patchSize;
+
+              // Checkerboard pattern - fill alternate squares
+              if ((pr + pc) % 2 === 0) {
+                pattern.push({
+                  type: 'rect',
+                  points: [
+                    { x: px, y: py },
+                    { x: px + patchSize, y: py },
+                    { x: px + patchSize, y: py + patchSize },
+                    { x: px, y: py + patchSize }
+                  ],
+                  layer: 0,
+                  blockId: row * cols + col
+                });
+
+                // Add diagonal for texture
+                pattern.push({
+                  type: 'line',
+                  points: [
+                    { x: px, y: py },
+                    { x: px + patchSize, y: py + patchSize }
+                  ],
+                  layer: 1,
+                  blockId: row * cols + col
+                });
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function generateStarBlock(blockSize, cols, rows, gap) {
+      // Star Block - 8-pointed star
+      const totalWidth = cols * blockSize + (cols - 1) * gap;
+      const totalHeight = rows * blockSize + (rows - 1) * gap;
+      const startX = (width - totalWidth) / 2;
+      const startY = (height - totalHeight) / 2;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * (blockSize + gap);
+          const y = startY + row * (blockSize + gap);
+
+          const cx = x + blockSize / 2;
+          const cy = y + blockSize / 2;
+          const outerRadius = blockSize * 0.4;
+          const innerRadius = blockSize * 0.2;
+
+          // Generate 8-pointed star
+          const points = [];
+          for (let i = 0; i < 16; i++) {
+            const angle = (i * 360 / 16) - 90;
+            const radius = i % 2 === 0 ? outerRadius : innerRadius;
+            points.push({
+              x: cx + cos(angle) * radius,
+              y: cy + sin(angle) * radius
+            });
+          }
+
+          // Draw star outline
+          for (let i = 0; i < points.length; i++) {
+            pattern.push({
+              type: 'line',
+              points: [points[i], points[(i + 1) % points.length]],
+              layer: 0,
+              blockId: row * cols + col
+            });
+          }
+
+          // Draw lines from center to outer points
+          for (let i = 0; i < 16; i += 2) {
+            pattern.push({
+              type: 'line',
+              points: [{ x: cx, y: cy }, points[i]],
+              layer: 1,
+              blockId: row * cols + col
+            });
+          }
+        }
+      }
+    }
+
+    function generateBearPaw(blockSize, cols, rows, gap) {
+      // Bear Paw - claw-like patterns
+      const totalWidth = cols * blockSize + (cols - 1) * gap;
+      const totalHeight = rows * blockSize + (rows - 1) * gap;
+      const startX = (width - totalWidth) / 2;
+      const startY = (height - totalHeight) / 2;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * (blockSize + gap);
+          const y = startY + row * (blockSize + gap);
+
+          const cx = x + blockSize / 2;
+          const cy = y + blockSize / 2;
+          const pawSize = blockSize / 6;
+
+          // Center square (palm)
+          const palmSize = blockSize / 3;
+          pattern.push({
+            type: 'rect',
+            points: [
+              { x: cx - palmSize / 2, y: cy - palmSize / 2 },
+              { x: cx + palmSize / 2, y: cy - palmSize / 2 },
+              { x: cx + palmSize / 2, y: cy + palmSize / 2 },
+              { x: cx - palmSize / 2, y: cy + palmSize / 2 }
+            ],
+            layer: 0,
+            blockId: row * cols + col
+          });
+
+          // Four claws in corners
+          const corners = [
+            { angle: 45, dist: blockSize * 0.3 },
+            { angle: 135, dist: blockSize * 0.3 },
+            { angle: 225, dist: blockSize * 0.3 },
+            { angle: 315, dist: blockSize * 0.3 }
+          ];
+
+          corners.forEach((corner, i) => {
+            const clawX = cx + cos(corner.angle) * corner.dist;
+            const clawY = cy + sin(corner.angle) * corner.dist;
+
+            // Draw claw as small square
+            pattern.push({
+              type: 'rect',
+              points: [
+                { x: clawX - pawSize / 2, y: clawY - pawSize / 2 },
+                { x: clawX + pawSize / 2, y: clawY - pawSize / 2 },
+                { x: clawX + pawSize / 2, y: clawY + pawSize / 2 },
+                { x: clawX - pawSize / 2, y: clawY + pawSize / 2 }
+              ],
+              layer: 1,
+              blockId: row * cols + col
+            });
+
+            // Connect claw to center
+            pattern.push({
+              type: 'line',
+              points: [{ x: cx, y: cy }, { x: clawX, y: clawY }],
+              layer: 2,
+              blockId: row * cols + col
+            });
+          });
+        }
+      }
+    }
+
+    function generatePinwheel(blockSize, cols, rows, gap) {
+      // Pinwheel - rotating triangles
+      const totalWidth = cols * blockSize + (cols - 1) * gap;
+      const totalHeight = rows * blockSize + (rows - 1) * gap;
+      const startX = (width - totalWidth) / 2;
+      const startY = (height - totalHeight) / 2;
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const x = startX + col * (blockSize + gap);
+          const y = startY + row * (blockSize + gap);
+
+          const cx = x + blockSize / 2;
+          const cy = y + blockSize / 2;
+
+          // Four triangles forming pinwheel
+          const corners = [
+            { x1: x, y1: y, x2: cx, y2: y, x3: cx, y3: cy },  // Top-left
+            { x1: x + blockSize, y1: y, x2: x + blockSize, y2: cy, x3: cx, y3: cy },  // Top-right
+            { x1: x + blockSize, y1: y + blockSize, x2: cx, y2: y + blockSize, x3: cx, y3: cy },  // Bottom-right
+            { x1: x, y1: y + blockSize, x2: x, y2: cy, x3: cx, y3: cy }  // Bottom-left
+          ];
+
+          corners.forEach((tri, i) => {
+            // Triangle outline
+            pattern.push({
+              type: 'line',
+              points: [
+                { x: tri.x1, y: tri.y1 },
+                { x: tri.x2, y: tri.y2 }
+              ],
+              layer: 0,
+              blockId: row * cols + col
+            });
+
+            pattern.push({
+              type: 'line',
+              points: [
+                { x: tri.x2, y: tri.y2 },
+                { x: tri.x3, y: tri.y3 }
+              ],
+              layer: 0,
+              blockId: row * cols + col
+            });
+
+            pattern.push({
+              type: 'line',
+              points: [
+                { x: tri.x3, y: tri.y3 },
+                { x: tri.x1, y: tri.y1 }
+              ],
+              layer: 0,
+              blockId: row * cols + col
+            });
+
+            // Interior line for shading
+            const midX = (tri.x1 + tri.x2) / 2;
+            const midY = (tri.y1 + tri.y2) / 2;
+            pattern.push({
+              type: 'line',
+              points: [
+                { x: midX, y: midY },
+                { x: tri.x3, y: tri.y3 }
+              ],
+              layer: 1,
+              blockId: row * cols + col
+            });
+          });
+        }
+      }
+    }
+
+    function draw() {
+      const bgColor = document.getElementById('bgColor').value;
+      background(bgColor);
+
+      const strokeWeightVal = parseFloat(document.getElementById('strokeWeight').value);
+      const rotation = parseFloat(document.getElementById('rotation').value);
+      const showBlockOutlines = document.getElementById('showBlockOutlines').checked;
+      const randomizeColors = document.getElementById('randomizeColors').checked;
+      const primaryColor = document.getElementById('primaryColor').value;
+      const secondaryColor = document.getElementById('secondaryColor').value;
+      const accentColor = document.getElementById('accentColor').value;
+
+      push();
+      translate(width / 2, height / 2);
+      rotate(rotation);
+      translate(-width / 2, -height / 2);
+
+      // Draw pattern elements
+      strokeWeight(strokeWeightVal);
+      noFill();
+
+      // Sort by layer and blockId for proper rendering
+      const sortedPattern = [...pattern].sort((a, b) => {
+        if (a.blockId !== b.blockId) return a.blockId - b.blockId;
+        return a.layer - b.layer;
+      });
+
+      let currentBlockId = -1;
+      sortedPattern.forEach((element, idx) => {
+        push();
+
+        // Change color per block if randomized
+        if (randomizeColors && element.blockId !== currentBlockId) {
+          currentBlockId = element.blockId;
+          randomSeed(currentSeed + element.blockId);
+          const colors = [primaryColor, secondaryColor, accentColor];
+          stroke(random(colors));
+        } else {
+          // Alternate colors by layer
+          const colors = [primaryColor, secondaryColor, accentColor];
+          stroke(colors[element.layer % colors.length]);
+        }
+
+        switch (element.type) {
+          case 'line':
+            line(element.points[0].x, element.points[0].y,
+                 element.points[1].x, element.points[1].y);
+            break;
+
+          case 'rect':
+            beginShape();
+            element.points.forEach(p => vertex(p.x, p.y));
+            endShape(CLOSE);
+            break;
+
+          case 'circle':
+            circle(element.center.x, element.center.y, element.radius * 2);
+            break;
+        }
+
+        pop();
+      });
+
+      // Draw block outlines if enabled
+      if (showBlockOutlines) {
+        const blockSize = parseInt(document.getElementById('blockSize').value);
+        const gridCols = parseInt(document.getElementById('gridCols').value);
+        const gridRows = parseInt(document.getElementById('gridRows').value);
+        const blockGap = parseInt(document.getElementById('blockGap').value);
+
+        const totalWidth = gridCols * blockSize + (gridCols - 1) * blockGap;
+        const totalHeight = gridRows * blockSize + (gridRows - 1) * blockGap;
+        const startX = (width - totalWidth) / 2;
+        const startY = (height - totalHeight) / 2;
+
+        push();
+        stroke(200);
+        strokeWeight(0.5);
+        noFill();
+
+        for (let row = 0; row < gridRows; row++) {
+          for (let col = 0; col < gridCols; col++) {
+            const x = startX + col * (blockSize + blockGap);
+            const y = startY + row * (blockSize + blockGap);
+            rect(x, y, blockSize, blockSize);
+          }
+        }
+        pop();
+      }
+
+      pop();
+      noLoop();
+    }
+
+    function randomizePattern() {
+      // Randomize controls
+      document.getElementById('blockSize').value = floor(random(50, 201) / 10) * 10;
+      document.getElementById('gridCols').value = floor(random(2, 7));
+      document.getElementById('gridRows').value = floor(random(2, 7));
+      document.getElementById('blockGap').value = floor(random(0, 31) / 2) * 2;
+      document.getElementById('rotation').value = floor(random(0, 25)) * 15;
+      document.getElementById('seed').value = floor(random(1, 100000));
+
+      // Random pattern type
+      const patterns = ['logCabin', 'flyingGeese', 'ninePatch', 'starBlock', 'bearPaw', 'pinwheel'];
+      document.getElementById('patternType').value = random(patterns);
+
+      // Update displays
+      updateAllDisplays();
+
+      // Generate new pattern
+      generatePattern();
+    }
+
+    function exportSVG() {
+      const size = PAPER_SIZES[currentPaperSize];
+      const strokeWeightVal = parseFloat(document.getElementById('strokeWeight').value);
+      const rotation = parseFloat(document.getElementById('rotation').value);
+      const bgColor = document.getElementById('bgColor').value;
+      const primaryColor = document.getElementById('primaryColor').value;
+      const secondaryColor = document.getElementById('secondaryColor').value;
+      const accentColor = document.getElementById('accentColor').value;
+      const randomizeColors = document.getElementById('randomizeColors').checked;
+
+      // Reorder elements for plotter if optimization enabled
+      let drawOrder = pattern;
+      if (document.getElementById('optimizeForPlotter').checked) {
+        drawOrder = TSExport.reorderElements(pattern,
+          (el) => el.points && el.points.length > 0 ? el.points[0] : { x: 0, y: 0 },
+          (el) => el.points && el.points.length > 1 ? el.points[el.points.length - 1] : el.points[0]
+        );
+      }
+
+      let svgElements = '';
+      let currentBlockId = -1;
+      drawOrder.forEach(element => {
+        let strokeColor = primaryColor;
+
+        if (randomizeColors && element.blockId !== currentBlockId) {
+          currentBlockId = element.blockId;
+          const colors = [primaryColor, secondaryColor, accentColor];
+          strokeColor = colors[Math.floor(Math.random() * colors.length)];
+        } else {
+          const colors = [primaryColor, secondaryColor, accentColor];
+          strokeColor = colors[element.layer % colors.length];
+        }
+
+        switch (element.type) {
+          case 'line':
+            svgElements += `    <line x1="${element.points[0].x}" y1="${element.points[0].y}" x2="${element.points[1].x}" y2="${element.points[1].y}" stroke="${strokeColor}" stroke-width="${strokeWeightVal}" fill="none"/>\n`;
+            break;
+          case 'rect': {
+            const pts = element.points.map(p => `${p.x},${p.y}`).join(' ');
+            svgElements += `    <polygon points="${pts}" stroke="${strokeColor}" stroke-width="${strokeWeightVal}" fill="none"/>\n`;
+            break;
+          }
+          case 'circle':
+            svgElements += `    <circle cx="${element.center.x}" cy="${element.center.y}" r="${element.radius}" stroke="${strokeColor}" stroke-width="${strokeWeightVal}" fill="none"/>\n`;
+            break;
+        }
+      });
+
+      const cx = size.width / 2;
+      const cy = size.height / 2;
+      const svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${size.width}" height="${size.height}" viewBox="0 0 ${size.width} ${size.height}">
+  <rect width="100%" height="100%" fill="${bgColor}"/>
+  <g transform="translate(${cx},${cy}) rotate(${rotation}) translate(${-cx},${-cy})">
+${svgElements}  </g>
+</svg>`;
+
+      TSExport.downloadSVG(svg, `quilting-pattern-${currentSeed}`);
+      showStatus('SVG exported successfully', 'success');
+    }
+
+    function exportPNG() {
+      save(`quilting-pattern-${currentSeed}.png`);
+      showStatus('PNG exported successfully', 'success');
+    }
+
+    function setupEventListeners() {
+      // Update value displays
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        input.addEventListener('input', (e) => {
+          const valueSpan = document.getElementById(e.target.id + '-value');
+          if (valueSpan) {
+            valueSpan.textContent = e.target.value;
+          }
+        });
+      });
+
+      // Regenerate on parameter change
+      ['patternType', 'blockSize', 'gridCols', 'gridRows', 'blockGap', 'seed'].forEach(id => {
+        document.getElementById(id).addEventListener('change', generatePattern);
+      });
+
+      // Redraw on visual change
+      ['strokeWeight', 'rotation', 'showBlockOutlines', 'randomizeColors',
+       'bgColor', 'primaryColor', 'secondaryColor', 'accentColor'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+          redraw();
+        });
+      });
+
+      // Paper size change
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        currentPaperSize = e.target.value;
+        updateCanvasSize();
+      });
+    }
+
+    function updateAllDisplays() {
+      document.querySelectorAll('input[type="range"]').forEach(input => {
+        const valueSpan = document.getElementById(input.id + '-value');
+        if (valueSpan) {
+          valueSpan.textContent = input.value;
+        }
+      });
+    }
+
+    function showStatus(message, type) {
+      const status = document.getElementById('processing-status');
+      status.textContent = message;
+      status.className = type;
+      status.style.display = 'block';
+
+      setTimeout(() => {
+        status.style.display = 'none';
+      }, 3000);
+    }
+
+    function updateUrlState() {
+      const params = {
+        patternType: document.getElementById('patternType').value,
+        blockSize: parseInt(document.getElementById('blockSize').value),
+        gridCols: parseInt(document.getElementById('gridCols').value),
+        gridRows: parseInt(document.getElementById('gridRows').value),
+        blockGap: parseInt(document.getElementById('blockGap').value),
+        strokeWeight: parseFloat(document.getElementById('strokeWeight').value),
+        rotation: parseInt(document.getElementById('rotation').value),
+        seed: parseInt(document.getElementById('seed').value),
+        showBlockOutlines: document.getElementById('showBlockOutlines').checked,
+        randomizeColors: document.getElementById('randomizeColors').checked
+      };
+      urlState.replaceState(params);
+    }
+
+    function copyShareUrl() {
+      const params = {
+        patternType: document.getElementById('patternType').value,
+        blockSize: parseInt(document.getElementById('blockSize').value),
+        gridCols: parseInt(document.getElementById('gridCols').value),
+        gridRows: parseInt(document.getElementById('gridRows').value),
+        blockGap: parseInt(document.getElementById('blockGap').value),
+        strokeWeight: parseFloat(document.getElementById('strokeWeight').value),
+        rotation: parseInt(document.getElementById('rotation').value),
+        seed: parseInt(document.getElementById('seed').value),
+        showBlockOutlines: document.getElementById('showBlockOutlines').checked,
+        randomizeColors: document.getElementById('randomizeColors').checked
+      };
+      const shareUrl = urlState.getShareUrl(params);
+      const statusEl = document.getElementById('share-status');
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        statusEl.textContent = '✓ Copied!';
+        setTimeout(() => statusEl.textContent = '', 2000);
+      }).catch(() => { statusEl.textContent = 'Copy failed'; });
+    }
+  </script>
+</body>
+</html>

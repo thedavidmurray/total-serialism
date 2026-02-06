@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plotter Preview & Simulator - Total Serialism</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================
+       TUFTE-INSPIRED DESIGN SYSTEM
+       ============================================ */
+    :root {
+      --ts-bg-deep: #0a0a0c;
+      --ts-bg-base: #111114;
+      --ts-bg-panel: #18181c;
+      --ts-bg-hover: #1f1f24;
+
+      --ts-accent: #00d4aa;
+      --ts-accent-dim: rgba(0, 212, 170, 0.15);
+
+      --ts-text-primary: #e4e4e8;
+      --ts-text-secondary: #8888a0;
+      --ts-text-muted: #555566;
+
+      --ts-border: rgba(255, 255, 255, 0.08);
+
+      --ts-font-mono: 'JetBrains Mono', monospace;
+
+      /* Plotter colors */
+      --pen-down: #00ff00;
+      --pen-up: #ff0000;
+      --pen-current: #ffff00;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    html {
+      font-size: 14px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: var(--ts-font-mono);
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ============================================
+       HEADER
+       ============================================ */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--ts-bg-base);
+      border-bottom: 1px solid var(--ts-border);
+    }
+
+    .header-inner {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid var(--ts-accent);
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-mark::before {
+      content: '';
+      width: 12px;
+      height: 12px;
+      border: 1.5px solid var(--ts-accent);
+      border-radius: 50%;
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .logo-title {
+      font-size: 0.9rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ts-text-primary);
+    }
+
+    .logo-subtitle {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ts-text-muted);
+    }
+
+    /* ============================================
+       MAIN LAYOUT
+       ============================================ */
+    .main-container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 350px;
+      gap: 1.5rem;
+      min-height: calc(100vh - 80px);
+    }
+
+    /* ============================================
+       CANVAS AREA
+       ============================================ */
+    .canvas-container {
+      background: var(--ts-bg-panel);
+      border: 1px solid var(--ts-border);
+      border-radius: 4px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .canvas-wrapper {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--ts-bg-deep);
+      border-radius: 4px;
+      position: relative;
+      overflow: hidden;
+      min-height: 600px;
+    }
+
+    #previewCanvas {
+      max-width: 100%;
+      max-height: 100%;
+      image-rendering: crisp-edges;
+    }
+
+    .drop-zone {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 212, 170, 0.05);
+      border: 2px dashed var(--ts-border);
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .drop-zone.active {
+      opacity: 1;
+      border-color: var(--ts-accent);
+    }
+
+    .drop-zone-text {
+      font-size: 1.2rem;
+      color: var(--ts-text-secondary);
+    }
+
+    /* ============================================
+       CONTROLS PANEL
+       ============================================ */
+    .controls-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .panel-section {
+      background: var(--ts-bg-panel);
+      border: 1px solid var(--ts-border);
+      border-radius: 4px;
+      padding: 1rem;
+    }
+
+    .section-title {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ts-text-muted);
+      margin: 0 0 0.75rem 0;
+    }
+
+    /* ============================================
+       BUTTONS
+       ============================================ */
+    .btn {
+      background: var(--ts-bg-hover);
+      border: 1px solid var(--ts-border);
+      color: var(--ts-text-primary);
+      padding: 0.5rem 1rem;
+      font-family: var(--ts-font-mono);
+      font-size: 0.75rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+
+    .btn:hover {
+      background: var(--ts-accent-dim);
+      border-color: var(--ts-accent);
+    }
+
+    .btn-primary {
+      background: var(--ts-accent);
+      color: var(--ts-bg-deep);
+      border-color: var(--ts-accent);
+    }
+
+    .btn-primary:hover {
+      background: #00ffcc;
+      border-color: #00ffcc;
+    }
+
+    .btn-block {
+      width: 100%;
+      display: block;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    /* ============================================
+       FORM CONTROLS
+       ============================================ */
+    .control-group {
+      margin-bottom: 1rem;
+    }
+
+    .control-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-label {
+      display: block;
+      font-size: 0.7rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .control-input {
+      width: 100%;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border);
+      color: var(--ts-text-primary);
+      padding: 0.5rem;
+      font-family: var(--ts-font-mono);
+      font-size: 0.8rem;
+      border-radius: 3px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 4px;
+      background: var(--ts-bg-deep);
+      border-radius: 2px;
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent);
+      cursor: pointer;
+      border-radius: 50%;
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 14px;
+      height: 14px;
+      background: var(--ts-accent);
+      cursor: pointer;
+      border-radius: 50%;
+      border: none;
+    }
+
+    input[type="color"] {
+      width: 60px;
+      height: 32px;
+      border: 1px solid var(--ts-border);
+      border-radius: 3px;
+      cursor: pointer;
+      background: var(--ts-bg-deep);
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0;
+    }
+
+    input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 100px;
+      background: var(--ts-bg-deep);
+      border: 1px solid var(--ts-border);
+      color: var(--ts-text-primary);
+      padding: 0.5rem;
+      font-family: var(--ts-font-mono);
+      font-size: 0.75rem;
+      border-radius: 3px;
+      resize: vertical;
+    }
+
+    /* ============================================
+       STATS DISPLAY
+       ============================================ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .stat-item {
+      background: var(--ts-bg-deep);
+      padding: 0.75rem;
+      border-radius: 3px;
+    }
+
+    .stat-value {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--ts-accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .stat-label {
+      font-size: 0.6rem;
+      color: var(--ts-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ============================================
+       PLAYBACK CONTROLS
+       ============================================ */
+    .playback-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--ts-bg-deep);
+      border-radius: 3px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--ts-accent);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    .toggle-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    /* ============================================
+       OPTIMIZATION COMPARISON
+       ============================================ */
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    .comparison-item {
+      background: var(--ts-bg-deep);
+      padding: 0.5rem;
+      border-radius: 3px;
+      text-align: center;
+    }
+
+    .comparison-label {
+      font-size: 0.6rem;
+      color: var(--ts-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+
+    .comparison-value {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--ts-text-primary);
+    }
+
+    .improvement {
+      color: var(--ts-accent);
+    }
+
+    /* ============================================
+       FILE INPUT
+       ============================================ */
+    .file-input-wrapper {
+      position: relative;
+    }
+
+    input[type="file"] {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+    }
+
+    /* ============================================
+       RESPONSIVE
+       ============================================ */
+    @media (max-width: 1200px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+
+      .controls-panel {
+        order: -1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo-section">
+        <div class="logo-mark"></div>
+        <div class="logo-text">
+          <div class="logo-title">Total Serialism</div>
+          <div class="logo-subtitle">Plotter Preview & Simulator</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <div class="main-container">
+
+    <!-- CANVAS AREA -->
+    <div class="canvas-container">
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <canvas id="previewCanvas"></canvas>
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-text">Drop SVG file here</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROLS PANEL -->
+    <div class="controls-panel">
+
+      <!-- INPUT SECTION -->
+      <div class="panel-section">
+        <h3 class="section-title">Input</h3>
+
+        <div class="control-group">
+          <label class="control-label">Load SVG File</label>
+          <div class="file-input-wrapper">
+            <button class="btn btn-block">Choose File</button>
+            <input type="file" id="fileInput" accept=".svg,image/svg+xml">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Or Paste SVG Code</label>
+          <textarea id="svgInput" placeholder="<svg>...</svg>"></textarea>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="loadBtn">Load SVG</button>
+      </div>
+
+      <!-- VISUALIZATION SECTION -->
+      <div class="panel-section">
+        <h3 class="section-title">Visualization</h3>
+
+        <div class="toggle-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="showDrawing" checked>
+            <label class="control-label" for="showDrawing">Drawing Paths</label>
+          </div>
+
+          <div class="checkbox-group">
+            <input type="checkbox" id="showTravel" checked>
+            <label class="control-label" for="showTravel">Travel Paths</label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Drawing Color</label>
+          <input type="color" id="penDownColor" value="#00ff00">
+        </div>
+
+        <div class="control-group">
+          <label class="control-label">Travel Color</label>
+          <input type="color" id="penUpColor" value="#ff0000">
+        </div>
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="showHeatmap">
+          <label class="control-label" for="showHeatmap">Show Heatmap</label>
+        </div>
+      </div>
+
+      <!-- PLAYBACK SECTION -->
+      <div class="panel-section">
+        <h3 class="section-title">Animation Playback</h3>
+
+        <div class="playback-controls">
+          <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+
+          <div class="btn-group">
+            <button class="btn" id="playBtn">Play</button>
+            <button class="btn" id="pauseBtn">Pause</button>
+            <button class="btn" id="resetBtn">Reset</button>
+          </div>
+
+          <div class="control-group">
+            <label class="control-label">Speed: <span id="speedValue">1.0</span>x</label>
+            <input type="range" id="speedSlider" min="0.1" max="10" step="0.1" value="1">
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS SECTION -->
+      <div class="panel-section">
+        <h3 class="section-title">Statistics</h3>
+
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value" id="drawDistance">0</div>
+            <div class="stat-label">Drawing (mm)</div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-value" id="travelDistance">0</div>
+            <div class="stat-label">Travel (mm)</div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-value" id="pathCount">0</div>
+            <div class="stat-label">Paths</div>
+          </div>
+
+          <div class="stat-item">
+            <div class="stat-value" id="penLifts">0</div>
+            <div class="stat-label">Pen Lifts</div>
+          </div>
+        </div>
+
+        <div class="control-group" style="margin-top: 1rem;">
+          <label class="control-label">Plot Speed (mm/s)</label>
+          <input type="number" id="plotSpeed" class="control-input" value="50" min="1" max="500">
+        </div>
+
+        <div class="stat-item" style="margin-top: 0.75rem;">
+          <div class="stat-value" id="estimatedTime">0:00</div>
+          <div class="stat-label">Estimated Time</div>
+        </div>
+      </div>
+
+      <!-- OPTIMIZATION SECTION -->
+      <div class="panel-section">
+        <h3 class="section-title">Path Optimization</h3>
+
+        <button class="btn btn-primary btn-block" id="optimizeBtn">Optimize Paths</button>
+
+        <div class="comparison-grid" id="comparisonGrid" style="display: none;">
+          <div class="comparison-item">
+            <div class="comparison-label">Before</div>
+            <div class="comparison-value" id="beforeTravel">-</div>
+          </div>
+
+          <div class="comparison-item">
+            <div class="comparison-label">After</div>
+            <div class="comparison-value improvement" id="afterTravel">-</div>
+          </div>
+        </div>
+
+        <button class="btn btn-block" id="downloadOptimizedBtn" style="display: none; margin-top: 0.75rem;">
+          Download Optimized SVG
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="../shared/path-optimizer.js"></script>
+  <script>
+    /**
+     * PLOTTER PREVIEW & SIMULATOR
+     * Visualizes pen plotter movements and optimizes paths
+     */
+
+    class PlotterPreview {
+      constructor() {
+        this.canvas = document.getElementById('previewCanvas');
+        this.ctx = this.canvas.getContext('2d');
+
+        // SVG and path data
+        this.svgData = null;
+        this.paths = [];
+        this.optimizedPaths = null;
+        this.currentPaths = [];
+
+        // Animation state
+        this.isPlaying = false;
+        this.animationProgress = 0;
+        this.animationFrame = null;
+        this.lastTimestamp = 0;
+
+        // Settings
+        this.settings = {
+          showDrawing: true,
+          showTravel: true,
+          showHeatmap: false,
+          penDownColor: '#00ff00',
+          penUpColor: '#ff0000',
+          speed: 1.0,
+          plotSpeed: 50, // mm/s
+        };
+
+        // Stats
+        this.stats = {
+          drawDistance: 0,
+          travelDistance: 0,
+          pathCount: 0,
+          penLifts: 0,
+        };
+
+        // Path optimizer
+        this.optimizer = new PathOptimizer();
+
+        this.initEventListeners();
+        this.resizeCanvas();
+      }
+
+      initEventListeners() {
+        // File input
+        document.getElementById('fileInput').addEventListener('change', (e) => this.handleFileSelect(e));
+        document.getElementById('loadBtn').addEventListener('click', () => this.loadFromTextarea());
+
+        // Drag and drop
+        const wrapper = document.getElementById('canvasWrapper');
+        const dropZone = document.getElementById('dropZone');
+
+        wrapper.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropZone.classList.add('active');
+        });
+
+        wrapper.addEventListener('dragleave', () => {
+          dropZone.classList.remove('active');
+        });
+
+        wrapper.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropZone.classList.remove('active');
+          const file = e.dataTransfer.files[0];
+          if (file && file.type === 'image/svg+xml') {
+            this.loadSVGFile(file);
+          }
+        });
+
+        // Visualization controls
+        document.getElementById('showDrawing').addEventListener('change', (e) => {
+          this.settings.showDrawing = e.target.checked;
+          this.render();
+        });
+
+        document.getElementById('showTravel').addEventListener('change', (e) => {
+          this.settings.showTravel = e.target.checked;
+          this.render();
+        });
+
+        document.getElementById('showHeatmap').addEventListener('change', (e) => {
+          this.settings.showHeatmap = e.target.checked;
+          this.render();
+        });
+
+        document.getElementById('penDownColor').addEventListener('change', (e) => {
+          this.settings.penDownColor = e.target.value;
+          this.render();
+        });
+
+        document.getElementById('penUpColor').addEventListener('change', (e) => {
+          this.settings.penUpColor = e.target.value;
+          this.render();
+        });
+
+        // Playback controls
+        document.getElementById('playBtn').addEventListener('click', () => this.play());
+        document.getElementById('pauseBtn').addEventListener('click', () => this.pause());
+        document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+
+        document.getElementById('speedSlider').addEventListener('input', (e) => {
+          this.settings.speed = parseFloat(e.target.value);
+          document.getElementById('speedValue').textContent = this.settings.speed.toFixed(1);
+        });
+
+        // Progress bar seeking
+        document.getElementById('progressBar').addEventListener('click', (e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          this.animationProgress = x / rect.width;
+          this.render();
+        });
+
+        // Plot speed
+        document.getElementById('plotSpeed').addEventListener('input', (e) => {
+          this.settings.plotSpeed = parseFloat(e.target.value);
+          this.updateStats();
+        });
+
+        // Optimization
+        document.getElementById('optimizeBtn').addEventListener('click', () => this.optimizePaths());
+        document.getElementById('downloadOptimizedBtn').addEventListener('click', () => this.downloadOptimized());
+
+        // Window resize
+        window.addEventListener('resize', () => this.resizeCanvas());
+
+        // URL parameter loading
+        this.checkURLParameter();
+      }
+
+      checkURLParameter() {
+        const params = new URLSearchParams(window.location.search);
+        const url = params.get('url');
+        if (url) {
+          fetch(url)
+            .then(r => r.text())
+            .then(svg => this.loadSVG(svg))
+            .catch(err => console.error('Failed to load SVG from URL:', err));
+        }
+      }
+
+      handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (file) {
+          this.loadSVGFile(file);
+        }
+      }
+
+      loadSVGFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          this.loadSVG(e.target.result);
+        };
+        reader.readAsText(file);
+      }
+
+      loadFromTextarea() {
+        const svgCode = document.getElementById('svgInput').value;
+        if (svgCode.trim()) {
+          this.loadSVG(svgCode);
+        }
+      }
+
+      loadSVG(svgString) {
+        try {
+          // Parse SVG
+          const parser = new DOMParser();
+          const svgDoc = parser.parseFromString(svgString, 'image/svg+xml');
+          const svgElement = svgDoc.querySelector('svg');
+
+          if (!svgElement) {
+            throw new Error('Invalid SVG');
+          }
+
+          this.svgData = svgElement;
+          this.parsePaths();
+          this.calculateStats();
+          this.updateStats();
+          this.resizeCanvas();
+          this.render();
+
+          // Reset optimization
+          this.optimizedPaths = null;
+          document.getElementById('comparisonGrid').style.display = 'none';
+          document.getElementById('downloadOptimizedBtn').style.display = 'none';
+
+        } catch (err) {
+          console.error('Failed to load SVG:', err);
+          alert('Failed to load SVG. Please check the format.');
+        }
+      }
+
+      parsePaths() {
+        this.paths = [];
+
+        // Get all path elements
+        const pathElements = this.svgData.querySelectorAll('path, polyline, polygon, line, rect, circle, ellipse');
+
+        pathElements.forEach(element => {
+          const pathData = this.elementToPathData(element);
+          if (pathData && pathData.length > 0) {
+            this.paths.push(pathData);
+          }
+        });
+
+        this.currentPaths = this.paths;
+      }
+
+      elementToPathData(element) {
+        const points = [];
+        const tagName = element.tagName.toLowerCase();
+
+        if (tagName === 'path') {
+          // Parse path d attribute
+          const d = element.getAttribute('d');
+          if (!d) return points;
+
+          // Simple path parser (handles M, L, C, Q commands)
+          const commands = d.match(/[MLCQZHVmlcqzhv][^MLCQZHVmlcqzhv]*/g);
+          let currentX = 0, currentY = 0;
+
+          commands?.forEach(cmd => {
+            const type = cmd[0];
+            const values = cmd.slice(1).trim().split(/[\s,]+/).map(parseFloat).filter(v => !isNaN(v));
+
+            if (type === 'M' || type === 'm') {
+              currentX = type === 'M' ? values[0] : currentX + values[0];
+              currentY = type === 'M' ? values[1] : currentY + values[1];
+              points.push({ x: currentX, y: currentY });
+            } else if (type === 'L' || type === 'l') {
+              for (let i = 0; i < values.length; i += 2) {
+                currentX = type === 'L' ? values[i] : currentX + values[i];
+                currentY = type === 'L' ? values[i + 1] : currentY + values[i + 1];
+                points.push({ x: currentX, y: currentY });
+              }
+            } else if (type === 'H' || type === 'h') {
+              currentX = type === 'H' ? values[0] : currentX + values[0];
+              points.push({ x: currentX, y: currentY });
+            } else if (type === 'V' || type === 'v') {
+              currentY = type === 'V' ? values[0] : currentY + values[0];
+              points.push({ x: currentX, y: currentY });
+            } else if (type === 'C' || type === 'c') {
+              // Cubic bezier - sample it
+              for (let i = 0; i < values.length; i += 6) {
+                const x1 = type === 'C' ? values[i] : currentX + values[i];
+                const y1 = type === 'C' ? values[i + 1] : currentY + values[i + 1];
+                const x2 = type === 'C' ? values[i + 2] : currentX + values[i + 2];
+                const y2 = type === 'C' ? values[i + 3] : currentY + values[i + 3];
+                const x = type === 'C' ? values[i + 4] : currentX + values[i + 4];
+                const y = type === 'C' ? values[i + 5] : currentY + values[i + 5];
+
+                // Sample bezier curve
+                for (let t = 0.1; t <= 1; t += 0.1) {
+                  const t2 = 1 - t;
+                  const bx = t2 * t2 * t2 * currentX + 3 * t2 * t2 * t * x1 + 3 * t2 * t * t * x2 + t * t * t * x;
+                  const by = t2 * t2 * t2 * currentY + 3 * t2 * t2 * t * y1 + 3 * t2 * t * t * y2 + t * t * t * y;
+                  points.push({ x: bx, y: by });
+                }
+
+                currentX = x;
+                currentY = y;
+              }
+            }
+          });
+
+        } else if (tagName === 'polyline' || tagName === 'polygon') {
+          const pointsAttr = element.getAttribute('points');
+          if (!pointsAttr) return points;
+
+          const coords = pointsAttr.trim().split(/[\s,]+/).map(parseFloat);
+          for (let i = 0; i < coords.length; i += 2) {
+            points.push({ x: coords[i], y: coords[i + 1] });
+          }
+
+          if (tagName === 'polygon' && points.length > 0) {
+            points.push({ ...points[0] }); // Close the polygon
+          }
+
+        } else if (tagName === 'line') {
+          points.push({
+            x: parseFloat(element.getAttribute('x1')),
+            y: parseFloat(element.getAttribute('y1'))
+          });
+          points.push({
+            x: parseFloat(element.getAttribute('x2')),
+            y: parseFloat(element.getAttribute('y2'))
+          });
+
+        } else if (tagName === 'rect') {
+          const x = parseFloat(element.getAttribute('x')) || 0;
+          const y = parseFloat(element.getAttribute('y')) || 0;
+          const w = parseFloat(element.getAttribute('width'));
+          const h = parseFloat(element.getAttribute('height'));
+
+          points.push({ x, y });
+          points.push({ x: x + w, y });
+          points.push({ x: x + w, y: y + h });
+          points.push({ x, y: y + h });
+          points.push({ x, y });
+
+        } else if (tagName === 'circle') {
+          const cx = parseFloat(element.getAttribute('cx')) || 0;
+          const cy = parseFloat(element.getAttribute('cy')) || 0;
+          const r = parseFloat(element.getAttribute('r'));
+
+          // Approximate circle with segments
+          const segments = 32;
+          for (let i = 0; i <= segments; i++) {
+            const angle = (i / segments) * Math.PI * 2;
+            points.push({
+              x: cx + r * Math.cos(angle),
+              y: cy + r * Math.sin(angle)
+            });
+          }
+        }
+
+        return points;
+      }
+
+      calculateStats() {
+        this.stats.drawDistance = 0;
+        this.stats.travelDistance = 0;
+        this.stats.pathCount = this.currentPaths.length;
+        this.stats.penLifts = Math.max(0, this.currentPaths.length - 1);
+
+        let lastPoint = { x: 0, y: 0 };
+
+        this.currentPaths.forEach((path, pathIndex) => {
+          // Travel distance to start of this path
+          if (pathIndex > 0 && path.length > 0) {
+            this.stats.travelDistance += this.distance(lastPoint, path[0]);
+          }
+
+          // Drawing distance within this path
+          for (let i = 1; i < path.length; i++) {
+            this.stats.drawDistance += this.distance(path[i - 1], path[i]);
+          }
+
+          if (path.length > 0) {
+            lastPoint = path[path.length - 1];
+          }
+        });
+      }
+
+      distance(p1, p2) {
+        return Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+      }
+
+      updateStats() {
+        document.getElementById('drawDistance').textContent = this.stats.drawDistance.toFixed(1);
+        document.getElementById('travelDistance').textContent = this.stats.travelDistance.toFixed(1);
+        document.getElementById('pathCount').textContent = this.stats.pathCount;
+        document.getElementById('penLifts').textContent = this.stats.penLifts;
+
+        // Calculate estimated time
+        const totalDistance = this.stats.drawDistance + this.stats.travelDistance;
+        const timeSeconds = totalDistance / this.settings.plotSpeed;
+        const minutes = Math.floor(timeSeconds / 60);
+        const seconds = Math.floor(timeSeconds % 60);
+        document.getElementById('estimatedTime').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+      }
+
+      resizeCanvas() {
+        if (!this.svgData) return;
+
+        const wrapper = document.getElementById('canvasWrapper');
+        const rect = wrapper.getBoundingClientRect();
+
+        // Get SVG viewBox
+        const viewBox = this.svgData.getAttribute('viewBox');
+        let svgWidth, svgHeight;
+
+        if (viewBox) {
+          const parts = viewBox.split(/\s+/);
+          svgWidth = parseFloat(parts[2]);
+          svgHeight = parseFloat(parts[3]);
+        } else {
+          svgWidth = parseFloat(this.svgData.getAttribute('width')) || 100;
+          svgHeight = parseFloat(this.svgData.getAttribute('height')) || 100;
+        }
+
+        // Calculate scale to fit canvas in wrapper with padding
+        const padding = 40;
+        const scale = Math.min(
+          (rect.width - padding * 2) / svgWidth,
+          (rect.height - padding * 2) / svgHeight
+        );
+
+        this.canvas.width = svgWidth * scale + padding * 2;
+        this.canvas.height = svgHeight * scale + padding * 2;
+
+        this.scale = scale;
+        this.offsetX = padding;
+        this.offsetY = padding;
+
+        this.render();
+      }
+
+      render() {
+        if (!this.svgData || this.currentPaths.length === 0) return;
+
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.settings.showHeatmap) {
+          this.renderHeatmap();
+        } else if (this.isPlaying || this.animationProgress > 0) {
+          this.renderAnimation();
+        } else {
+          this.renderStatic();
+        }
+      }
+
+      renderStatic() {
+        let lastPoint = { x: 0, y: 0 };
+
+        this.currentPaths.forEach((path, pathIndex) => {
+          // Render travel path
+          if (this.settings.showTravel && pathIndex > 0 && path.length > 0) {
+            this.ctx.strokeStyle = this.settings.penUpColor;
+            this.ctx.lineWidth = 1;
+            this.ctx.setLineDash([5, 5]);
+            this.ctx.beginPath();
+            this.ctx.moveTo(
+              lastPoint.x * this.scale + this.offsetX,
+              lastPoint.y * this.scale + this.offsetY
+            );
+            this.ctx.lineTo(
+              path[0].x * this.scale + this.offsetX,
+              path[0].y * this.scale + this.offsetY
+            );
+            this.ctx.stroke();
+          }
+
+          // Render drawing path
+          if (this.settings.showDrawing && path.length > 0) {
+            this.ctx.strokeStyle = this.settings.penDownColor;
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([]);
+            this.ctx.beginPath();
+            this.ctx.moveTo(
+              path[0].x * this.scale + this.offsetX,
+              path[0].y * this.scale + this.offsetY
+            );
+
+            for (let i = 1; i < path.length; i++) {
+              this.ctx.lineTo(
+                path[i].x * this.scale + this.offsetX,
+                path[i].y * this.scale + this.offsetY
+              );
+            }
+            this.ctx.stroke();
+          }
+
+          if (path.length > 0) {
+            lastPoint = path[path.length - 1];
+          }
+        });
+      }
+
+      renderAnimation() {
+        // Calculate how much to render based on progress
+        let totalSegments = 0;
+        this.currentPaths.forEach(path => {
+          totalSegments += path.length + 1; // +1 for travel segment
+        });
+
+        const segmentsToRender = Math.floor(totalSegments * this.animationProgress);
+
+        let segmentCount = 0;
+        let lastPoint = { x: 0, y: 0 };
+
+        for (let pathIndex = 0; pathIndex < this.currentPaths.length; pathIndex++) {
+          const path = this.currentPaths[pathIndex];
+
+          // Travel segment
+          if (pathIndex > 0 && path.length > 0) {
+            segmentCount++;
+
+            if (segmentCount <= segmentsToRender && this.settings.showTravel) {
+              this.ctx.strokeStyle = this.settings.penUpColor;
+              this.ctx.lineWidth = 1;
+              this.ctx.setLineDash([5, 5]);
+              this.ctx.beginPath();
+              this.ctx.moveTo(
+                lastPoint.x * this.scale + this.offsetX,
+                lastPoint.y * this.scale + this.offsetY
+              );
+
+              if (segmentCount < segmentsToRender) {
+                this.ctx.lineTo(
+                  path[0].x * this.scale + this.offsetX,
+                  path[0].y * this.scale + this.offsetY
+                );
+              } else {
+                // Partial segment
+                const progress = segmentsToRender - (segmentCount - 1);
+                const x = lastPoint.x + (path[0].x - lastPoint.x) * progress;
+                const y = lastPoint.y + (path[0].y - lastPoint.y) * progress;
+                this.ctx.lineTo(
+                  x * this.scale + this.offsetX,
+                  y * this.scale + this.offsetY
+                );
+              }
+
+              this.ctx.stroke();
+            }
+
+            if (segmentCount >= segmentsToRender) break;
+          }
+
+          // Drawing segments
+          if (path.length > 0 && this.settings.showDrawing) {
+            this.ctx.strokeStyle = this.settings.penDownColor;
+            this.ctx.lineWidth = 2;
+            this.ctx.setLineDash([]);
+            this.ctx.beginPath();
+            this.ctx.moveTo(
+              path[0].x * this.scale + this.offsetX,
+              path[0].y * this.scale + this.offsetY
+            );
+
+            for (let i = 1; i < path.length; i++) {
+              segmentCount++;
+
+              if (segmentCount < segmentsToRender) {
+                this.ctx.lineTo(
+                  path[i].x * this.scale + this.offsetX,
+                  path[i].y * this.scale + this.offsetY
+                );
+              } else if (segmentCount === segmentsToRender) {
+                // Partial segment
+                const progress = segmentsToRender - (segmentCount - 1);
+                const x = path[i - 1].x + (path[i].x - path[i - 1].x) * progress;
+                const y = path[i - 1].y + (path[i].y - path[i - 1].y) * progress;
+                this.ctx.lineTo(
+                  x * this.scale + this.offsetX,
+                  y * this.scale + this.offsetY
+                );
+                break;
+              }
+            }
+
+            this.ctx.stroke();
+          }
+
+          if (segmentCount >= segmentsToRender) break;
+
+          if (path.length > 0) {
+            lastPoint = path[path.length - 1];
+          }
+        }
+
+        // Update progress bar
+        document.getElementById('progressFill').style.width = (this.animationProgress * 100) + '%';
+      }
+
+      renderHeatmap() {
+        // Create heatmap showing areas with most pen travel
+        const heatmapData = new Map();
+        const gridSize = 10; // pixels
+
+        let lastPoint = { x: 0, y: 0 };
+
+        this.currentPaths.forEach((path, pathIndex) => {
+          // Count travel paths
+          if (pathIndex > 0 && path.length > 0) {
+            this.addToHeatmap(heatmapData, lastPoint, path[0], gridSize);
+          }
+
+          // Count drawing paths (with higher weight)
+          for (let i = 1; i < path.length; i++) {
+            this.addToHeatmap(heatmapData, path[i - 1], path[i], gridSize, 2);
+          }
+
+          if (path.length > 0) {
+            lastPoint = path[path.length - 1];
+          }
+        });
+
+        // Find max value for normalization
+        let maxValue = 0;
+        heatmapData.forEach(value => {
+          maxValue = Math.max(maxValue, value);
+        });
+
+        // Render heatmap
+        heatmapData.forEach((value, key) => {
+          const [x, y] = key.split(',').map(Number);
+          const intensity = value / maxValue;
+          const hue = 240 - intensity * 240; // Blue to red
+          this.ctx.fillStyle = `hsla(${hue}, 100%, 50%, 0.5)`;
+          this.ctx.fillRect(x, y, gridSize, gridSize);
+        });
+
+        // Overlay paths
+        this.renderStatic();
+      }
+
+      addToHeatmap(heatmapData, p1, p2, gridSize, weight = 1) {
+        const steps = Math.ceil(this.distance(p1, p2) * this.scale / gridSize);
+
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const x = Math.floor((p1.x + (p2.x - p1.x) * t) * this.scale / gridSize) * gridSize;
+          const y = Math.floor((p1.y + (p2.y - p1.y) * t) * this.scale / gridSize) * gridSize;
+          const key = `${x},${y}`;
+          heatmapData.set(key, (heatmapData.get(key) || 0) + weight);
+        }
+      }
+
+      play() {
+        if (this.isPlaying) return;
+        this.isPlaying = true;
+        this.lastTimestamp = performance.now();
+        this.animate();
+      }
+
+      pause() {
+        this.isPlaying = false;
+        if (this.animationFrame) {
+          cancelAnimationFrame(this.animationFrame);
+          this.animationFrame = null;
+        }
+      }
+
+      reset() {
+        this.pause();
+        this.animationProgress = 0;
+        this.render();
+      }
+
+      animate(timestamp = 0) {
+        if (!this.isPlaying) return;
+
+        const deltaTime = (timestamp - this.lastTimestamp) / 1000; // seconds
+        this.lastTimestamp = timestamp;
+
+        // Calculate progress increment based on speed
+        // Assume animation should complete in 10 seconds at 1x speed
+        const baseSpeed = 0.1; // 10% per second
+        this.animationProgress += baseSpeed * this.settings.speed * deltaTime;
+
+        if (this.animationProgress >= 1) {
+          this.animationProgress = 1;
+          this.isPlaying = false;
+        }
+
+        this.render();
+
+        if (this.isPlaying) {
+          this.animationFrame = requestAnimationFrame((t) => this.animate(t));
+        }
+      }
+
+      optimizePaths() {
+        if (this.paths.length === 0) return;
+
+        // Store original stats
+        const beforeTravel = this.stats.travelDistance;
+
+        // Run optimization
+        this.optimizedPaths = this.optimizer.optimizePathOrder(this.paths);
+        this.currentPaths = this.optimizedPaths;
+
+        // Recalculate stats
+        this.calculateStats();
+        this.updateStats();
+        this.render();
+
+        // Show comparison
+        const afterTravel = this.stats.travelDistance;
+        const improvement = ((beforeTravel - afterTravel) / beforeTravel * 100).toFixed(1);
+
+        document.getElementById('beforeTravel').textContent = beforeTravel.toFixed(1) + ' mm';
+        document.getElementById('afterTravel').textContent = afterTravel.toFixed(1) + ' mm (-' + improvement + '%)';
+        document.getElementById('comparisonGrid').style.display = 'grid';
+        document.getElementById('downloadOptimizedBtn').style.display = 'block';
+      }
+
+      downloadOptimized() {
+        if (!this.optimizedPaths) return;
+
+        // Create new SVG with optimized paths
+        const svgClone = this.svgData.cloneNode(true);
+
+        // Remove all path-like elements
+        svgClone.querySelectorAll('path, polyline, polygon, line, rect, circle, ellipse').forEach(el => el.remove());
+
+        // Add optimized paths
+        this.optimizedPaths.forEach(path => {
+          if (path.length === 0) return;
+
+          const pathElement = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          let d = `M ${path[0].x} ${path[0].y}`;
+
+          for (let i = 1; i < path.length; i++) {
+            d += ` L ${path[i].x} ${path[i].y}`;
+          }
+
+          pathElement.setAttribute('d', d);
+          pathElement.setAttribute('fill', 'none');
+          pathElement.setAttribute('stroke', 'black');
+          pathElement.setAttribute('stroke-width', '1');
+
+          svgClone.appendChild(pathElement);
+        });
+
+        // Download
+        const svgString = new XMLSerializer().serializeToString(svgClone);
+        const blob = new Blob([svgString], { type: 'image/svg+xml' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'optimized.svg';
+        a.click();
+
+        URL.revokeObjectURL(url);
+      }
+    }
+
+    // Initialize
+    const preview = new PlotterPreview();
+  </script>
+
+</body>
+</html>

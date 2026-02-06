@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Circuit Board Pattern Generator - Total Serialism</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/canvas-controls.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/url-state.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <script src="../../shared/stats-display.js"></script>
+
+  <!-- Total Serialism Design System -->
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    /* Algorithm-specific overrides */
+    .info-text {
+      font-size: 11px;
+      color: var(--ts-text-muted, #666);
+      margin-top: 4px;
+    }
+    .checkbox-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .pattern-info {
+      font-size: 10px;
+      color: var(--ts-text-muted, #666);
+      margin-top: 4px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container"></div>
+  <div id="controls">
+    <div class="ts-header-inline">
+      <span class="ts-logo">Total Serialism</span>
+      <h2>Circuit Board Pattern</h2>
+    </div>
+
+    <div class="control-group">
+      <h3>Canvas Settings</h3>
+      <div class="control">
+        <label>Canvas Size:</label>
+        <select id="paperSize">
+          <option value="square800">Square 800x800</option>
+          <option value="a4portrait">A4 Portrait</option>
+          <option value="a4landscape">A4 Landscape</option>
+          <option value="a3portrait">A3 Portrait</option>
+          <option value="a3landscape">A3 Landscape</option>
+          <option value="letterportrait">Letter Portrait</option>
+          <option value="letterlandscape">Letter Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background Color:</label>
+        <input type="color" id="bgColor" value="#0a1f1a">
+      </div>
+      <div class="control">
+        <button id="randomizeAll" class="ts-btn">Randomize Colors</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Pattern Type</h3>
+      <div class="control">
+        <label>Pattern:</label>
+        <select id="patternType">
+          <option value="random">Random Traces</option>
+          <option value="grid">Grid Nodes</option>
+          <option value="radial">Radial Circuit</option>
+          <option value="layered">Layered Traces</option>
+          <option value="organic">Organic Circuit</option>
+        </select>
+      </div>
+      <p class="pattern-info" id="pattern-info">Maze-like random paths with Manhattan routing</p>
+    </div>
+
+    <div class="control-group">
+      <h3>Grid Settings</h3>
+      <div class="control">
+        <label>Grid Size: <span class="value" id="gridSize-val">16</span></label>
+        <input type="range" id="gridSize" min="8" max="32" value="16">
+      </div>
+      <div class="control">
+        <label>Node Density: <span class="value" id="nodeDensity-val">30</span>%</label>
+        <input type="range" id="nodeDensity" min="10" max="80" value="30">
+      </div>
+      <div class="control">
+        <label>Trace Complexity: <span class="value" id="complexity-val">5</span></label>
+        <input type="range" id="complexity" min="1" max="10" value="5">
+      </div>
+      <div class="control">
+        <label>Margin: <span class="value" id="margin-val">60</span></label>
+        <input type="range" id="margin" min="20" max="120" value="60">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Trace Settings</h3>
+      <div class="control">
+        <label>Trace Width: <span class="value" id="traceWidth-val">2.0</span></label>
+        <input type="range" id="traceWidth" min="0.5" max="6" value="2.0" step="0.5">
+      </div>
+      <div class="control">
+        <label>Corner Style:</label>
+        <select id="cornerStyle">
+          <option value="sharp">Sharp</option>
+          <option value="rounded">Rounded</option>
+          <option value="chamfered">Chamfered</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Trace Color:</label>
+        <input type="color" id="traceColor" value="#00ff88">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Via & Pad Settings</h3>
+      <div class="control">
+        <label>Via Size: <span class="value" id="viaSize-val">3</span></label>
+        <input type="range" id="viaSize" min="1" max="8" value="3" step="0.5">
+      </div>
+      <div class="control">
+        <label>Pad Size: <span class="value" id="padSize-val">6</span></label>
+        <input type="range" id="padSize" min="2" max="12" value="6" step="0.5">
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showVias" checked>
+        <label for="showVias">Show Vias</label>
+      </div>
+      <div class="control checkbox-container">
+        <input type="checkbox" id="showPads" checked>
+        <label for="showPads">Show Component Pads</label>
+      </div>
+      <div class="control">
+        <label>Via Color:</label>
+        <input type="color" id="viaColor" value="#ffaa00">
+      </div>
+      <div class="control">
+        <label>Pad Color:</label>
+        <input type="color" id="padColor" value="#ff4444">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Generation</h3>
+      <div class="control">
+        <label>Random Seed: <span class="value" id="seed-val">42</span></label>
+        <input type="range" id="seed" min="1" max="99999" value="42">
+      </div>
+      <button class="ts-btn-primary" id="regenerate">Generate New Pattern</button>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <button class="ts-btn" id="exportSVG">Export SVG</button>
+      <button class="ts-btn" id="exportPNG">Export PNG</button>
+    </div>
+
+    <div class="control-group preset-container">
+      <h3>Info</h3>
+      <p class="info-text">Circuit board inspired patterns perfect for pen plotting. Adjust complexity and density for different styles.</p>
+    </div>
+  </div>
+
+  <script>
+    // Parameters
+    const params = {
+      paperSize: 'square800',
+      bgColor: '#0a1f1a',
+      patternType: 'random',
+      gridSize: 16,
+      nodeDensity: 30,
+      complexity: 5,
+      margin: 60,
+      traceWidth: 2.0,
+      cornerStyle: 'sharp',
+      traceColor: '#00ff88',
+      viaSize: 3,
+      padSize: 6,
+      showVias: true,
+      showPads: true,
+      viaColor: '#ffaa00',
+      padColor: '#ff4444',
+      seed: 42
+    };
+
+    // Pattern descriptions
+    const patternInfo = {
+      random: 'Maze-like random paths with Manhattan routing',
+      grid: 'Components on grid with interconnecting traces',
+      radial: 'Circular PCB layout radiating from center',
+      layered: 'Multi-layer effect with crossing traces',
+      organic: 'Curved traces inspired by organic forms'
+    };
+
+    // Canvas controls for unified color handling
+    const canvasControls = new TSCanvasControls();
+    canvasControls.bind(params);
+
+    let canvas;
+    let nodes = [];
+    let traces = [];
+    let vias = [];
+    let pads = [];
+    let panelController;
+    let statsDisplay;
+
+    // Seeded random
+    let rng;
+    function seededRandom() {
+      rng = (rng * 9301 + 49297) % 233280;
+      return rng / 233280;
+    }
+
+    function setup() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas-container');
+
+      panelController = new TSPanelController().attach();
+      statsDisplay = new TSStatsDisplay().attach();
+
+      setupControls();
+      canvasControls.setupRandomizeButton();
+
+      // Setup URL state management
+      if (typeof TSURLState !== 'undefined') {
+        const urlState = new TSURLState();
+        urlState.bindParams(params, () => {
+          updateAllDisplays();
+          generatePattern();
+        });
+      }
+
+      generatePattern();
+    }
+
+    function resizeCanvasForPaperSize() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      resizeCanvas(size.width, size.height);
+      generatePattern();
+    }
+
+    function setupControls() {
+      // Canvas settings
+      document.getElementById('paperSize').addEventListener('change', (e) => {
+        params.paperSize = e.target.value;
+        resizeCanvasForPaperSize();
+      });
+
+      document.getElementById('bgColor').addEventListener('input', (e) => {
+        params.bgColor = e.target.value;
+        drawPattern();
+      });
+
+      // Pattern type
+      document.getElementById('patternType').addEventListener('change', (e) => {
+        params.patternType = e.target.value;
+        document.getElementById('pattern-info').textContent = patternInfo[params.patternType];
+        generatePattern();
+      });
+
+      // Range controls
+      const rangeControls = ['gridSize', 'nodeDensity', 'complexity', 'margin',
+                            'traceWidth', 'viaSize', 'padSize', 'seed'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        el.addEventListener('input', () => {
+          params[id] = parseFloat(el.value);
+          display.textContent = el.value;
+          generatePattern();
+        });
+      });
+
+      // Color controls
+      ['traceColor', 'viaColor', 'padColor'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          params[id] = e.target.value;
+          drawPattern();
+        });
+      });
+
+      // Select controls
+      document.getElementById('cornerStyle').addEventListener('change', (e) => {
+        params.cornerStyle = e.target.value;
+        drawPattern();
+      });
+
+      // Checkbox controls
+      ['showVias', 'showPads'].forEach(id => {
+        document.getElementById(id).addEventListener('change', (e) => {
+          params[id] = e.target.checked;
+          drawPattern();
+        });
+      });
+
+      // Buttons
+      document.getElementById('regenerate').addEventListener('click', () => {
+        params.seed = Math.floor(Math.random() * 99999);
+        document.getElementById('seed').value = params.seed;
+        document.getElementById('seed-val').textContent = params.seed;
+        generatePattern();
+      });
+
+      document.getElementById('exportSVG').addEventListener('click', () => {
+        const svg = generateSVG();
+        TSExport.downloadSVG(svg, 'circuit-pattern');
+      });
+
+      document.getElementById('exportPNG').addEventListener('click', () => {
+        TSExport.downloadPNG(canvas.canvas, 'circuit-pattern');
+      });
+    }
+
+    function updateAllDisplays() {
+      const rangeControls = ['gridSize', 'nodeDensity', 'complexity', 'margin',
+                            'traceWidth', 'viaSize', 'padSize', 'seed'];
+      rangeControls.forEach(id => {
+        const el = document.getElementById(id);
+        const display = document.getElementById(`${id}-val`);
+        if (el && display) {
+          el.value = params[id];
+          display.textContent = params[id];
+        }
+      });
+    }
+
+    function generatePattern() {
+      rng = params.seed;
+      nodes = [];
+      traces = [];
+      vias = [];
+      pads = [];
+
+      const margin = params.margin;
+      const usableWidth = width - margin * 2;
+      const usableHeight = height - margin * 2;
+      const cellSize = Math.min(usableWidth, usableHeight) / params.gridSize;
+
+      // Generate nodes based on pattern type
+      switch (params.patternType) {
+        case 'random':
+          generateRandomPattern(margin, cellSize);
+          break;
+        case 'grid':
+          generateGridPattern(margin, cellSize);
+          break;
+        case 'radial':
+          generateRadialPattern(margin, usableWidth, usableHeight);
+          break;
+        case 'layered':
+          generateLayeredPattern(margin, cellSize);
+          break;
+        case 'organic':
+          generateOrganicPattern(margin, cellSize);
+          break;
+      }
+
+      drawPattern();
+
+      // Update stats
+      if (statsDisplay) {
+        statsDisplay.update({
+          pattern: patternInfo[params.patternType],
+          nodes: nodes.length,
+          traces: traces.length,
+          vias: vias.length,
+          pads: pads.length,
+          seed: params.seed
+        });
+      }
+    }
+
+    function generateRandomPattern(margin, cellSize) {
+      // Create random nodes on grid
+      const numNodes = Math.floor((params.gridSize * params.gridSize * params.nodeDensity) / 100);
+
+      for (let i = 0; i < numNodes; i++) {
+        const gridX = Math.floor(seededRandom() * params.gridSize);
+        const gridY = Math.floor(seededRandom() * params.gridSize);
+        nodes.push({
+          x: margin + gridX * cellSize + cellSize / 2,
+          y: margin + gridY * cellSize + cellSize / 2,
+          gridX,
+          gridY
+        });
+      }
+
+      // Connect nodes with Manhattan routing
+      const connected = new Set();
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const numConnections = Math.min(params.complexity, 3);
+
+        for (let j = 0; j < numConnections; j++) {
+          // Find nearby unconnected nodes
+          const candidates = nodes.filter((n, idx) => {
+            if (idx === i) return false;
+            const key1 = `${i}-${idx}`;
+            const key2 = `${idx}-${i}`;
+            if (connected.has(key1) || connected.has(key2)) return false;
+
+            const dist = Math.abs(n.gridX - node.gridX) + Math.abs(n.gridY - node.gridY);
+            return dist > 0 && dist <= params.complexity * 2;
+          });
+
+          if (candidates.length > 0) {
+            const target = candidates[Math.floor(seededRandom() * candidates.length)];
+            const targetIdx = nodes.indexOf(target);
+            connected.add(`${i}-${targetIdx}`);
+
+            const trace = createManhattanTrace(node, target, cellSize);
+            traces.push(trace);
+
+            // Add pads at endpoints
+            pads.push({ x: node.x, y: node.y });
+            pads.push({ x: target.x, y: target.y });
+          }
+        }
+      }
+    }
+
+    function generateGridPattern(margin, cellSize) {
+      // Place components on regular grid
+      const spacing = Math.ceil(params.gridSize / Math.sqrt(params.nodeDensity / 10));
+
+      for (let gy = 0; gy < params.gridSize; gy += spacing) {
+        for (let gx = 0; gx < params.gridSize; gx += spacing) {
+          const jitterX = (seededRandom() - 0.5) * cellSize * 0.3;
+          const jitterY = (seededRandom() - 0.5) * cellSize * 0.3;
+          nodes.push({
+            x: margin + gx * cellSize + cellSize / 2 + jitterX,
+            y: margin + gy * cellSize + cellSize / 2 + jitterY,
+            gridX: gx,
+            gridY: gy
+          });
+        }
+      }
+
+      // Connect to nearby nodes
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const nearbyNodes = nodes.filter((n, idx) => {
+          if (idx <= i) return false;
+          const dx = n.gridX - node.gridX;
+          const dy = n.gridY - node.gridY;
+          const dist = Math.abs(dx) + Math.abs(dy);
+          return dist > 0 && dist <= spacing * 1.5;
+        });
+
+        nearbyNodes.forEach(target => {
+          if (seededRandom() < 0.6) {
+            const trace = createManhattanTrace(node, target, cellSize);
+            traces.push(trace);
+            pads.push({ x: node.x, y: node.y });
+            pads.push({ x: target.x, y: target.y });
+          }
+        });
+      }
+    }
+
+    function generateRadialPattern(margin, usableWidth, usableHeight) {
+      const cx = margin + usableWidth / 2;
+      const cy = margin + usableHeight / 2;
+      const maxRadius = Math.min(usableWidth, usableHeight) / 2 - 20;
+
+      const rings = Math.ceil(params.gridSize / 3);
+      const pointsPerRing = Math.ceil(params.nodeDensity / 3);
+
+      for (let ring = 1; ring <= rings; ring++) {
+        const radius = (ring / rings) * maxRadius;
+        const numPoints = pointsPerRing * ring;
+
+        for (let i = 0; i < numPoints; i++) {
+          const angle = (i / numPoints) * TWO_PI + seededRandom() * 0.2;
+          nodes.push({
+            x: cx + cos(angle) * radius,
+            y: cy + sin(angle) * radius,
+            ring,
+            angle
+          });
+        }
+      }
+
+      // Connect rings and within rings
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+
+        // Connect to next ring
+        const nextRingNodes = nodes.filter((n, idx) => idx > i && n.ring === node.ring + 1);
+        if (nextRingNodes.length > 0 && seededRandom() < 0.4) {
+          const target = nextRingNodes[Math.floor(seededRandom() * nextRingNodes.length)];
+          traces.push({
+            points: [{ x: node.x, y: node.y }, { x: target.x, y: target.y }]
+          });
+          pads.push({ x: node.x, y: node.y });
+          pads.push({ x: target.x, y: target.y });
+        }
+
+        // Connect within ring
+        const sameRingNodes = nodes.filter((n, idx) => idx > i && n.ring === node.ring);
+        if (sameRingNodes.length > 0 && seededRandom() < 0.3) {
+          const target = sameRingNodes[0];
+          traces.push({
+            points: [{ x: node.x, y: node.y }, { x: target.x, y: target.y }]
+          });
+        }
+      }
+    }
+
+    function generateLayeredPattern(margin, cellSize) {
+      // Generate multiple layers with crossings
+      const layers = Math.ceil(params.complexity / 3);
+
+      for (let layer = 0; layer < layers; layer++) {
+        const numNodes = Math.floor((params.gridSize * params.nodeDensity) / (100 * layers));
+
+        for (let i = 0; i < numNodes; i++) {
+          const gridX = Math.floor(seededRandom() * params.gridSize);
+          const gridY = Math.floor(seededRandom() * params.gridSize);
+          nodes.push({
+            x: margin + gridX * cellSize + cellSize / 2,
+            y: margin + gridY * cellSize + cellSize / 2,
+            gridX,
+            gridY,
+            layer
+          });
+        }
+      }
+
+      // Connect nodes, add vias at layer crossings
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const targets = nodes.filter((n, idx) => {
+          if (idx <= i) return false;
+          const dist = Math.abs(n.gridX - node.gridX) + Math.abs(n.gridY - node.gridY);
+          return dist > 0 && dist <= params.complexity;
+        });
+
+        targets.forEach(target => {
+          if (seededRandom() < 0.3) {
+            const trace = createManhattanTrace(node, target, cellSize);
+            traces.push(trace);
+            pads.push({ x: node.x, y: node.y });
+            pads.push({ x: target.x, y: target.y });
+
+            // Add via if different layers
+            if (node.layer !== target.layer) {
+              const midIdx = Math.floor(trace.points.length / 2);
+              vias.push({
+                x: trace.points[midIdx].x,
+                y: trace.points[midIdx].y
+              });
+            }
+          }
+        });
+      }
+    }
+
+    function generateOrganicPattern(margin, cellSize) {
+      // Create nodes
+      const numNodes = Math.floor((params.gridSize * params.gridSize * params.nodeDensity) / 100);
+
+      for (let i = 0; i < numNodes; i++) {
+        const gridX = Math.floor(seededRandom() * params.gridSize);
+        const gridY = Math.floor(seededRandom() * params.gridSize);
+        nodes.push({
+          x: margin + gridX * cellSize + cellSize / 2,
+          y: margin + gridY * cellSize + cellSize / 2,
+          gridX,
+          gridY
+        });
+      }
+
+      // Connect with curved traces
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        const numConnections = Math.min(Math.ceil(params.complexity / 2), 2);
+
+        for (let j = 0; j < numConnections; j++) {
+          const candidates = nodes.filter((n, idx) => {
+            if (idx <= i) return false;
+            const dx = n.x - node.x;
+            const dy = n.y - node.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            return dist > cellSize && dist <= cellSize * params.complexity;
+          });
+
+          if (candidates.length > 0) {
+            const target = candidates[Math.floor(seededRandom() * candidates.length)];
+            const trace = createCurvedTrace(node, target);
+            traces.push(trace);
+            pads.push({ x: node.x, y: node.y });
+            pads.push({ x: target.x, y: target.y });
+          }
+        }
+      }
+    }
+
+    function createManhattanTrace(start, end, cellSize) {
+      const points = [{ x: start.x, y: start.y }];
+
+      // Manhattan routing with random turn choice
+      let currentX = start.x;
+      let currentY = start.y;
+
+      // Sometimes go horizontal first, sometimes vertical
+      const horizontalFirst = seededRandom() < 0.5;
+
+      if (horizontalFirst) {
+        if (Math.abs(end.x - currentX) > 1) {
+          currentX = end.x;
+          points.push({ x: currentX, y: currentY });
+        }
+        if (Math.abs(end.y - currentY) > 1) {
+          currentY = end.y;
+          points.push({ x: currentX, y: currentY });
+        }
+      } else {
+        if (Math.abs(end.y - currentY) > 1) {
+          currentY = end.y;
+          points.push({ x: currentX, y: currentY });
+        }
+        if (Math.abs(end.x - currentX) > 1) {
+          currentX = end.x;
+          points.push({ x: currentX, y: currentY });
+        }
+      }
+
+      points.push({ x: end.x, y: end.y });
+
+      return { points };
+    }
+
+    function createCurvedTrace(start, end) {
+      const points = [];
+      const steps = 12;
+
+      // Create curved path using quadratic bezier-like curve
+      const dx = end.x - start.x;
+      const dy = end.y - start.y;
+
+      // Control point offset perpendicular to line
+      const perpX = -dy * 0.3;
+      const perpY = dx * 0.3;
+      const ctrlX = start.x + dx / 2 + perpX * (seededRandom() - 0.5);
+      const ctrlY = start.y + dy / 2 + perpY * (seededRandom() - 0.5);
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const it = 1 - t;
+        const x = it * it * start.x + 2 * it * t * ctrlX + t * t * end.x;
+        const y = it * it * start.y + 2 * it * t * ctrlY + t * t * end.y;
+        points.push({ x, y });
+      }
+
+      return { points };
+    }
+
+    function drawPattern() {
+      background(params.bgColor);
+
+      // Set corner style
+      if (params.cornerStyle === 'rounded') {
+        strokeCap(ROUND);
+        strokeJoin(ROUND);
+      } else if (params.cornerStyle === 'chamfered') {
+        strokeCap(SQUARE);
+        strokeJoin(BEVEL);
+      } else {
+        strokeCap(SQUARE);
+        strokeJoin(MITER);
+      }
+
+      // Draw traces
+      stroke(params.traceColor);
+      strokeWeight(params.traceWidth);
+      noFill();
+
+      for (const trace of traces) {
+        beginShape();
+        for (const point of trace.points) {
+          vertex(point.x, point.y);
+        }
+        endShape();
+      }
+
+      // Draw vias
+      if (params.showVias) {
+        fill(params.viaColor);
+        noStroke();
+        for (const via of vias) {
+          ellipse(via.x, via.y, params.viaSize * 2);
+
+          // Add via ring
+          noFill();
+          stroke(params.viaColor);
+          strokeWeight(0.5);
+          ellipse(via.x, via.y, params.viaSize * 3);
+        }
+      }
+
+      // Draw component pads
+      if (params.showPads) {
+        // Remove duplicates
+        const uniquePads = [];
+        const padSet = new Set();
+
+        for (const pad of pads) {
+          const key = `${Math.round(pad.x)},${Math.round(pad.y)}`;
+          if (!padSet.has(key)) {
+            padSet.add(key);
+            uniquePads.push(pad);
+          }
+        }
+
+        fill(params.padColor);
+        noStroke();
+        for (const pad of uniquePads) {
+          ellipse(pad.x, pad.y, params.padSize * 2);
+
+          // Add pad ring
+          noFill();
+          stroke(params.padColor);
+          strokeWeight(0.5);
+          ellipse(pad.x, pad.y, params.padSize * 2.5);
+        }
+      }
+    }
+
+    function generateSVG() {
+      const paths = [];
+
+      // Trace paths
+      for (const trace of traces) {
+        const pathData = TSExport.pointsToPath(trace.points, false);
+        paths.push({
+          d: pathData,
+          stroke: params.traceColor,
+          strokeWidth: params.traceWidth,
+          fill: 'none',
+          strokeLinecap: params.cornerStyle === 'rounded' ? 'round' : 'square',
+          strokeLinejoin: params.cornerStyle === 'rounded' ? 'round' :
+                         params.cornerStyle === 'chamfered' ? 'bevel' : 'miter'
+        });
+      }
+
+      // Via circles
+      if (params.showVias) {
+        for (const via of vias) {
+          paths.push({
+            d: `M ${via.x - params.viaSize} ${via.y} A ${params.viaSize} ${params.viaSize} 0 0 0 ${via.x + params.viaSize} ${via.y} A ${params.viaSize} ${params.viaSize} 0 0 0 ${via.x - params.viaSize} ${via.y}`,
+            fill: params.viaColor,
+            stroke: 'none'
+          });
+          // Via ring
+          paths.push({
+            d: `M ${via.x - params.viaSize * 1.5} ${via.y} A ${params.viaSize * 1.5} ${params.viaSize * 1.5} 0 0 0 ${via.x + params.viaSize * 1.5} ${via.y} A ${params.viaSize * 1.5} ${params.viaSize * 1.5} 0 0 0 ${via.x - params.viaSize * 1.5} ${via.y}`,
+            stroke: params.viaColor,
+            strokeWidth: 0.5,
+            fill: 'none'
+          });
+        }
+      }
+
+      // Pad circles
+      if (params.showPads) {
+        const uniquePads = [];
+        const padSet = new Set();
+
+        for (const pad of pads) {
+          const key = `${Math.round(pad.x)},${Math.round(pad.y)}`;
+          if (!padSet.has(key)) {
+            padSet.add(key);
+            uniquePads.push(pad);
+          }
+        }
+
+        for (const pad of uniquePads) {
+          paths.push({
+            d: `M ${pad.x - params.padSize} ${pad.y} A ${params.padSize} ${params.padSize} 0 0 0 ${pad.x + params.padSize} ${pad.y} A ${params.padSize} ${params.padSize} 0 0 0 ${pad.x - params.padSize} ${pad.y}`,
+            fill: params.padColor,
+            stroke: 'none'
+          });
+          // Pad ring
+          paths.push({
+            d: `M ${pad.x - params.padSize * 1.25} ${pad.y} A ${params.padSize * 1.25} ${params.padSize * 1.25} 0 0 0 ${pad.x + params.padSize * 1.25} ${pad.y} A ${params.padSize * 1.25} ${params.padSize * 1.25} 0 0 0 ${pad.x - params.padSize * 1.25} ${pad.y}`,
+            stroke: params.padColor,
+            strokeWidth: 0.5,
+            fill: 'none'
+          });
+        }
+      }
+
+      return TSExport.createSVG(paths, width, height, {
+        backgroundColor: params.bgColor
+      });
+    }
+  </script>
+</body>
+</html>

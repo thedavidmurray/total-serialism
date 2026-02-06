@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -940,9 +941,108 @@ ${content}
       downloadSVG(svgString, `game-of-life-combined-gen${generation}.svg`);
     }
 
-    function exportAllLayers() {
-      // In a real implementation, this would create a ZIP file
-      alert('ZIP export would package all layers with a manifest file. For now, use "Export Each Layer".');
+    async function exportAllLayers() {
+      const zip = new JSZip();
+      const w = gridSize * 10 + 40;
+      const h = gridSize * 10 + 40;
+      const includeReg = document.getElementById('includeRegistration').checked;
+
+      // Create manifest data
+      const manifest = {
+        timestamp: new Date().toISOString(),
+        generation: generation,
+        gridSize: gridSize,
+        cellSize: cellSize,
+        seed: seed,
+        includeRegistrationMarks: includeReg,
+        layers: []
+      };
+
+      // Export each visible layer as SVG
+      layers.forEach((layer, index) => {
+        if (!layer.visible) return;
+
+        const rects = [];
+
+        // Draw cells
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            if (layer.grid[i][j] === 1) {
+              rects.push(`  <rect x="${20 + i * 10}" y="${20 + j * 10}" width="10" height="10" fill="black"/>`);
+            }
+          }
+        }
+
+        let content = '';
+        if (includeReg) {
+          content += buildRegistrationMarks(w, h) + '\n';
+        }
+        content += rects.join('\n');
+
+        // Add metadata text
+        content += `\n  <text x="20" y="${h - 5}" font-size="8" fill="black">Layer: ${layer.name}</text>`;
+        content += `\n  <text x="100" y="${h - 5}" font-size="8" fill="black">Color: ${layer.color}</text>`;
+        content += `\n  <text x="200" y="${h - 5}" font-size="8" fill="black">Gen: ${generation}</text>`;
+
+        const svgString = buildSVGString(w, h, content);
+
+        // Add to ZIP with sanitized filename
+        const sanitizedName = layer.name.replace(/[^a-z0-9]/gi, '-').toLowerCase();
+        const filename = `layer-${index + 1}-${sanitizedName}.svg`;
+        zip.file(filename, svgString);
+
+        // Add layer metadata to manifest
+        manifest.layers.push({
+          index: index + 1,
+          id: layer.id,
+          name: layer.name,
+          color: layer.color,
+          birthRules: layer.birthRules,
+          survivalRules: layer.survivalRules,
+          interaction: layer.interaction,
+          filename: filename
+        });
+      });
+
+      // Add manifest.json to ZIP
+      zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+
+      // Also include a combined SVG for reference
+      let combinedContent = '';
+      if (includeReg) {
+        combinedContent += buildRegistrationMarks(w, h) + '\n';
+      }
+
+      layers.forEach(layer => {
+        if (!layer.visible) return;
+
+        for (let i = 0; i < gridSize; i++) {
+          for (let j = 0; j < gridSize; j++) {
+            if (layer.grid[i][j] === 1) {
+              combinedContent += `  <rect x="${20 + i * 10}" y="${20 + j * 10}" width="10" height="10" fill="${layer.color}"/>\n`;
+            }
+          }
+        }
+      });
+
+      const combinedSVG = buildSVGString(w, h, combinedContent);
+      zip.file('combined-preview.svg', combinedSVG);
+
+      // Generate and download ZIP
+      try {
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `game-of-life-layers-gen${generation}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error generating ZIP:', error);
+        alert('Failed to generate ZIP file. Please try again.');
+      }
     }
 
     function drawRegistrationMarks(svg) {
