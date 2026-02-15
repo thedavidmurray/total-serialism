@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Aperiodic Tilings Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
@@ -435,7 +436,8 @@
 
       // Export buttons
       TSExport.quickSetup('aperiodic-tilings', {
-        getSVG: generateSVG
+        getSVG: generateSVG,
+        getGIF: generateGIFFrames
       });
     }
 
@@ -1122,6 +1124,41 @@
       if (width !== size.width || height !== size.height) {
         resizeCanvas(size.width, size.height);
       }
+    }
+
+    // ============================================
+    // GIF EXPORT
+    // ============================================
+
+    async function generateGIFFrames() {
+      const frames = [];
+      const frameCount = 30;
+      const canvas = TSExport.getCanvas();
+      if (!canvas) {
+        throw new Error('Canvas not found');
+      }
+
+      const originalRotation = params.rotation;
+
+      for (let i = 0; i < frameCount; i++) {
+        params.rotation = (originalRotation + (360 * i) / frameCount) % 360;
+        generate();
+
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        const frame = document.createElement('canvas');
+        frame.width = canvas.width;
+        frame.height = canvas.height;
+        const frameCtx = frame.getContext('2d');
+        frameCtx.drawImage(canvas, 0, 0);
+        frames.push(frame);
+      }
+
+      params.rotation = originalRotation;
+      updateUIFromParams();
+      generate();
+
+      return { frames, fps: 12 };
     }
 
     // ============================================

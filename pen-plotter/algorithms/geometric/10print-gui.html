@@ -8,6 +8,8 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
   <title>10PRINT Pattern Generator</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gif.js@0.2.0/dist/gif.js"></script>
+  <script src="../../shared/export-utils.js"></script>
   <script src="../../preset-manager.js"></script>
   <script src="../../canvas-layout.js"></script>
   <script src="../../shared/canvas-controls.js"></script>
@@ -309,6 +311,7 @@
     let fitZoom;
     let panelController;
     let statsDisplay;
+    let isGifExporting = false;
 
     function setup() {
       updateCanvasSize();
@@ -511,7 +514,30 @@
     }
 
     function draw() {
+      if (isAnimating) {
+        const cellsPerFrame = 5;
+        const totalCells = grid.length * (grid[0] ? grid[0].length : 0);
+        const currentCell = Math.min(totalCells, animationFrame * cellsPerFrame);
+
+        renderPattern(currentCell);
+        animationFrame++;
+
+        // Stop when complete
+        if (currentCell >= totalCells) {
+          isAnimating = false;
+          noLoop();
+        }
+      } else {
+        renderPattern();
+        noLoop();
+      }
+    }
+
+    function renderPattern(cellLimit = Infinity) {
       background(params.bgColor);
+
+      // Keep randomized line/color modes deterministic for exports and redraws.
+      randomSeed(params.seed + 1000);
 
       stroke(0);
       strokeWeight(params.strokeWeight);
@@ -532,43 +558,17 @@
         translate(-width/2, -height/2);
       }
 
-      // Animate pattern generation for GIF
-      if (isAnimating) {
-        const cellsPerFrame = 5;
-        const totalCells = grid.length * (grid[0] ? grid[0].length : 0);
-        const currentCell = animationFrame * cellsPerFrame;
-
-        let cellCount = 0;
-        for (let y = 0; y < grid.length; y++) {
-          for (let x = 0; x < grid[y].length; x++) {
-            if (cellCount < currentCell) {
-              drawCell(x, y, grid[y][x]);
-            }
-            cellCount++;
-          }
-        }
-
-        animationFrame++;
-
-        // Stop when complete
-        if (currentCell >= totalCells) {
-          isAnimating = false;
-          noLoop();
-        }
-      } else {
-        // Draw all cells at once
-        for (let y = 0; y < grid.length; y++) {
-          for (let x = 0; x < grid[y].length; x++) {
+      let cellCount = 0;
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (cellCount < cellLimit) {
             drawCell(x, y, grid[y][x]);
           }
+          cellCount++;
         }
       }
 
       pop();
-
-      if (!isAnimating) {
-        noLoop();
-      }
     }
 
     function drawCell(x, y, value) {
@@ -797,8 +797,96 @@
       save(`10print-${params.variation}-${params.seed}.png`);
     }
 
-    function toggleGifRecording() {
-      alert('GIF recording feature coming soon! Use PNG export for now.');
+    function captureCurrentFrame() {
+      const sourceCanvas = (typeof TSExport !== 'undefined' && TSExport.getCanvas)
+        ? TSExport.getCanvas()
+        : document.querySelector('#defaultCanvas0');
+      if (!sourceCanvas) return null;
+
+      const frame = document.createElement('canvas');
+      frame.width = sourceCanvas.width;
+      frame.height = sourceCanvas.height;
+      const frameCtx = frame.getContext('2d');
+      frameCtx.drawImage(sourceCanvas, 0, 0);
+      return frame;
+    }
+
+    function getGifFrameCount(totalCells) {
+      // Keep capture bounded so export doesn't freeze on dense grids.
+      return Math.max(18, Math.min(72, Math.ceil(totalCells / 24)));
+    }
+
+    async function toggleGifRecording() {
+      if (isGifExporting) return;
+
+      const gifProgress = document.getElementById('gif-progress');
+      const statusEl = document.getElementById('gif-status');
+      const progressBar = document.getElementById('gif-progress-bar');
+      const recordText = document.getElementById('gif-record-text');
+
+      let totalCells = grid.length * (grid[0] ? grid[0].length : 0);
+      if (totalCells === 0) {
+        regenerate();
+        totalCells = grid.length * (grid[0] ? grid[0].length : 0);
+      }
+
+      const frameCount = getGifFrameCount(totalCells);
+      const frames = [];
+      const prevAnimating = isAnimating;
+      const prevAnimationFrame = animationFrame;
+
+      isGifExporting = true;
+      gifProgress.style.display = 'block';
+      recordText.textContent = 'Recording...';
+      statusEl.textContent = 'Capturing frames...';
+      progressBar.style.width = '0%';
+
+      try {
+        for (let i = 0; i < frameCount; i++) {
+          const cellLimit = Math.floor(((i + 1) / frameCount) * totalCells);
+          renderPattern(cellLimit);
+
+          const frame = captureCurrentFrame();
+          if (frame) {
+            frames.push(frame);
+          }
+
+          const captureProgress = Math.round(((i + 1) / frameCount) * 70);
+          statusEl.textContent = `Capturing ${i + 1}/${frameCount}`;
+          progressBar.style.width = `${captureProgress}%`;
+
+          await new Promise(resolve => requestAnimationFrame(resolve));
+        }
+
+        if (!frames.length) {
+          throw new Error('No frames captured');
+        }
+
+        statusEl.textContent = 'Encoding GIF...';
+        progressBar.style.width = '85%';
+
+        await TSExport.downloadGIF(frames, `10print-${params.variation}-${params.seed}`, { fps: 12 });
+
+        statusEl.textContent = 'Done';
+        progressBar.style.width = '100%';
+      } catch (err) {
+        console.error('GIF export failed:', err);
+        statusEl.textContent = 'Export failed';
+        alert('GIF export failed. Make sure gif.js is loaded and try again.');
+      } finally {
+        isAnimating = prevAnimating;
+        animationFrame = prevAnimationFrame;
+        regenerate();
+
+        recordText.textContent = 'Record GIF';
+        setTimeout(() => {
+          gifProgress.style.display = 'none';
+          statusEl.textContent = 'Preparing...';
+          progressBar.style.width = '0%';
+        }, 900);
+
+        isGifExporting = false;
+      }
     }
 
     function copyShareUrl() {

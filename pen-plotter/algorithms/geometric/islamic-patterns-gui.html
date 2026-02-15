@@ -13,7 +13,7 @@
   <script src="../../preset-manager.js"></script>
   <script src="../../shared/panel-controller.js"></script>
   <script src="../../shared/stats-display.js"></script>
-  <script src="../../export-utils.js"></script>
+  <script src="../../shared/export-utils.js"></script>
   <script src="../../ui-utils.js"></script>
   <link rel="stylesheet" href="../../preset-manager.css">
   
@@ -1036,29 +1036,85 @@
       pop();
     }
 
-    // Export functions
-    function exportSVG() {
-      const allShapes = [];
+    function hsbToCss(h, s, b, a = 1) {
+      push();
+      colorMode(HSB, 360, 100, 100, 255);
+      const c = color(h, s, b);
+      pop();
+      const r = Math.round(red(c));
+      const g = Math.round(green(c));
+      const bl = Math.round(blue(c));
+      return `rgba(${r}, ${g}, ${bl}, ${a})`;
+    }
+
+    function getShapeSvgStyle(shape) {
+      const palette = colorPalettes[params.colorScheme];
+      const base = palette[shape.color] || palette.primary;
+      const fillAlpha = Math.max(0, Math.min(1, params.fillOpacity / 255));
+
+      return {
+        fill: (params.renderMode === 'filled' || params.renderMode === 'both')
+          ? hsbToCss(base[0], base[1], base[2], fillAlpha)
+          : 'none',
+        stroke: (params.renderMode === 'outline' || params.renderMode === 'both')
+          ? hsbToCss(base[0], base[1], Math.max(0, base[2] * 0.5), 1)
+          : 'none'
+      };
+    }
+
+    function buildSvgPaths() {
+      const paths = [];
 
       patterns.forEach(pattern => {
         pattern.shapes.forEach(shape => {
-          allShapes.push({
-            points: shape.vertices.map(v => ({ x: v.x, y: v.y })),
-            closed: true
+          if (!shape.vertices || shape.vertices.length < 2) return;
+
+          const d = TSExport.pointsToPath(
+            shape.vertices.map(v => ({ x: v.x, y: v.y })),
+            true
+          );
+          if (!d) return;
+
+          const style = getShapeSvgStyle(shape);
+          paths.push({
+            d,
+            stroke: style.stroke,
+            strokeWidth: params.strokeWeight,
+            fill: style.fill
           });
         });
       });
 
-      const filename = ExportUtils.generateFilename('islamic-pattern');
-      ExportUtils.exportSVG(allShapes, width, height, filename, {
+      return paths;
+    }
+
+    // Export functions
+    function exportSVG() {
+      const palette = colorPalettes[params.colorScheme];
+      const bg = hsbToCss(
+        palette.background[0],
+        palette.background[1],
+        palette.background[2],
+        1
+      );
+
+      const svg = TSExport.createSVG(buildSvgPaths(), width, height, {
+        backgroundColor: bg,
         strokeWidth: params.strokeWeight
       });
+
+      TSExport.downloadSVG(svg, 'islamic-pattern');
       UIUtils.showNotification('SVG exported successfully!', 'success');
     }
 
     function exportPNG() {
-      const filename = ExportUtils.generateFilename('islamic-pattern');
-      ExportUtils.exportPNG(filename);
+      const canvas = TSExport.getCanvas();
+      if (!canvas) {
+        UIUtils.showNotification('Canvas not found for PNG export', 'error');
+        return;
+      }
+
+      TSExport.downloadPNG(canvas, 'islamic-pattern', { scale: 2 });
       UIUtils.showNotification('PNG exported successfully!', 'success');
     }
   </script>
