@@ -1,53 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pen Plotter Art Hub</title>
-    <link rel="stylesheet" href="src/hub.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirecting to Total Serialism Pen Plotter</title>
+  <meta http-equiv="refresh" content="0; url=pen-plotter/index.html">
+  <script>
+    (function() {
+      const pathname = window.location.pathname;
+      const basePath = pathname.endsWith('/index.html')
+        ? pathname.slice(0, -'index.html'.length)
+        : pathname;
+      const normalizedBase = basePath.endsWith('/') ? basePath : `${basePath}/`;
+      const target = `${window.location.origin}${normalizedBase}pen-plotter/index.html${window.location.search}${window.location.hash}`;
+      window.location.replace(target);
+    })();
+  </script>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background: #0f1115;
+      color: #e8ecf1;
+      display: grid;
+      place-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .card {
+      max-width: 36rem;
+      padding: 1.5rem;
+      border: 1px solid #2a3240;
+      border-radius: 12px;
+      background: #171b22;
+      text-align: center;
+    }
+    a {
+      color: #55d2b8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
-    <header>
-        <h1>Pen Plotter Art Hub</h1>
-        <p class="subtitle">Generative algorithms for pen plotting</p>
-    </header>
-
-    <div class="controls">
-        <div class="search-container">
-            <input type="text" id="search" placeholder="Search algorithms..." autocomplete="off">
-            <span class="search-icon">🔍</span>
-        </div>
-        
-        <div class="filters">
-            <button class="filter-btn active" data-filter="all">All</button>
-            <button class="filter-btn" data-filter="hybrid">Hybrid</button>
-            <button class="filter-btn" data-filter="cellular-automata">Cellular Automata</button>
-            <button class="filter-btn" data-filter="flow-fields">Flow Fields</button>
-            <button class="filter-btn" data-filter="physics">Physics</button>
-            <button class="filter-btn" data-filter="reaction-diffusion">Reaction-Diffusion</button>
-            <button class="filter-btn" data-filter="trees">Trees & L-Systems</button>
-            <button class="filter-btn" data-filter="geometric">Geometric</button>
-            <button class="filter-btn" data-filter="textures">Textures</button>
-            <button class="filter-btn" data-filter="image-processing">Image Processing</button>
-            <button class="filter-btn" data-filter="fluid">Fluid Dynamics</button>
-            <button class="filter-btn" data-filter="natural">Natural</button>
-            <button class="filter-btn" data-filter="tools">Tools</button>
-        </div>
-
-        <div class="view-options">
-            <button id="theme-toggle" class="icon-btn" title="Toggle theme">🌓</button>
-            <button id="grid-toggle" class="icon-btn" title="Toggle grid view">⚏</button>
-        </div>
-    </div>
-
-    <main id="algorithms-grid" class="grid-view">
-        <!-- Algorithm cards will be dynamically inserted here -->
-    </main>
-
-    <footer>
-        <p>Pen Plotter Art System • <a href="README.md">Documentation</a> • <a href="QUICKSTART.md">Quick Start</a></p>
-    </footer>
-
-    <script src="src/hub.js"></script>
+  <div class="card">
+    <h1>Total Serialism</h1>
+    <p>Redirecting to the current Pen Plotter gallery...</p>
+    <p><a href="pen-plotter/index.html">Open it now</a></p>
+  </div>
 </body>
 </html>
