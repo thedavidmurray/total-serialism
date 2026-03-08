@@ -534,11 +534,17 @@
             const content = document.getElementById('content');
             let html = '';
             const visibleAlgorithms = getVisibleAlgorithms();
-            let visibleCount = 0;
+            const featuredMode = currentFilter === 'all' && !searchTerm;
+            let visibleCount = visibleAlgorithms.length;
+            const featuredIds = new Set(
+                featuredMode
+                    ? visibleAlgorithms.filter(algo => algo.featured).map(algo => algo.id)
+                    : []
+            );
 
             // Featured section
-            if (currentFilter === 'all' && !searchTerm) {
-                const featuredAlgos = catalog.algorithms.filter(algo => algo.featured);
+            if (featuredMode) {
+                const featuredAlgos = visibleAlgorithms.filter(algo => algo.featured);
 
                 if (featuredAlgos.length > 0) {
                     html += `
@@ -552,13 +558,14 @@
                             </div>
                         </div>
                     `;
-                    visibleCount += featuredAlgos.length;
                 }
             }
 
             // Category sections
             Object.entries(catalog.categories).forEach(([catKey, category]) => {
-                const filteredAlgos = visibleAlgorithms.filter(algo => algo.category === catKey);
+                const filteredAlgos = visibleAlgorithms.filter(algo =>
+                    algo.category === catKey && (!featuredMode || !featuredIds.has(algo.id))
+                );
 
                 if (filteredAlgos.length > 0) {
                     html += `
@@ -576,7 +583,6 @@
                             </div>
                         </div>
                     `;
-                    visibleCount += filteredAlgos.length;
                 }
             });
 
