@@ -411,6 +411,12 @@
     let canvas;
     let batchFiles = [];
     let optimizationStats = null;
+    let documentInfo = {
+      width: 800,
+      height: 600,
+      viewBox: '0 0 800 600',
+      background: null
+    };
 
     // Setup file upload
     const uploadArea = document.getElementById('upload-area');
@@ -515,6 +521,31 @@
       `).join('');
     }
 
+    function parseSvgDocumentInfo(svg) {
+      const viewBox = svg.getAttribute('viewBox');
+      const widthAttr = svg.getAttribute('width');
+      const heightAttr = svg.getAttribute('height');
+      const width = parseFloat(widthAttr);
+      const height = parseFloat(heightAttr);
+
+      if (viewBox) {
+        const parts = viewBox.trim().split(/[\s,]+/).map(Number);
+        if (parts.length === 4 && parts.every(Number.isFinite)) {
+          return {
+            width: Number.isFinite(width) ? width : parts[2],
+            height: Number.isFinite(height) ? height : parts[3],
+            viewBox: parts.join(' ')
+          };
+        }
+      }
+
+      return {
+        width: Number.isFinite(width) ? width : 800,
+        height: Number.isFinite(height) ? height : 600,
+        viewBox: `0 0 ${Number.isFinite(width) ? width : 800} ${Number.isFinite(height) ? height : 600}`
+      };
+    }
+
     function parseSVG(svgText, filename = 'upload') {
       const parser = new DOMParser();
       const doc = parser.parseFromString(svgText, 'image/svg+xml');
@@ -529,6 +560,10 @@
       originalSvgData = svgText;
       layers = [];
       optimizationStats = null;
+      documentInfo = {
+        ...parseSvgDocumentInfo(svg),
+        background: svg.querySelector('rect')?.getAttribute('fill') || null
+      };
 
       // Extract layers by color/stroke
       const pathElements = svg.querySelectorAll('path, line, polyline, polygon, rect, circle, ellipse');
@@ -944,9 +979,12 @@
 
     function generateSVG(layersToExport) {
       let svg = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
-  <rect width="800" height="600" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="${documentInfo.width}" height="${documentInfo.height}" viewBox="${documentInfo.viewBox}">
 `;
+
+      if (documentInfo.background && documentInfo.background !== 'none') {
+        svg += `  <rect width="100%" height="100%" fill="${documentInfo.background}"/>\n`;
+      }
 
       layersToExport.forEach(layer => {
         const paths = layer.optimized && layer.optimizedPaths ? layer.optimizedPaths : layer.paths;

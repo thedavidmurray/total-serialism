@@ -271,6 +271,32 @@
             color: #f57f17;
         }
 
+        .badge-category {
+            background: #ede7f6;
+            color: #5e35b1;
+        }
+
+        .badge-export {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .badge-preset {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .badge-plotter {
+            background: #e0f7fa;
+            color: #006064;
+        }
+
+        .action-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
         .favorite-btn {
             background: none;
             border: none;
@@ -373,10 +399,15 @@
                 <div class="filters">
                     <button class="filter-btn active" data-filter="all">All</button>
                     <button class="filter-btn" data-filter="featured">⭐ Featured</button>
+                    <button class="filter-btn" data-filter="plotter-safe">Plotter Safe</button>
+                    <button class="filter-btn" data-filter="presets">Presets</button>
+                    <button class="filter-btn" data-filter="tools">Tools</button>
                     <button class="filter-btn" data-filter="favorites">❤️ Favorites</button>
                     <button class="filter-btn" data-filter="beginner">Beginner</button>
                     <button class="filter-btn" data-filter="intermediate">Intermediate</button>
                     <button class="filter-btn" data-filter="advanced">Advanced</button>
+                    <button class="filter-btn" id="surpriseBtn" type="button">🎲 Surprise Me</button>
+                    <a class="filter-btn action-link" href="pen-plotter/algorithms/tools/plotter-prep.html">Plotter Prep</a>
                 </div>
             </div>
         </div>
@@ -438,13 +469,20 @@
         });
 
         // Filter buttons
-        document.querySelectorAll('.filter-btn').forEach(btn => {
+        document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
             btn.addEventListener('click', () => {
-                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentFilter = btn.dataset.filter;
                 renderContent();
             });
+        });
+
+        document.getElementById('surpriseBtn').addEventListener('click', () => {
+            const visible = getVisibleAlgorithms();
+            if (visible.length === 0) return;
+            const pick = visible[Math.floor(Math.random() * visible.length)];
+            window.location.href = pick.path;
         });
 
         function toggleFavorite(algoId, event) {
@@ -465,6 +503,9 @@
         function matchesFilter(algo, categoryKey) {
             if (currentFilter === 'all') return true;
             if (currentFilter === 'featured') return algo.featured === true;
+            if (currentFilter === 'plotter-safe') return algo.plotterSafe === true;
+            if (currentFilter === 'presets') return algo.hasPresets === true;
+            if (currentFilter === 'tools') return algo.category === 'tools';
             if (currentFilter === 'favorites') return favorites.includes(algo.id);
             if (currentFilter === 'beginner') return algo.complexity === 'beginner';
             if (currentFilter === 'intermediate') return algo.complexity === 'intermediate';
@@ -476,7 +517,15 @@
             if (!searchTerm) return true;
             return algo.name.toLowerCase().includes(searchTerm) ||
                    algo.description.toLowerCase().includes(searchTerm) ||
-                   algo.id.toLowerCase().includes(searchTerm);
+                   algo.id.toLowerCase().includes(searchTerm) ||
+                   (algo.tags || []).some(tag => tag.toLowerCase().includes(searchTerm));
+        }
+
+        function getVisibleAlgorithms() {
+            if (!catalog) return [];
+            return catalog.algorithms.filter(algo =>
+                matchesFilter(algo, algo.category) && matchesSearch(algo)
+            );
         }
 
         function renderContent() {
@@ -484,18 +533,12 @@
 
             const content = document.getElementById('content');
             let html = '';
+            const visibleAlgorithms = getVisibleAlgorithms();
             let visibleCount = 0;
 
             // Featured section
             if (currentFilter === 'all' && !searchTerm) {
-                const featuredAlgos = [];
-                Object.entries(catalog.categories).forEach(([catKey, category]) => {
-                    category.algorithms.forEach(algo => {
-                        if (algo.featured) {
-                            featuredAlgos.push(algo);
-                        }
-                    });
-                });
+                const featuredAlgos = catalog.algorithms.filter(algo => algo.featured);
 
                 if (featuredAlgos.length > 0) {
                     html += `
@@ -515,9 +558,7 @@
 
             // Category sections
             Object.entries(catalog.categories).forEach(([catKey, category]) => {
-                const filteredAlgos = category.algorithms.filter(algo =>
-                    matchesFilter(algo, catKey) && matchesSearch(algo)
-                );
+                const filteredAlgos = visibleAlgorithms.filter(algo => algo.category === catKey);
 
                 if (filteredAlgos.length > 0) {
                     html += `
@@ -558,6 +599,10 @@
 
         function renderAlgorithmCard(algo) {
             const isFavorite = favorites.includes(algo.id);
+            const category = catalog.categories[algo.category];
+            const exportBadges = (algo.hasExport || []).slice(0, 2).map(format =>
+                `<span class="badge badge-export">${format}</span>`
+            ).join('');
             return `
                 <a href="${algo.path}" class="algorithm-card">
                     <div class="algorithm-header">
@@ -573,7 +618,11 @@
                     <div class="algorithm-description">${algo.description}</div>
                     <div class="algorithm-footer">
                         <span class="badge badge-complexity ${algo.complexity}">${algo.complexity}</span>
+                        <span class="badge badge-category">${category.shortLabel}</span>
                         ${algo.featured ? '<span class="badge badge-featured">Featured</span>' : ''}
+                        ${algo.hasPresets ? '<span class="badge badge-preset">Presets</span>' : ''}
+                        ${algo.plotterSafe ? '<span class="badge badge-plotter">Plotter Safe</span>' : ''}
+                        ${exportBadges}
                     </div>
                 </a>
             `;

@@ -390,6 +390,7 @@
     <div id="preset-container"></div>
   </div>
 
+  <script src="../../shared/path-optimizer.js"></script>
   <script src="../../shared/plotter-export.js"></script>
   <script>
     // Initialize the GUI
@@ -401,6 +402,7 @@
     let currentPaths = [];
     let gcodeExporter = new GCodeExporter();
     let hpglExporter = new HPGLExporter();
+    let pathOptimizer = typeof PathOptimizer !== 'undefined' ? new PathOptimizer() : null;
 
     // Tab switching
     document.querySelectorAll('.tab-button').forEach(button => {
@@ -440,19 +442,9 @@
 
     // Load SVG
     function loadSVG(svgContent) {
-      // Parse SVG and extract paths
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(svgContent, 'image/svg+xml');
-      const paths = [];
-
-      doc.querySelectorAll('path').forEach(pathElement => {
-        const d = pathElement.getAttribute('d');
-        if (d) {
-          const parsedPaths = hpglExporter.parseSVGPath(d);
-          paths.push(...parsedPaths);
-        }
-      });
-
+      const paths = typeof hpglExporter.parseSVGContent === 'function'
+        ? hpglExporter.parseSVGContent(svgContent)
+        : [];
       loadPaths(paths);
     }
 
@@ -469,7 +461,9 @@
       // Optimize if needed using simple nearest-neighbor
       const optimizeCheckbox = document.getElementById('svgOptimize');
       if (optimizeCheckbox && optimizeCheckbox.checked && currentPaths.length > 1) {
-        currentPaths = optimizePathOrder(currentPaths);
+        currentPaths = pathOptimizer
+          ? pathOptimizer.optimize(currentPaths, { merge: false, sort: true, simplify: false })
+          : optimizePathOrder(currentPaths);
       }
 
       // Update preview

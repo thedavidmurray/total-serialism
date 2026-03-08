@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <title>Arrows Generator - Pen Plotter</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+  <script src="../../preset-manager.js"></script>
+  <script src="../../shared/canvas-layout.js"></script>
+  <script src="../../shared/export-utils.js"></script>
+  <script src="../../shared/path-optimizer.js"></script>
+  <script src="../../shared/panel-controller.js"></script>
+  <link rel="stylesheet" href="../../preset-manager.css">
+  <link rel="stylesheet" href="../../shared/algorithm.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+    }
+    #canvas-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: var(--ts-bg-base);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: auto;
+    }
+    #controls {
+      width: 390px;
+      padding: 20px;
+      background: var(--ts-bg-panel);
+      height: 100vh;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      margin: 0 0 16px;
+      color: var(--ts-accent-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .control-group {
+      margin-bottom: 18px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--ts-border-subtle);
+    }
+    .control-group:last-child {
+      border-bottom: none;
+    }
+    .control-group h3 {
+      margin: 0 0 12px;
+      color: var(--ts-text-secondary);
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .control {
+      margin-bottom: 12px;
+    }
+    label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-size: 0.82rem;
+      color: var(--ts-text-secondary);
+    }
+    input[type="range"],
+    select,
+    input[type="number"] {
+      width: 100%;
+    }
+    input[type="number"],
+    select {
+      padding: 8px 10px;
+      background: var(--ts-bg-deep);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      font-family: inherit;
+      font-size: 0.82rem;
+      box-sizing: border-box;
+    }
+    input[type="color"] {
+      width: 64px;
+      height: 30px;
+      border: 1px solid var(--ts-border-default);
+      border-radius: var(--ts-radius-md);
+      background: transparent;
+      cursor: pointer;
+    }
+    button {
+      width: 100%;
+      padding: 10px 16px;
+      margin: 4px 0;
+      background: var(--ts-accent-primary);
+      color: var(--ts-text-inverse);
+      border: none;
+      cursor: pointer;
+      font-size: 0.84rem;
+      font-family: inherit;
+      border-radius: var(--ts-radius-md);
+      transition: all var(--ts-transition-fast);
+    }
+    button:hover {
+      background: #00e8bb;
+      box-shadow: var(--ts-shadow-glow);
+    }
+    .secondary {
+      background: var(--ts-bg-control);
+      color: var(--ts-text-primary);
+      border: 1px solid var(--ts-border-default);
+    }
+    .secondary:hover {
+      background: var(--ts-bg-hover);
+      border-color: var(--ts-border-strong);
+      box-shadow: none;
+    }
+    .value {
+      color: var(--ts-accent-primary);
+      font-weight: 500;
+    }
+    .button-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .button-group.three {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .algorithm-info {
+      background: var(--ts-bg-deep);
+      padding: 12px;
+      border-radius: var(--ts-radius-md);
+      font-size: 0.82rem;
+      color: var(--ts-text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.55;
+      border-left: 3px solid var(--ts-accent-primary);
+    }
+    .stats {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--ts-bg-deep);
+      border-radius: var(--ts-radius-md);
+      font-size: 0.82rem;
+    }
+    .stats div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--ts-text-secondary);
+    }
+    .stats div:last-child {
+      margin-bottom: 0;
+    }
+    .stat-value {
+      font-weight: 600;
+      color: var(--ts-accent-primary);
+    }
+    .back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      color: var(--ts-accent-primary);
+      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 100;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">&larr; Back to Index</a>
+
+  <div id="canvas-container">
+    <div id="canvas"></div>
+  </div>
+
+  <div id="controls">
+    <h2>Arrows</h2>
+
+    <div class="algorithm-info">
+      Packs arrow motifs into dense compositions with controllable orientation, curvature, spacing, and crossing behavior.
+      Use jump-over and jump-under modes for plotter-friendly overlap handling.
+    </div>
+
+    <div id="preset-container"></div>
+
+    <div class="control-group">
+      <h3>Canvas</h3>
+      <div class="control">
+        <label>Paper Size</label>
+        <select id="paperSize">
+          <option value="square800" selected>Square (800x800)</option>
+          <option value="landscape800x600">Landscape (800x600)</option>
+          <option value="A4_portrait">A4 Portrait</option>
+          <option value="A4_landscape">A4 Landscape</option>
+          <option value="A3_portrait">A3 Portrait</option>
+          <option value="A3_landscape">A3 Landscape</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Background <input type="color" id="bgColor" value="#fffaf0"></label>
+      </div>
+      <div class="control">
+        <label>Stroke <input type="color" id="strokeColor" value="#101010"></label>
+      </div>
+      <div class="control">
+        <label>Line Weight <span class="value" id="lineWeightValue">1.2</span></label>
+        <input type="range" id="lineWeight" min="0.3" max="4" step="0.1" value="1.2">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Composition</h3>
+      <div class="control">
+        <label>Arrow Count <span class="value" id="countValue">70</span></label>
+        <input type="range" id="count" min="10" max="220" step="1" value="70">
+      </div>
+      <div class="control">
+        <label>Density / Gap <span class="value" id="minGapValue">22</span></label>
+        <input type="range" id="minGap" min="8" max="60" step="1" value="22">
+      </div>
+      <div class="control">
+        <label>Line Length <span class="value" id="lineLengthValue">96</span></label>
+        <input type="range" id="lineLength" min="24" max="220" step="1" value="96">
+      </div>
+      <div class="control">
+        <label>Length Jitter <span class="value" id="lengthJitterValue">0.35</span></label>
+        <input type="range" id="lengthJitter" min="0" max="1" step="0.01" value="0.35">
+      </div>
+      <div class="control">
+        <label>Orientation Mode</label>
+        <select id="orientationMode">
+          <option value="field" selected>Noise Field</option>
+          <option value="random">Random</option>
+          <option value="radial">Radial</option>
+          <option value="orbit">Orbit</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Arrow Shape</h3>
+      <div class="control">
+        <label>Curve Mode</label>
+        <select id="curveMode">
+          <option value="straight">Straight</option>
+          <option value="arc" selected>Arc</option>
+          <option value="flow">Flow Curve</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Curvature <span class="value" id="curvatureValue">0.48</span></label>
+        <input type="range" id="curvature" min="0" max="1" step="0.01" value="0.48">
+      </div>
+      <div class="control">
+        <label>Head Style</label>
+        <select id="headStyle">
+          <option value="chevron" selected>Chevron</option>
+          <option value="barbed">Barbed</option>
+          <option value="minimal">Minimal</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Head Size <span class="value" id="headSizeValue">0.28</span></label>
+        <input type="range" id="headSize" min="0.1" max="0.55" step="0.01" value="0.28">
+      </div>
+      <div class="control">
+        <label>Tail Style</label>
+        <select id="tailStyle">
+          <option value="none">None</option>
+          <option value="notch" selected>Notch</option>
+          <option value="fins">Fins</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Overlaps</h3>
+      <div class="control">
+        <label>Crossing Policy</label>
+        <select id="overlapMode">
+          <option value="intersect">Intersect</option>
+          <option value="jump-over" selected>Jump Over</option>
+          <option value="jump-under">Jump Under</option>
+          <option value="avoid">Avoid</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Bridge / Gap Size <span class="value" id="bridgeSizeValue">14</span></label>
+        <input type="range" id="bridgeSize" min="4" max="40" step="1" value="14">
+      </div>
+      <div class="control">
+        <label>Seed</label>
+        <input type="number" id="seed" min="1" max="99999" value="31415">
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Actions</h3>
+      <button id="regenerateBtn">Regenerate</button>
+      <div class="button-group">
+        <button id="randomSeedBtn" class="secondary">Random Seed</button>
+        <button id="randomizeBtn" class="secondary">Randomize</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <h3>Export</h3>
+      <div class="button-group three">
+        <button id="exportSvgBtn" class="secondary">SVG</button>
+        <button id="exportPlotterBtn" class="secondary">Plotter SVG</button>
+        <button id="exportPngBtn" class="secondary">PNG</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div><span>Accepted</span><span class="stat-value" id="statAccepted">0</span></div>
+      <div><span>Rejected</span><span class="stat-value" id="statRejected">0</span></div>
+      <div><span>Paths</span><span class="stat-value" id="statPaths">0</span></div>
+      <div><span>Crossings handled</span><span class="stat-value" id="statCrossings">0</span></div>
+      <div><span>Mode</span><span class="stat-value" id="statMode">jump-over</span></div>
+    </div>
+  </div>
+
+  <script>
+    const params = {
+      paperSize: 'square800',
+      bgColor: '#fffaf0',
+      strokeColor: '#101010',
+      lineWeight: 1.2,
+      count: 70,
+      minGap: 22,
+      lineLength: 96,
+      lengthJitter: 0.35,
+      orientationMode: 'field',
+      curveMode: 'arc',
+      curvature: 0.48,
+      headStyle: 'chevron',
+      headSize: 0.28,
+      tailStyle: 'notch',
+      overlapMode: 'jump-over',
+      bridgeSize: 14,
+      seed: 31415
+    };
+
+    const sliderIds = [
+      'lineWeight', 'count', 'minGap', 'lineLength', 'lengthJitter',
+      'curvature', 'headSize', 'bridgeSize'
+    ];
+
+    let arrows = [];
+    let renderPaths = [];
+    let stats = { accepted: 0, rejected: 0, crossings: 0 };
+    let panelController;
+    let presetManager;
+
+    function setup() {
+      createManagedCanvas();
+      panelController = new TSPanelController('controls');
+      setupControls();
+      setupPresets();
+      regenerate();
+      noLoop();
+    }
+
+    function createManagedCanvas() {
+      const size = CanvasLayout.getSize(params.paperSize);
+      const canvas = createCanvas(size.width, size.height);
+      canvas.parent('canvas');
+    }
+
+    function draw() {
+      background(params.bgColor);
+      stroke(params.strokeColor);
+      strokeWeight(params.lineWeight);
+      noFill();
+      strokeCap(ROUND);
+      strokeJoin(ROUND);
+
+      renderPaths.forEach((path) => drawPolyline(path));
+    }
+
+    function setupControls() {
+      bindControl('paperSize', (value) => {
+        params.paperSize = value;
+        const size = CanvasLayout.getSize(value);
+        resizeCanvas(size.width, size.height);
+        regenerate();
+      });
+      bindControl('bgColor', (value) => {
+        params.bgColor = value;
+        redraw();
+      });
+      bindControl('strokeColor', (value) => {
+        params.strokeColor = value;
+        redraw();
+      });
+      bindControl('orientationMode', (value) => updateParam('orientationMode', value));
+      bindControl('curveMode', (value) => updateParam('curveMode', value));
+      bindControl('headStyle', (value) => updateParam('headStyle', value));
+      bindControl('tailStyle', (value) => updateParam('tailStyle', value));
+      bindControl('overlapMode', (value) => updateParam('overlapMode', value));
+      bindControl('seed', (value) => updateParam('seed', parseInt(value, 10) || 1));
+
+      sliderIds.forEach((id) => {
+        bindSlider(id, (value) => updateParam(id, parseFloat(value)));
+      });
+
+      document.getElementById('regenerateBtn').addEventListener('click', regenerate);
+      document.getElementById('randomSeedBtn').addEventListener('click', () => {
+        params.seed = Math.floor(Math.random() * 99999) + 1;
+        document.getElementById('seed').value = params.seed;
+        regenerate();
+      });
+      document.getElementById('randomizeBtn').addEventListener('click', randomizeParams);
+      document.getElementById('exportSvgBtn').addEventListener('click', exportSvg);
+      document.getElementById('exportPlotterBtn').addEventListener('click', exportPlotterSvg);
+      document.getElementById('exportPngBtn').addEventListener('click', () => {
+        TSExport.downloadPNG(document.querySelector('#canvas canvas'), 'arrows');
+      });
+    }
+
+    function bindControl(id, handler) {
+      const element = document.getElementById(id);
+      element.addEventListener('change', (event) => handler(event.target.value));
+      if (element.type === 'color') {
+        element.addEventListener('input', (event) => handler(event.target.value));
+      }
+    }
+
+    function bindSlider(id, handler) {
+      const element = document.getElementById(id);
+      const valueEl = document.getElementById(`${id}Value`);
+      const syncValue = (value) => {
+        if (valueEl) valueEl.textContent = value;
+      };
+      syncValue(element.value);
+      element.addEventListener('input', (event) => {
+        syncValue(event.target.value);
+        handler(event.target.value);
+      });
+      element.addEventListener('change', regenerate);
+    }
+
+    function updateParam(key, value) {
+      params[key] = value;
+      if (key !== 'lineWeight' && key !== 'bgColor' && key !== 'strokeColor') {
+        regenerate();
+      }
+      redraw();
+    }
+
+    function setupPresets() {
+      presetManager = new PresetManager({
+        algorithmId: 'arrows',
+        container: '#preset-container',
+        onSave: () => ({ ...params }),
+        onLoad: (preset) => {
+          Object.assign(params, preset.data);
+          updateUIFromParams();
+          regenerate();
+        },
+        onRandomize: () => {
+          randomizeParams();
+        }
+      });
+    }
+
+    function updateUIFromParams() {
+      Object.entries(params).forEach(([key, value]) => {
+        const el = document.getElementById(key);
+        if (!el) return;
+        el.value = value;
+        const label = document.getElementById(`${key}Value`);
+        if (label) label.textContent = value;
+      });
+    }
+
+    function randomizeParams() {
+      params.count = Math.floor(randomBetween(30, 150));
+      params.minGap = Math.floor(randomBetween(10, 34));
+      params.lineLength = Math.floor(randomBetween(48, 150));
+      params.lengthJitter = roundTo(randomBetween(0.08, 0.65), 2);
+      params.curvature = roundTo(randomBetween(0.08, 0.75), 2);
+      params.headSize = roundTo(randomBetween(0.16, 0.42), 2);
+      params.bridgeSize = Math.floor(randomBetween(8, 24));
+      params.lineWeight = roundTo(randomBetween(0.5, 2.2), 1);
+      params.seed = Math.floor(randomBetween(1, 99999));
+      params.orientationMode = pickOne(['field', 'random', 'radial', 'orbit']);
+      params.curveMode = pickOne(['straight', 'arc', 'flow']);
+      params.headStyle = pickOne(['chevron', 'barbed', 'minimal']);
+      params.tailStyle = pickOne(['none', 'notch', 'fins']);
+      params.overlapMode = pickOne(['intersect', 'jump-over', 'jump-under', 'avoid']);
+      updateUIFromParams();
+      regenerate();
+    }
+
+    function regenerate() {
+      randomSeed(params.seed);
+      noiseSeed(params.seed);
+      arrows = [];
+      renderPaths = [];
+      stats = { accepted: 0, rejected: 0, crossings: 0 };
+
+      const margin = 48;
+      const anchors = [];
+      const existingSegments = [];
+      const attemptsLimit = Math.max(params.count * 80, 1200);
+      let attempts = 0;
+
+      while (arrows.length < params.count && attempts < attemptsLimit) {
+        attempts += 1;
+        const anchor = {
+          x: random(margin, width - margin),
+          y: random(margin, height - margin)
+        };
+
+        if (!canPlaceAnchor(anchor, anchors)) {
+          stats.rejected += 1;
+          continue;
+        }
+
+        const arrow = buildArrow(anchor, arrows.length);
+        if (!arrow) {
+          stats.rejected += 1;
+          continue;
+        }
+
+        const handled = applyOverlapPolicy(arrow, existingSegments);
+        if (!handled.accepted) {
+          stats.rejected += 1;
+          continue;
+        }
+
+        anchors.push(anchor);
+        arrows.push(handled.arrow);
+        handled.arrow.paths.forEach((path) => {
+          segmentsFromPath(path).forEach((segment) => existingSegments.push(segment));
+        });
+      }
+
+      renderPaths = arrows.flatMap((arrow) => arrow.paths);
+      stats.accepted = arrows.length;
+      updateStats();
+      redraw();
+    }
+
+    function canPlaceAnchor(anchor, anchors) {
+      return anchors.every((other) => dist(anchor.x, anchor.y, other.x, other.y) >= params.minGap);
+    }
+
+    function buildArrow(anchor, index) {
+      const angle = getOrientation(anchor, index);
+      const length = params.lineLength * (1 - params.lengthJitter / 2 + random() * params.lengthJitter);
+      const shaft = buildShaft(anchor, angle, length);
+      if (!pathInsideBounds(shaft, 32)) return null;
+
+      const tip = shaft[shaft.length - 1];
+      const tail = shaft[0];
+      const headPaths = buildHead(tip, angle, length);
+      const tailPaths = buildTail(tail, angle, length);
+
+      return {
+        anchor,
+        angle,
+        paths: [shaft, ...headPaths, ...tailPaths]
+      };
+    }
+
+    function getOrientation(anchor, index) {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      if (params.orientationMode === 'random') {
+        return random(TWO_PI);
+      }
+      if (params.orientationMode === 'radial') {
+        return atan2(anchor.y - centerY, anchor.x - centerX);
+      }
+      if (params.orientationMode === 'orbit') {
+        return atan2(anchor.y - centerY, anchor.x - centerX) + HALF_PI;
+      }
+      const scale = 0.0023;
+      const field = noise(anchor.x * scale, anchor.y * scale, index * 0.01);
+      return field * TWO_PI * 1.75;
+    }
+
+    function buildShaft(anchor, angle, length) {
+      const tail = {
+        x: anchor.x - cos(angle) * length * 0.5,
+        y: anchor.y - sin(angle) * length * 0.5
+      };
+      const tip = {
+        x: anchor.x + cos(angle) * length * 0.5,
+        y: anchor.y + sin(angle) * length * 0.5
+      };
+
+      if (params.curveMode === 'straight') {
+        return [tail, tip];
+      }
+
+      const normal = { x: -sin(angle), y: cos(angle) };
+      if (params.curveMode === 'arc') {
+        const bend = length * params.curvature * 0.45 * (noise(anchor.x * 0.01, anchor.y * 0.01) > 0.5 ? 1 : -1);
+        const control = {
+          x: anchor.x + normal.x * bend,
+          y: anchor.y + normal.y * bend
+        };
+        return sampleQuadratic(tail, control, tip, 18);
+      }
+
+      const points = [];
+      for (let i = 0; i <= 24; i++) {
+        const t = i / 24;
+        const baseX = lerp(tail.x, tip.x, t);
+        const baseY = lerp(tail.y, tip.y, t);
+        const local = noise(anchor.x * 0.008 + t * 2.4, anchor.y * 0.008 + index * 0.03) - 0.5;
+        const offset = local * length * params.curvature * 0.65;
+        points.push({
+          x: baseX + normal.x * offset,
+          y: baseY + normal.y * offset
+        });
+      }
+      return points;
+    }
+
+    function buildHead(tip, angle, length) {
+      const headLength = length * params.headSize;
+      const spread = params.headStyle === 'minimal' ? PI / 9 : params.headStyle === 'barbed' ? PI / 5.5 : PI / 7;
+      const left = {
+        x: tip.x - cos(angle - spread) * headLength,
+        y: tip.y - sin(angle - spread) * headLength
+      };
+      const right = {
+        x: tip.x - cos(angle + spread) * headLength,
+        y: tip.y - sin(angle + spread) * headLength
+      };
+      const paths = [[left, tip, right]];
+
+      if (params.headStyle === 'barbed') {
+        const innerLeft = {
+          x: tip.x - cos(angle - spread * 0.5) * headLength * 0.55,
+          y: tip.y - sin(angle - spread * 0.5) * headLength * 0.55
+        };
+        const innerRight = {
+          x: tip.x - cos(angle + spread * 0.5) * headLength * 0.55,
+          y: tip.y - sin(angle + spread * 0.5) * headLength * 0.55
+        };
+        paths.push([innerLeft, tip, innerRight]);
+      }
+      return paths;
+    }
+
+    function buildTail(tail, angle, length) {
+      const normal = { x: -sin(angle), y: cos(angle) };
+      const tailSize = length * 0.08;
+      if (params.tailStyle === 'notch') {
+        return [[
+          { x: tail.x + normal.x * tailSize, y: tail.y + normal.y * tailSize },
+          tail,
+          { x: tail.x - normal.x * tailSize, y: tail.y - normal.y * tailSize }
+        ]];
+      }
+      if (params.tailStyle === 'fins') {
+        return [
+          [tail, { x: tail.x + normal.x * tailSize * 1.4 - cos(angle) * tailSize, y: tail.y + normal.y * tailSize * 1.4 - sin(angle) * tailSize }],
+          [tail, { x: tail.x - normal.x * tailSize * 1.4 - cos(angle) * tailSize, y: tail.y - normal.y * tailSize * 1.4 - sin(angle) * tailSize }]
+        ];
+      }
+      return [];
+    }
+
+    function applyOverlapPolicy(arrow, existingSegments) {
+      if (params.overlapMode === 'intersect') {
+        return { accepted: true, arrow };
+      }
+
+      const shaft = arrow.paths[0];
+      const otherPaths = arrow.paths.slice(1);
+      const intersection = findFirstIntersection(shaft, existingSegments);
+      if (!intersection) {
+        return { accepted: true, arrow };
+      }
+
+      if (params.overlapMode === 'avoid') {
+        return { accepted: false };
+      }
+
+      if (params.overlapMode === 'jump-under') {
+        const gapped = addGapToPath(shaft, intersection.point, params.bridgeSize);
+        if (gapped.length === 0) return { accepted: false };
+        stats.crossings += 1;
+        return {
+          accepted: true,
+          arrow: { ...arrow, paths: [...gapped, ...otherPaths] }
+        };
+      }
+
+      const bridged = addBridgeToPath(shaft, intersection.point, params.bridgeSize);
+      if (bridged.length === 0) return { accepted: false };
+      stats.crossings += 1;
+      return {
+        accepted: true,
+        arrow: { ...arrow, paths: [...bridged, ...otherPaths] }
+      };
+    }
+
+    function addGapToPath(path, point, size) {
+      const samples = resamplePath(path, 3);
+      const distances = cumulativeDistances(samples);
+      const target = closestDistanceAlongPath(samples, distances, point);
+      const half = size * 0.5;
+      const before = slicePathByDistance(samples, distances, 0, Math.max(0, target - half));
+      const after = slicePathByDistance(samples, distances, Math.min(distances[distances.length - 1], target + half), distances[distances.length - 1]);
+      return [before, after].filter((segment) => segment.length > 1);
+    }
+
+    function addBridgeToPath(path, point, size) {
+      const samples = resamplePath(path, 3);
+      const distances = cumulativeDistances(samples);
+      const target = closestDistanceAlongPath(samples, distances, point);
+      const total = distances[distances.length - 1];
+      const half = size * 0.5;
+      const startDist = Math.max(0, target - half);
+      const endDist = Math.min(total, target + half);
+      const startPoint = pointAtDistance(samples, distances, startDist);
+      const endPoint = pointAtDistance(samples, distances, endDist);
+      const localAngle = angleAtDistance(samples, distances, target);
+      const before = slicePathByDistance(samples, distances, 0, startDist);
+      const after = slicePathByDistance(samples, distances, endDist, total);
+      const bridge = [];
+      const normal = { x: -Math.sin(localAngle), y: Math.cos(localAngle) };
+
+      for (let i = 0; i <= 12; i++) {
+        const t = i / 12;
+        const baseX = lerp(startPoint.x, endPoint.x, t);
+        const baseY = lerp(startPoint.y, endPoint.y, t);
+        const height = Math.sin(t * Math.PI) * size * 0.6;
+        bridge.push({
+          x: baseX + normal.x * height,
+          y: baseY + normal.y * height
+        });
+      }
+
+      const output = [];
+      if (before.length > 1) output.push(before);
+      output.push(bridge);
+      if (after.length > 1) output.push(after);
+      return output;
+    }
+
+    function findFirstIntersection(path, existingSegments) {
+      const segments = segmentsFromPath(path);
+      for (let i = 0; i < segments.length; i++) {
+        const [a1, a2] = segments[i];
+        for (let j = 0; j < existingSegments.length; j++) {
+          const [b1, b2] = existingSegments[j];
+          const point = segmentIntersection(a1, a2, b1, b2);
+          if (point) return { point, segmentIndex: i };
+        }
+      }
+      return null;
+    }
+
+    function segmentIntersection(a1, a2, b1, b2) {
+      const denominator = (a1.x - a2.x) * (b1.y - b2.y) - (a1.y - a2.y) * (b1.x - b2.x);
+      if (Math.abs(denominator) < 0.0001) return null;
+      const t = ((a1.x - b1.x) * (b1.y - b2.y) - (a1.y - b1.y) * (b1.x - b2.x)) / denominator;
+      const u = ((a1.x - b1.x) * (a1.y - a2.y) - (a1.y - b1.y) * (a1.x - a2.x)) / denominator;
+      if (t <= 0 || t >= 1 || u <= 0 || u >= 1) return null;
+      return {
+        x: a1.x + t * (a2.x - a1.x),
+        y: a1.y + t * (a2.y - a1.y)
+      };
+    }
+
+    function segmentsFromPath(path) {
+      const segments = [];
+      for (let i = 0; i < path.length - 1; i++) {
+        segments.push([path[i], path[i + 1]]);
+      }
+      return segments;
+    }
+
+    function pathInsideBounds(path, margin) {
+      return path.every((point) =>
+        point.x >= margin && point.x <= width - margin && point.y >= margin && point.y <= height - margin
+      );
+    }
+
+    function sampleQuadratic(p0, p1, p2, steps) {
+      const points = [];
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const x = Math.pow(1 - t, 2) * p0.x + 2 * (1 - t) * t * p1.x + Math.pow(t, 2) * p2.x;
+        const y = Math.pow(1 - t, 2) * p0.y + 2 * (1 - t) * t * p1.y + Math.pow(t, 2) * p2.y;
+        points.push({ x, y });
+      }
+      return points;
+    }
+
+    function resamplePath(path, spacing) {
+      if (path.length < 2) return path.slice();
+      const distances = cumulativeDistances(path);
+      const total = distances[distances.length - 1];
+      const points = [];
+      const count = Math.max(2, Math.ceil(total / spacing));
+      for (let i = 0; i <= count; i++) {
+        points.push(pointAtDistance(path, distances, (total * i) / count));
+      }
+      return points;
+    }
+
+    function cumulativeDistances(path) {
+      const distances = [0];
+      for (let i = 1; i < path.length; i++) {
+        distances.push(distances[i - 1] + dist(path[i - 1].x, path[i - 1].y, path[i].x, path[i].y));
+      }
+      return distances;
+    }
+
+    function pointAtDistance(path, distances, target) {
+      if (target <= 0) return { ...path[0] };
+      const total = distances[distances.length - 1];
+      if (target >= total) return { ...path[path.length - 1] };
+      for (let i = 1; i < distances.length; i++) {
+        if (distances[i] >= target) {
+          const span = distances[i] - distances[i - 1] || 1;
+          const local = (target - distances[i - 1]) / span;
+          return {
+            x: lerp(path[i - 1].x, path[i].x, local),
+            y: lerp(path[i - 1].y, path[i].y, local)
+          };
+        }
+      }
+      return { ...path[path.length - 1] };
+    }
+
+    function angleAtDistance(path, distances, target) {
+      const clamped = constrain(target, 0, distances[distances.length - 1]);
+      const p1 = pointAtDistance(path, distances, Math.max(0, clamped - 1));
+      const p2 = pointAtDistance(path, distances, Math.min(distances[distances.length - 1], clamped + 1));
+      return atan2(p2.y - p1.y, p2.x - p1.x);
+    }
+
+    function closestDistanceAlongPath(path, distances, point) {
+      let bestDistance = 0;
+      let bestGap = Infinity;
+      path.forEach((sample, index) => {
+        const gap = dist(sample.x, sample.y, point.x, point.y);
+        if (gap < bestGap) {
+          bestGap = gap;
+          bestDistance = distances[index];
+        }
+      });
+      return bestDistance;
+    }
+
+    function slicePathByDistance(path, distances, start, end) {
+      if (end <= start) return [];
+      const output = [pointAtDistance(path, distances, start)];
+      for (let i = 1; i < path.length - 1; i++) {
+        if (distances[i] > start && distances[i] < end) {
+          output.push({ ...path[i] });
+        }
+      }
+      output.push(pointAtDistance(path, distances, end));
+      return dedupePath(output);
+    }
+
+    function dedupePath(path) {
+      return path.filter((point, index) => {
+        if (index === 0) return true;
+        const prev = path[index - 1];
+        return dist(prev.x, prev.y, point.x, point.y) > 0.5;
+      });
+    }
+
+    function drawPolyline(path) {
+      beginShape();
+      path.forEach((point) => vertex(point.x, point.y));
+      endShape();
+    }
+
+    function flattenPaths(paths) {
+      return paths.map((path) => path.map((point) => ({ x: point.x, y: point.y })));
+    }
+
+    function exportSvg() {
+      const svg = buildSvgString(renderPaths, true, false);
+      TSExport.downloadSVG(svg, `arrows-${params.seed}`);
+    }
+
+    function exportPlotterSvg() {
+      const rawPaths = flattenPaths(renderPaths);
+      let plotterPaths = rawPaths;
+      if (typeof TSExport.optimizePaths === 'function') {
+        plotterPaths = TSExport.optimizePaths(rawPaths, {
+          merge: false,
+          reorder: true,
+          simplify: false,
+          minPathLength: 2,
+          mergeThreshold: 1
+        }).paths;
+      }
+      const svg = buildSvgString(plotterPaths, false, true);
+      TSExport.downloadSVG(svg, `arrows-plotter-${params.seed}`);
+    }
+
+    function buildSvgString(paths, includeBackground, plotterMode) {
+      const svgPaths = paths.map((path) => ({
+        d: TSExport.pointsToPath(path),
+        stroke: params.strokeColor,
+        strokeWidth: plotterMode ? Math.max(0.35, params.lineWeight * 0.75) : params.lineWeight,
+        fill: 'none'
+      }));
+      const size = CanvasLayout.getSize(params.paperSize);
+      return TSExport.createSVG(svgPaths, size.width, size.height, {
+        backgroundColor: includeBackground ? params.bgColor : 'none',
+        strokeColor: params.strokeColor,
+        strokeWidth: params.lineWeight
+      }).replace(/<rect width="100%" height="100%" fill="none"\/>\n?/, '');
+    }
+
+    function updateStats() {
+      document.getElementById('statAccepted').textContent = stats.accepted;
+      document.getElementById('statRejected').textContent = stats.rejected;
+      document.getElementById('statPaths').textContent = renderPaths.length;
+      document.getElementById('statCrossings').textContent = stats.crossings;
+      document.getElementById('statMode').textContent = params.overlapMode;
+    }
+
+    function pickOne(values) {
+      return values[Math.floor(Math.random() * values.length)];
+    }
+
+    function randomBetween(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function roundTo(value, places) {
+      const factor = Math.pow(10, places);
+      return Math.round(value * factor) / factor;
+    }
+  </script>
+</body>
+</html>
