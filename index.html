@@ -442,6 +442,14 @@
       color: var(--ts-accent);
     }
 
+    .filter-divider {
+      width: 1px;
+      height: 1.4rem;
+      background: var(--ts-border);
+      margin: 0 0.2rem;
+      align-self: center;
+    }
+
     /* ============================================
        GRID - High density, clean
        ============================================ */
@@ -531,17 +539,12 @@
     }
 
     .grid.list-view .card-link {
-      padding: 0.5rem 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      padding: 0.6rem 0.75rem 0.35rem;
     }
 
     .grid.list-view .card-header {
       margin: 0;
-      flex: 1;
-      flex-direction: row;
-      align-items: center;
+      align-items: flex-start;
     }
 
     .grid.list-view .card-title {
@@ -554,7 +557,13 @@
     }
 
     .grid.list-view .card-meta {
-      display: none;
+      white-space: normal;
+      min-height: 0;
+    }
+
+    .grid.list-view .card-footer {
+      padding: 0 0.75rem 0.6rem;
+      border-top: none;
     }
 
     /* ============================================
@@ -572,7 +581,7 @@
 
     .card-link {
       display: block;
-      padding: 0.6rem 0.75rem;
+      padding: 0.75rem 0.75rem 0.55rem;
       text-decoration: none;
       color: inherit;
     }
@@ -609,9 +618,45 @@
     .card-meta {
       font-size: 0.6rem;
       color: var(--ts-text-muted);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      line-height: 1.5;
+      min-height: 2.6em;
+    }
+
+    .card-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 0.45rem;
+      padding: 0.55rem 0.75rem 0.7rem;
+      border-top: 1px solid var(--ts-border);
+    }
+
+    .card-badges,
+    .card-related {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem;
+      align-items: center;
+    }
+
+    .card-related-label,
+    .card-related-empty {
+      font-size: 0.52rem;
+      color: var(--ts-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .card-related-link,
+    .card-more-link {
+      font-size: 0.58rem;
+      color: var(--ts-accent);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .card-related-link:hover,
+    .card-more-link:hover {
+      border-bottom-color: currentColor;
     }
 
     /* Hidden state */
@@ -796,6 +841,7 @@
     <p>Total Serialism &bull; <a href="https://github.com/thedavidmurray/total-serialism" target="_blank">GitHub</a></p>
   </footer>
 
+  <script src="../discovery-utils.js"></script>
   <script>
     let catalog = null;
     let algorithms = [];
@@ -810,37 +856,75 @@
     let currentFilter = 'all';
 
     function renderFilters() {
-      const filters = ['<button class="filter-btn active" data-filter="all">All</button>'];
+      const filters = [
+        '<button class="filter-btn active" data-filter="all">All</button>',
+        '<button class="filter-btn" data-filter="plotter">Plotter</button>',
+        '<button class="filter-btn" data-filter="screen">Screen</button>',
+        '<button class="filter-btn" data-filter="systems">Systems</button>',
+        '<button class="filter-btn" data-filter="tools">Tools</button>',
+        '<span class="filter-divider" aria-hidden="true"></span>'
+      ];
       Object.entries(catalog.categories).forEach(([key, category]) => {
+        if (key === 'tools') return;
         filters.push(`<button class="filter-btn" data-filter="${key}">${category.shortLabel}</button>`);
       });
       filtersContainer.innerHTML = filters.join('');
     }
 
-    function normalizeText(value) {
+    function escapeHtml(value) {
       return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase();
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function renderBadge(label) {
+      return `<span class="card-badge">${escapeHtml(label)}</span>`;
+    }
+
+    function renderRelatedLinks(algo) {
+      const related = TSDiscovery.getRelatedAlgorithms(catalog, algo.id, 2);
+      if (related.length === 0) {
+        return '<span class="card-related-empty">Ideation browser</span>';
+      }
+
+      return related.map((item) => `
+        <a href="${item.path}" class="card-related-link">${escapeHtml(item.name)}</a>
+      `).join('');
     }
 
     function renderCards() {
       grid.innerHTML = algorithms.map(algo => `
-        <div class="card" data-category="${algo.category}" data-search="${[
-          algo.name,
-          algo.description,
-          ...(algo.tags || [])
-        ].map(normalizeText).join(' ')}">
+        <div
+          class="card"
+          data-category="${algo.category}"
+          data-medium="${algo.medium}"
+          data-search="${escapeHtml(TSDiscovery.buildSearchHaystack(algo, catalog))}"
+        >
           <a href="${algo.path}" class="card-link">
             <div class="card-header">
-              <span class="card-title">${algo.name}</span>
-              <span class="card-badge badge-${algo.category}">${catalog.categories[algo.category]?.shortLabel || formatCategory(algo.category)}</span>
+              <span class="card-title">${escapeHtml(algo.name)}</span>
+              <span class="card-badge">${escapeHtml(catalog.categories[algo.category]?.shortLabel || formatCategory(algo.category))}</span>
             </div>
-            <div class="card-meta">
-              <span class="card-path">${algo.description}</span>
-              <span class="card-arrow">&rarr;</span>
-            </div>
+            <div class="card-meta">${escapeHtml(algo.description)}</div>
           </a>
+          <div class="card-footer">
+            <div class="card-badges">
+              ${renderBadge(algo.complexity)}
+              ${renderBadge(TSDiscovery.getMediumLabel(algo.medium))}
+              ${renderBadge(TSDiscovery.getPlotterReadinessLabel(algo.plotterReadiness))}
+              ${algo.hasPresets ? renderBadge('Presets') : ''}
+              ${algo.featured ? renderBadge('Featured') : ''}
+              ${(algo.engine || []).slice(0, 1).map(engine => renderBadge(engine.toUpperCase())).join('')}
+            </div>
+            <div class="card-related">
+              <span class="card-related-label">Try Next</span>
+              ${renderRelatedLinks(algo)}
+              <a href="../browse.html?related=${algo.id}" class="card-more-link">More like this</a>
+            </div>
+          </div>
         </div>
       `).join('');
 
@@ -850,21 +934,19 @@
     }
 
     function formatCategory(cat) {
-      return cat
-        .split('-')
-        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-        .join(' ');
+      return TSDiscovery.formatCategory(cat);
     }
 
     function applyFilters() {
-      const searchTerm = normalizeText(searchInput.value).trim();
+      const searchTerm = TSDiscovery.normalizeText(searchInput.value).trim();
       const cards = document.querySelectorAll('.card');
 
       cards.forEach(card => {
         const category = card.dataset.category;
+        const medium = card.dataset.medium;
         const haystack = card.dataset.search;
 
-        const matchesFilter = currentFilter === 'all' || category === currentFilter;
+        const matchesFilter = currentFilter === 'all' || category === currentFilter || medium === currentFilter;
         const matchesSearch = !searchTerm || haystack.includes(searchTerm);
 
         card.classList.toggle('hidden', !(matchesFilter && matchesSearch));

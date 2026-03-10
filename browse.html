@@ -114,6 +114,75 @@
             padding: 40px 0;
         }
 
+        .focus-panel {
+            background: rgba(12, 18, 42, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
+            padding: 28px;
+            margin-bottom: 36px;
+            backdrop-filter: blur(14px);
+        }
+
+        .focus-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            align-items: flex-start;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+
+        .focus-kicker {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            opacity: 0.75;
+            margin-bottom: 10px;
+        }
+
+        .focus-title {
+            font-size: 30px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .focus-description {
+            max-width: 780px;
+            line-height: 1.6;
+            opacity: 0.92;
+        }
+
+        .focus-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .focus-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            border-radius: 999px;
+            padding: 10px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .focus-btn:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .focus-meta {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
         .stats {
             text-align: center;
             margin-bottom: 40px;
@@ -184,11 +253,8 @@
         .algorithm-card {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 12px;
-            padding: 20px;
             color: #333;
-            text-decoration: none;
             transition: all 0.3s ease;
-            cursor: pointer;
             position: relative;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
@@ -213,6 +279,13 @@
 
         .algorithm-card:hover::before {
             transform: translateX(0);
+        }
+
+        .algorithm-main-link {
+            display: block;
+            text-decoration: none;
+            color: inherit;
+            padding: 20px 20px 12px;
         }
 
         .algorithm-header {
@@ -240,6 +313,41 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            padding: 0 20px 14px;
+        }
+
+        .algorithm-related {
+            border-top: 1px solid rgba(102, 126, 234, 0.15);
+            padding: 14px 20px 18px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .algorithm-related-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #7a7f94;
+        }
+
+        .algorithm-related-link,
+        .algorithm-related-more {
+            text-decoration: none;
+            color: #4a5ed8;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .algorithm-related-more {
+            margin-left: auto;
+        }
+
+        .algorithm-related-link:hover,
+        .algorithm-related-more:hover {
+            text-decoration: underline;
         }
 
         .badge {
@@ -289,6 +397,31 @@
         .badge-plotter {
             background: #e0f7fa;
             color: #006064;
+        }
+
+        .badge-medium {
+            background: #f5f0ff;
+            color: #5d3fd3;
+        }
+
+        .badge-readiness {
+            background: #eef7f1;
+            color: #226f54;
+        }
+
+        .badge-readiness.screen-first {
+            background: #fff1eb;
+            color: #c44536;
+        }
+
+        .badge-readiness.adaptable {
+            background: #fff8e6;
+            color: #8f5d00;
+        }
+
+        .badge-engine {
+            background: #f1f5f9;
+            color: #475569;
         }
 
         .action-link {
@@ -368,6 +501,29 @@
                 flex-direction: column;
                 gap: 20px;
             }
+
+            .focus-panel {
+                padding: 20px;
+            }
+
+            .focus-title {
+                font-size: 24px;
+            }
+
+            .algorithm-main-link {
+                padding: 18px 18px 12px;
+            }
+
+            .algorithm-footer,
+            .algorithm-related {
+                padding-left: 18px;
+                padding-right: 18px;
+            }
+
+            .algorithm-related-more {
+                margin-left: 0;
+                width: 100%;
+            }
         }
 
         .loading {
@@ -398,10 +554,14 @@
 
                 <div class="filters">
                     <button class="filter-btn active" data-filter="all">All</button>
-                    <button class="filter-btn" data-filter="featured">⭐ Featured</button>
-                    <button class="filter-btn" data-filter="plotter-safe">Plotter Safe</button>
-                    <button class="filter-btn" data-filter="presets">Presets</button>
+                    <button class="filter-btn" data-filter="plotter">Plotter</button>
+                    <button class="filter-btn" data-filter="screen">Screen</button>
+                    <button class="filter-btn" data-filter="systems">Systems</button>
                     <button class="filter-btn" data-filter="tools">Tools</button>
+                    <button class="filter-btn" data-filter="featured">⭐ Featured</button>
+                    <button class="filter-btn" data-filter="native">Plotter Native</button>
+                    <button class="filter-btn" data-filter="adaptable">Adaptable</button>
+                    <button class="filter-btn" data-filter="presets">Presets</button>
                     <button class="filter-btn" data-filter="favorites">❤️ Favorites</button>
                     <button class="filter-btn" data-filter="beginner">Beginner</button>
                     <button class="filter-btn" data-filter="intermediate">Intermediate</button>
@@ -433,23 +593,47 @@
                 </div>
             </div>
 
+            <div id="relatedFocus"></div>
+
             <div id="content" class="loading">
                 Loading algorithms...
             </div>
         </div>
     </main>
 
+    <script src="discovery-utils.js"></script>
     <script>
         let catalog = null;
         let favorites = JSON.parse(localStorage.getItem('total-serialism-favorites') || '[]');
         let currentFilter = 'all';
         let searchTerm = '';
+        let relatedFocusId = TSDiscovery.getUrlParams().get('related') || '';
 
-        function normalizeText(value) {
+        function escapeHtml(value) {
             return String(value || '')
-                .normalize('NFD')
-                .replace(/[\u0300-\u036f]/g, '')
-                .toLowerCase();
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function renderBadge(label, className = '') {
+            return `<span class="badge ${className}">${escapeHtml(label)}</span>`;
+        }
+
+        function getDisplayOutputs(algo) {
+            const priority = ['svg', 'plotter', 'png', 'gif', 'preview', 'canvas'];
+            return [...new Set(algo.outputs || [])]
+                .sort((left, right) => {
+                    const leftIndex = priority.indexOf(left);
+                    const rightIndex = priority.indexOf(right);
+                    const safeLeft = leftIndex === -1 ? priority.length : leftIndex;
+                    const safeRight = rightIndex === -1 ? priority.length : rightIndex;
+                    if (safeLeft !== safeRight) return safeLeft - safeRight;
+                    return left.localeCompare(right);
+                })
+                .slice(0, 2);
         }
 
         // Load catalog
@@ -457,10 +641,11 @@
             .then(res => res.json())
             .then(data => {
                 catalog = data;
+                renderFocusPanel();
                 renderContent();
                 updateStats();
             })
-            .catch(err => {
+            .catch(() => {
                 document.getElementById('content').innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">⚠️</div>
@@ -471,7 +656,7 @@
 
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchTerm = normalizeText(e.target.value);
+            searchTerm = TSDiscovery.normalizeText(e.target.value);
             renderContent();
         });
 
@@ -507,32 +692,78 @@
             renderContent();
         }
 
-        function matchesFilter(algo, categoryKey) {
+        function matchesFilter(algo) {
             if (currentFilter === 'all') return true;
+            if (currentFilter === 'plotter' || currentFilter === 'screen' || currentFilter === 'systems' || currentFilter === 'tools') {
+                return algo.medium === currentFilter;
+            }
             if (currentFilter === 'featured') return algo.featured === true;
-            if (currentFilter === 'plotter-safe') return algo.plotterSafe === true;
+            if (currentFilter === 'plotter-safe' || currentFilter === 'native') return algo.plotterReadiness === 'native';
+            if (currentFilter === 'adaptable') return algo.plotterReadiness === 'adaptable';
             if (currentFilter === 'presets') return algo.hasPresets === true;
-            if (currentFilter === 'tools') return algo.category === 'tools';
             if (currentFilter === 'favorites') return favorites.includes(algo.id);
             if (currentFilter === 'beginner') return algo.complexity === 'beginner';
             if (currentFilter === 'intermediate') return algo.complexity === 'intermediate';
             if (currentFilter === 'advanced') return algo.complexity === 'advanced';
+            if (catalog && catalog.categories[currentFilter]) return algo.category === currentFilter;
             return true;
         }
 
         function matchesSearch(algo) {
             if (!searchTerm) return true;
-            return normalizeText(algo.name).includes(searchTerm) ||
-                   normalizeText(algo.description).includes(searchTerm) ||
-                   normalizeText(algo.id).includes(searchTerm) ||
-                   (algo.tags || []).some(tag => normalizeText(tag).includes(searchTerm));
+            return TSDiscovery.buildSearchHaystack(algo, catalog).includes(searchTerm);
         }
 
         function getVisibleAlgorithms() {
             if (!catalog) return [];
             return catalog.algorithms.filter(algo =>
-                matchesFilter(algo, algo.category) && matchesSearch(algo)
+                matchesFilter(algo) && matchesSearch(algo)
             );
+        }
+
+        function renderFocusPanel() {
+            if (!catalog) return;
+
+            const relatedFocus = document.getElementById('relatedFocus');
+            if (!relatedFocusId) {
+                relatedFocus.innerHTML = '';
+                return;
+            }
+
+            const focusAlgorithm = catalog.algorithms.find((algo) => algo.id === relatedFocusId);
+            if (!focusAlgorithm) {
+                relatedFocus.innerHTML = '';
+                return;
+            }
+
+            const relatedAlgorithms = TSDiscovery.getRelatedAlgorithms(catalog, relatedFocusId, 6);
+            const openHref = focusAlgorithm.path;
+            relatedFocus.innerHTML = `
+                <section class="focus-panel">
+                    <div class="focus-header">
+                        <div>
+                            <div class="focus-kicker">More like this</div>
+                            <div class="focus-title">${escapeHtml(focusAlgorithm.name)}</div>
+                            <div class="focus-description">
+                                ${escapeHtml(focusAlgorithm.description)} Recommendations below are scored from shared motif families, visual traits, medium, and plotter readiness.
+                            </div>
+                        </div>
+                        <div class="focus-actions">
+                            <a href="${openHref}" class="focus-btn">Open algorithm</a>
+                            <a href="browse.html" class="focus-btn">Clear focus</a>
+                        </div>
+                    </div>
+                    <div class="focus-meta">
+                        ${renderBadge(TSDiscovery.getMediumLabel(focusAlgorithm.medium), 'badge-medium')}
+                        ${renderBadge(TSDiscovery.getPlotterReadinessLabel(focusAlgorithm.plotterReadiness), `badge-readiness ${focusAlgorithm.plotterReadiness}`)}
+                        ${renderBadge(focusAlgorithm.complexity, `badge-complexity ${focusAlgorithm.complexity}`)}
+                        ${(focusAlgorithm.engine || []).slice(0, 2).map((engine) => renderBadge(engine.toUpperCase(), 'badge-engine')).join('')}
+                    </div>
+                    <div class="algorithms-grid">
+                        ${relatedAlgorithms.map((algo) => renderAlgorithmCard(algo)).join('')}
+                    </div>
+                </section>
+            `;
         }
 
         function renderContent() {
@@ -613,13 +844,18 @@
         function renderAlgorithmCard(algo) {
             const isFavorite = favorites.includes(algo.id);
             const category = catalog.categories[algo.category];
-            const exportBadges = (algo.hasExport || []).slice(0, 2).map(format =>
-                `<span class="badge badge-export">${format}</span>`
+            const exportBadges = getDisplayOutputs(algo).map(format =>
+                renderBadge(format, 'badge-export')
             ).join('');
+            const relatedLinks = TSDiscovery.getRelatedAlgorithms(catalog, algo.id, 2).map(item =>
+                `<a href="${item.path}" class="algorithm-related-link">${escapeHtml(item.name)}</a>`
+            ).join('');
+
             return `
-                <a href="${algo.path}" class="algorithm-card">
+                <div class="algorithm-card">
+                    <a href="${algo.path}" class="algorithm-main-link">
                     <div class="algorithm-header">
-                        <div class="algorithm-name">${algo.name}</div>
+                        <div class="algorithm-name">${escapeHtml(algo.name)}</div>
                         <button
                             class="favorite-btn ${isFavorite ? 'active' : ''}"
                             onclick="toggleFavorite('${algo.id}', event)"
@@ -628,16 +864,24 @@
                             ${isFavorite ? '❤️' : '🤍'}
                         </button>
                     </div>
-                    <div class="algorithm-description">${algo.description}</div>
+                    <div class="algorithm-description">${escapeHtml(algo.description)}</div>
+                    </a>
                     <div class="algorithm-footer">
-                        <span class="badge badge-complexity ${algo.complexity}">${algo.complexity}</span>
-                        <span class="badge badge-category">${category.shortLabel}</span>
-                        ${algo.featured ? '<span class="badge badge-featured">Featured</span>' : ''}
-                        ${algo.hasPresets ? '<span class="badge badge-preset">Presets</span>' : ''}
-                        ${algo.plotterSafe ? '<span class="badge badge-plotter">Plotter Safe</span>' : ''}
+                        ${renderBadge(algo.complexity, `badge-complexity ${algo.complexity}`)}
+                        ${renderBadge(category.shortLabel, 'badge-category')}
+                        ${renderBadge(TSDiscovery.getMediumLabel(algo.medium), 'badge-medium')}
+                        ${renderBadge(TSDiscovery.getPlotterReadinessLabel(algo.plotterReadiness), `badge-readiness ${algo.plotterReadiness}`)}
+                        ${algo.featured ? renderBadge('Featured', 'badge-featured') : ''}
+                        ${algo.hasPresets ? renderBadge('Presets', 'badge-preset') : ''}
                         ${exportBadges}
+                        ${(algo.engine || []).slice(0, 1).map(engine => renderBadge(engine.toUpperCase(), 'badge-engine')).join('')}
                     </div>
-                </a>
+                    <div class="algorithm-related">
+                        <span class="algorithm-related-label">Try next</span>
+                        ${relatedLinks || '<span class="algorithm-related-label">Use focus mode</span>'}
+                        <a href="?related=${algo.id}" class="algorithm-related-more">More like this</a>
+                    </div>
+                </div>
             `;
         }
 

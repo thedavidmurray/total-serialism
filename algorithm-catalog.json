@@ -1,11 +1,23 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "lastUpdated": "2026-03-10",
   "stats": {
     "totalAlgorithms": 93,
     "totalCategories": 20,
     "featuredCount": 13,
-    "plotterSafeCount": 83
+    "plotterSafeCount": 83,
+    "mediumCounts": {
+      "systems": 26,
+      "screen": 4,
+      "plotter": 56,
+      "tools": 7
+    },
+    "plotterReadinessCounts": {
+      "adaptable": 32,
+      "screen-first": 5,
+      "native": 49,
+      "tool": 7
+    }
   },
   "categories": {
     "advanced": {
@@ -149,7 +161,37 @@
         "physics",
         "waves",
         "scientific"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "field",
+        "interference",
+        "simulation",
+        "wave"
+      ],
+      "visualTraits": [
+        "chaotic",
+        "dense",
+        "scientific"
+      ],
+      "relatedSeeds": [
+        "sound-waveform",
+        "strange-attractors",
+        "wave-interference"
+      ],
+      "status": "experimental"
     },
     {
       "id": "lorenz-attractor",
@@ -168,7 +210,37 @@
       "tags": [
         "advanced",
         "plotter"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "attractor",
+        "chaos",
+        "field",
+        "simulation",
+        "wave"
+      ],
+      "visualTraits": [
+        "chaotic",
+        "dense",
+        "scientific"
+      ],
+      "relatedSeeds": [
+        "parametric-surfaces",
+        "particle-system",
+        "strange-attractors"
+      ],
+      "status": "experimental"
     },
     {
       "id": "parametric-surfaces",
@@ -189,7 +261,40 @@
         "mathematical",
         "surfaces",
         "contours"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "field",
+        "projection",
+        "simulation",
+        "surfaces",
+        "wave"
+      ],
+      "visualTraits": [
+        "chaotic",
+        "dense",
+        "layered",
+        "mathematical",
+        "scientific"
+      ],
+      "relatedSeeds": [
+        "lorenz-attractor",
+        "mandelbrot-and-julia",
+        "topographic-contours"
+      ],
+      "status": "experimental"
     },
     {
       "id": "sound-waveform",
@@ -209,7 +314,40 @@
         "audio",
         "waveform",
         "visualization"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "audio"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "audio",
+        "field",
+        "signal",
+        "simulation",
+        "wave"
+      ],
+      "visualTraits": [
+        "chaotic",
+        "dense",
+        "rhythmic",
+        "scientific"
+      ],
+      "relatedSeeds": [
+        "chladni-patterns",
+        "harmonograph",
+        "wave-interference"
+      ],
+      "status": "experimental"
     },
     {
       "id": "strange-attractors",
@@ -228,7 +366,41 @@
       "tags": [
         "advanced",
         "plotter"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "attractor",
+        "chaos",
+        "curves",
+        "field",
+        "simulation",
+        "wave"
+      ],
+      "visualTraits": [
+        "chaotic",
+        "continuous",
+        "dense",
+        "scientific"
+      ],
+      "relatedSeeds": [
+        "harmonograph",
+        "lorenz-attractor",
+        "spirotron"
+      ],
+      "status": "experimental"
     },
     {
       "id": "vortex-street",
@@ -248,7 +420,39 @@
         "fluid-dynamics",
         "vortex",
         "physics"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "field",
+        "fluid",
+        "particles",
+        "simulation",
+        "wave"
+      ],
+      "visualTraits": [
+        "chaotic",
+        "dense",
+        "directional",
+        "scientific",
+        "turbulent"
+      ],
+      "relatedSeeds": [
+        "fluid-dynamics",
+        "magnetic-fields",
+        "wave-interference"
+      ],
+      "status": "experimental"
     },
     {
       "id": "ml5-patterns",
@@ -268,7 +472,42 @@
         "machine-learning",
         "ai",
         "generative"
-      ]
+      ],
+      "medium": "screen",
+      "engine": [
+        "ml5",
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "camera",
+        "image",
+        "ml"
+      ],
+      "plotterReadiness": "screen-first",
+      "colorDependency": "core",
+      "penCount": "variable",
+      "motifFamilies": [
+        "adaptive",
+        "image-derived",
+        "ml"
+      ],
+      "visualTraits": [
+        "experimental",
+        "layered",
+        "screen-based"
+      ],
+      "relatedSeeds": [
+        "ascii-art",
+        "image-to-ascii",
+        "neural-network-art"
+      ],
+      "status": "experimental"
     },
     {
       "id": "neural-network-art",
@@ -287,7 +526,41 @@
       "tags": [
         "ai",
         "plotter"
-      ]
+      ],
+      "medium": "screen",
+      "engine": [
+        "ml5",
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "camera",
+        "image",
+        "ml"
+      ],
+      "plotterReadiness": "screen-first",
+      "colorDependency": "core",
+      "penCount": "variable",
+      "motifFamilies": [
+        "adaptive",
+        "image-derived",
+        "ml"
+      ],
+      "visualTraits": [
+        "experimental",
+        "layered",
+        "screen-based"
+      ],
+      "relatedSeeds": [
+        "ascii-art",
+        "dithering",
+        "ml5-patterns"
+      ],
+      "status": "experimental"
     },
     {
       "id": "elementary-ca",
@@ -307,7 +580,37 @@
         "wolfram",
         "1d-ca",
         "rule-based"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "cellular",
+        "grid",
+        "rules"
+      ],
+      "visualTraits": [
+        "emergent",
+        "layered",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "elementary-ca-layers",
+        "game-of-life",
+        "reaction-diffusion-layers"
+      ],
+      "status": "stable"
     },
     {
       "id": "elementary-ca-layers",
@@ -327,7 +630,36 @@
         "wolfram",
         "layered",
         "rule-based"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "cellular",
+        "grid",
+        "rules"
+      ],
+      "visualTraits": [
+        "emergent",
+        "layered",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "elementary-ca",
+        "game-of-life-layers",
+        "reaction-diffusion-layers"
+      ],
+      "status": "stable"
     },
     {
       "id": "game-of-life",
@@ -349,7 +681,36 @@
         "2d-ca",
         "emergence",
         "patterns"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "cellular",
+        "grid",
+        "rules"
+      ],
+      "visualTraits": [
+        "emergent",
+        "layered",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "elementary-ca",
+        "game-of-life-layers",
+        "reaction-diffusion"
+      ],
+      "status": "stable"
     },
     {
       "id": "game-of-life-layers",
@@ -369,7 +730,36 @@
         "conway",
         "layered",
         "composite"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "cellular",
+        "grid",
+        "rules"
+      ],
+      "visualTraits": [
+        "emergent",
+        "layered",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "elementary-ca-layers",
+        "game-of-life",
+        "reaction-diffusion-layers"
+      ],
+      "status": "stable"
     },
     {
       "id": "belousov-zhabotinsky",
@@ -390,7 +780,36 @@
         "oscillating",
         "spirals",
         "bz-reaction"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "field",
+        "reaction"
+      ],
+      "visualTraits": [
+        "dense",
+        "diffusive",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "crystallization",
+        "liesegang-rings",
+        "reaction-diffusion"
+      ],
+      "status": "experimental"
     },
     {
       "id": "chromatography",
@@ -410,7 +829,40 @@
         "chemical",
         "separation",
         "diffusion"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "bands",
+        "contour",
+        "diffusion",
+        "field",
+        "reaction"
+      ],
+      "visualTraits": [
+        "dense",
+        "diffusive",
+        "layered",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "flow-hatching",
+        "liesegang-rings",
+        "mixing-patterns"
+      ],
+      "status": "experimental"
     },
     {
       "id": "convection-cells",
@@ -430,7 +882,40 @@
         "convection",
         "thermal",
         "fluid-dynamics"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "cells",
+        "contour",
+        "field",
+        "fluid",
+        "reaction"
+      ],
+      "visualTraits": [
+        "cellular",
+        "dense",
+        "diffusive",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "reaction-diffusion",
+        "voronoi-stippling",
+        "vortex-street"
+      ],
+      "status": "experimental"
     },
     {
       "id": "crystallization",
@@ -450,7 +935,40 @@
         "crystals",
         "growth",
         "nucleation"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "branching",
+        "contour",
+        "crystal",
+        "field",
+        "growth",
+        "reaction"
+      ],
+      "visualTraits": [
+        "angular",
+        "dense",
+        "diffusive",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "belousov-zhabotinsky",
+        "crystal-growth",
+        "snowflakes"
+      ],
+      "status": "experimental"
     },
     {
       "id": "liesegang-rings",
@@ -470,7 +988,41 @@
         "precipitation",
         "rings",
         "periodic"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "diffusion",
+        "field",
+        "reaction",
+        "rings"
+      ],
+      "visualTraits": [
+        "dense",
+        "diffusive",
+        "layered",
+        "organic",
+        "radial"
+      ],
+      "relatedSeeds": [
+        "chromatography",
+        "circle-rays",
+        "reaction-diffusion"
+      ],
+      "status": "experimental"
     },
     {
       "id": "mixing-patterns",
@@ -490,7 +1042,41 @@
         "mixing",
         "diffusion",
         "chemical"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "diffusion",
+        "field",
+        "fluid",
+        "interference",
+        "reaction"
+      ],
+      "visualTraits": [
+        "dense",
+        "diffusive",
+        "layered",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "belousov-zhabotinsky",
+        "chromatography",
+        "fluid-dynamics"
+      ],
+      "status": "experimental"
     },
     {
       "id": "harmonograph",
@@ -509,7 +1095,37 @@
       "tags": [
         "curves",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "oscillation",
+        "parametric",
+        "recursion"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "rhythmic"
+      ],
+      "relatedSeeds": [
+        "lissajous-curves",
+        "rose-curves",
+        "spirotron"
+      ],
+      "status": "stable"
     },
     {
       "id": "hilbert-curve",
@@ -528,7 +1144,38 @@
       "tags": [
         "curves",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "parametric",
+        "recursion",
+        "space-filling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "rhythmic",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "maze-generator",
+        "space-filling-curves",
+        "space-filling-standard"
+      ],
+      "status": "stable"
     },
     {
       "id": "lissajous-curves",
@@ -547,7 +1194,38 @@
       "tags": [
         "curves",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "oscillation",
+        "parametric",
+        "recursion"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "rhythmic",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "harmonograph",
+        "rose-curves",
+        "spirotron"
+      ],
+      "status": "stable"
     },
     {
       "id": "rose-curves",
@@ -566,7 +1244,39 @@
       "tags": [
         "curves",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "parametric",
+        "radial",
+        "recursion"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "radial",
+        "rhythmic",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "lissajous-curves",
+        "spirotron"
+      ],
+      "status": "stable"
     },
     {
       "id": "space-filling-standard",
@@ -585,7 +1295,38 @@
       "tags": [
         "curves",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "parametric",
+        "recursion",
+        "space-filling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "rhythmic",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "hilbert-curve",
+        "maze-generator",
+        "space-filling-curves"
+      ],
+      "status": "stable"
     },
     {
       "id": "space-filling-curves",
@@ -604,7 +1345,41 @@
       "tags": [
         "curves",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "parametric",
+        "recursion",
+        "space-filling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "dense",
+        "geometric",
+        "rhythmic",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "hilbert-curve",
+        "maze-generator",
+        "space-filling-standard"
+      ],
+      "status": "stable"
     },
     {
       "id": "flow-field-collision",
@@ -624,7 +1399,37 @@
         "flow-field",
         "collision",
         "particles"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "collision",
+        "field",
+        "particles",
+        "streamlines"
+      ],
+      "visualTraits": [
+        "continuous",
+        "dense",
+        "directional",
+        "flowing"
+      ],
+      "relatedSeeds": [
+        "arrows",
+        "boids-flocking",
+        "physarum-slime"
+      ],
+      "status": "stable"
     },
     {
       "id": "flow-field-p5",
@@ -646,7 +1451,36 @@
         "noise",
         "curl",
         "particles"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "field",
+        "particles",
+        "streamlines"
+      ],
+      "visualTraits": [
+        "continuous",
+        "directional",
+        "flowing"
+      ],
+      "relatedSeeds": [
+        "flow-field-collision",
+        "perlin-spiral",
+        "physarum-slime"
+      ],
+      "status": "stable"
     },
     {
       "id": "fluid-dynamics",
@@ -665,7 +1499,33 @@
       "tags": [
         "fluid-dynamics",
         "plotter"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "core",
+      "penCount": "variable",
+      "motifFamilies": [
+        "field",
+        "fluid",
+        "particles"
+      ],
+      "visualTraits": [
+        "dynamic",
+        "layered",
+        "turbulent"
+      ],
+      "relatedSeeds": [],
+      "status": "experimental"
     },
     {
       "id": "mandelbrot-and-julia",
@@ -684,7 +1544,36 @@
       "tags": [
         "fractals",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "contour",
+        "fractal",
+        "iteration",
+        "recursion"
+      ],
+      "visualTraits": [
+        "dense",
+        "mathematical",
+        "recursive"
+      ],
+      "relatedSeeds": [
+        "parametric-surfaces",
+        "strange-attractors",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "10print",
@@ -706,7 +1595,40 @@
         "maze",
         "simple",
         "classic"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "maze",
+        "texture",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "high-contrast",
+        "precise",
+        "repetitive",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "10print-simple",
+        "hash-tiles",
+        "truchet-tiles"
+      ],
+      "status": "stable"
     },
     {
       "id": "10print-simple",
@@ -725,7 +1647,39 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "maze",
+        "texture",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "high-contrast",
+        "precise",
+        "repetitive",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "10print",
+        "hash-tiles",
+        "truchet-tiles"
+      ],
+      "status": "stable"
     },
     {
       "id": "circle-rays",
@@ -745,7 +1699,41 @@
         "radial",
         "circles",
         "geometric"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "burst",
+        "circles",
+        "curves",
+        "grid",
+        "radial",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "high-contrast",
+        "precise",
+        "radial",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "perlin-circles",
+        "spirotron",
+        "string-art"
+      ],
+      "status": "stable"
     },
     {
       "id": "circle-twist",
@@ -765,7 +1753,39 @@
         "circles",
         "twist",
         "geometric"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "circles",
+        "curves",
+        "grid",
+        "radial",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "precise",
+        "radial",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "perlin-circles",
+        "spirotron"
+      ],
+      "status": "stable"
     },
     {
       "id": "circuit-pattern",
@@ -784,7 +1804,38 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "lattice",
+        "routes",
+        "tiling"
+      ],
+      "visualTraits": [
+        "angular",
+        "geometric",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "maze-generator",
+        "string-art",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "grid-landscape",
@@ -805,7 +1856,39 @@
         "landscape",
         "grid",
         "wireframe"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "tiling",
+        "topography",
+        "waves"
+      ],
+      "visualTraits": [
+        "geometric",
+        "layered",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "perlin-landscape",
+        "spiral-fill",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "hash-tiles",
@@ -825,7 +1908,39 @@
         "tiles",
         "hash",
         "procedural"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "texture",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "high-contrast",
+        "modular",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "10print",
+        "aperiodic-tilings",
+        "truchet-tiles"
+      ],
+      "status": "stable"
     },
     {
       "id": "islamic-patterns",
@@ -844,7 +1959,39 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "lattice",
+        "ornament",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "precise",
+        "structured",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "kumiko-pattern",
+        "penrose-tiling",
+        "zellige-pattern"
+      ],
+      "status": "stable"
     },
     {
       "id": "maze-generator",
@@ -863,7 +2010,38 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "maze",
+        "routes",
+        "tiling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "10print",
+        "circuit-pattern",
+        "space-filling-curves"
+      ],
+      "status": "stable"
     },
     {
       "id": "moir-patterns",
@@ -882,7 +2060,41 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "interference",
+        "lines",
+        "tiling",
+        "wave"
+      ],
+      "visualTraits": [
+        "geometric",
+        "high-contrast",
+        "layered",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "string-art",
+        "wave-interference"
+      ],
+      "status": "stable"
     },
     {
       "id": "penrose-tiling",
@@ -901,7 +2113,37 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "aperiodic",
+        "curves",
+        "grid",
+        "lattice",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "aperiodic-tilings",
+        "islamic-patterns",
+        "zellige-pattern"
+      ],
+      "status": "stable"
     },
     {
       "id": "perlin-circles",
@@ -921,7 +2163,40 @@
         "perlin",
         "circles",
         "noise"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "circles",
+        "curves",
+        "grid",
+        "noise",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "organic",
+        "precise",
+        "radial",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "circle-twist",
+        "perlin-spiral"
+      ],
+      "status": "stable"
     },
     {
       "id": "perlin-landscape",
@@ -942,7 +2217,41 @@
         "landscape",
         "terrain",
         "noise"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "field",
+        "grid",
+        "noise",
+        "tiling",
+        "topography"
+      ],
+      "visualTraits": [
+        "geometric",
+        "layered",
+        "organic",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "flow-field-p5",
+        "grid-landscape",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "perlin-spiral",
@@ -963,7 +2272,40 @@
         "perlin",
         "mathematical",
         "noise"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "noise",
+        "spiral",
+        "tiling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "organic",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "flow-field-p5",
+        "perlin-circles",
+        "spiral-burst"
+      ],
+      "status": "stable"
     },
     {
       "id": "snowflakes",
@@ -983,7 +2325,41 @@
         "snowflake",
         "symmetry",
         "fractal"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "curves",
+        "grid",
+        "radial",
+        "symmetry",
+        "tiling"
+      ],
+      "visualTraits": [
+        "delicate",
+        "geometric",
+        "precise",
+        "structured",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "crystallization",
+        "phyllotaxis",
+        "zellige-pattern"
+      ],
+      "status": "stable"
     },
     {
       "id": "spiral-burst",
@@ -1002,7 +2378,41 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "burst",
+        "curves",
+        "grid",
+        "radial",
+        "spiral",
+        "tiling"
+      ],
+      "visualTraits": [
+        "energetic",
+        "geometric",
+        "precise",
+        "radial",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "perlin-spiral",
+        "spirotron"
+      ],
+      "status": "stable"
     },
     {
       "id": "spiral-fill",
@@ -1022,7 +2432,40 @@
         "spiral",
         "fill",
         "simple"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "contour",
+        "curves",
+        "fill",
+        "grid",
+        "spiral",
+        "tiling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "dense",
+        "geometric",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "grid-landscape",
+        "spiral-burst",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "spirotron",
@@ -1042,7 +2485,41 @@
         "spirograph",
         "rotation",
         "harmonic"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "parametric",
+        "radial",
+        "tiling"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "layered",
+        "precise",
+        "radial",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "harmonograph",
+        "lissajous-curves"
+      ],
+      "status": "stable"
     },
     {
       "id": "string-art",
@@ -1061,7 +2538,39 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "grid",
+        "interference",
+        "lines",
+        "routes",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "high-contrast",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "arrows",
+        "circle-rays",
+        "moir-patterns"
+      ],
+      "status": "stable"
     },
     {
       "id": "topographic-contours",
@@ -1080,7 +2589,41 @@
       "tags": [
         "geometric",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "contour",
+        "curves",
+        "field",
+        "grid",
+        "tiling",
+        "topography"
+      ],
+      "visualTraits": [
+        "dense",
+        "geometric",
+        "layered",
+        "precise",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "grid-landscape",
+        "parametric-surfaces",
+        "perlin-landscape"
+      ],
+      "status": "stable"
     },
     {
       "id": "hybrid-composer",
@@ -1100,7 +2643,34 @@
         "composite",
         "layers",
         "meta"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "composition",
+        "layers",
+        "system-mix"
+      ],
+      "visualTraits": [
+        "configurable",
+        "hybrid",
+        "layered"
+      ],
+      "relatedSeeds": [
+        "flow-field-collision",
+        "path-optimizer",
+        "plotter-prep"
+      ],
+      "status": "experimental"
     },
     {
       "id": "ascii-art",
@@ -1119,7 +2689,36 @@
       "tags": [
         "image-processing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "screen-first",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "dithering",
+        "image-to-ascii",
+        "neural-network-art"
+      ],
+      "status": "stable"
     },
     {
       "id": "contour-lines",
@@ -1138,7 +2737,39 @@
       "tags": [
         "image-processing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "flow-hatching",
+        "halftone",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "dithering",
@@ -1157,7 +2788,36 @@
       "tags": [
         "image-processing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "ascii-art",
+        "halftone",
+        "image-to-ascii"
+      ],
+      "status": "stable"
     },
     {
       "id": "flow-hatching",
@@ -1176,7 +2836,37 @@
       "tags": [
         "image-processing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "contour-lines",
+        "hatching",
+        "topographic-contours"
+      ],
+      "status": "stable"
     },
     {
       "id": "halftone",
@@ -1196,7 +2886,37 @@
         "image",
         "halftone",
         "dots"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "contour-lines",
+        "dithering",
+        "hatching"
+      ],
+      "status": "stable"
     },
     {
       "id": "hatching",
@@ -1216,7 +2936,37 @@
         "image",
         "hatching",
         "crosshatch"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "contour-lines",
+        "flow-hatching",
+        "halftone"
+      ],
+      "status": "stable"
     },
     {
       "id": "image-to-ascii",
@@ -1235,7 +2985,37 @@
       "tags": [
         "image-processing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "screen-first",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "ascii-art",
+        "dithering",
+        "neural-network-art"
+      ],
+      "status": "stable"
     },
     {
       "id": "squigglecam",
@@ -1255,7 +3035,38 @@
         "image",
         "squiggle",
         "line-art"
-      ]
+      ],
+      "medium": "screen",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "camera",
+        "image"
+      ],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "core",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "hatching",
+        "image-derived"
+      ],
+      "visualTraits": [
+        "high-contrast",
+        "layered",
+        "textural"
+      ],
+      "relatedSeeds": [
+        "contour-lines",
+        "flow-hatching",
+        "ml5-patterns"
+      ],
+      "status": "stable"
     },
     {
       "id": "astronomy",
@@ -1275,7 +3086,41 @@
         "astronomy",
         "stars",
         "celestial"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "fields",
+        "growth",
+        "orbits",
+        "particles",
+        "radial"
+      ],
+      "visualTraits": [
+        "delicate",
+        "emergent",
+        "flowing",
+        "layered",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "circle-rays",
+        "phyllotaxis",
+        "strange-attractors"
+      ],
+      "status": "stable"
     },
     {
       "id": "coral-growth",
@@ -1296,7 +3141,37 @@
         "growth",
         "organic",
         "branching"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "cells",
+        "growth",
+        "particles"
+      ],
+      "visualTraits": [
+        "dense",
+        "emergent",
+        "flowing",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "crystal-growth",
+        "differential-growth",
+        "space-colonization"
+      ],
+      "status": "stable"
     },
     {
       "id": "crystal-growth",
@@ -1316,7 +3191,38 @@
         "crystal",
         "growth",
         "geometric"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "crystal",
+        "growth",
+        "particles"
+      ],
+      "visualTraits": [
+        "angular",
+        "emergent",
+        "flowing",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "coral-growth",
+        "crystallization",
+        "snowflakes"
+      ],
+      "status": "stable"
     },
     {
       "id": "differential-growth",
@@ -1335,7 +3241,39 @@
       "tags": [
         "natural",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "collision",
+        "curves",
+        "growth",
+        "particles"
+      ],
+      "visualTraits": [
+        "dense",
+        "emergent",
+        "flowing",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "arrows",
+        "coral-growth",
+        "physarum-slime"
+      ],
+      "status": "stable"
     },
     {
       "id": "dla-growth",
@@ -1354,7 +3292,39 @@
       "tags": [
         "natural",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "aggregation",
+        "branching",
+        "growth",
+        "particles"
+      ],
+      "visualTraits": [
+        "branching",
+        "emergent",
+        "flowing",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "crystal-growth",
+        "physarum-slime",
+        "reaction-diffusion"
+      ],
+      "status": "stable"
     },
     {
       "id": "lightning",
@@ -1374,7 +3344,39 @@
         "lightning",
         "electric",
         "branching"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "field",
+        "growth",
+        "particles",
+        "routes"
+      ],
+      "visualTraits": [
+        "directional",
+        "emergent",
+        "flowing",
+        "high-contrast",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "magnetic-fields",
+        "space-colonization",
+        "tree-gui"
+      ],
+      "status": "stable"
     },
     {
       "id": "phyllotaxis",
@@ -1393,7 +3395,43 @@
       "tags": [
         "natural",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "growth",
+        "packing",
+        "particles",
+        "radial",
+        "spiral"
+      ],
+      "visualTraits": [
+        "emergent",
+        "flowing",
+        "organic",
+        "radial"
+      ],
+      "relatedSeeds": [
+        "astronomy",
+        "circle-packing",
+        "perlin-circles"
+      ],
+      "status": "stable"
     },
     {
       "id": "physarum-slime",
@@ -1412,7 +3450,40 @@
       "tags": [
         "natural",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "field",
+        "growth",
+        "network",
+        "particles"
+      ],
+      "visualTraits": [
+        "emergent",
+        "flowing",
+        "organic",
+        "web-like"
+      ],
+      "relatedSeeds": [
+        "boids-flocking",
+        "differential-growth",
+        "flow-field-collision"
+      ],
+      "status": "stable"
     },
     {
       "id": "space-colonization",
@@ -1431,7 +3502,39 @@
       "tags": [
         "natural",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "growth",
+        "network",
+        "particles"
+      ],
+      "visualTraits": [
+        "botanical",
+        "emergent",
+        "flowing",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "lightning",
+        "physarum-slime",
+        "tree-gui"
+      ],
+      "status": "stable"
     },
     {
       "id": "arrows",
@@ -1450,7 +3553,41 @@
       "tags": [
         "packing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "collision",
+        "crossing-aware",
+        "directional",
+        "field",
+        "motif-placement",
+        "packing"
+      ],
+      "visualTraits": [
+        "braided",
+        "dense",
+        "directional",
+        "modular"
+      ],
+      "relatedSeeds": [
+        "circle-packing",
+        "flow-field-collision",
+        "moir-patterns",
+        "string-art"
+      ],
+      "status": "stable"
     },
     {
       "id": "circle-packing",
@@ -1469,7 +3606,40 @@
       "tags": [
         "packing",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "circles",
+        "collision",
+        "motif-placement",
+        "packing"
+      ],
+      "visualTraits": [
+        "dense",
+        "directional",
+        "modular",
+        "radial"
+      ],
+      "relatedSeeds": [
+        "arrows",
+        "phyllotaxis",
+        "voronoi-stippling"
+      ],
+      "status": "stable"
     },
     {
       "id": "boids-flocking",
@@ -1488,7 +3658,40 @@
       "tags": [
         "physics",
         "plotter"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "field",
+        "forces",
+        "interference",
+        "particles",
+        "swarm"
+      ],
+      "visualTraits": [
+        "directional",
+        "dynamic",
+        "field-driven",
+        "layered"
+      ],
+      "relatedSeeds": [
+        "flow-field-collision",
+        "particle-system",
+        "physarum-slime"
+      ],
+      "status": "experimental"
     },
     {
       "id": "cloth-simulation",
@@ -1507,7 +3710,40 @@
       "tags": [
         "physics",
         "plotter"
-      ]
+      ],
+      "medium": "screen",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "screen-first",
+      "colorDependency": "core",
+      "penCount": "variable",
+      "motifFamilies": [
+        "fabric",
+        "forces",
+        "interference",
+        "mesh",
+        "particles",
+        "simulation"
+      ],
+      "visualTraits": [
+        "dynamic",
+        "field-driven",
+        "layered"
+      ],
+      "relatedSeeds": [
+        "fluid-dynamics",
+        "particle-system",
+        "wave-interference"
+      ],
+      "status": "experimental"
     },
     {
       "id": "magnetic-fields",
@@ -1526,7 +3762,40 @@
       "tags": [
         "physics",
         "plotter"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "field",
+        "forces",
+        "interference",
+        "lines",
+        "particles"
+      ],
+      "visualTraits": [
+        "directional",
+        "dynamic",
+        "field-driven",
+        "layered"
+      ],
+      "relatedSeeds": [
+        "flow-field-collision",
+        "lightning",
+        "wave-interference"
+      ],
+      "status": "experimental"
     },
     {
       "id": "particle-system",
@@ -1546,7 +3815,39 @@
         "particles",
         "physics",
         "simulation"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "field",
+        "forces",
+        "interference",
+        "particles",
+        "swarm"
+      ],
+      "visualTraits": [
+        "dynamic",
+        "field-driven",
+        "layered"
+      ],
+      "relatedSeeds": [
+        "boids-flocking",
+        "cloth-simulation",
+        "magnetic-fields"
+      ],
+      "status": "experimental"
     },
     {
       "id": "wave-interference",
@@ -1565,7 +3866,38 @@
       "tags": [
         "physics",
         "plotter"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "contour",
+        "forces",
+        "interference",
+        "particles",
+        "wave"
+      ],
+      "visualTraits": [
+        "dynamic",
+        "field-driven",
+        "layered",
+        "scientific"
+      ],
+      "relatedSeeds": [
+        "chladni-patterns",
+        "moir-patterns",
+        "sound-waveform"
+      ],
+      "status": "experimental"
     },
     {
       "id": "reaction-diffusion",
@@ -1586,7 +3918,36 @@
         "gray-scott",
         "patterns",
         "organic"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "cells",
+        "contour",
+        "reaction"
+      ],
+      "visualTraits": [
+        "cellular",
+        "dense",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "belousov-zhabotinsky",
+        "reaction-diffusion-enhanced",
+        "reaction-diffusion-layers"
+      ],
+      "status": "experimental"
     },
     {
       "id": "reaction-diffusion-enhanced",
@@ -1606,7 +3967,36 @@
         "reaction-diffusion",
         "gray-scott",
         "chemical"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "cells",
+        "contour",
+        "reaction"
+      ],
+      "visualTraits": [
+        "cellular",
+        "dense",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "belousov-zhabotinsky",
+        "reaction-diffusion",
+        "reaction-diffusion-layers"
+      ],
+      "status": "experimental"
     },
     {
       "id": "reaction-diffusion-layers",
@@ -1626,7 +4016,36 @@
         "reaction-diffusion",
         "layered",
         "composite"
-      ]
+      ],
+      "medium": "systems",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "adaptable",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "cells",
+        "contour",
+        "reaction"
+      ],
+      "visualTraits": [
+        "cellular",
+        "dense",
+        "organic"
+      ],
+      "relatedSeeds": [
+        "game-of-life-layers",
+        "reaction-diffusion",
+        "reaction-diffusion-enhanced"
+      ],
+      "status": "experimental"
     },
     {
       "id": "aperiodic-tilings",
@@ -1646,7 +4065,36 @@
       "tags": [
         "symmetry",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "lattice",
+        "ornament",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "modular",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "hash-tiles",
+        "penrose-tiling",
+        "truchet-tiles"
+      ],
+      "status": "stable"
     },
     {
       "id": "kumiko-pattern",
@@ -1667,7 +4115,35 @@
         "japanese",
         "geometric",
         "woodwork"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "lattice",
+        "ornament",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "modular",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "islamic-patterns",
+        "quilting-patterns",
+        "zellige-pattern"
+      ],
+      "status": "stable"
     },
     {
       "id": "quilting-patterns",
@@ -1686,7 +4162,35 @@
       "tags": [
         "symmetry",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "lattice",
+        "ornament",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "modular",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "hash-tiles",
+        "kumiko-pattern",
+        "truchet-tiles"
+      ],
+      "status": "stable"
     },
     {
       "id": "truchet-tiles",
@@ -1705,7 +4209,36 @@
       "tags": [
         "symmetry",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "lattice",
+        "ornament",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "modular",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "10print",
+        "aperiodic-tilings",
+        "hash-tiles"
+      ],
+      "status": "stable"
     },
     {
       "id": "zellige-pattern",
@@ -1726,7 +4259,35 @@
         "islamic",
         "tiles",
         "geometric"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "lattice",
+        "ornament",
+        "tiling"
+      ],
+      "visualTraits": [
+        "geometric",
+        "modular",
+        "symmetrical"
+      ],
+      "relatedSeeds": [
+        "islamic-patterns",
+        "kumiko-pattern",
+        "penrose-tiling"
+      ],
+      "status": "stable"
     },
     {
       "id": "canvas-runner",
@@ -1743,7 +4304,30 @@
       "tags": [
         "tools",
         "plotter"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "canvas"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "debug-preview",
@@ -1760,7 +4344,30 @@
       "tags": [
         "tools",
         "plotter"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "path-optimizer",
@@ -1777,7 +4384,29 @@
       "tags": [
         "tools",
         "tool"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "svg"
+      ],
+      "inputs": [
+        "image",
+        "svg"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "plot-simulator",
@@ -1794,7 +4423,31 @@
       "tags": [
         "tools",
         "tool"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "preview",
+        "svg"
+      ],
+      "inputs": [
+        "image",
+        "svg"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "plotter-export",
@@ -1815,7 +4468,33 @@
       "tags": [
         "tools",
         "tool"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "gcode",
+        "hpgl",
+        "plotter",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "image",
+        "svg"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "plotter-prep",
@@ -1832,7 +4511,30 @@
       "tags": [
         "tools",
         "tool"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "plotter",
+        "svg"
+      ],
+      "inputs": [
+        "image",
+        "svg"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "plotter-preview",
@@ -1849,7 +4551,31 @@
       "tags": [
         "tools",
         "tool"
-      ]
+      ],
+      "medium": "tools",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "canvas",
+        "preview",
+        "svg"
+      ],
+      "inputs": [
+        "image",
+        "svg"
+      ],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
     },
     {
       "id": "lsystem-simple",
@@ -1869,7 +4595,36 @@
         "lsystem",
         "fractal",
         "plants"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "grammar",
+        "growth"
+      ],
+      "visualTraits": [
+        "botanical",
+        "organic",
+        "recursive"
+      ],
+      "relatedSeeds": [
+        "space-colonization",
+        "tree-gui",
+        "tree-working"
+      ],
+      "status": "stable"
     },
     {
       "id": "tree-gui",
@@ -1889,7 +4644,36 @@
         "tree",
         "branching",
         "organic"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "gif",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "grammar",
+        "growth"
+      ],
+      "visualTraits": [
+        "botanical",
+        "organic",
+        "recursive"
+      ],
+      "relatedSeeds": [
+        "lsystem-simple",
+        "space-colonization",
+        "tree-working"
+      ],
+      "status": "stable"
     },
     {
       "id": "tree-working",
@@ -1909,7 +4693,34 @@
         "tree",
         "enhanced",
         "organic"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "grammar",
+        "growth"
+      ],
+      "visualTraits": [
+        "botanical",
+        "organic",
+        "recursive"
+      ],
+      "relatedSeeds": [
+        "lightning",
+        "lsystem-simple",
+        "tree-gui"
+      ],
+      "status": "stable"
     },
     {
       "id": "tsp-art",
@@ -1928,7 +4739,38 @@
       "tags": [
         "voronoi",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "cells",
+        "routes",
+        "stippling"
+      ],
+      "visualTraits": [
+        "cellular",
+        "dense",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-packing",
+        "string-art",
+        "voronoi-stippling"
+      ],
+      "status": "stable"
     },
     {
       "id": "voronoi-stippling",
@@ -1947,7 +4789,37 @@
       "tags": [
         "voronoi",
         "plotter"
-      ]
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [
+        "image"
+      ],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "cells",
+        "routes",
+        "stippling"
+      ],
+      "visualTraits": [
+        "cellular",
+        "dense",
+        "structured"
+      ],
+      "relatedSeeds": [
+        "circle-packing",
+        "flow-hatching",
+        "tsp-art"
+      ],
+      "status": "stable"
     }
   ]
 }

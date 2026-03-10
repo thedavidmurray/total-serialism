@@ -6,6 +6,7 @@
   "scripts": {
     "start": "python3 -m http.server 8080",
     "serve": "python3 -m http.server 8000",
+    "catalog:enrich": "node scripts/enrich-algorithm-catalog.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
