@@ -1,11 +1,11 @@
 {
   "version": "2.0.0",
-  "lastUpdated": "2026-03-08",
+  "lastUpdated": "2026-03-10",
   "stats": {
-    "totalAlgorithms": 97,
+    "totalAlgorithms": 93,
     "totalCategories": 20,
     "featuredCount": 13,
-    "plotterSafeCount": 87
+    "plotterSafeCount": 83
   },
   "categories": {
     "advanced": {
@@ -498,25 +498,6 @@
       "category": "curves",
       "path": "algorithms/curves/harmonograph-gui.html",
       "description": "Harmonograph explores harmonic and parametric curves with plotter-ready line output.",
-      "complexity": "intermediate",
-      "hasPresets": false,
-      "hasExport": [
-        "svg"
-      ],
-      "featured": false,
-      "plotterSafe": true,
-      "requiresImage": false,
-      "tags": [
-        "curves",
-        "plotter"
-      ]
-    },
-    {
-      "id": "harmonograph-dat-gui",
-      "name": "Harmonograph (dat.GUI)",
-      "category": "curves",
-      "path": "algorithms/curves/harmonograph-datgui.html",
-      "description": "Harmonograph (dat.GUI) explores harmonic and parametric curves with plotter-ready line output.",
       "complexity": "intermediate",
       "hasPresets": false,
       "hasExport": [
@@ -1748,43 +1729,6 @@
       ]
     },
     {
-      "id": "hatching-demo",
-      "name": "Hatching Demo",
-      "category": "textures",
-      "path": "algorithms/textures/hatching-demo.html",
-      "description": "Demonstration of various hatching and crosshatching techniques",
-      "complexity": "beginner",
-      "hasPresets": false,
-      "hasExport": [
-        "svg"
-      ],
-      "featured": false,
-      "plotterSafe": true,
-      "requiresImage": false,
-      "tags": [
-        "hatching",
-        "texture",
-        "demo"
-      ]
-    },
-    {
-      "id": "algorithm-validator",
-      "name": "Algorithm Validator",
-      "category": "tools",
-      "path": "algorithms/tools/algorithm-validator.html",
-      "description": "Algorithm Validator utility for preparing, previewing, or exporting plotter-ready artwork.",
-      "complexity": "intermediate",
-      "hasPresets": false,
-      "hasExport": [],
-      "featured": false,
-      "plotterSafe": true,
-      "requiresImage": false,
-      "tags": [
-        "tools",
-        "plotter"
-      ]
-    },
-    {
       "id": "canvas-runner",
       "name": "Canvas Runner",
       "category": "tools",
@@ -1807,23 +1751,6 @@
       "category": "tools",
       "path": "algorithms/tools/debug-preview-gui.html",
       "description": "Debug Preview utility for preparing, previewing, or exporting plotter-ready artwork.",
-      "complexity": "intermediate",
-      "hasPresets": false,
-      "hasExport": [],
-      "featured": false,
-      "plotterSafe": true,
-      "requiresImage": false,
-      "tags": [
-        "tools",
-        "plotter"
-      ]
-    },
-    {
-      "id": "functional-validator",
-      "name": "Functional Validator",
-      "category": "tools",
-      "path": "algorithms/tools/functional-validator.html",
-      "description": "Functional Validator utility for preparing, previewing, or exporting plotter-ready artwork.",
       "complexity": "intermediate",
       "hasPresets": false,
       "hasExport": [],

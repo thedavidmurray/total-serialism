@@ -310,7 +310,7 @@
 
       setupControls();
       canvasControls.setupRandomizeButton();
-      loadModel();
+      activateFallbackMode('Procedural preview loaded. Click Load Model to try neural features.');
 
       // Update initial stats
       updateStats();
@@ -374,6 +374,11 @@
     }
 
     async function loadModel() {
+      if (params.modelType === 'sketchRNN') {
+        activateFallbackMode('SketchRNN is unavailable in this build. Using procedural preview.');
+        return;
+      }
+
       updateStatus('Loading model...');
 
       try {
@@ -397,20 +402,16 @@
     }
 
     async function loadSketchRNN() {
-      const modelName = params.sketchModel;
-      try {
-        sketchRNN = ml5.sketchRNN(modelName, modelReady);
+      activateFallbackMode('SketchRNN is unavailable in this build. Using procedural preview.');
+    }
 
-        function modelReady() {
-          updateStatus('SketchRNN model loaded: ' + modelName);
-          patterns = [];
-          generateSketch();
-        }
-      } catch (error) {
-        updateStatus('Error loading SketchRNN: ' + error.message);
-        useFallbackMode = true;
-        generateFallbackSketch();
-      }
+    function activateFallbackMode(message) {
+      useFallbackMode = true;
+      sketchRNN = null;
+      currentStroke = null;
+      generateFallbackSketch();
+      updateStatus(message);
+      updateStats();
     }
 
     function generateFallbackSketch() {

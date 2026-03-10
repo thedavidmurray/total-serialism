@@ -301,7 +301,7 @@
       <button id="clear" class="secondary">Clear</button>
       <div class="control">
         <label>Speed: <span class="value" id="speed-val">10</span> iterations/frame</label>
-        <input type="range" id="speed" min="1" max="50" value="10">
+        <input type="range" id="speed" min="1" max="50" value="4">
       </div>
     </div>
     
@@ -342,11 +342,11 @@
       <h3>Grid Settings</h3>
       <div class="control">
         <label>Grid Size: <span class="value" id="gridSize-val">200</span></label>
-        <input type="range" id="gridSize" min="50" max="400" value="200">
+        <input type="range" id="gridSize" min="50" max="400" value="140">
       </div>
       <div class="control">
         <label>Cell Size: <span class="value" id="cellSize-val">3</span>px</label>
-        <input type="range" id="cellSize" min="1" max="10" value="3">
+        <input type="range" id="cellSize" min="1" max="10" value="4">
       </div>
     </div>
     
@@ -414,8 +414,8 @@
   <script>
     // Reaction-Diffusion System
     let grid, next;
-    let gridSize = 200;
-    let cellSize = 3;
+    let gridSize = 140;
+    let cellSize = 4;
     let iteration = 0;
     let isPaused = false;
     let presetManager;
@@ -425,6 +425,7 @@
     let fitZoomCtl;
     let panelController;
     let statsDisplay;
+    const isAuditMode = window.location.search.includes('audit=');
 
     // Parameters
     let params = {
@@ -435,7 +436,7 @@
       killRate: 0.062,
       dA: 1.0,
       dB: 0.5,
-      speed: 10,
+      speed: 4,
       threshold: 0.5,
       renderMode: 'grayscale'
     };
@@ -486,6 +487,7 @@
       const scale = Math.min(windowWidth * 0.6 / size.width, windowHeight * 0.9 / size.height);
       let canvas = createCanvas(size.width * scale, size.height * scale);
       canvas.parent('canvas-container');
+      frameRate(24);
       if (window.CanvasLayout) {
         fitZoomCtl = CanvasLayout.attachFitZoom({
           container: document.getElementById('canvas-container'),
@@ -573,6 +575,13 @@
           right: '10px'
         }
       });
+
+      if (isAuditMode) {
+        isPaused = true;
+        document.getElementById('play-pause').textContent = '▶ Play';
+        noLoop();
+        redraw();
+      }
     }
 
     // Helper function to update UI from params

@@ -817,13 +817,20 @@
       filtersContainer.innerHTML = filters.join('');
     }
 
+    function normalizeText(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
     function renderCards() {
       grid.innerHTML = algorithms.map(algo => `
         <div class="card" data-category="${algo.category}" data-search="${[
           algo.name,
           algo.description,
           ...(algo.tags || [])
-        ].join(' ').toLowerCase()}">
+        ].map(normalizeText).join(' ')}">
           <a href="${algo.path}" class="card-link">
             <div class="card-header">
               <span class="card-title">${algo.name}</span>
@@ -850,7 +857,7 @@
     }
 
     function applyFilters() {
-      const searchTerm = searchInput.value.toLowerCase().trim();
+      const searchTerm = normalizeText(searchInput.value).trim();
       const cards = document.querySelectorAll('.card');
 
       cards.forEach(card => {

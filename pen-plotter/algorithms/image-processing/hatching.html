@@ -281,7 +281,6 @@
     // Global variables
     let img = null;
     let canvas;
-    let svgCanvas;
     let hatchLines = [];
     let processing = false;
     let uploadHelper;
@@ -322,9 +321,6 @@
       const size = CanvasLayout.getSize(params.paperSize);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
-
-      // Initialize SVG canvas for export
-      svgCanvas = createGraphics(size.width, size.height, SVG);
 
       // Setup upload helper
       setupUploadHelper();
@@ -374,7 +370,6 @@
         params.paperSize = e.target.value;
         const size = CanvasLayout.getSize(params.paperSize);
         resizeCanvas(size.width, size.height);
-        svgCanvas = createGraphics(size.width, size.height, SVG);
         if (img) redraw();
       });
 
@@ -762,26 +757,18 @@
         return;
       }
 
-      // Create SVG content
-      svgCanvas.clear();
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(1);
-      svgCanvas.noFill();
-
-      hatchLines.forEach(line => {
+      const elements = hatchLines.map((line) => {
         if (line.points && line.points.length >= 2) {
-          svgCanvas.beginShape();
-          line.points.forEach(point => {
-            svgCanvas.vertex(point.x, point.y);
-          });
-          svgCanvas.endShape();
-        } else if (line.x !== undefined && line.y !== undefined && line.r !== undefined) {
-          svgCanvas.circle(line.x, line.y, line.r * 2);
+          return `  <path d="${TSExport.pointsToPath(line.points)}" stroke="#000000" stroke-width="1" fill="none"/>`;
         }
-      });
+        if (line.x !== undefined && line.y !== undefined && line.r !== undefined) {
+          return `  <circle cx="${line.x}" cy="${line.y}" r="${line.r}" fill="#000000" stroke="none"/>`;
+        }
+        return '';
+      }).filter(Boolean);
 
-      // Save SVG
-      save(svgCanvas, 'hatching-output.svg');
+      const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n  <rect width="100%" height="100%" fill="#ffffff"/>\n${elements.join('\n')}\n</svg>`;
+      TSExport.downloadSVG(svg, 'hatching-output');
       showStatus('SVG exported successfully!', 'success');
     }
 

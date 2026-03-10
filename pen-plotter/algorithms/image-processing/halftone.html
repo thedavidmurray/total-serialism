@@ -311,7 +311,6 @@
     // Global variables
     let img = null;
     let canvas;
-    let svgCanvas;
     let halftoneShapes = [];
     let processing = false;
     let autoRegenerate = false;
@@ -358,9 +357,6 @@
       const size = CanvasLayout.getSize(params.paperSize);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
-
-      // Initialize SVG canvas for export
-      svgCanvas = createGraphics(size.width, size.height, SVG);
 
       // Setup canvas layout and fit/zoom
       setupCanvasLayout();
@@ -442,7 +438,6 @@
         params.paperSize = e.target.value;
         const size = CanvasLayout.getSize(params.paperSize);
         resizeCanvas(size.width, size.height);
-        svgCanvas = createGraphics(size.width, size.height, SVG);
         if (img) redraw();
       });
 
@@ -809,55 +804,8 @@
         return;
       }
 
-      // Create SVG content
-      svgCanvas.clear();
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(0.5);
-      svgCanvas.fill(0);
-
-      halftoneShapes.forEach(shape => {
-        svgCanvas.push();
-        svgCanvas.translate(shape.x, shape.y);
-
-        switch (shape.type) {
-          case 'circle':
-            svgCanvas.circle(0, 0, shape.size);
-            break;
-          case 'square':
-            svgCanvas.rectMode(CENTER);
-            svgCanvas.square(0, 0, shape.size);
-            break;
-          case 'diamond':
-            svgCanvas.push();
-            svgCanvas.rotate(45);
-            svgCanvas.rectMode(CENTER);
-            svgCanvas.square(0, 0, shape.size * 0.7071);
-            svgCanvas.pop();
-            break;
-          case 'star':
-            const radius1 = shape.size / 2;
-            const radius2 = shape.size / 4;
-            const npoints = 5;
-            const angle = TWO_PI / npoints;
-            const halfAngle = angle / 2.0;
-
-            svgCanvas.beginShape();
-            for (let a = -PI / 2; a < TWO_PI - PI / 2; a += angle) {
-              let sx = cos(a) * radius1;
-              let sy = sin(a) * radius1;
-              svgCanvas.vertex(sx, sy);
-              sx = cos(a + halfAngle) * radius2;
-              sy = sin(a + halfAngle) * radius2;
-              svgCanvas.vertex(sx, sy);
-            }
-            svgCanvas.endShape(CLOSE);
-            break;
-        }
-
-        svgCanvas.pop();
-      });
-
-      save(svgCanvas, 'halftone-output.svg');
+      const svg = buildHalftoneSVG(false);
+      TSExport.downloadSVG(svg, 'halftone-output');
       showStatus('SVG exported successfully!', 'success');
     }
 
@@ -867,55 +815,47 @@
         return;
       }
 
-      svgCanvas.clear();
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(0.5);
-      svgCanvas.noFill();
-
-      halftoneShapes.forEach(shape => {
-        svgCanvas.push();
-        svgCanvas.translate(shape.x, shape.y);
-
-        switch (shape.type) {
-          case 'circle':
-            svgCanvas.circle(0, 0, shape.size);
-            break;
-          case 'square':
-            svgCanvas.rectMode(CENTER);
-            svgCanvas.square(0, 0, shape.size);
-            break;
-          case 'diamond':
-            svgCanvas.push();
-            svgCanvas.rotate(45);
-            svgCanvas.rectMode(CENTER);
-            svgCanvas.square(0, 0, shape.size * 0.7071);
-            svgCanvas.pop();
-            break;
-          case 'star':
-            const radius1 = shape.size / 2;
-            const radius2 = shape.size / 4;
-            const npoints = 5;
-            const angle = TWO_PI / npoints;
-            const halfAngle = angle / 2.0;
-
-            svgCanvas.beginShape();
-            for (let a = -PI / 2; a < TWO_PI - PI / 2; a += angle) {
-              let sx = cos(a) * radius1;
-              let sy = sin(a) * radius1;
-              svgCanvas.vertex(sx, sy);
-              sx = cos(a + halfAngle) * radius2;
-              sy = sin(a + halfAngle) * radius2;
-              svgCanvas.vertex(sx, sy);
-            }
-            svgCanvas.endShape(CLOSE);
-            break;
-        }
-
-        svgCanvas.pop();
-      });
-
-      save(svgCanvas, 'halftone-plotter.svg');
+      const svg = buildHalftoneSVG(true);
+      TSExport.downloadSVG(svg, 'halftone-plotter');
       showStatus('Plotter SVG exported successfully!', 'success');
+    }
+
+    function buildHalftoneSVG(plotterMode) {
+      const shapeMarkup = halftoneShapes.map((shape) => buildHalftoneShapeMarkup(shape, plotterMode)).join('\n');
+      return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n  <rect width="100%" height="100%" fill="#ffffff"/>\n${shapeMarkup}\n</svg>`;
+    }
+
+    function buildHalftoneShapeMarkup(shape, plotterMode) {
+      const stroke = '#000000';
+      const fill = plotterMode ? 'none' : '#000000';
+      const strokeWidth = 0.5;
+      const half = shape.size / 2;
+
+      switch (shape.type) {
+        case 'circle':
+          return `  <circle cx="${shape.x}" cy="${shape.y}" r="${half}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}"/>`;
+        case 'square':
+          return `  <rect x="${shape.x - half}" y="${shape.y - half}" width="${shape.size}" height="${shape.size}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}"/>`;
+        case 'diamond':
+          return `  <rect x="${shape.x - half * 0.7071}" y="${shape.y - half * 0.7071}" width="${shape.size * 0.7071}" height="${shape.size * 0.7071}" transform="rotate(45 ${shape.x} ${shape.y})" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}"/>`;
+        case 'star': {
+          const radius1 = shape.size / 2;
+          const radius2 = shape.size / 4;
+          const npoints = 5;
+          const angleStep = TWO_PI / npoints;
+          const halfAngle = angleStep / 2.0;
+          const points = [];
+
+          for (let angle = -PI / 2; angle < TWO_PI - PI / 2; angle += angleStep) {
+            points.push({ x: shape.x + cos(angle) * radius1, y: shape.y + sin(angle) * radius1 });
+            points.push({ x: shape.x + cos(angle + halfAngle) * radius2, y: shape.y + sin(angle + halfAngle) * radius2 });
+          }
+
+          return `  <path d="${TSExport.pointsToPath(points, true)}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}"/>`;
+        }
+        default:
+          return '';
+      }
     }
 
     function exportPNG() {

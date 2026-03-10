@@ -953,7 +953,10 @@ class PathOptimizer {
 }
 
 // Global instance
-const pathOptimizer = new PathOptimizer();
+var pathOptimizer = globalThis.pathOptimizer instanceof PathOptimizer
+  ? globalThis.pathOptimizer
+  : new PathOptimizer();
+globalThis.pathOptimizer = pathOptimizer;
 
 // Convenience functions
 function optimizePaths(paths, options) {

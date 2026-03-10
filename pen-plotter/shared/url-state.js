@@ -422,7 +422,7 @@
      */
     pushState(params) {
       const url = this.getUrl(params);
-      history.pushState({ params }, '', url);
+      window.history.pushState({ params }, '', url);
     }
 
     /**
@@ -431,7 +431,7 @@
      */
     replaceState(params) {
       const url = this.getUrl(params);
-      history.replaceState({ params }, '', url);
+      window.history.replaceState({ params }, '', url);
     }
 
     /**

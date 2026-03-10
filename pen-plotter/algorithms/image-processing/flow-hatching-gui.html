@@ -10,6 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
   <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
   <script src="../../shared/path-optimizer.js"></script>
+  <script src="../../shared/export-utils.js"></script>
 
   <!-- Total Serialism Design System -->
   <link rel="stylesheet" href="../../shared/algorithm.css">
@@ -505,7 +506,6 @@
     // Global variables
     let img = null;
     let canvas;
-    let svgCanvas;
     let hatchLines = [];
     let flowField = [];
     let gradientField = [];
@@ -526,9 +526,6 @@
       // Initialize UX components
       window.panelController = new TSPanelController().attach();
       window.statsDisplay = new TSStatsDisplay().attach();
-
-      // Initialize SVG canvas for export
-      svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
 
       background(255);
       noLoop();
@@ -733,8 +730,6 @@
 
     function resizeCanvasAndRedraw() {
       resizeCanvas(canvasWidth, canvasHeight);
-      svgCanvas = createGraphics(canvasWidth, canvasHeight, SVG);
-
       if (img) {
         computeFlowField();
       }
@@ -1197,23 +1192,24 @@
       const lineW = parseFloat(document.getElementById('lineWeight').value);
       const bgColor = document.getElementById('bgColor').value;
 
-      svgCanvas.clear();
-      svgCanvas.background(bgColor);
-      svgCanvas.stroke(strokeCol);
-      svgCanvas.strokeWeight(lineW);
-      svgCanvas.noFill();
-
-      hatchLines.forEach(line => {
-        if (line.points && line.points.length >= 2) {
-          svgCanvas.beginShape();
-          line.points.forEach(point => {
-            svgCanvas.vertex(point.x, point.y);
-          });
-          svgCanvas.endShape();
+      const svg = TSExport.createSVG(
+        hatchLines
+          .filter(line => line.points && line.points.length >= 2)
+          .map(line => ({
+            d: TSExport.pointsToPath(line.points),
+            stroke: strokeCol,
+            strokeWidth: lineW,
+            fill: 'none'
+          })),
+        width,
+        height,
+        {
+          backgroundColor: bgColor,
+          strokeColor: strokeCol,
+          strokeWidth: lineW
         }
-      });
-
-      save(svgCanvas, `flow-hatching-${currentSeed}.svg`);
+      );
+      TSExport.downloadSVG(svg, `flow-hatching-${currentSeed}`);
       showStatus('SVG exported!', 'success');
     }
 
@@ -1225,23 +1221,24 @@
 
       const lineW = parseFloat(document.getElementById('lineWeight').value);
 
-      svgCanvas.clear();
-      // No background for plotter SVG
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(lineW);
-      svgCanvas.noFill();
-
-      hatchLines.forEach(line => {
-        if (line.points && line.points.length >= 2) {
-          svgCanvas.beginShape();
-          line.points.forEach(point => {
-            svgCanvas.vertex(point.x, point.y);
-          });
-          svgCanvas.endShape();
+      const svg = TSExport.createSVG(
+        hatchLines
+          .filter(line => line.points && line.points.length >= 2)
+          .map(line => ({
+            d: TSExport.pointsToPath(line.points),
+            stroke: '#000000',
+            strokeWidth: lineW,
+            fill: 'none'
+          })),
+        width,
+        height,
+        {
+          backgroundColor: '#ffffff',
+          strokeColor: '#000000',
+          strokeWidth: lineW
         }
-      });
-
-      save(svgCanvas, `flow-hatching-plotter-${currentSeed}.svg`);
+      );
+      TSExport.downloadSVG(svg, `flow-hatching-plotter-${currentSeed}`);
       showStatus('Plotter SVG exported!', 'success');
     }
 

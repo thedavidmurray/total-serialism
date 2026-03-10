@@ -445,6 +445,13 @@
         let currentFilter = 'all';
         let searchTerm = '';
 
+        function normalizeText(value) {
+            return String(value || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase();
+        }
+
         // Load catalog
         fetch('algorithm-catalog.json')
             .then(res => res.json())
@@ -464,7 +471,7 @@
 
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', (e) => {
-            searchTerm = e.target.value.toLowerCase();
+            searchTerm = normalizeText(e.target.value);
             renderContent();
         });
 
@@ -515,10 +522,10 @@
 
         function matchesSearch(algo) {
             if (!searchTerm) return true;
-            return algo.name.toLowerCase().includes(searchTerm) ||
-                   algo.description.toLowerCase().includes(searchTerm) ||
-                   algo.id.toLowerCase().includes(searchTerm) ||
-                   (algo.tags || []).some(tag => tag.toLowerCase().includes(searchTerm));
+            return normalizeText(algo.name).includes(searchTerm) ||
+                   normalizeText(algo.description).includes(searchTerm) ||
+                   normalizeText(algo.id).includes(searchTerm) ||
+                   (algo.tags || []).some(tag => normalizeText(tag).includes(searchTerm));
         }
 
         function getVisibleAlgorithms() {

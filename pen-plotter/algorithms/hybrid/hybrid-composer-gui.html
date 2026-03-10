@@ -658,6 +658,7 @@
 
       // Update parameters
       updateAlgorithmParameters(layerId, selectedAlgorithm);
+      renderPreview();
     }
 
     function removeLayer(layerId) {
@@ -892,20 +893,20 @@
         // Update stats display with composition metrics
         if (window.statsDisplay) {
           const activeLayers = engine.layers.filter(l => l.enabled);
-          const algorithms = activeLayers.map(l => algorithms[l.algorithm].name).join(', ');
+          const algorithmNames = activeLayers.map(l => algorithms[l.algorithm].name).join(', ');
           const blendModes = [...new Set(activeLayers.map(l => l.blendMode))].join(', ');
 
           window.statsDisplay.update({
             'Layers': activeLayers.length,
             'Total Paths': result.paths.length,
-            'Algorithms': algorithms,
+            'Algorithms': algorithmNames,
             'Blend Modes': blendModes,
             'Canvas': `${canvas.width}x${canvas.height}`,
             'Paper Size': params.paperSize
           });
         }
       } catch (error) {
-        console.error('Generation error:', error);
+        console.error('Generation error:', error?.message || error, error?.stack || '');
         status.textContent = 'Error: ' + error.message;
       } finally {
         loading.classList.remove('active');

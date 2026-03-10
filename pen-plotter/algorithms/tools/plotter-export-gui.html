@@ -402,7 +402,7 @@
     let currentPaths = [];
     let gcodeExporter = new GCodeExporter();
     let hpglExporter = new HPGLExporter();
-    let pathOptimizer = typeof PathOptimizer !== 'undefined' ? new PathOptimizer() : null;
+    let optimizer = typeof PathOptimizer !== 'undefined' ? new PathOptimizer() : null;
 
     // Tab switching
     document.querySelectorAll('.tab-button').forEach(button => {
@@ -461,8 +461,8 @@
       // Optimize if needed using simple nearest-neighbor
       const optimizeCheckbox = document.getElementById('svgOptimize');
       if (optimizeCheckbox && optimizeCheckbox.checked && currentPaths.length > 1) {
-        currentPaths = pathOptimizer
-          ? pathOptimizer.optimize(currentPaths, { merge: false, sort: true, simplify: false })
+        currentPaths = optimizer
+          ? optimizer.optimize(currentPaths, { merge: false, sort: true, simplify: false })
           : optimizePathOrder(currentPaths);
       }
 

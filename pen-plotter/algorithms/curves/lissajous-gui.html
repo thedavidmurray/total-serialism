@@ -323,7 +323,7 @@
 
     function setup() {
       const size = CanvasLayout.getSize(params.paperSize);
-      let canvas = createCanvas(size.width, size.height, SVG);
+      let canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
 
       canvasControls = new TSCanvasControls({
@@ -578,7 +578,7 @@
     }
 
     function drawPattern() {
-      clear();  // Required for SVG mode - removes existing elements
+      clear();
       background(params.bgColor);
       stroke(params.strokeColor);
       strokeWeight(params.strokeWeight);
@@ -620,7 +620,22 @@
     }
 
     function exportSVG() {
-      save('lissajous-' + params.seed + '.svg');
+      const svg = TSExport.createSVG(
+        paths.map((path) => ({
+          d: TSExport.pointsToPath(path),
+          stroke: params.strokeColor,
+          strokeWidth: params.strokeWeight,
+          fill: 'none'
+        })),
+        width,
+        height,
+        {
+          backgroundColor: params.bgColor,
+          strokeColor: params.strokeColor,
+          strokeWidth: params.strokeWeight
+        }
+      );
+      TSExport.downloadSVG(svg, 'lissajous-' + params.seed);
     }
 
     function exportPNG() {

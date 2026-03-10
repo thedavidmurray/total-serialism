@@ -334,6 +334,7 @@
             <div class="upload-hint">Supports single or multiple files</div>
             <input type="file" id="file-input" accept=".svg,image/svg+xml" multiple>
           </div>
+          <button id="btn-load-sample" class="secondary">Load Sample SVG</button>
           <div id="batch-files" class="batch-files" style="display: none;"></div>
         </div>
 
@@ -417,12 +418,22 @@
       viewBox: '0 0 800 600',
       background: null
     };
+    const SAMPLE_PREP_SVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <rect width="800" height="600" fill="#ffffff"/>
+  <path d="M 120 140 L 690 140" stroke="#111111" stroke-width="2" fill="none"/>
+  <path d="M 120 220 C 230 120 350 320 470 220 S 650 120 690 220" stroke="#0b7285" stroke-width="2" fill="none"/>
+  <polyline points="120,360 210,300 300,360 390,300 480,360 570,300 660,360" stroke="#c92a2a" stroke-width="2" fill="none"/>
+  <circle cx="220" cy="470" r="64" stroke="#7c2d12" stroke-width="2" fill="none"/>
+  <rect x="420" y="410" width="180" height="110" stroke="#5f3dc4" stroke-width="2" fill="none"/>
+</svg>`;
 
     // Setup file upload
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('file-input');
 
     uploadArea.addEventListener('click', () => fileInput.click());
+    document.getElementById('btn-load-sample').addEventListener('click', () => loadSampleArtwork());
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files.length > 0) {
@@ -465,6 +476,11 @@
         // Batch mode
         loadBatchFiles(svgFiles);
       }
+    }
+
+    function loadSampleArtwork() {
+      parseSVG(SAMPLE_PREP_SVG, 'sample-plotter-prep.svg');
+      showStatus('Loaded sample artwork. Replace it with your own SVG when ready.', 'success');
     }
 
     function loadSVGFile(file) {
@@ -976,6 +992,8 @@
         showStatus('Reset to original', 'info');
       }
     });
+
+    loadSampleArtwork();
 
     function generateSVG(layersToExport) {
       let svg = `<?xml version="1.0" encoding="UTF-8"?>
