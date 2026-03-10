@@ -183,6 +183,102 @@
             margin-bottom: 18px;
         }
 
+        .focus-trails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .focus-trail-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            text-decoration: none;
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .focus-trail-link span {
+            opacity: 0.78;
+            font-weight: 500;
+        }
+
+        .focus-trail-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .idea-deck {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 36px;
+        }
+
+        .idea-deck[hidden] {
+            display: none;
+        }
+
+        .idea-lane {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .idea-lane-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .idea-lane-copy {
+            font-size: 13px;
+            line-height: 1.55;
+            opacity: 0.82;
+        }
+
+        .idea-lane-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .idea-lane-link {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            border-radius: 12px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .idea-lane-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .idea-lane-name {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .idea-lane-meta {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.7;
+        }
+
         .stats {
             text-align: center;
             margin-bottom: 40px;
@@ -288,6 +384,28 @@
             padding: 20px 20px 12px;
         }
 
+        .algorithm-swatch {
+            height: 78px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.12);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 8px;
+            padding: 14px 16px;
+        }
+
+        .algorithm-swatch-pill {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            color: #1f2937;
+            background: rgba(255, 255, 255, 0.72);
+            border-radius: 999px;
+            padding: 4px 8px;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+        }
+
         .algorithm-header {
             display: flex;
             justify-content: space-between;
@@ -348,6 +466,29 @@
         .algorithm-related-link:hover,
         .algorithm-related-more:hover {
             text-decoration: underline;
+        }
+
+        .algorithm-trails {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 20px 14px;
+        }
+
+        .algorithm-trail-link {
+            text-decoration: none;
+            color: #475569;
+            font-size: 11px;
+            font-weight: 600;
+            border-radius: 999px;
+            padding: 6px 10px;
+            border: 1px solid rgba(71, 85, 105, 0.18);
+            background: rgba(248, 250, 252, 0.8);
+        }
+
+        .algorithm-trail-link:hover {
+            color: #4a5ed8;
+            border-color: rgba(74, 94, 216, 0.28);
         }
 
         .badge {
@@ -502,6 +643,10 @@
                 gap: 20px;
             }
 
+            .idea-deck {
+                grid-template-columns: 1fr;
+            }
+
             .focus-panel {
                 padding: 20px;
             }
@@ -514,7 +659,12 @@
                 padding: 18px 18px 12px;
             }
 
+            .algorithm-swatch {
+                padding: 12px 14px;
+            }
+
             .algorithm-footer,
+            .algorithm-trails,
             .algorithm-related {
                 padding-left: 18px;
                 padding-right: 18px;
@@ -593,6 +743,7 @@
                 </div>
             </div>
 
+            <div id="ideaDeck" class="idea-deck" hidden></div>
             <div id="relatedFocus"></div>
 
             <div id="content" class="loading">
@@ -608,6 +759,7 @@
         let currentFilter = 'all';
         let searchTerm = '';
         let relatedFocusId = TSDiscovery.getUrlParams().get('related') || '';
+        const ideaDeckEl = document.getElementById('ideaDeck');
 
         function escapeHtml(value) {
             return String(value || '')
@@ -636,12 +788,58 @@
                 .slice(0, 2);
         }
 
+        function renderTrailLinks(algo, className = 'algorithm-trail-link') {
+            return TSDiscovery.getTrailSuggestions(catalog, algo.id)
+                .map((trail) => `
+                    <a
+                        href="?related=${trail.algo.id}"
+                        class="${className}"
+                        title="${escapeHtml(trail.description)}"
+                    >${escapeHtml(trail.label)} <span>${escapeHtml(trail.algo.name)}</span></a>
+                `)
+                .join('');
+        }
+
+        function renderIdeaDeck() {
+            if (!catalog || relatedFocusId || currentFilter !== 'all' || searchTerm) {
+                ideaDeckEl.hidden = true;
+                ideaDeckEl.innerHTML = '';
+                return;
+            }
+
+            const sections = TSDiscovery.getSpotlightSections(catalog);
+            if (sections.length === 0) {
+                ideaDeckEl.hidden = true;
+                ideaDeckEl.innerHTML = '';
+                return;
+            }
+
+            ideaDeckEl.hidden = false;
+            ideaDeckEl.innerHTML = sections.map((section) => `
+                <section class="idea-lane">
+                    <div>
+                        <div class="idea-lane-title">${escapeHtml(section.title)}</div>
+                        <div class="idea-lane-copy">${escapeHtml(section.description)}</div>
+                    </div>
+                    <div class="idea-lane-list">
+                        ${section.algorithms.map((algo) => `
+                            <a href="${algo.path}" class="idea-lane-link">
+                                <span class="idea-lane-name">${escapeHtml(algo.name)}</span>
+                                <span class="idea-lane-meta">${escapeHtml(TSDiscovery.getMediumLabel(algo.medium))}</span>
+                            </a>
+                        `).join('')}
+                    </div>
+                </section>
+            `).join('');
+        }
+
         // Load catalog
         fetch('algorithm-catalog.json')
             .then(res => res.json())
             .then(data => {
                 catalog = data;
                 renderFocusPanel();
+                renderIdeaDeck();
                 renderContent();
                 updateStats();
             })
@@ -657,6 +855,7 @@
         // Search functionality
         document.getElementById('searchInput').addEventListener('input', (e) => {
             searchTerm = TSDiscovery.normalizeText(e.target.value);
+            renderIdeaDeck();
             renderContent();
         });
 
@@ -666,6 +865,7 @@
                 document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentFilter = btn.dataset.filter;
+                renderIdeaDeck();
                 renderContent();
             });
         });
@@ -727,12 +927,14 @@
             const relatedFocus = document.getElementById('relatedFocus');
             if (!relatedFocusId) {
                 relatedFocus.innerHTML = '';
+                renderIdeaDeck();
                 return;
             }
 
             const focusAlgorithm = catalog.algorithms.find((algo) => algo.id === relatedFocusId);
             if (!focusAlgorithm) {
                 relatedFocus.innerHTML = '';
+                renderIdeaDeck();
                 return;
             }
 
@@ -759,11 +961,15 @@
                         ${renderBadge(focusAlgorithm.complexity, `badge-complexity ${focusAlgorithm.complexity}`)}
                         ${(focusAlgorithm.engine || []).slice(0, 2).map((engine) => renderBadge(engine.toUpperCase(), 'badge-engine')).join('')}
                     </div>
+                    <div class="focus-trails">
+                        ${renderTrailLinks(focusAlgorithm, 'focus-trail-link')}
+                    </div>
                     <div class="algorithms-grid">
                         ${relatedAlgorithms.map((algo) => renderAlgorithmCard(algo)).join('')}
                     </div>
                 </section>
             `;
+            renderIdeaDeck();
         }
 
         function renderContent() {
@@ -850,9 +1056,14 @@
             const relatedLinks = TSDiscovery.getRelatedAlgorithms(catalog, algo.id, 2).map(item =>
                 `<a href="${item.path}" class="algorithm-related-link">${escapeHtml(item.name)}</a>`
             ).join('');
+            const accent = TSDiscovery.getPreviewAccent(algo);
 
             return `
                 <div class="algorithm-card">
+                    <div class="algorithm-swatch" style="${TSDiscovery.buildPreviewStyle(algo)}">
+                        <span class="algorithm-swatch-pill">${escapeHtml((accent.primary || algo.category).replace(/-/g, ' '))}</span>
+                        <span class="algorithm-swatch-pill">${escapeHtml(TSDiscovery.getMediumLabel(algo.medium))}</span>
+                    </div>
                     <a href="${algo.path}" class="algorithm-main-link">
                     <div class="algorithm-header">
                         <div class="algorithm-name">${escapeHtml(algo.name)}</div>
@@ -875,6 +1086,9 @@
                         ${algo.hasPresets ? renderBadge('Presets', 'badge-preset') : ''}
                         ${exportBadges}
                         ${(algo.engine || []).slice(0, 1).map(engine => renderBadge(engine.toUpperCase(), 'badge-engine')).join('')}
+                    </div>
+                    <div class="algorithm-trails">
+                        ${renderTrailLinks(algo)}
                     </div>
                     <div class="algorithm-related">
                         <span class="algorithm-related-label">Try next</span>
