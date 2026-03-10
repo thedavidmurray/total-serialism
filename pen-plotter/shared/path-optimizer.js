@@ -11,6 +11,82 @@ class PathOptimizer {
       simplifyTolerance: 0.1, // mm
       maxIterations: 1000
     };
+    this.stats = null;
+  }
+
+  /**
+   * Normalize a point to {x, y} form.
+   */
+  normalizePoint(point) {
+    if (Array.isArray(point)) {
+      return { x: Number(point[0]) || 0, y: Number(point[1]) || 0 };
+    }
+    return {
+      x: Number(point?.x) || 0,
+      y: Number(point?.y) || 0
+    };
+  }
+
+  /**
+   * Normalize mixed path shapes to arrays of points.
+   */
+  normalizeInputPaths(paths) {
+    return (paths || []).map((path) => {
+      const points = Array.isArray(path?.points) ? path.points : path;
+      return (points || []).map((point) => this.normalizePoint(point));
+    }).filter((path) => path.length > 0);
+  }
+
+  /**
+   * Restore optimized paths to the input shape expected by older UIs.
+   */
+  restorePathShape(templatePaths, optimizedPaths) {
+    const objectPaths = (templatePaths || []).some(
+      (path) => path && !Array.isArray(path) && Array.isArray(path.points)
+    );
+
+    if (!objectPaths) {
+      return optimizedPaths.map((path) => path.map((point) => ({ x: point.x, y: point.y })));
+    }
+
+    return optimizedPaths.map((points, index) => {
+      const template = templatePaths[Math.min(index, templatePaths.length - 1)] || {};
+      const { points: _ignored, ...meta } = Array.isArray(template) ? {} : template;
+      return {
+        ...meta,
+        points: points.map((point) => ({ x: point.x, y: point.y }))
+      };
+    });
+  }
+
+  /**
+   * Map older GUI option names to the newer optimizer options.
+   */
+  normalizeLegacyOptions(options = {}) {
+    return {
+      minLength: options.minLength ?? options.minPathLength,
+      mergeThreshold: options.mergeThreshold,
+      simplifyTolerance: options.simplifyTolerance ?? options.tolerance,
+      removeShortPaths: options.removeShortPaths !== false,
+      simplifyPaths: options.simplifyPaths ?? options.simplify ?? false,
+      mergeEndpoints: options.mergeEndpoints ?? options.merge ?? true,
+      optimizeOrder: options.optimizeOrder ?? options.sort ?? options.reorder ?? true,
+      fitArcs: options.fitArcs ?? false,
+      orderMethod: options.orderMethod,
+      finalTwoOpt: options.finalTwoOpt ?? true,
+      penSpeed: options.penSpeed,
+      penUpSpeed: options.penUpSpeed
+    };
+  }
+
+  countPoints(paths) {
+    return paths.reduce((total, path) => total + path.length, 0);
+  }
+
+  estimatePlotTimeSeconds(paths, penSpeed = 20, penUpSpeed = 60) {
+    const drawingLength = this.calculateTotalLength(paths);
+    const penUpDistance = this.calculatePenUpDistance(paths);
+    return drawingLength / penSpeed + penUpDistance / penUpSpeed + paths.length * 0.5;
   }
 
   /**
@@ -309,6 +385,42 @@ class PathOptimizer {
     }
 
     return optimizedPaths;
+  }
+
+  /**
+   * Backwards-compatible entry point used by existing GUIs.
+   * Accepts either raw point arrays or objects shaped like { points, ...meta }.
+   */
+  optimize(paths, options = {}) {
+    const normalized = this.normalizeInputPaths(paths);
+    const optimizeOptions = this.normalizeLegacyOptions(options);
+    const optimized = this.optimizeAllPaths(normalized, optimizeOptions);
+    const report = this.generateReport(normalized, optimized, optimizeOptions);
+    const originalTimeSeconds = this.estimatePlotTimeSeconds(
+      normalized,
+      optimizeOptions.penSpeed,
+      optimizeOptions.penUpSpeed
+    );
+    const optimizedTimeSeconds = this.estimatePlotTimeSeconds(
+      optimized,
+      optimizeOptions.penSpeed,
+      optimizeOptions.penUpSpeed
+    );
+
+    this.stats = {
+      originalPaths: normalized.length,
+      optimizedPaths: optimized.length,
+      originalPoints: this.countPoints(normalized),
+      optimizedPoints: this.countPoints(optimized),
+      originalTravelDistance: Number(this.calculatePenUpDistance(normalized).toFixed(1)),
+      optimizedTravelDistance: Number(this.calculatePenUpDistance(optimized).toFixed(1)),
+      originalDrawingLength: Number(this.calculateTotalLength(normalized).toFixed(1)),
+      optimizedDrawingLength: Number(this.calculateTotalLength(optimized).toFixed(1)),
+      timeSaved: Number(Math.max(0, originalTimeSeconds - optimizedTimeSeconds).toFixed(1)),
+      report
+    };
+
+    return this.restorePathShape(paths, optimized);
   }
 
   /**
@@ -841,7 +953,10 @@ class PathOptimizer {
 }
 
 // Global instance
-const pathOptimizer = new PathOptimizer();
+var pathOptimizer = globalThis.pathOptimizer instanceof PathOptimizer
+  ? globalThis.pathOptimizer
+  : new PathOptimizer();
+globalThis.pathOptimizer = pathOptimizer;
 
 // Convenience functions
 function optimizePaths(paths, options) {

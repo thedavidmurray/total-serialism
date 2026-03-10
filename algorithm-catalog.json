@@ -1,24 +1,134 @@
 {
-  "version": "1.0.0",
-  "lastUpdated": "2026-01-19",
-  "totalAlgorithms": 50,
-  "categories": [
-    "advanced",
-    "ai",
-    "cellular-automata",
-    "chemical",
-    "flow-fields",
-    "geometric",
-    "hybrid",
-    "image-processing",
-    "natural",
-    "physics",
-    "reaction-diffusion",
-    "symmetry",
-    "textures",
-    "tools",
-    "trees-lsystems"
-  ],
+  "version": "2.0.0",
+  "lastUpdated": "2026-03-10",
+  "stats": {
+    "totalAlgorithms": 93,
+    "totalCategories": 20,
+    "featuredCount": 13,
+    "plotterSafeCount": 83
+  },
+  "categories": {
+    "advanced": {
+      "name": "Advanced",
+      "shortLabel": "Adv",
+      "icon": "◇",
+      "description": "Dense scientific and mathematical systems for ambitious plots."
+    },
+    "ai": {
+      "name": "AI",
+      "shortLabel": "AI",
+      "icon": "◎",
+      "description": "Machine-learning assisted experiments and neural pattern studies."
+    },
+    "cellular-automata": {
+      "name": "Cellular Automata",
+      "shortLabel": "CA",
+      "icon": "▦",
+      "description": "Rule-driven systems where simple local logic creates emergent structure."
+    },
+    "chemical": {
+      "name": "Chemical",
+      "shortLabel": "Chem",
+      "icon": "◌",
+      "description": "Reaction, diffusion, and material-inspired studies with organic flow."
+    },
+    "curves": {
+      "name": "Curves",
+      "shortLabel": "Curves",
+      "icon": "∿",
+      "description": "Parametric, harmonic, and recursive line systems."
+    },
+    "flow-fields": {
+      "name": "Flow Fields",
+      "shortLabel": "Flow",
+      "icon": "↝",
+      "description": "Vector-field driven motion and contour-following trajectories."
+    },
+    "fluid-dynamics": {
+      "name": "Fluid Dynamics",
+      "shortLabel": "Fluid",
+      "icon": "≈",
+      "description": "Flow simulations and turbulence-inspired structures."
+    },
+    "fractals": {
+      "name": "Fractals",
+      "shortLabel": "Frac",
+      "icon": "✶",
+      "description": "Recursive and contour-derived forms with self-similar detail."
+    },
+    "geometric": {
+      "name": "Geometric",
+      "shortLabel": "Geo",
+      "icon": "◧",
+      "description": "Tilings, spirals, grids, and structured line compositions."
+    },
+    "hybrid": {
+      "name": "Hybrid",
+      "shortLabel": "Hybrid",
+      "icon": "⬡",
+      "description": "Composable systems that blend multiple algorithm families."
+    },
+    "image-processing": {
+      "name": "Image Processing",
+      "shortLabel": "Image",
+      "icon": "◫",
+      "description": "Raster-to-line workflows, hatching, halftones, and contour extraction."
+    },
+    "natural": {
+      "name": "Natural",
+      "shortLabel": "Nat",
+      "icon": "✿",
+      "description": "Growth, branching, weather, and organism-inspired forms."
+    },
+    "packing": {
+      "name": "Packing",
+      "shortLabel": "Pack",
+      "icon": "◍",
+      "description": "Motif placement, dense compositions, and collision-aware arrangement."
+    },
+    "physics": {
+      "name": "Physics",
+      "shortLabel": "Phys",
+      "icon": "⟲",
+      "description": "Particle, force, field, and interference-based systems."
+    },
+    "reaction-diffusion": {
+      "name": "Reaction Diffusion",
+      "shortLabel": "RD",
+      "icon": "◐",
+      "description": "Chemical pattern formation, thresholds, and contour-ready fields."
+    },
+    "symmetry": {
+      "name": "Symmetry",
+      "shortLabel": "Sym",
+      "icon": "✣",
+      "description": "Tessellations, ornamental systems, and repeating structure."
+    },
+    "textures": {
+      "name": "Textures",
+      "shortLabel": "Tex",
+      "icon": "▒",
+      "description": "Surface treatments, hatch structures, and repeatable fills."
+    },
+    "tools": {
+      "name": "Tools",
+      "shortLabel": "Tools",
+      "icon": "⚙",
+      "description": "Prep, optimization, preview, export, and validation utilities."
+    },
+    "trees-lsystems": {
+      "name": "Trees & L-Systems",
+      "shortLabel": "L-Sys",
+      "icon": "⟐",
+      "description": "Branching grammars, recursive trees, and botanical structures."
+    },
+    "voronoi": {
+      "name": "Voronoi",
+      "shortLabel": "Voro",
+      "icon": "⬢",
+      "description": "Cellular partitioning, stippling, and route optimization studies."
+    }
+  },
   "algorithms": [
     {
       "id": "chladni-patterns",
@@ -26,11 +136,39 @@
       "category": "advanced",
       "path": "algorithms/advanced/chladni-patterns-gui.html",
       "description": "Acoustic wave patterns inspired by Chladni plates and standing waves",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["acoustic", "physics", "waves", "scientific"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "acoustic",
+        "physics",
+        "waves",
+        "scientific"
+      ]
+    },
+    {
+      "id": "lorenz-attractor",
+      "name": "Lorenz Attractor",
+      "category": "advanced",
+      "path": "algorithms/advanced/lorenz-attractor-gui.html",
+      "description": "Lorenz Attractor explores dense scientific and mathematical systems for ambitious plots.",
+      "complexity": "advanced",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "advanced",
+        "plotter"
+      ]
     },
     {
       "id": "parametric-surfaces",
@@ -38,11 +176,20 @@
       "category": "advanced",
       "path": "algorithms/advanced/parametric-surfaces-gui.html",
       "description": "3D parametric surfaces rendered as 2D contour lines for plotting",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["3d", "mathematical", "surfaces", "contours"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "3d",
+        "mathematical",
+        "surfaces",
+        "contours"
+      ]
     },
     {
       "id": "sound-waveform",
@@ -50,11 +197,38 @@
       "category": "advanced",
       "path": "algorithms/advanced/sound-waveform-gui.html",
       "description": "Audio waveform visualization and pattern generation",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["audio", "waveform", "visualization"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "audio",
+        "waveform",
+        "visualization"
+      ]
+    },
+    {
+      "id": "strange-attractors",
+      "name": "Strange Attractors",
+      "category": "advanced",
+      "path": "algorithms/advanced/strange-attractors-gui.html",
+      "description": "Strange Attractors explores dense scientific and mathematical systems for ambitious plots.",
+      "complexity": "advanced",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "advanced",
+        "plotter"
+      ]
     },
     {
       "id": "vortex-street",
@@ -62,11 +236,19 @@
       "category": "advanced",
       "path": "algorithms/advanced/vortex-street-gui.html",
       "description": "Fluid dynamics vortex patterns (von Kármán vortex street)",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["fluid-dynamics", "vortex", "physics"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "fluid-dynamics",
+        "vortex",
+        "physics"
+      ]
     },
     {
       "id": "ml5-patterns",
@@ -74,23 +256,58 @@
       "category": "ai",
       "path": "algorithms/ai/ml5-patterns-gui.html",
       "description": "Machine learning-generated patterns using ml5.js",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["machine-learning", "ai", "generative"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": false,
+      "tags": [
+        "machine-learning",
+        "ai",
+        "generative"
+      ]
+    },
+    {
+      "id": "neural-network-art",
+      "name": "Neural Network Art",
+      "category": "ai",
+      "path": "algorithms/ai/neural-network-art-gui.html",
+      "description": "Neural Network Art explores machine-learning assisted experiments and neural pattern studies.",
+      "complexity": "advanced",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": false,
+      "tags": [
+        "ai",
+        "plotter"
+      ]
     },
     {
       "id": "elementary-ca",
-      "name": "Elementary Cellular Automaton",
+      "name": "Elementary CA",
       "category": "cellular-automata",
       "path": "algorithms/cellular-automata/elementary-ca.html",
       "description": "1D cellular automaton with 256 rule variants (Wolfram rules)",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["wolfram", "1d-ca", "rule-based"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "wolfram",
+        "1d-ca",
+        "rule-based"
+      ]
     },
     {
       "id": "elementary-ca-layers",
@@ -98,23 +315,41 @@
       "category": "cellular-automata",
       "path": "algorithms/cellular-automata/elementary-ca-layers.html",
       "description": "Layered elementary cellular automaton with multiple rule sets",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["wolfram", "layered", "rule-based"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "wolfram",
+        "layered",
+        "rule-based"
+      ]
     },
     {
       "id": "game-of-life",
-      "name": "Conway's Game of Life",
+      "name": "Game of Life",
       "category": "cellular-automata",
       "path": "algorithms/cellular-automata/game-of-life-gui.html",
       "description": "Classic 2D cellular automaton with famous patterns like gliders and oscillators",
+      "complexity": "intermediate",
       "hasPresets": true,
-      "hasCollapsible": false,
-      "hasExport": ["svg", "gif"],
-      "complexity": "medium",
-      "tags": ["conway", "2d-ca", "emergence", "patterns"]
+      "hasExport": [
+        "svg",
+        "gif"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "conway",
+        "2d-ca",
+        "emergence",
+        "patterns"
+      ]
     },
     {
       "id": "game-of-life-layers",
@@ -122,35 +357,60 @@
       "category": "cellular-automata",
       "path": "algorithms/cellular-automata/game-of-life-layers.html",
       "description": "Multi-layered Game of Life with composite rendering",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["conway", "layered", "composite"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "conway",
+        "layered",
+        "composite"
+      ]
     },
     {
       "id": "belousov-zhabotinsky",
-      "name": "Belousov-Zhabotinsky Reaction",
+      "name": "Belousov-Zhabotinsky",
       "category": "chemical",
       "path": "algorithms/chemical/belousov-zhabotinsky-gui.html",
       "description": "Chemical oscillating reaction producing spiral and target patterns",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["chemical", "oscillating", "spirals", "bz-reaction"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "chemical",
+        "oscillating",
+        "spirals",
+        "bz-reaction"
+      ]
     },
     {
       "id": "chromatography",
-      "name": "Chromatography Patterns",
+      "name": "Chromatography",
       "category": "chemical",
       "path": "algorithms/chemical/chromatography-gui.html",
       "description": "Separation patterns inspired by paper chromatography",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["chemical", "separation", "diffusion"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "chemical",
+        "separation",
+        "diffusion"
+      ]
     },
     {
       "id": "convection-cells",
@@ -158,11 +418,19 @@
       "category": "chemical",
       "path": "algorithms/chemical/convection-cells-gui.html",
       "description": "Thermal convection patterns (Rayleigh-Bénard convection)",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["convection", "thermal", "fluid-dynamics"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "convection",
+        "thermal",
+        "fluid-dynamics"
+      ]
     },
     {
       "id": "crystallization",
@@ -170,11 +438,19 @@
       "category": "chemical",
       "path": "algorithms/chemical/crystallization-gui.html",
       "description": "Crystal formation and growth patterns",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["crystals", "growth", "nucleation"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "crystals",
+        "growth",
+        "nucleation"
+      ]
     },
     {
       "id": "liesegang-rings",
@@ -182,11 +458,19 @@
       "category": "chemical",
       "path": "algorithms/chemical/liesegang-rings-gui.html",
       "description": "Periodic precipitation patterns forming concentric rings",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["precipitation", "rings", "periodic"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "precipitation",
+        "rings",
+        "periodic"
+      ]
     },
     {
       "id": "mixing-patterns",
@@ -194,11 +478,133 @@
       "category": "chemical",
       "path": "algorithms/chemical/mixing-patterns-gui.html",
       "description": "Chemical mixing and diffusion patterns",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["mixing", "diffusion", "chemical"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "mixing",
+        "diffusion",
+        "chemical"
+      ]
+    },
+    {
+      "id": "harmonograph",
+      "name": "Harmonograph",
+      "category": "curves",
+      "path": "algorithms/curves/harmonograph-gui.html",
+      "description": "Harmonograph explores harmonic and parametric curves with plotter-ready line output.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ]
+    },
+    {
+      "id": "hilbert-curve",
+      "name": "Hilbert Curve",
+      "category": "curves",
+      "path": "algorithms/curves/hilbert-curve-gui.html",
+      "description": "Hilbert Curve explores harmonic and parametric curves with plotter-ready line output.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ]
+    },
+    {
+      "id": "lissajous-curves",
+      "name": "Lissajous Curves",
+      "category": "curves",
+      "path": "algorithms/curves/lissajous-gui.html",
+      "description": "Lissajous Curves explores harmonic and parametric curves with plotter-ready line output.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ]
+    },
+    {
+      "id": "rose-curves",
+      "name": "Rose Curves",
+      "category": "curves",
+      "path": "algorithms/curves/rose-curves-gui.html",
+      "description": "Rose Curves explores harmonic and parametric curves with plotter-ready line output.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ]
+    },
+    {
+      "id": "space-filling-standard",
+      "name": "Space-Filling (Standard)",
+      "category": "curves",
+      "path": "algorithms/curves/space-filling-curves-gui.html",
+      "description": "Space-Filling (Standard) explores harmonic and parametric curves with plotter-ready line output.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ]
+    },
+    {
+      "id": "space-filling-curves",
+      "name": "Space-Filling Curves",
+      "category": "curves",
+      "path": "algorithms/curves/space-filling-expanded-gui.html",
+      "description": "Space-Filling Curves explores harmonic and parametric curves with plotter-ready line output.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ]
     },
     {
       "id": "flow-field-collision",
@@ -206,11 +612,19 @@
       "category": "flow-fields",
       "path": "algorithms/flow-fields/flow-field-collision.html",
       "description": "Flow field with collision detection and particle interactions",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["flow-field", "collision", "particles"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "flow-field",
+        "collision",
+        "particles"
+      ]
     },
     {
       "id": "flow-field-p5",
@@ -218,23 +632,100 @@
       "category": "flow-fields",
       "path": "algorithms/flow-fields/flow-field-p5-gui.html",
       "description": "Noise-based flow field with curl, perlin, and turbulent modes",
+      "complexity": "intermediate",
       "hasPresets": true,
-      "hasCollapsible": false,
-      "hasExport": ["svg", "gif"],
-      "complexity": "medium",
-      "tags": ["flow-field", "noise", "curl", "particles"]
+      "hasExport": [
+        "svg",
+        "gif"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "flow-field",
+        "noise",
+        "curl",
+        "particles"
+      ]
+    },
+    {
+      "id": "fluid-dynamics",
+      "name": "Fluid Dynamics",
+      "category": "fluid-dynamics",
+      "path": "algorithms/fluid-dynamics/fluid-dynamics-gui.html",
+      "description": "Fluid Dynamics explores flow simulations and turbulence-inspired structures.",
+      "complexity": "advanced",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "fluid-dynamics",
+        "plotter"
+      ]
+    },
+    {
+      "id": "mandelbrot-and-julia",
+      "name": "Mandelbrot & Julia",
+      "category": "fractals",
+      "path": "algorithms/fractals/mandelbrot-julia-gui.html",
+      "description": "Mandelbrot & Julia explores recursive and contour-derived forms with self-similar detail.",
+      "complexity": "advanced",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "fractals",
+        "plotter"
+      ]
     },
     {
       "id": "10print",
-      "name": "10 PRINT",
+      "name": "10PRINT",
       "category": "geometric",
       "path": "algorithms/geometric/10print-gui.html",
       "description": "Classic Commodore 64 one-liner maze pattern",
+      "complexity": "beginner",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "low",
-      "tags": ["retro", "maze", "simple", "classic"]
+      "hasExport": [
+        "svg",
+        "gif"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "retro",
+        "maze",
+        "simple",
+        "classic"
+      ]
+    },
+    {
+      "id": "10print-simple",
+      "name": "10PRINT Simple",
+      "category": "geometric",
+      "path": "algorithms/geometric/10print-simple.html",
+      "description": "10PRINT Simple builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "beginner",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
     },
     {
       "id": "circle-rays",
@@ -242,11 +733,19 @@
       "category": "geometric",
       "path": "algorithms/geometric/circle-rays-gui.html",
       "description": "Radial patterns with concentric circles and rays",
+      "complexity": "beginner",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "low",
-      "tags": ["radial", "circles", "geometric"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "radial",
+        "circles",
+        "geometric"
+      ]
     },
     {
       "id": "circle-twist",
@@ -254,11 +753,38 @@
       "category": "geometric",
       "path": "algorithms/geometric/circle-twist-gui.html",
       "description": "Twisted and warped circular patterns",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["circles", "twist", "geometric"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "circles",
+        "twist",
+        "geometric"
+      ]
+    },
+    {
+      "id": "circuit-pattern",
+      "name": "Circuit Pattern",
+      "category": "geometric",
+      "path": "algorithms/geometric/circuit-pattern-gui.html",
+      "description": "Circuit Pattern builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
     },
     {
       "id": "grid-landscape",
@@ -266,11 +792,20 @@
       "category": "geometric",
       "path": "algorithms/geometric/grid-landscape-gui.html",
       "description": "3D landscape rendered as grid wireframe",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["3d", "landscape", "grid", "wireframe"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "3d",
+        "landscape",
+        "grid",
+        "wireframe"
+      ]
     },
     {
       "id": "hash-tiles",
@@ -278,11 +813,95 @@
       "category": "geometric",
       "path": "algorithms/geometric/hash-tiles-gui.html",
       "description": "Tiling patterns based on hash functions",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["tiles", "hash", "procedural"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tiles",
+        "hash",
+        "procedural"
+      ]
+    },
+    {
+      "id": "islamic-patterns",
+      "name": "Islamic Patterns",
+      "category": "geometric",
+      "path": "algorithms/geometric/islamic-patterns-gui.html",
+      "description": "Islamic Patterns builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
+    },
+    {
+      "id": "maze-generator",
+      "name": "Maze Generator",
+      "category": "geometric",
+      "path": "algorithms/geometric/maze-generator-gui.html",
+      "description": "Maze Generator builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
+    },
+    {
+      "id": "moir-patterns",
+      "name": "Moiré Patterns",
+      "category": "geometric",
+      "path": "algorithms/geometric/moire-patterns-gui.html",
+      "description": "Moiré Patterns builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
+    },
+    {
+      "id": "penrose-tiling",
+      "name": "Penrose Tiling",
+      "category": "geometric",
+      "path": "algorithms/geometric/penrose-tiling-gui.html",
+      "description": "Penrose Tiling builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
     },
     {
       "id": "perlin-circles",
@@ -290,11 +909,19 @@
       "category": "geometric",
       "path": "algorithms/geometric/perlin-circles-gui.html",
       "description": "Concentric circles modulated by Perlin noise",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["perlin", "circles", "noise"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "perlin",
+        "circles",
+        "noise"
+      ]
     },
     {
       "id": "perlin-landscape",
@@ -302,11 +929,20 @@
       "category": "geometric",
       "path": "algorithms/geometric/perlin-landscape-gui.html",
       "description": "Terrain-like patterns using Perlin noise elevation",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["perlin", "landscape", "terrain", "noise"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "perlin",
+        "landscape",
+        "terrain",
+        "noise"
+      ]
     },
     {
       "id": "perlin-spiral",
@@ -314,11 +950,20 @@
       "category": "geometric",
       "path": "algorithms/geometric/perlin-spiral-gui.html",
       "description": "Mathematical spirals (Archimedean, logarithmic, Fermat) with noise modulation",
+      "complexity": "intermediate",
       "hasPresets": true,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["spiral", "perlin", "mathematical", "noise"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "spiral",
+        "perlin",
+        "mathematical",
+        "noise"
+      ]
     },
     {
       "id": "snowflakes",
@@ -326,11 +971,38 @@
       "category": "geometric",
       "path": "algorithms/geometric/snowflakes-gui.html",
       "description": "Procedural snowflake patterns with 6-fold symmetry",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["snowflake", "symmetry", "fractal"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "snowflake",
+        "symmetry",
+        "fractal"
+      ]
+    },
+    {
+      "id": "spiral-burst",
+      "name": "Spiral Burst",
+      "category": "geometric",
+      "path": "algorithms/geometric/spiral-burst-gui.html",
+      "description": "Spiral Burst builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": true,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
     },
     {
       "id": "spiral-fill",
@@ -338,11 +1010,19 @@
       "category": "geometric",
       "path": "algorithms/geometric/spiral-fill.html",
       "description": "Space-filling spiral patterns",
+      "complexity": "beginner",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "low",
-      "tags": ["spiral", "fill", "simple"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "spiral",
+        "fill",
+        "simple"
+      ]
     },
     {
       "id": "spirotron",
@@ -350,11 +1030,57 @@
       "category": "geometric",
       "path": "algorithms/geometric/spirotron-gui.html",
       "description": "Spirograph-like patterns with multiple rotating arms",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["spirograph", "rotation", "harmonic"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "spirograph",
+        "rotation",
+        "harmonic"
+      ]
+    },
+    {
+      "id": "string-art",
+      "name": "String Art",
+      "category": "geometric",
+      "path": "algorithms/geometric/string-art-gui.html",
+      "description": "String Art builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
+    },
+    {
+      "id": "topographic-contours",
+      "name": "Topographic Contours",
+      "category": "geometric",
+      "path": "algorithms/geometric/topographic-contours-gui.html",
+      "description": "Topographic Contours builds structured geometric linework for pen plotting and iterative exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "geometric",
+        "plotter"
+      ]
     },
     {
       "id": "hybrid-composer",
@@ -362,11 +1088,95 @@
       "category": "hybrid",
       "path": "algorithms/hybrid/hybrid-composer-gui.html",
       "description": "Combine multiple algorithms into layered compositions",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["composite", "layers", "meta"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "composite",
+        "layers",
+        "meta"
+      ]
+    },
+    {
+      "id": "ascii-art",
+      "name": "ASCII Art",
+      "category": "image-processing",
+      "path": "algorithms/image-processing/ascii-art-gui.html",
+      "description": "ASCII Art converts source imagery into plotter-friendly line and tone structures.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image-processing",
+        "plotter"
+      ]
+    },
+    {
+      "id": "contour-lines",
+      "name": "Contour Lines",
+      "category": "image-processing",
+      "path": "algorithms/image-processing/contour-lines-gui.html",
+      "description": "Contour Lines converts source imagery into plotter-friendly line and tone structures.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image-processing",
+        "plotter"
+      ]
+    },
+    {
+      "id": "dithering",
+      "name": "Dithering",
+      "category": "image-processing",
+      "path": "algorithms/image-processing/dithering-gui.html",
+      "description": "Dithering converts source imagery into plotter-friendly line and tone structures.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image-processing",
+        "plotter"
+      ]
+    },
+    {
+      "id": "flow-hatching",
+      "name": "Flow Hatching",
+      "category": "image-processing",
+      "path": "algorithms/image-processing/flow-hatching-gui.html",
+      "description": "Flow Hatching converts source imagery into plotter-friendly line and tone structures.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image-processing",
+        "plotter"
+      ]
     },
     {
       "id": "halftone",
@@ -374,11 +1184,19 @@
       "category": "image-processing",
       "path": "algorithms/image-processing/halftone.html",
       "description": "Convert images to halftone dot patterns",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["image", "halftone", "dots"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image",
+        "halftone",
+        "dots"
+      ]
     },
     {
       "id": "hatching",
@@ -386,35 +1204,78 @@
       "category": "image-processing",
       "path": "algorithms/image-processing/hatching.html",
       "description": "Convert images to crosshatch patterns",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["image", "hatching", "crosshatch"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image",
+        "hatching",
+        "crosshatch"
+      ]
+    },
+    {
+      "id": "image-to-ascii",
+      "name": "Image to ASCII",
+      "category": "image-processing",
+      "path": "algorithms/image-processing/image-to-ascii-gui.html",
+      "description": "Image to ASCII converts source imagery into plotter-friendly line and tone structures.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image-processing",
+        "plotter"
+      ]
     },
     {
       "id": "squigglecam",
-      "name": "Squigglecam",
+      "name": "SquiggleCam",
       "category": "image-processing",
       "path": "algorithms/image-processing/squigglecam.html",
       "description": "Convert images to squiggly line art",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["image", "squiggle", "line-art"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": false,
+      "requiresImage": true,
+      "tags": [
+        "image",
+        "squiggle",
+        "line-art"
+      ]
     },
     {
       "id": "astronomy",
-      "name": "Astronomy Patterns",
+      "name": "Astronomy",
       "category": "natural",
       "path": "algorithms/natural/astronomy-gui.html",
       "description": "Celestial patterns, star fields, and orbital mechanics",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["astronomy", "stars", "celestial"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "astronomy",
+        "stars",
+        "celestial"
+      ]
     },
     {
       "id": "coral-growth",
@@ -422,11 +1283,20 @@
       "category": "natural",
       "path": "algorithms/natural/coral-growth-gui.html",
       "description": "Branching coral-like growth patterns",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["coral", "growth", "organic", "branching"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "coral",
+        "growth",
+        "organic",
+        "branching"
+      ]
     },
     {
       "id": "crystal-growth",
@@ -434,11 +1304,57 @@
       "category": "natural",
       "path": "algorithms/natural/crystal-growth-gui.html",
       "description": "Crystalline structure formation and growth",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["crystal", "growth", "geometric"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "crystal",
+        "growth",
+        "geometric"
+      ]
+    },
+    {
+      "id": "differential-growth",
+      "name": "Differential Growth",
+      "category": "natural",
+      "path": "algorithms/natural/differential-growth-gui.html",
+      "description": "Differential Growth explores growth, branching, weather, and organism-inspired forms.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "natural",
+        "plotter"
+      ]
+    },
+    {
+      "id": "dla-growth",
+      "name": "DLA Growth",
+      "category": "natural",
+      "path": "algorithms/natural/dla-gui.html",
+      "description": "DLA Growth explores growth, branching, weather, and organism-inspired forms.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "natural",
+        "plotter"
+      ]
     },
     {
       "id": "lightning",
@@ -446,11 +1362,171 @@
       "category": "natural",
       "path": "algorithms/natural/lightning-gui.html",
       "description": "Electric discharge patterns resembling lightning bolts",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["lightning", "electric", "branching"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "lightning",
+        "electric",
+        "branching"
+      ]
+    },
+    {
+      "id": "phyllotaxis",
+      "name": "Phyllotaxis",
+      "category": "natural",
+      "path": "algorithms/natural/phyllotaxis-gui.html",
+      "description": "Phyllotaxis explores growth, branching, weather, and organism-inspired forms.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "natural",
+        "plotter"
+      ]
+    },
+    {
+      "id": "physarum-slime",
+      "name": "Physarum Slime",
+      "category": "natural",
+      "path": "algorithms/natural/physarum-gui.html",
+      "description": "Physarum Slime explores growth, branching, weather, and organism-inspired forms.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "natural",
+        "plotter"
+      ]
+    },
+    {
+      "id": "space-colonization",
+      "name": "Space Colonization",
+      "category": "natural",
+      "path": "algorithms/natural/space-colonization-gui.html",
+      "description": "Space Colonization explores growth, branching, weather, and organism-inspired forms.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "natural",
+        "plotter"
+      ]
+    },
+    {
+      "id": "arrows",
+      "name": "Arrows",
+      "category": "packing",
+      "path": "algorithms/packing/arrows-gui.html",
+      "description": "Arrows packs repeated motifs into dense, plotter-friendly compositions with adjustable spacing and overlap.",
+      "complexity": "beginner",
+      "hasPresets": true,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "packing",
+        "plotter"
+      ]
+    },
+    {
+      "id": "circle-packing",
+      "name": "Circle Packing",
+      "category": "packing",
+      "path": "algorithms/packing/circle-packing-gui.html",
+      "description": "Circle Packing packs repeated motifs into dense, plotter-friendly compositions with adjustable spacing and overlap.",
+      "complexity": "beginner",
+      "hasPresets": true,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "packing",
+        "plotter"
+      ]
+    },
+    {
+      "id": "boids-flocking",
+      "name": "Boids Flocking",
+      "category": "physics",
+      "path": "algorithms/physics/boids-flocking-gui.html",
+      "description": "Boids Flocking explores particle, force, field, and interference-based systems.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "physics",
+        "plotter"
+      ]
+    },
+    {
+      "id": "cloth-simulation",
+      "name": "Cloth Simulation",
+      "category": "physics",
+      "path": "algorithms/physics/cloth-simulation-gui.html",
+      "description": "Cloth Simulation explores particle, force, field, and interference-based systems.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "physics",
+        "plotter"
+      ]
+    },
+    {
+      "id": "magnetic-fields",
+      "name": "Magnetic Fields",
+      "category": "physics",
+      "path": "algorithms/physics/magnetic-field-gui.html",
+      "description": "Magnetic Fields explores particle, force, field, and interference-based systems.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "physics",
+        "plotter"
+      ]
     },
     {
       "id": "particle-system",
@@ -458,23 +1534,38 @@
       "category": "physics",
       "path": "algorithms/physics/particle-system-gui.html",
       "description": "Physics-based particle simulation with forces and collisions",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["particles", "physics", "simulation"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "particles",
+        "physics",
+        "simulation"
+      ]
     },
     {
-      "id": "reaction-diffusion-enhanced",
-      "name": "Reaction-Diffusion Enhanced",
-      "category": "reaction-diffusion",
-      "path": "algorithms/reaction-diffusion/reaction-diffusion-enhanced.html",
-      "description": "Enhanced Gray-Scott reaction-diffusion with additional features",
+      "id": "wave-interference",
+      "name": "Wave Interference",
+      "category": "physics",
+      "path": "algorithms/physics/wave-interference-gui.html",
+      "description": "Wave Interference explores particle, force, field, and interference-based systems.",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["reaction-diffusion", "gray-scott", "chemical"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "physics",
+        "plotter"
+      ]
     },
     {
       "id": "reaction-diffusion",
@@ -482,11 +1573,40 @@
       "category": "reaction-diffusion",
       "path": "algorithms/reaction-diffusion/reaction-diffusion-gui.html",
       "description": "Gray-Scott reaction-diffusion system creating organic patterns",
+      "complexity": "advanced",
       "hasPresets": true,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["reaction-diffusion", "gray-scott", "patterns", "organic"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "reaction-diffusion",
+        "gray-scott",
+        "patterns",
+        "organic"
+      ]
+    },
+    {
+      "id": "reaction-diffusion-enhanced",
+      "name": "Reaction-Diffusion Enhanced",
+      "category": "reaction-diffusion",
+      "path": "algorithms/reaction-diffusion/reaction-diffusion-enhanced.html",
+      "description": "Enhanced Gray-Scott reaction-diffusion with additional features",
+      "complexity": "advanced",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "reaction-diffusion",
+        "gray-scott",
+        "chemical"
+      ]
     },
     {
       "id": "reaction-diffusion-layers",
@@ -494,11 +1614,39 @@
       "category": "reaction-diffusion",
       "path": "algorithms/reaction-diffusion/reaction-diffusion-layers.html",
       "description": "Multi-layer reaction-diffusion with composite rendering",
+      "complexity": "advanced",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "high",
-      "tags": ["reaction-diffusion", "layered", "composite"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "reaction-diffusion",
+        "layered",
+        "composite"
+      ]
+    },
+    {
+      "id": "aperiodic-tilings",
+      "name": "Aperiodic Tilings",
+      "category": "symmetry",
+      "path": "algorithms/symmetry/aperiodic-tilings-gui.html",
+      "description": "Aperiodic Tilings explores tessellations, ornamental systems, and repeating structure.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg",
+        "gif"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "symmetry",
+        "plotter"
+      ]
     },
     {
       "id": "kumiko-pattern",
@@ -506,11 +1654,58 @@
       "category": "symmetry",
       "path": "algorithms/symmetry/kumiko-pattern.html",
       "description": "Japanese kumiko woodworking patterns with geometric precision",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["kumiko", "japanese", "geometric", "woodwork"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "kumiko",
+        "japanese",
+        "geometric",
+        "woodwork"
+      ]
+    },
+    {
+      "id": "quilting-patterns",
+      "name": "Quilting Patterns",
+      "category": "symmetry",
+      "path": "algorithms/symmetry/quilting-patterns-gui.html",
+      "description": "Quilting Patterns explores tessellations, ornamental systems, and repeating structure.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "symmetry",
+        "plotter"
+      ]
+    },
+    {
+      "id": "truchet-tiles",
+      "name": "Truchet Tiles",
+      "category": "symmetry",
+      "path": "algorithms/symmetry/truchet-tiles-gui.html",
+      "description": "Truchet Tiles explores tessellations, ornamental systems, and repeating structure.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "symmetry",
+        "plotter"
+      ]
     },
     {
       "id": "zellige-pattern",
@@ -518,23 +1713,143 @@
       "category": "symmetry",
       "path": "algorithms/symmetry/zellige-pattern.html",
       "description": "Moroccan zellige tile patterns with Islamic geometric design",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["zellige", "islamic", "tiles", "geometric"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "zellige",
+        "islamic",
+        "tiles",
+        "geometric"
+      ]
     },
     {
-      "id": "hatching-demo",
-      "name": "Hatching Demo",
-      "category": "textures",
-      "path": "algorithms/textures/hatching-demo.html",
-      "description": "Demonstration of various hatching and crosshatching techniques",
+      "id": "canvas-runner",
+      "name": "Canvas Runner",
+      "category": "tools",
+      "path": "algorithms/tools/canvas-runner.html",
+      "description": "Canvas Runner utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "low",
-      "tags": ["hatching", "texture", "demo"]
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "plotter"
+      ]
+    },
+    {
+      "id": "debug-preview",
+      "name": "Debug Preview",
+      "category": "tools",
+      "path": "algorithms/tools/debug-preview-gui.html",
+      "description": "Debug Preview utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "plotter"
+      ]
+    },
+    {
+      "id": "path-optimizer",
+      "name": "Path Optimizer",
+      "category": "tools",
+      "path": "algorithms/tools/path-optimizer-gui.html",
+      "description": "Path Optimizer utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "tool"
+      ]
+    },
+    {
+      "id": "plot-simulator",
+      "name": "Plot Simulator",
+      "category": "tools",
+      "path": "algorithms/tools/plot-simulator.html",
+      "description": "Plot Simulator utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "tool"
+      ]
+    },
+    {
+      "id": "plotter-export",
+      "name": "Plotter Export",
+      "category": "tools",
+      "path": "algorithms/tools/plotter-export-gui.html",
+      "description": "Plotter Export utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg",
+        "gcode",
+        "hpgl"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "tool"
+      ]
+    },
+    {
+      "id": "plotter-prep",
+      "name": "Plotter Prep",
+      "category": "tools",
+      "path": "algorithms/tools/plotter-prep.html",
+      "description": "Plotter Prep utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "tool"
+      ]
+    },
+    {
+      "id": "plotter-preview",
+      "name": "Plotter Preview",
+      "category": "tools",
+      "path": "tools/plotter-preview-gui.html",
+      "description": "Plotter Preview utility for preparing, previewing, or exporting plotter-ready artwork.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "tool"
+      ]
     },
     {
       "id": "lsystem-simple",
@@ -542,23 +1857,39 @@
       "category": "trees-lsystems",
       "path": "algorithms/trees-lsystems/lsystem-simple.html",
       "description": "Basic Lindenmayer system for creating plant-like structures",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["lsystem", "fractal", "plants"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "lsystem",
+        "fractal",
+        "plants"
+      ]
     },
     {
       "id": "tree-gui",
-      "name": "Tree Generator",
+      "name": "Tree",
       "category": "trees-lsystems",
       "path": "algorithms/trees-lsystems/tree-gui.html",
       "description": "Procedural tree generation with branching control",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["tree", "branching", "organic"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tree",
+        "branching",
+        "organic"
+      ]
     },
     {
       "id": "tree-working",
@@ -566,11 +1897,57 @@
       "category": "trees-lsystems",
       "path": "algorithms/trees-lsystems/tree-working.html",
       "description": "Enhanced tree generator with additional parameters",
+      "complexity": "intermediate",
       "hasPresets": false,
-      "hasCollapsible": false,
-      "hasExport": ["svg"],
-      "complexity": "medium",
-      "tags": ["tree", "enhanced", "organic"]
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tree",
+        "enhanced",
+        "organic"
+      ]
+    },
+    {
+      "id": "tsp-art",
+      "name": "TSP Art",
+      "category": "voronoi",
+      "path": "algorithms/voronoi/tsp-art-gui.html",
+      "description": "TSP Art explores cellular partitioning, stippling, and route optimization studies.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "voronoi",
+        "plotter"
+      ]
+    },
+    {
+      "id": "voronoi-stippling",
+      "name": "Voronoi Stippling",
+      "category": "voronoi",
+      "path": "algorithms/voronoi/voronoi-stippling-gui.html",
+      "description": "Voronoi Stippling explores cellular partitioning, stippling, and route optimization studies.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "voronoi",
+        "plotter"
+      ]
     }
   ]
 }

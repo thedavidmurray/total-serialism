@@ -333,7 +333,7 @@
   <script>
     // Global variables
     let debugPreview;
-    let pathOptimizer;
+    let optimizer;
     let currentPaths = [];
     let optimizedPaths = [];
     let canvas;
@@ -348,7 +348,7 @@
       canvas.parent('canvas-wrapper');
 
       debugPreview = new DebugPreview();
-      pathOptimizer = new PathOptimizer();
+      optimizer = new PathOptimizer();
 
       background(255);
 
@@ -778,16 +778,16 @@
         const simplifyTolerance = parseFloat(document.getElementById('simplifyTolerance').value);
 
         // Join nearby paths
-        let paths = pathOptimizer.joinPaths(currentPaths, joinThreshold);
+        let paths = optimizer.joinPaths(currentPaths, joinThreshold);
 
         // Simplify paths
         paths = paths.map(path => ({
           ...path,
-          points: pathOptimizer.simplifyPath(path.points, simplifyTolerance)
+          points: optimizer.simplifyPath(path.points, simplifyTolerance)
         }));
 
         // Optimize order (TSP)
-        optimizedPaths = pathOptimizer.optimizeOrder(paths);
+        optimizedPaths = optimizer.optimizeOrder(paths);
 
         updatePreview();
         showStatus('Paths optimized successfully', 'success');
@@ -817,14 +817,14 @@
       if (paths.length === 0) return;
 
       // Convert to SVG
-      const svg = pathOptimizer.cleanSVG(pathOptimizer.toSVGPath(paths));
+      const svg = optimizer.cleanSVG(optimizer.toSVGPath(paths));
 
       // Create full SVG document
       const svgDoc = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
   <g fill="none" stroke="black" stroke-width="1">
     ${paths.map(path =>
-      `<path d="${pathOptimizer.toSVGPath([path])}" />`
+      `<path d="${optimizer.toSVGPath([path])}" />`
     ).join('\n    ')}
   </g>
 </svg>`;

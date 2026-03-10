@@ -7,6 +7,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
     <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+    <script src="../../shared/export-utils.js"></script>
     <!-- Total Serialism Design System -->
     <link rel="stylesheet" href="../../shared/algorithm.css">
     <style>
@@ -432,7 +433,7 @@
         };
 
         let points = [];
-        let svgCanvas;
+        let canvas;
         let canvasWidth, canvasHeight;
         let isAnimating = false;
         let animationFrame = 0;
@@ -441,8 +442,8 @@
 
         function setup() {
             updateCanvasSize();
-            svgCanvas = createCanvas(canvasWidth, canvasHeight, SVG);
-            svgCanvas.parent('canvas-wrapper');
+            canvas = createCanvas(canvasWidth, canvasHeight);
+            canvas.parent('canvas-wrapper');
 
             window.panelController = new TSPanelController().attach();
             window.statsDisplay = new TSStatsDisplay().attach();
@@ -966,7 +967,94 @@
         }
 
         function exportSVG() {
-            save(svgCanvas, `phyllotaxis-${params.seed}.svg`);
+            TSExport.downloadSVG(buildPhyllotaxisSVG(), `phyllotaxis-${params.seed}`);
+        }
+
+        function buildPhyllotaxisSVG() {
+            const elements = [`  <rect width="100%" height="100%" fill="${params.bgColor}"/>`];
+            const centerX = canvasWidth / 2;
+            const centerY = canvasHeight / 2;
+
+            if (params.connectionMode !== 'none') {
+                const stroke = params.connectionColor;
+                const strokeWidth = params.connectionWeight;
+
+                switch (params.connectionMode) {
+                    case 'center':
+                        points.forEach((point) => {
+                            elements.push(`  <line x1="${point.x}" y1="${point.y}" x2="${centerX}" y2="${centerY}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none"/>`);
+                        });
+                        break;
+
+                    case 'neighbors':
+                        for (let i = 1; i < points.length; i++) {
+                            elements.push(`  <line x1="${points[i].x}" y1="${points[i].y}" x2="${points[i - 1].x}" y2="${points[i - 1].y}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none"/>`);
+                        }
+                        break;
+
+                    case 'spiral':
+                        elements.push(`  <path d="${TSExport.pointsToPath(points)}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none"/>`);
+                        break;
+
+                    case 'fibonacci': {
+                        const fibNums = [8, 13, 21, 34, 55];
+                        fibNums.forEach((fib) => {
+                            for (let i = fib; i < points.length; i++) {
+                                elements.push(`  <line x1="${points[i].x}" y1="${points[i].y}" x2="${points[i - fib].x}" y2="${points[i - fib].y}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none"/>`);
+                            }
+                        });
+                        break;
+                    }
+                }
+            }
+
+            points.forEach((point) => {
+                const strokeAttr = params.fillMode === 'stroke' || params.fillMode === 'both'
+                    ? `stroke="${params.strokeColor}" stroke-width="${params.strokeWeight}"`
+                    : 'stroke="none"';
+                const fillAttr = params.fillMode === 'fill' || params.fillMode === 'both'
+                    ? `fill="${params.fillColor}"`
+                    : 'fill="none"';
+
+                switch (params.elementType) {
+                    case 'circle':
+                        elements.push(`  <circle cx="${point.x}" cy="${point.y}" r="${point.size}" ${strokeAttr} ${fillAttr}/>`);
+                        break;
+
+                    case 'square': {
+                        const size = point.size * 2;
+                        elements.push(`  <rect x="${point.x - point.size}" y="${point.y - point.size}" width="${size}" height="${size}" ${strokeAttr} ${fillAttr} transform="rotate(${degrees(point.theta)} ${point.x} ${point.y})"/>`);
+                        break;
+                    }
+
+                    case 'polygon': {
+                        const polygonPoints = [];
+                        for (let i = 0; i < params.polygonSides; i++) {
+                            const angle = point.theta + TWO_PI * i / params.polygonSides - HALF_PI;
+                            polygonPoints.push({
+                                x: point.x + cos(angle) * point.size,
+                                y: point.y + sin(angle) * point.size
+                            });
+                        }
+                        elements.push(`  <path d="${TSExport.pointsToPath(polygonPoints, true)}" ${strokeAttr} ${fillAttr}/>`);
+                        break;
+                    }
+
+                    case 'line-center': {
+                        const half = point.size;
+                        const dx = cos(point.theta) * half;
+                        const dy = sin(point.theta) * half;
+                        elements.push(`  <line x1="${point.x - dx}" y1="${point.y - dy}" x2="${point.x + dx}" y2="${point.y + dy}" stroke="${params.strokeColor}" stroke-width="${params.strokeWeight}" fill="none"/>`);
+                        break;
+                    }
+
+                    case 'dots':
+                        elements.push(`  <circle cx="${point.x}" cy="${point.y}" r="${point.size / 2}" fill="${params.strokeColor}" stroke="none"/>`);
+                        break;
+                }
+            });
+
+            return `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}" viewBox="0 0 ${canvasWidth} ${canvasHeight}">\n${elements.join('\n')}\n</svg>`;
         }
 
         function exportPNG() {

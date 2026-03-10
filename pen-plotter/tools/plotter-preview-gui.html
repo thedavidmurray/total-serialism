@@ -649,6 +649,15 @@
      * PLOTTER PREVIEW & SIMULATOR
      * Visualizes pen plotter movements and optimizes paths
      */
+    const DEFAULT_PREVIEW_SVG = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="620" viewBox="0 0 820 620">
+  <rect width="820" height="620" fill="#ffffff"/>
+  <path d="M 80 120 L 740 120" stroke="#111111" stroke-width="2" fill="none"/>
+  <path d="M 100 240 C 220 120 320 360 430 240 S 650 120 720 240" stroke="#111111" stroke-width="2" fill="none"/>
+  <polyline points="110,420 210,330 310,420 410,330 510,420 610,330 710,420" stroke="#111111" stroke-width="2" fill="none"/>
+  <circle cx="220" cy="510" r="55" stroke="#111111" stroke-width="2" fill="none"/>
+  <rect x="470" y="455" width="170" height="95" stroke="#111111" stroke-width="2" fill="none"/>
+</svg>`;
 
     class PlotterPreview {
       constructor() {
@@ -691,6 +700,9 @@
 
         this.initEventListeners();
         this.resizeCanvas();
+        if (!this.checkURLParameter()) {
+          this.loadSample();
+        }
       }
 
       initEventListeners() {
@@ -777,8 +789,6 @@
         // Window resize
         window.addEventListener('resize', () => this.resizeCanvas());
 
-        // URL parameter loading
-        this.checkURLParameter();
       }
 
       checkURLParameter() {
@@ -789,7 +799,14 @@
             .then(r => r.text())
             .then(svg => this.loadSVG(svg))
             .catch(err => console.error('Failed to load SVG from URL:', err));
+          return true;
         }
+        return false;
+      }
+
+      loadSample() {
+        document.getElementById('svgInput').value = DEFAULT_PREVIEW_SVG;
+        this.loadSVG(DEFAULT_PREVIEW_SVG);
       }
 
       handleFileSelect(event) {

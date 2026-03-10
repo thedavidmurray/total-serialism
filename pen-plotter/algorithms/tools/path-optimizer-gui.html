@@ -314,6 +314,10 @@
           if (originalPaths.length > 0) visualizePaths();
         });
       });
+
+      document.getElementById('testPattern').value = 'grid';
+      generateTestPattern();
+      optimizePaths();
     });
 
     function updateOptimizerSettings() {

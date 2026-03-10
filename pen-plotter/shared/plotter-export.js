@@ -169,23 +169,87 @@ class HPGLExporter {
   }
 
   /**
-   * Parse SVG path data into point arrays
+   * Sample a browser-native SVG path when geometry APIs are available.
+   */
+  samplePathData(d, segmentLength = 4) {
+    if (typeof document === 'undefined' || !document.createElementNS) {
+      return null;
+    }
+
+    try {
+      const ns = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(ns, 'svg');
+      const path = document.createElementNS(ns, 'path');
+      path.setAttribute('d', d);
+      svg.appendChild(path);
+      svg.setAttribute('width', '0');
+      svg.setAttribute('height', '0');
+      svg.style.position = 'absolute';
+      svg.style.opacity = '0';
+      svg.style.pointerEvents = 'none';
+      document.body.appendChild(svg);
+
+      const totalLength = path.getTotalLength();
+      const samples = Math.max(8, Math.ceil(totalLength / segmentLength));
+      const points = [];
+
+      for (let i = 0; i <= samples; i++) {
+        const point = path.getPointAtLength((totalLength * i) / samples);
+        points.push({ x: point.x, y: point.y });
+      }
+
+      document.body.removeChild(svg);
+      return points;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  createPolylinePath(points, closed = false) {
+    return {
+      points: points.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y)),
+      closed
+    };
+  }
+
+  approximateEllipse(cx, cy, rx, ry, segments = 72) {
+    const points = [];
+    for (let i = 0; i <= segments; i++) {
+      const angle = (i / segments) * Math.PI * 2;
+      points.push({
+        x: cx + rx * Math.cos(angle),
+        y: cy + ry * Math.sin(angle)
+      });
+    }
+    return this.createPolylinePath(points, true);
+  }
+
+  /**
+   * Parse SVG path data into point arrays.
    */
   parseSVGPath(d) {
+    const sampled = this.samplePathData(d);
+    if (sampled && sampled.length > 1) {
+      return [this.createPolylinePath(sampled, /[Zz]\s*$/.test(d.trim()))];
+    }
+
     const paths = [];
-    const commands = d.match(/[MmLlHhVvCcSsQqTtAaZz][^MmLlHhVvCcSsQqTtAaZz]*/g);
+    const commands = d.match(/[MmLlHhVvZz][^MmLlHhVvZz]*/g);
     if (!commands) return paths;
 
     let currentPath = { points: [], closed: false };
-    let currentX = 0, currentY = 0;
-    let startX = 0, startY = 0;
+    let currentX = 0;
+    let currentY = 0;
+    let startX = 0;
+    let startY = 0;
 
-    commands.forEach(cmd => {
+    commands.forEach((cmd) => {
       const type = cmd[0];
-      const coords = cmd.slice(1).trim().split(/[\s,]+/).filter(s => s).map(parseFloat);
+      const coords = cmd.slice(1).trim().split(/[\s,]+/).filter(Boolean).map(parseFloat);
 
-      switch (type.toUpperCase()) {
+      switch (type) {
         case 'M':
+        case 'm':
           if (currentPath.points.length > 0) {
             paths.push(currentPath);
             currentPath = { points: [], closed: false };
@@ -196,26 +260,26 @@ class HPGLExporter {
           startY = currentY;
           currentPath.points.push({ x: currentX, y: currentY });
           break;
-
         case 'L':
+        case 'l':
           for (let i = 0; i < coords.length; i += 2) {
             currentX = type === 'L' ? coords[i] : currentX + coords[i];
             currentY = type === 'L' ? coords[i + 1] : currentY + coords[i + 1];
             currentPath.points.push({ x: currentX, y: currentY });
           }
           break;
-
         case 'H':
+        case 'h':
           currentX = type === 'H' ? coords[0] : currentX + coords[0];
           currentPath.points.push({ x: currentX, y: currentY });
           break;
-
         case 'V':
+        case 'v':
           currentY = type === 'V' ? coords[0] : currentY + coords[0];
           currentPath.points.push({ x: currentX, y: currentY });
           break;
-
         case 'Z':
+        case 'z':
           currentPath.points.push({ x: startX, y: startY });
           currentPath.closed = true;
           currentX = startX;
@@ -229,6 +293,86 @@ class HPGLExporter {
     }
 
     return paths;
+  }
+
+  /**
+   * Parse a full SVG document into plotter-ready path objects.
+   */
+  parseSVGContent(svgString) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgString, 'image/svg+xml');
+    const svg = doc.documentElement;
+
+    if (!svg || svg.tagName.toLowerCase() !== 'svg') {
+      return [];
+    }
+
+    const paths = [];
+    svg.querySelectorAll('path, line, polyline, polygon, rect, circle, ellipse').forEach((element) => {
+      const tag = element.tagName.toLowerCase();
+
+      if (tag === 'path') {
+        const d = element.getAttribute('d');
+        if (d) {
+          paths.push(...this.parseSVGPath(d));
+        }
+        return;
+      }
+
+      if (tag === 'line') {
+        paths.push(this.createPolylinePath([
+          { x: parseFloat(element.getAttribute('x1') || 0), y: parseFloat(element.getAttribute('y1') || 0) },
+          { x: parseFloat(element.getAttribute('x2') || 0), y: parseFloat(element.getAttribute('y2') || 0) }
+        ]));
+        return;
+      }
+
+      if (tag === 'polyline' || tag === 'polygon') {
+        const points = (element.getAttribute('points') || '')
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean)
+          .map((pair) => {
+            const [x, y] = pair.split(',').map(Number);
+            return { x, y };
+          });
+        paths.push(this.createPolylinePath(points, tag === 'polygon'));
+        return;
+      }
+
+      if (tag === 'rect') {
+        const x = parseFloat(element.getAttribute('x') || 0);
+        const y = parseFloat(element.getAttribute('y') || 0);
+        const width = parseFloat(element.getAttribute('width') || 0);
+        const height = parseFloat(element.getAttribute('height') || 0);
+        paths.push(this.createPolylinePath([
+          { x, y },
+          { x: x + width, y },
+          { x: x + width, y: y + height },
+          { x, y: y + height },
+          { x, y }
+        ], true));
+        return;
+      }
+
+      if (tag === 'circle') {
+        const cx = parseFloat(element.getAttribute('cx') || 0);
+        const cy = parseFloat(element.getAttribute('cy') || 0);
+        const r = parseFloat(element.getAttribute('r') || 0);
+        paths.push(this.approximateEllipse(cx, cy, r, r));
+        return;
+      }
+
+      if (tag === 'ellipse') {
+        const cx = parseFloat(element.getAttribute('cx') || 0);
+        const cy = parseFloat(element.getAttribute('cy') || 0);
+        const rx = parseFloat(element.getAttribute('rx') || 0);
+        const ry = parseFloat(element.getAttribute('ry') || 0);
+        paths.push(this.approximateEllipse(cx, cy, rx, ry));
+      }
+    });
+
+    return paths.filter((path) => path.points && path.points.length > 1);
   }
 }
 

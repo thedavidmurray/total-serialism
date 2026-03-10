@@ -21,7 +21,7 @@ total-serialism/
 ├── total-serialism-*.js          # Core JavaScript engines
 ├── total-serialism-*.html        # Various visualization interfaces
 ├── pen-plotter/                  # Pen plotter specific tools
-│   ├── algorithms/               # 65+ generative algorithms
+│   ├── algorithms/               # 97 generative algorithms
 │   │   ├── advanced/            # Complex pattern generators
 │   │   ├── flow-fields/         # Flow field visualizations
 │   │   ├── natural/            # Nature-inspired algorithms
@@ -93,7 +93,7 @@ See [PRESET-MANAGER-GUIDE.md](PRESET-MANAGER-GUIDE.md) for integration instructi
 
 ### 🎨 Quick Start - Algorithm Browser (NEW!)
 
-The easiest way to explore all 65+ algorithms:
+The easiest way to explore all 97 algorithms:
 
 1. Start a local server:
 ```bash

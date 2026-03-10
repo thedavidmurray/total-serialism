@@ -672,11 +672,27 @@
           <div class="stat-label">Algorithms</div>
         </div>
         <div class="stat">
-          <div class="stat-value">20</div>
+          <div class="stat-value" id="category-count">20</div>
           <div class="stat-label">Categories</div>
         </div>
       </div>
       <div class="header-actions">
+        <a href="../browse.html" class="header-btn" title="Open the ideation browser">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M3 6h18M3 12h18M3 18h12"/>
+          </svg>
+          <span>Ideate</span>
+        </a>
+        <button class="header-btn" id="surprise-btn" title="Jump to a random algorithm">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
+            <path d="M16 3h5v5"/>
+            <path d="M4 20L21 3"/>
+            <path d="M21 16v5h-5"/>
+            <path d="M15 15l6 6"/>
+            <path d="M4 4l5 5"/>
+          </svg>
+          <span>Surprise</span>
+        </button>
         <button class="header-btn" onclick="showHelp()" title="How to use">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
             <circle cx="12" cy="12" r="10"/>
@@ -766,29 +782,7 @@
           <button class="view-btn" data-view="list" title="List view">List</button>
         </div>
       </div>
-      <div class="filter-row" id="filters">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="geometric">Geometric</button>
-        <button class="filter-btn" data-filter="cellular-automata">Cellular</button>
-        <button class="filter-btn" data-filter="voronoi">Voronoi</button>
-        <button class="filter-btn" data-filter="flow-fields">Flow</button>
-        <button class="filter-btn" data-filter="natural">Natural</button>
-        <button class="filter-btn" data-filter="chemical">Chemical</button>
-        <button class="filter-btn" data-filter="reaction-diffusion">R-D</button>
-        <button class="filter-btn" data-filter="symmetry">Symmetry</button>
-        <button class="filter-btn" data-filter="physics">Physics</button>
-        <button class="filter-btn" data-filter="advanced">Advanced</button>
-        <button class="filter-btn" data-filter="trees-lsystems">L-Sys</button>
-        <button class="filter-btn" data-filter="image-processing">Image</button>
-        <button class="filter-btn" data-filter="curves">Curves</button>
-        <button class="filter-btn" data-filter="fluid-dynamics">Fluid</button>
-        <button class="filter-btn" data-filter="fractals">Fractals</button>
-        <button class="filter-btn" data-filter="textures">Textures</button>
-        <button class="filter-btn" data-filter="packing">Packing</button>
-        <button class="filter-btn" data-filter="hybrid">Hybrid</button>
-        <button class="filter-btn" data-filter="ai">AI</button>
-        <button class="filter-btn" data-filter="tools">Tools</button>
-      </div>
+      <div class="filter-row" id="filters"></div>
     </div>
   </div>
 
@@ -803,160 +797,47 @@
   </footer>
 
   <script>
-    // Algorithm catalog - all algorithms
-    const algorithms = [
-      // Geometric (15)
-      { name: "Spiral Burst", category: "geometric", path: "algorithms/geometric/spiral-burst-gui.html" },
-      { name: "Circle Rays", category: "geometric", path: "algorithms/geometric/circle-rays-gui.html" },
-      { name: "Perlin Circles", category: "geometric", path: "algorithms/geometric/perlin-circles-gui.html" },
-      { name: "Snowflakes", category: "geometric", path: "algorithms/geometric/snowflakes-gui.html" },
-      { name: "Hash Tiles", category: "geometric", path: "algorithms/geometric/hash-tiles-gui.html" },
-      { name: "10PRINT", category: "geometric", path: "algorithms/geometric/10print-gui.html" },
-      { name: "10PRINT Simple", category: "geometric", path: "algorithms/geometric/10print-simple.html" },
-      { name: "Circle Twist", category: "geometric", path: "algorithms/geometric/circle-twist-gui.html" },
-      { name: "Grid Landscape", category: "geometric", path: "algorithms/geometric/grid-landscape-gui.html" },
-      { name: "Islamic Patterns", category: "geometric", path: "algorithms/geometric/islamic-patterns-gui.html" },
-      { name: "Penrose Tiling", category: "geometric", path: "algorithms/geometric/penrose-tiling-gui.html" },
-      { name: "Perlin Landscape", category: "geometric", path: "algorithms/geometric/perlin-landscape-gui.html" },
-      { name: "Perlin Spiral", category: "geometric", path: "algorithms/geometric/perlin-spiral-gui.html" },
-      { name: "Spiral Fill", category: "geometric", path: "algorithms/geometric/spiral-fill.html" },
-      { name: "Spirotron", category: "geometric", path: "algorithms/geometric/spirotron-gui.html" },
-      { name: "Maze Generator", category: "geometric", path: "algorithms/geometric/maze-generator-gui.html" },
-      { name: "Moiré Patterns", category: "geometric", path: "algorithms/geometric/moire-patterns-gui.html" },
-      { name: "String Art", category: "geometric", path: "algorithms/geometric/string-art-gui.html" },
-      { name: "Topographic Contours", category: "geometric", path: "algorithms/geometric/topographic-contours-gui.html" },
-      { name: "Circuit Pattern", category: "geometric", path: "algorithms/geometric/circuit-pattern-gui.html" },
-
-      // Cellular Automata (4)
-      { name: "Game of Life", category: "cellular-automata", path: "algorithms/cellular-automata/game-of-life-gui.html" },
-      { name: "Game of Life Layers", category: "cellular-automata", path: "algorithms/cellular-automata/game-of-life-layers.html" },
-      { name: "Elementary CA", category: "cellular-automata", path: "algorithms/cellular-automata/elementary-ca.html" },
-      { name: "Elementary CA Layers", category: "cellular-automata", path: "algorithms/cellular-automata/elementary-ca-layers.html" },
-
-      // Voronoi (2)
-      { name: "Voronoi Stippling", category: "voronoi", path: "algorithms/voronoi/voronoi-stippling-gui.html" },
-      { name: "TSP Art", category: "voronoi", path: "algorithms/voronoi/tsp-art-gui.html" },
-
-      // Flow Fields (2)
-      { name: "Flow Field P5", category: "flow-fields", path: "algorithms/flow-fields/flow-field-p5-gui.html" },
-      { name: "Flow Field Collision", category: "flow-fields", path: "algorithms/flow-fields/flow-field-collision.html" },
-
-      // Natural (8)
-      { name: "Lightning", category: "natural", path: "algorithms/natural/lightning-gui.html" },
-      { name: "Coral Growth", category: "natural", path: "algorithms/natural/coral-growth-gui.html" },
-      { name: "Crystal Growth", category: "natural", path: "algorithms/natural/crystal-growth-gui.html" },
-      { name: "Astronomy", category: "natural", path: "algorithms/natural/astronomy-gui.html" },
-      { name: "Phyllotaxis", category: "natural", path: "algorithms/natural/phyllotaxis-gui.html" },
-      { name: "DLA Growth", category: "natural", path: "algorithms/natural/dla-gui.html" },
-      { name: "Physarum Slime", category: "natural", path: "algorithms/natural/physarum-gui.html" },
-      { name: "Space Colonization", category: "natural", path: "algorithms/natural/space-colonization-gui.html" },
-      { name: "Differential Growth", category: "natural", path: "algorithms/natural/differential-growth-gui.html" },
-
-      // Chemical (6)
-      { name: "Belousov-Zhabotinsky", category: "chemical", path: "algorithms/chemical/belousov-zhabotinsky-gui.html" },
-      { name: "Chromatography", category: "chemical", path: "algorithms/chemical/chromatography-gui.html" },
-      { name: "Convection Cells", category: "chemical", path: "algorithms/chemical/convection-cells-gui.html" },
-      { name: "Crystallization", category: "chemical", path: "algorithms/chemical/crystallization-gui.html" },
-      { name: "Liesegang Rings", category: "chemical", path: "algorithms/chemical/liesegang-rings-gui.html" },
-      { name: "Mixing Patterns", category: "chemical", path: "algorithms/chemical/mixing-patterns-gui.html" },
-
-      // Reaction-Diffusion (3)
-      { name: "Reaction-Diffusion", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-gui.html" },
-      { name: "Reaction-Diffusion Enhanced", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-enhanced.html" },
-      { name: "Reaction-Diffusion Layers", category: "reaction-diffusion", path: "algorithms/reaction-diffusion/reaction-diffusion-layers.html" },
-
-      // Symmetry (4)
-      { name: "Truchet Tiles", category: "symmetry", path: "algorithms/symmetry/truchet-tiles-gui.html" },
-      { name: "Kumiko Pattern", category: "symmetry", path: "algorithms/symmetry/kumiko-pattern.html" },
-      { name: "Zellige Pattern", category: "symmetry", path: "algorithms/symmetry/zellige-pattern.html" },
-      { name: "Aperiodic Tilings", category: "symmetry", path: "algorithms/symmetry/aperiodic-tilings-gui.html" },
-      { name: "Quilting Patterns", category: "symmetry", path: "algorithms/symmetry/quilting-patterns-gui.html" },
-
-      // Physics (5)
-      { name: "Particle System", category: "physics", path: "algorithms/physics/particle-system-gui.html" },
-      { name: "Boids Flocking", category: "physics", path: "algorithms/physics/boids-flocking-gui.html" },
-      { name: "Cloth Simulation", category: "physics", path: "algorithms/physics/cloth-simulation-gui.html" },
-      { name: "Magnetic Fields", category: "physics", path: "algorithms/physics/magnetic-field-gui.html" },
-      { name: "Wave Interference", category: "physics", path: "algorithms/physics/wave-interference-gui.html" },
-
-      // Advanced (5)
-      { name: "Chladni Patterns", category: "advanced", path: "algorithms/advanced/chladni-patterns-gui.html" },
-      { name: "Parametric Surfaces", category: "advanced", path: "algorithms/advanced/parametric-surfaces-gui.html" },
-      { name: "Sound Waveform", category: "advanced", path: "algorithms/advanced/sound-waveform-gui.html" },
-      { name: "Vortex Street", category: "advanced", path: "algorithms/advanced/vortex-street-gui.html" },
-      { name: "Strange Attractors", category: "advanced", path: "algorithms/advanced/strange-attractors-gui.html" },
-      { name: "Lorenz Attractor", category: "advanced", path: "algorithms/advanced/lorenz-attractor-gui.html" },
-
-      // Trees & L-Systems (3)
-      { name: "Tree", category: "trees-lsystems", path: "algorithms/trees-lsystems/tree-gui.html" },
-      { name: "Tree Working", category: "trees-lsystems", path: "algorithms/trees-lsystems/tree-working.html" },
-      { name: "L-System Simple", category: "trees-lsystems", path: "algorithms/trees-lsystems/lsystem-simple.html" },
-
-      // Image Processing (8)
-      { name: "ASCII Art", category: "image-processing", path: "algorithms/image-processing/ascii-art-gui.html" },
-      { name: "Dithering", category: "image-processing", path: "algorithms/image-processing/dithering-gui.html" },
-      { name: "Halftone", category: "image-processing", path: "algorithms/image-processing/halftone.html" },
-      { name: "Hatching", category: "image-processing", path: "algorithms/image-processing/hatching.html" },
-      { name: "Image to ASCII", category: "image-processing", path: "algorithms/image-processing/image-to-ascii-gui.html" },
-      { name: "SquiggleCam", category: "image-processing", path: "algorithms/image-processing/squigglecam.html" },
-      { name: "Contour Lines", category: "image-processing", path: "algorithms/image-processing/contour-lines-gui.html" },
-      { name: "Flow Hatching", category: "image-processing", path: "algorithms/image-processing/flow-hatching-gui.html" },
-
-      // Tools (6)
-      { name: "Canvas Runner", category: "tools", path: "algorithms/tools/canvas-runner.html" },
-      { name: "Debug Preview", category: "tools", path: "algorithms/tools/debug-preview-gui.html" },
-      { name: "Path Optimizer", category: "tools", path: "algorithms/tools/path-optimizer-gui.html" },
-      { name: "Plot Simulator", category: "tools", path: "algorithms/tools/plot-simulator.html" },
-      { name: "Plotter Export", category: "tools", path: "algorithms/tools/plotter-export-gui.html" },
-      { name: "Plotter Preview", category: "tools", path: "tools/plotter-preview-gui.html" },
-      { name: "Plotter Prep", category: "tools", path: "algorithms/tools/plotter-prep.html" },
-      { name: "Algorithm Validator", category: "tools", path: "algorithms/tools/algorithm-validator.html" },
-      { name: "Functional Validator", category: "tools", path: "algorithms/tools/functional-validator.html" },
-
-      // Curves (5)
-      { name: "Harmonograph", category: "curves", path: "algorithms/curves/harmonograph-gui.html" },
-      { name: "Hilbert Curve", category: "curves", path: "algorithms/curves/hilbert-curve-gui.html" },
-      { name: "Lissajous Curves", category: "curves", path: "algorithms/curves/lissajous-gui.html" },
-      { name: "Rose Curves", category: "curves", path: "algorithms/curves/rose-curves-gui.html" },
-      { name: "Space-Filling Curves", category: "curves", path: "algorithms/curves/space-filling-expanded-gui.html" },
-      { name: "Space-Filling (Standard)", category: "curves", path: "algorithms/curves/space-filling-curves-gui.html" },
-      { name: "Harmonograph (dat.GUI)", category: "curves", path: "algorithms/curves/harmonograph-datgui.html" },
-
-      // Fluid Dynamics (1)
-      { name: "Fluid Dynamics", category: "fluid-dynamics", path: "algorithms/fluid-dynamics/fluid-dynamics-gui.html" },
-
-      // Fractals (1)
-      { name: "Mandelbrot & Julia", category: "fractals", path: "algorithms/fractals/mandelbrot-julia-gui.html" },
-
-      // Other categories
-      { name: "Hatching Demo", category: "textures", path: "algorithms/textures/hatching-demo.html" },
-      { name: "Circle Packing", category: "packing", path: "algorithms/packing/circle-packing-gui.html" },
-      { name: "Hybrid Composer", category: "hybrid", path: "algorithms/hybrid/hybrid-composer-gui.html" },
-      { name: "ML5 Patterns", category: "ai", path: "algorithms/ai/ml5-patterns-gui.html" },
-      { name: "Neural Network Art", category: "ai", path: "algorithms/ai/neural-network-art-gui.html" }
-    ];
-
-    // DOM elements
+    let catalog = null;
+    let algorithms = [];
     const grid = document.getElementById('grid');
     const searchInput = document.getElementById('search');
     const filtersContainer = document.getElementById('filters');
     const visibleCountEl = document.getElementById('visible-count');
     const totalCountEl = document.getElementById('total-count');
+    const categoryCountEl = document.getElementById('category-count');
+    const surpriseBtn = document.getElementById('surprise-btn');
 
-    // State
     let currentFilter = 'all';
 
-    // Render cards
+    function renderFilters() {
+      const filters = ['<button class="filter-btn active" data-filter="all">All</button>'];
+      Object.entries(catalog.categories).forEach(([key, category]) => {
+        filters.push(`<button class="filter-btn" data-filter="${key}">${category.shortLabel}</button>`);
+      });
+      filtersContainer.innerHTML = filters.join('');
+    }
+
+    function normalizeText(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+    }
+
     function renderCards() {
       grid.innerHTML = algorithms.map(algo => `
-        <div class="card" data-category="${algo.category}" data-name="${algo.name.toLowerCase()}">
+        <div class="card" data-category="${algo.category}" data-search="${[
+          algo.name,
+          algo.description,
+          ...(algo.tags || [])
+        ].map(normalizeText).join(' ')}">
           <a href="${algo.path}" class="card-link">
             <div class="card-header">
               <span class="card-title">${algo.name}</span>
-              <span class="card-badge badge-${algo.category}">${formatCategory(algo.category)}</span>
+              <span class="card-badge badge-${algo.category}">${catalog.categories[algo.category]?.shortLabel || formatCategory(algo.category)}</span>
             </div>
             <div class="card-meta">
-              <span class="card-path">${algo.path.replace('algorithms/', '')}</span>
+              <span class="card-path">${algo.description}</span>
               <span class="card-arrow">&rarr;</span>
             </div>
           </a>
@@ -964,6 +845,7 @@
       `).join('');
 
       totalCountEl.textContent = algorithms.length;
+      categoryCountEl.textContent = Object.keys(catalog.categories).length;
       updateVisibleCount();
     }
 
@@ -974,17 +856,16 @@
         .join(' ');
     }
 
-    // Filter and search
     function applyFilters() {
-      const searchTerm = searchInput.value.toLowerCase().trim();
+      const searchTerm = normalizeText(searchInput.value).trim();
       const cards = document.querySelectorAll('.card');
 
       cards.forEach(card => {
         const category = card.dataset.category;
-        const name = card.dataset.name;
+        const haystack = card.dataset.search;
 
         const matchesFilter = currentFilter === 'all' || category === currentFilter;
-        const matchesSearch = !searchTerm || name.includes(searchTerm);
+        const matchesSearch = !searchTerm || haystack.includes(searchTerm);
 
         card.classList.toggle('hidden', !(matchesFilter && matchesSearch));
       });
@@ -1010,8 +891,13 @@
       }
     }
 
-    // Event listeners
     searchInput.addEventListener('input', applyFilters);
+    surpriseBtn.addEventListener('click', () => {
+      const visibleCards = [...document.querySelectorAll('.card:not(.hidden) a.card-link')];
+      if (visibleCards.length === 0) return;
+      const pick = visibleCards[Math.floor(Math.random() * visibleCards.length)];
+      window.location.href = pick.getAttribute('href');
+    });
 
     filtersContainer.addEventListener('click', (e) => {
       if (e.target.classList.contains('filter-btn')) {
@@ -1048,8 +934,22 @@
       if (e.key === 'Escape') closeHelp();
     });
 
-    // Initialize
-    renderCards();
+    fetch('../algorithm-catalog.json')
+      .then((response) => response.json())
+      .then((data) => {
+        catalog = data;
+        algorithms = data.algorithms;
+        renderFilters();
+        renderCards();
+      })
+      .catch(() => {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">&#9888;</div>
+            <div class="empty-text">Failed to load the algorithm catalog.</div>
+          </div>
+        `;
+      });
   </script>
 </body>
 </html>

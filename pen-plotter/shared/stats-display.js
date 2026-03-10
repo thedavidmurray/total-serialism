@@ -24,6 +24,12 @@
    */
   class TSStatsDisplay {
     constructor(options = {}) {
+      if (typeof options === 'string') {
+        options = {
+          containerSelector: options.startsWith('#') ? options : `#${options}`
+        };
+      }
+
       this.options = { ...DEFAULTS, ...options };
       this._container = null;
       this._barEl = null;
@@ -48,8 +54,8 @@
       // containerSelector is kept for backwards compatibility but bar goes to body
       this._container = document.querySelector(this.options.containerSelector);
       if (!this._container) {
-        console.error('[TSStatsDisplay] Container not found:', this.options.containerSelector);
-        return this;
+        console.warn('[TSStatsDisplay] Container not found, falling back to document.body:', this.options.containerSelector);
+        this._container = document.body;
       }
 
       // Create stats bar
@@ -181,6 +187,33 @@
           label: label || this._titleCase(key)
         });
       }
+    }
+
+    /**
+     * Backwards-compatible alias used by older algorithms.
+     * @param {string} label Human-readable label
+     * @param {number|string} value Stat value
+     */
+    add(label, value) {
+      this.set(this._statKey(label), value, label);
+    }
+
+    /**
+     * Backwards-compatible alias used by older algorithms.
+     * @param {string} label Human-readable label
+     * @param {number|string} value Stat value
+     */
+    setValue(label, value) {
+      this.set(this._statKey(label), value, label);
+    }
+
+    /**
+     * Backwards-compatible alias used by older algorithms.
+     * @param {string} label Human-readable label
+     * @param {number|string} value Stat value
+     */
+    setCustomStat(label, value) {
+      this.set(this._statKey(label), value, label);
     }
 
     /**
@@ -318,6 +351,17 @@
     }
 
     /**
+     * Normalize a human-readable stat label to a stable key.
+     */
+    _statKey(label) {
+      return String(label)
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '') || 'stat';
+    }
+
+    /**
      * Convert key to title case for label
      */
     _titleCase(str) {
@@ -366,6 +410,14 @@
      */
     setPoints(count) {
       this.set('points', count, 'Points');
+    }
+
+    /**
+     * Backwards-compatible helper for ring-based algorithms.
+     * @param {number} count
+     */
+    setRings(count) {
+      this.set('rings', count, 'Rings');
     }
 
     // ==========================================
@@ -428,6 +480,14 @@
       if (stats.plotTime !== undefined) this.setPlotTime(stats.plotTime);
       if (stats.penLifts !== undefined) this.setPenLifts(stats.penLifts);
       if (stats.pathCount !== undefined) this.setPathCount(stats.pathCount);
+    }
+
+    /**
+     * Backwards-compatible alias used by older algorithms.
+     * @param {Object|Array} stats
+     */
+    updateStats(stats) {
+      this.update(stats);
     }
   }
 

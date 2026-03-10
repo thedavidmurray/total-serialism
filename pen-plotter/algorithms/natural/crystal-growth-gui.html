@@ -342,6 +342,7 @@
         let animationFrames = [];
         let isGrowing = false;
         let presetManager;
+        let previewRenderTimer = null;
 
         // Initialize panel controller and stats display
         window.panelController = new TSPanelController().attach();
@@ -397,6 +398,8 @@
                     updateUIFromParams();
                 }
             });
+
+            updateUIFromParams();
         });
 
         // Helper function to update UI from params
@@ -423,6 +426,7 @@
 
             // Apply canvas size
             resizeCanvasForPaperSize();
+            schedulePreviewRender(0);
         }
 
         function resizeCanvasForPaperSize() {
@@ -430,6 +434,53 @@
             canvas.width = size.width;
             canvas.height = size.height;
             clearCanvas();
+        }
+
+        function schedulePreviewRender(delay = 80) {
+            clearTimeout(previewRenderTimer);
+            previewRenderTimer = setTimeout(() => {
+                if (!isGrowing) {
+                    renderCrystalPreview();
+                }
+            }, delay);
+        }
+
+        function renderCrystalPreview() {
+            clearTimeout(previewRenderTimer);
+            previewRenderTimer = null;
+            clearCanvas();
+
+            const crystal = new CrystalGrowth(canvas.width, canvas.height);
+            crystal.initializeSeed();
+
+            const previewParticles = Math.min(Math.max(Math.floor(params.particles * 0.08), 300), 2500);
+            let grown = 0;
+            let stagnantSteps = 0;
+
+            while (grown < previewParticles && stagnantSteps < 8) {
+                const added = crystal.growStep(Math.min(120, previewParticles - grown));
+                if (added <= 0) {
+                    stagnantSteps++;
+                } else {
+                    grown += added;
+                    stagnantSteps = 0;
+                }
+            }
+
+            crystalData = crystal;
+            crystal.draw(ctx);
+
+            if (window.statsDisplay) {
+                window.statsDisplay.update({
+                    crystals: crystal.particles.length,
+                    preview: 'Ready',
+                    age: crystal.age,
+                    type: params.crystalType,
+                    symmetry: params.symmetry === 'none' ? 'none' : params.symmetry + '-fold',
+                    seed: params.seedPattern,
+                    stickiness: params.stickiness.toFixed(2)
+                });
+            }
         }
 
         // Update value displays and params on input
@@ -447,6 +498,10 @@
                 if (key === 'paperSize') {
                     resizeCanvasForPaperSize();
                 }
+
+                if (key !== 'frameInterval') {
+                    schedulePreviewRender(key === 'particles' ? 140 : 80);
+                }
             });
         });
 
@@ -454,12 +509,13 @@
         document.getElementById('bgColor').addEventListener('input', (e) => {
             params.bgColor = e.target.value;
             if (crystalData) crystalData.draw(ctx);
-            else clearCanvas();
+            else schedulePreviewRender(0);
         });
 
         document.getElementById('strokeColor').addEventListener('input', (e) => {
             params.strokeColor = e.target.value;
             if (crystalData) crystalData.draw(ctx);
+            else schedulePreviewRender(0);
         });
 
         class CrystalGrowth {

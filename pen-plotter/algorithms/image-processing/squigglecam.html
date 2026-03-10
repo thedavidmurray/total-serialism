@@ -272,7 +272,6 @@
     // Global variables
     let img = null;
     let canvas;
-    let svgCanvas;
     let squiggleLines = [];
     let processing = false;
     let uploadHelper;
@@ -311,9 +310,6 @@
       const size = CanvasLayout.getSize(params.paperSize);
       canvas = createCanvas(size.width, size.height);
       canvas.parent('canvas-container');
-
-      // Initialize SVG canvas for export
-      svgCanvas = createGraphics(size.width, size.height, SVG);
 
       // Setup upload helper
       setupUploadHelper();
@@ -363,7 +359,6 @@
         params.paperSize = e.target.value;
         const size = CanvasLayout.getSize(params.paperSize);
         resizeCanvas(size.width, size.height);
-        svgCanvas = createGraphics(size.width, size.height, SVG);
         if (img) redraw();
       });
 
@@ -572,22 +567,23 @@
         return;
       }
 
-      // Create SVG content
-      svgCanvas.clear();
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(1);
-      svgCanvas.noFill();
+      const svg = TSExport.createSVG(
+        squiggleLines.map(line => ({
+          d: TSExport.pointsToPath(line),
+          stroke: '#000000',
+          strokeWidth: 1,
+          fill: 'none'
+        })),
+        width,
+        height,
+        {
+          backgroundColor: '#ffffff',
+          strokeColor: '#000000',
+          strokeWidth: 1
+        }
+      );
 
-      squiggleLines.forEach(line => {
-        svgCanvas.beginShape();
-        line.forEach(point => {
-          svgCanvas.vertex(point.x, point.y);
-        });
-        svgCanvas.endShape();
-      });
-
-      // Save SVG
-      save(svgCanvas, 'squigglecam-output.svg');
+      TSExport.downloadSVG(svg, 'squigglecam-output');
       showStatus('SVG exported successfully!', 'success');
     }
 

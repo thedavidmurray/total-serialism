@@ -127,7 +127,7 @@
             <input type="number" id="seed" min="1" max="999999" style="width:100%;padding:6px;background:var(--ts-bg-deep,#0a0a1a);border:1px solid var(--ts-border-default,#2a2a4a);border-radius:4px;color:var(--ts-text-primary,#e0e0e0);font-family:monospace;">
         </div>
 
-        <button onclick="toggleMic()">Start Microphone</button>
+        <button id="micToggleBtn" onclick="toggleMic()">Start Microphone</button>
         <button onclick="exportSVG()">Export SVG</button>
         <button onclick="clearCanvas()" class="stop">Clear</button>
         <button onclick="copyShareUrl()">📋 Copy Share URL</button>
@@ -255,8 +255,8 @@
                 }
             });
 
-            // Start with a simple sine wave for testing
-            noLoop();
+            updateStatus(false);
+            updateMicButton();
         }
 
         // Helper function to update UI from params
@@ -379,30 +379,66 @@
 
         function toggleMic() {
             if (!micActive) {
+                userStartAudio();
                 mic = new p5.AudioIn();
                 mic.start(() => {
                     micActive = true;
                     fft.setInput(mic);
                     amplitude.setInput(mic);
-                    loop();
                     updateStatus(true);
+                    updateMicButton();
+                }, () => {
+                    micActive = false;
+                    updateStatus(false, 'Microphone unavailable - demo signal active');
+                    updateMicButton();
                 });
             } else {
                 mic.stop();
                 micActive = false;
-                noLoop();
                 updateStatus(false);
+                updateMicButton();
             }
         }
 
-        function updateStatus(active) {
+        function updateMicButton() {
+            const micButton = document.getElementById('micToggleBtn');
+            if (micButton) {
+                micButton.textContent = micActive ? 'Stop Microphone' : 'Start Microphone';
+            }
+        }
+
+        function updateStatus(active, inactiveMessage) {
             const status = document.getElementById('status');
             if (active) {
                 status.className = 'status active';
                 status.textContent = 'Microphone Active';
             } else {
                 status.className = 'status inactive';
-                status.textContent = 'Microphone Inactive';
+                status.textContent = inactiveMessage || 'Demo Signal Active';
+            }
+        }
+
+        function generateDemoSignal() {
+            const sampleCount = Math.max(64, params.fftBins);
+            const time = millis() * 0.001 + params.seed * 0.0001;
+            waveform = [];
+            spectrum = [];
+
+            for (let i = 0; i < sampleCount; i++) {
+                const t = i / sampleCount;
+                const signal =
+                    sin(TWO_PI * (t * 2 + time * 0.65)) * 0.55 +
+                    sin(TWO_PI * (t * 5 - time * 0.32 + params.seed * 0.0003)) * 0.28 +
+                    sin(TWO_PI * (t * 11 + time * 0.17)) * 0.12;
+                waveform.push(constrain(signal * params.scale * 0.6, -1, 1));
+
+                const freqNorm = i / Math.max(1, sampleCount - 1);
+                const movingPeak = 0.16 + 0.05 * sin(time * 0.9);
+                const overtonePeak = 0.46 + 0.03 * cos(time * 0.55);
+                const band1 = exp(-pow((freqNorm - movingPeak) / 0.045, 2)) * 210;
+                const band2 = exp(-pow((freqNorm - overtonePeak) / 0.08, 2)) * 140;
+                const shimmer = 22 + 18 * sin(time * 4 + i * 0.19);
+                spectrum.push(constrain(band1 + band2 + shimmer, 0, 255));
             }
         }
 
@@ -419,69 +455,69 @@
             }
 
             if (micActive) {
-                // Get audio data
                 waveform = fft.waveform();
                 spectrum = fft.analyze();
+                updateStatus(true);
+            } else {
+                generateDemoSignal();
+            }
 
-                // Update frequency display
-                updateFrequencyDisplay();
+            updateFrequencyDisplay();
 
-                // Draw based on selected style
-                push();
-                translate(width / 2, height / 2);
+            push();
+            translate(width / 2, height / 2);
 
-                switch(params.vizStyle) {
-                    case 'oscilloscope':
-                        drawOscilloscope();
-                        break;
-                    case 'radial':
-                        drawRadial();
-                        break;
-                    case 'spiral':
-                        drawSpiral();
-                        break;
-                    case 'waterfall':
-                        drawWaterfall();
-                        break;
-                    case 'frequency':
-                        drawFrequencyBars();
-                        break;
-                    case 'circular':
-                        drawCircularFFT();
-                        break;
-                }
+            switch(params.vizStyle) {
+                case 'oscilloscope':
+                    drawOscilloscope();
+                    break;
+                case 'radial':
+                    drawRadial();
+                    break;
+                case 'spiral':
+                    drawSpiral();
+                    break;
+                case 'waterfall':
+                    drawWaterfall();
+                    break;
+                case 'frequency':
+                    drawFrequencyBars();
+                    break;
+                case 'circular':
+                    drawCircularFFT();
+                    break;
+            }
 
-                pop();
+            pop();
 
-                // Record paths if in recording mode
-                if (isRecording) {
-                    recordPath();
-                }
+            if (isRecording) {
+                recordPath();
+            }
 
-                // Update stats display
-                if (window.statsDisplay) {
-                    const nyquist = 22050;
-                    let maxAmp = 0;
-                    let dominantFreq = 0;
-                    for (let i = 0; i < spectrum.length; i++) {
-                        if (spectrum[i] > maxAmp) {
-                            maxAmp = spectrum[i];
-                            dominantFreq = map(i, 0, spectrum.length, 0, nyquist);
-                        }
+            if (window.statsDisplay) {
+                const nyquist = 22050;
+                let maxAmp = 0;
+                let dominantFreq = 0;
+                for (let i = 0; i < spectrum.length; i++) {
+                    if (spectrum[i] > maxAmp) {
+                        maxAmp = spectrum[i];
+                        dominantFreq = map(i, 0, spectrum.length, 0, nyquist);
                     }
-                    const peakDb = (20 * log(maxAmp / 255) / log(10)).toFixed(1);
-
-                    window.statsDisplay.update({
-                        'Style': params.vizStyle,
-                        'Frequency': `${dominantFreq.toFixed(0)} Hz`,
-                        'Peak': `${peakDb} dB`,
-                        'FFT Bins': params.fftBins,
-                        'Smoothing': params.smoothing.toFixed(2),
-                        'Samples': waveform.length,
-                        'Trails': params.trails ? 'On' : 'Off',
-                        'Recording': isRecording ? 'On' : 'Off'
-                    });
                 }
+                const safePeak = Math.max(maxAmp, 1);
+                const peakDb = (20 * log(safePeak / 255) / log(10)).toFixed(1);
+
+                window.statsDisplay.update({
+                    'Input': micActive ? 'Microphone' : 'Demo Signal',
+                    'Style': params.vizStyle,
+                    'Frequency': `${dominantFreq.toFixed(0)} Hz`,
+                    'Peak': `${peakDb} dB`,
+                    'FFT Bins': params.fftBins,
+                    'Smoothing': params.smoothing.toFixed(2),
+                    'Samples': waveform.length,
+                    'Trails': params.trails ? 'On' : 'Off',
+                    'Recording': isRecording ? 'On' : 'Off'
+                });
             }
         }
 

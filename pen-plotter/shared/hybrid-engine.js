@@ -134,8 +134,15 @@
         }
 
         try {
+          const payload = {
+            width: this.width,
+            height: this.height,
+            ...layer.parameters
+          };
           const result = await Promise.resolve(
-            algorithm.generate(this.width, this.height, layer.parameters)
+            algorithm.generate.length >= 3
+              ? algorithm.generate(this.width, this.height, layer.parameters)
+              : algorithm.generate(payload)
           );
           this.generatedPaths.set(layer.id, result.paths || []);
         } catch (e) {
@@ -155,6 +162,8 @@
       canvas.width = this.width;
       canvas.height = this.height;
       const ctx = canvas.getContext('2d');
+      const getX = (point) => Array.isArray(point) ? point[0] : point?.x;
+      const getY = (point) => Array.isArray(point) ? point[1] : point?.y;
 
       // White background
       ctx.fillStyle = '#ffffff';
@@ -180,20 +189,15 @@
           if (Array.isArray(path) && path.length > 0) {
             ctx.beginPath();
             const first = path[0];
-            ctx.moveTo(first.x || first[0], first.y || first[1]);
+            ctx.moveTo(getX(first), getY(first));
 
             for (let i = 1; i < path.length; i++) {
               const p = path[i];
-              ctx.lineTo(p.x || p[0], p.y || p[1]);
+              ctx.lineTo(getX(p), getY(p));
             }
             ctx.stroke();
 
-            // Also add to composed paths for SVG export
-            composedPaths.push({
-              points: path,
-              opacity: layer.opacity,
-              blendMode: layer.blendMode
-            });
+            composedPaths.push(path.map((point) => [getX(point), getY(point)]));
           }
         }
 
@@ -230,6 +234,8 @@
      */
     exportSVG() {
       let pathsMarkup = '';
+      const getX = (point) => Array.isArray(point) ? point[0] : point?.x;
+      const getY = (point) => Array.isArray(point) ? point[1] : point?.y;
 
       for (const layer of this.layers) {
         if (!layer.enabled) continue;
@@ -239,11 +245,11 @@
         for (const path of paths) {
           if (Array.isArray(path) && path.length > 1) {
             const first = path[0];
-            let d = `M ${first.x || first[0]} ${first.y || first[1]}`;
+            let d = `M ${getX(first)} ${getY(first)}`;
 
             for (let i = 1; i < path.length; i++) {
               const p = path[i];
-              d += ` L ${p.x || p[0]} ${p.y || p[1]}`;
+              d += ` L ${getX(p)} ${getY(p)}`;
             }
 
             pathsMarkup += `  <path d="${d}" stroke="#000000" stroke-width="1" fill="none" opacity="${layer.opacity}" stroke-linecap="round" stroke-linejoin="round"/>\n`;

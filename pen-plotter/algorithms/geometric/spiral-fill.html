@@ -247,7 +247,6 @@
 
     // Global variables
     let canvas;
-    let svgCanvas;
     let spiralPath = [];
     let shapePath = [];
     let currentShape = 'circle';
@@ -319,9 +318,6 @@
       const canvasSize = parseInt(document.getElementById('canvasSize').value);
       canvas = createCanvas(canvasSize, canvasSize);
       canvas.parent('canvas-wrapper');
-
-      // Initialize SVG canvas for export
-      svgCanvas = createGraphics(canvasSize, canvasSize, SVG);
 
       background(255);
       strokeWeight(1);
@@ -737,55 +733,30 @@
         console.log(`[Spiral] Optimized: ${spiralPath.length} → ${exportPath.length} points`);
       }
 
-      // Create SVG content
-      svgCanvas.clear();
-      svgCanvas.push();
-      svgCanvas.translate(svgCanvas.width / 2, svgCanvas.height / 2);
-      svgCanvas.rotate(radians(parseInt(document.getElementById('rotation').value)));
+      const rotation = parseInt(document.getElementById('rotation').value);
+      const elements = [];
 
-      // Draw shape outline
       if (document.getElementById('showShape').checked) {
-        svgCanvas.stroke(200);
-        svgCanvas.strokeWeight(1);
-        svgCanvas.noFill();
-
-        svgCanvas.beginShape();
-        shapePath.forEach(point => {
-          svgCanvas.vertex(point.x, point.y);
-        });
-        svgCanvas.endShape(CLOSE);
+        elements.push(`    <path d="${TSExport.pointsToPath(shapePath, true)}" stroke="#c8c8c8" stroke-width="1" fill="none"/>`);
       }
 
-      // Draw spiral
-      svgCanvas.stroke(0);
-      svgCanvas.strokeWeight(1);
-      svgCanvas.noFill();
-
       if (document.getElementById('clipToShape').checked) {
-        // Export only clipped portions
         for (let i = 0; i < exportPath.length - 1; i++) {
           const p1 = exportPath[i];
           const p2 = exportPath[i + 1];
-
           const inside1 = isPointInShape(p1, shapePath);
           const inside2 = isPointInShape(p2, shapePath);
 
           if (inside1 && inside2) {
-            svgCanvas.line(p1.x, p1.y, p2.x, p2.y);
+            elements.push(`    <line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#000000" stroke-width="1" fill="none"/>`);
           }
         }
       } else {
-        svgCanvas.beginShape();
-        exportPath.forEach(point => {
-          svgCanvas.vertex(point.x, point.y);
-        });
-        svgCanvas.endShape();
+        elements.push(`    <path d="${TSExport.pointsToPath(exportPath)}" stroke="#000000" stroke-width="1" fill="none"/>`);
       }
 
-      svgCanvas.pop();
-
-      // Save SVG
-      save(svgCanvas, 'spiral-fill.svg');
+      const svg = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${canvasSize}" height="${canvasSize}" viewBox="0 0 ${canvasSize} ${canvasSize}">\n  <rect width="100%" height="100%" fill="#ffffff"/>\n  <g transform="translate(${canvasSize / 2} ${canvasSize / 2}) rotate(${rotation})">\n${elements.join('\n')}\n  </g>\n</svg>`;
+      TSExport.downloadSVG(svg, 'spiral-fill');
       showStatus('SVG exported successfully!', 'success');
     }
 
@@ -888,7 +859,6 @@
         if (e.target.id === 'canvasSize') {
           const size = parseInt(e.target.value);
           resizeCanvas(size, size);
-          svgCanvas = createGraphics(size, size, SVG);
           generateSpiral();
         }
       });
