@@ -190,6 +190,82 @@
             margin-bottom: 18px;
         }
 
+        .focus-guidance-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .focus-guidance-card {
+            padding: 16px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .focus-guidance-title {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 700;
+            opacity: 0.72;
+        }
+
+        .focus-guidance-copy {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .focus-chip-row,
+        .focus-workflow-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .focus-workflow-link {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 180px;
+            padding: 10px 12px;
+            text-decoration: none;
+            color: #fff;
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .focus-workflow-link:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
+
+        .focus-workflow-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .focus-workflow-copy {
+            font-size: 12px;
+            line-height: 1.5;
+            opacity: 0.78;
+        }
+
+        .focus-prompt-list {
+            margin: 0;
+            padding-left: 18px;
+            display: grid;
+            gap: 8px;
+            font-size: 13px;
+            line-height: 1.55;
+            opacity: 0.92;
+        }
+
         .focus-trail-link {
             display: inline-flex;
             align-items: center;
@@ -655,6 +731,10 @@
                 font-size: 24px;
             }
 
+            .focus-guidance-grid {
+                grid-template-columns: 1fr;
+            }
+
             .algorithm-main-link {
                 padding: 18px 18px 12px;
             }
@@ -797,6 +877,29 @@
                         title="${escapeHtml(trail.description)}"
                     >${escapeHtml(trail.label)} <span>${escapeHtml(trail.algo.name)}</span></a>
                 `)
+                .join('');
+        }
+
+        function renderWorkflowLinks(algo) {
+            return TSDiscovery.getWorkflowSteps(catalog, algo)
+                .map((tool) => `
+                    <a href="${tool.path}" class="focus-workflow-link">
+                        <span class="focus-workflow-name">${escapeHtml(tool.name)}</span>
+                        <span class="focus-workflow-copy">${escapeHtml(tool.guidance)}</span>
+                    </a>
+                `)
+                .join('');
+        }
+
+        function renderPromptList(algo) {
+            return TSDiscovery.getIdeationPrompts(algo)
+                .map((prompt) => `<li>${escapeHtml(prompt)}</li>`)
+                .join('');
+        }
+
+        function renderUseCaseChips(algo) {
+            return TSDiscovery.getUseCaseLabels(algo)
+                .map((label) => renderBadge(label, 'badge-medium'))
                 .join('');
         }
 
@@ -960,6 +1063,24 @@
                         ${renderBadge(TSDiscovery.getPlotterReadinessLabel(focusAlgorithm.plotterReadiness), `badge-readiness ${focusAlgorithm.plotterReadiness}`)}
                         ${renderBadge(focusAlgorithm.complexity, `badge-complexity ${focusAlgorithm.complexity}`)}
                         ${(focusAlgorithm.engine || []).slice(0, 2).map((engine) => renderBadge(engine.toUpperCase(), 'badge-engine')).join('')}
+                    </div>
+                    <div class="focus-guidance-grid">
+                        <section class="focus-guidance-card">
+                            <div class="focus-guidance-title">Plotter Path</div>
+                            <div class="focus-guidance-copy">${escapeHtml(TSDiscovery.getPlotterSummary(focusAlgorithm))}</div>
+                            <div class="focus-chip-row">
+                                ${renderUseCaseChips(focusAlgorithm)}
+                            </div>
+                            <div class="focus-workflow-links">
+                                ${renderWorkflowLinks(focusAlgorithm)}
+                            </div>
+                        </section>
+                        <section class="focus-guidance-card">
+                            <div class="focus-guidance-title">Try This Next</div>
+                            <ul class="focus-prompt-list">
+                                ${renderPromptList(focusAlgorithm)}
+                            </ul>
+                        </section>
                     </div>
                     <div class="focus-trails">
                         ${renderTrailLinks(focusAlgorithm, 'focus-trail-link')}

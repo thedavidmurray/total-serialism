@@ -1625,12 +1625,92 @@ body .back-link::before {
   color: var(--ts-text-secondary);
 }
 
+.ts-guidance-chip-row,
 .ts-discovery-badges,
 .ts-discovery-trails,
 .ts-discovery-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--ts-space-sm);
+}
+
+.ts-discovery-badge.is-subtle {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ts-text-primary);
+}
+
+.ts-guidance-grid {
+  display: grid;
+  gap: var(--ts-space-sm);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ts-guidance-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ts-space-sm);
+  padding: var(--ts-space-md);
+  border-radius: var(--ts-radius-md);
+  border: 1px solid var(--ts-border-default);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.ts-guidance-title {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ts-text-muted);
+}
+
+.ts-guidance-copy {
+  font-size: 0.74rem;
+  line-height: 1.6;
+  color: var(--ts-text-secondary);
+}
+
+.ts-guidance-links {
+  display: grid;
+  gap: var(--ts-space-sm);
+}
+
+.ts-guidance-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem;
+  text-decoration: none;
+  border-radius: var(--ts-radius-md);
+  color: var(--ts-text-primary);
+  border: 1px solid var(--ts-border-default);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color var(--ts-transition-fast), transform var(--ts-transition-fast), color var(--ts-transition-fast);
+}
+
+.ts-guidance-link:hover {
+  color: var(--ts-accent-primary);
+  border-color: var(--ts-accent-primary);
+  transform: translateY(-1px);
+}
+
+.ts-guidance-link-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.ts-guidance-link-copy {
+  font-size: 0.66rem;
+  line-height: 1.5;
+  color: var(--ts-text-secondary);
+}
+
+.ts-guidance-prompts {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--ts-text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.55;
 }
 
 .ts-discovery-trail {
@@ -1736,6 +1816,10 @@ body .back-link::before {
 }
 
 @media (max-width: 720px) {
+  .ts-guidance-grid {
+    grid-template-columns: 1fr;
+  }
+
   .ts-discovery-card {
     grid-template-columns: 1fr;
   }
