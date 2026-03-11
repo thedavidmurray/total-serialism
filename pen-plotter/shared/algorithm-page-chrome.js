@@ -115,10 +115,37 @@
       .join('');
   }
 
+  function renderWorkflowSteps(catalog, currentAlgorithm) {
+    return global.TSDiscovery.getWorkflowSteps(catalog, currentAlgorithm)
+      .map((tool) => `
+        <a href="${tool.path}" class="ts-guidance-link">
+          <span class="ts-guidance-link-name">${escapeHtml(tool.name)}</span>
+          <span class="ts-guidance-link-copy">${escapeHtml(tool.guidance)}</span>
+        </a>
+      `)
+      .join('');
+  }
+
+  function renderPromptList(currentAlgorithm) {
+    return global.TSDiscovery.getIdeationPrompts(currentAlgorithm)
+      .map((prompt) => `<li>${escapeHtml(prompt)}</li>`)
+      .join('');
+  }
+
+  function renderUseCases(currentAlgorithm) {
+    return global.TSDiscovery.getUseCaseLabels(currentAlgorithm)
+      .map((label) => renderBadge(label, 'is-subtle'))
+      .join('');
+  }
+
   function buildPanelMarkup(catalog, currentAlgorithm, browseUrl) {
     const accent = global.TSDiscovery.getPreviewAccent(currentAlgorithm);
     const trails = renderTrailLinks(catalog, currentAlgorithm);
     const relatedCards = renderRelatedCards(catalog, currentAlgorithm);
+    const workflowSteps = renderWorkflowSteps(catalog, currentAlgorithm);
+    const promptList = renderPromptList(currentAlgorithm);
+    const useCases = renderUseCases(currentAlgorithm);
+    const plotterSummary = global.TSDiscovery.getPlotterSummary(currentAlgorithm);
 
     return `
       <details class="ts-discovery-panel" open>
@@ -143,6 +170,18 @@
             ${renderBadge(currentAlgorithm.complexity)}
             ${currentAlgorithm.hasPresets ? renderBadge('Presets') : ''}
             ${(currentAlgorithm.engine || []).slice(0, 1).map((engine) => renderBadge(engine.toUpperCase())).join('')}
+          </div>
+          ${useCases ? `<div class="ts-guidance-chip-row">${useCases}</div>` : ''}
+          <div class="ts-guidance-grid">
+            <section class="ts-guidance-block">
+              <div class="ts-guidance-title">Plotter Path</div>
+              <div class="ts-guidance-copy">${escapeHtml(plotterSummary)}</div>
+              ${workflowSteps ? `<div class="ts-guidance-links">${workflowSteps}</div>` : ''}
+            </section>
+            <section class="ts-guidance-block">
+              <div class="ts-guidance-title">Try This Next</div>
+              ${promptList ? `<ul class="ts-guidance-prompts">${promptList}</ul>` : '<div class="ts-guidance-copy">Change one control family at a time and keep the first seed that survives simplification.</div>'}
+            </section>
           </div>
           ${trails ? `<div class="ts-discovery-trails">${trails}</div>` : ''}
           ${relatedCards ? `<div class="ts-discovery-grid">${relatedCards}</div>` : ''}

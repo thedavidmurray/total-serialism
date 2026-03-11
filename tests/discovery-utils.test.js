@@ -43,4 +43,26 @@ describe('discovery utils', () => {
     expect(style).toMatch(/background-image:/);
     expect(style).toMatch(/background-size:/);
   });
+
+  test('builds a plotter workflow for native and screen-first algorithms', () => {
+    const arrowsSteps = TSDiscovery.getWorkflowSteps(catalog, 'arrows');
+    expect(arrowsSteps.map((step) => step.id)).toEqual(['plotter-prep', 'path-optimizer', 'plotter-preview']);
+
+    const neuralSteps = TSDiscovery.getWorkflowSteps(catalog, 'neural-network-art');
+    expect(neuralSteps.map((step) => step.id)).toContain('plotter-export');
+    expect(neuralSteps.map((step) => step.id)).toContain('plotter-prep');
+  });
+
+  test('generates plotter summaries and ideation prompts', () => {
+    const arrows = catalog.algorithms.find((algo) => algo.id === 'arrows');
+    const summary = TSDiscovery.getPlotterSummary(arrows);
+    const prompts = TSDiscovery.getIdeationPrompts(arrows);
+
+    expect(summary).toMatch(/pen plotting|SVG|cleanup|plotting/i);
+    expect(prompts.length).toBe(3);
+    prompts.forEach((prompt) => {
+      expect(typeof prompt).toBe('string');
+      expect(prompt.length).toBeGreaterThan(30);
+    });
+  });
 });
