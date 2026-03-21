@@ -64,3 +64,8 @@ test-results/
 
 # GitHub workflows (add manually - can't be pushed via Claude Code)
 .github/
+# Playwright CLI artifacts
+.playwright-cli/
+
+# Test runner reports
+pen-plotter/algorithms/tools/test-runner/reports/
