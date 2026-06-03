@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <title>Curves Factory - Pen Plotter Art</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://unpkg.com/p5.js-svg@1.5.1"></script>
+    <script src="../../shared/export-utils.js"></script>
+    <link rel="stylesheet" href="../../shared/algorithm.css">
+    <style>
+        :root {
+            --ts-bg-deep: #0a0a0f;
+            --ts-bg-base: #12121a;
+            --ts-bg-panel: #1a1a24;
+            --ts-bg-elevated: #24242f;
+            --ts-border-subtle: #2a2a3a;
+            --ts-border-default: #3a3a4a;
+            --ts-text-primary: #e8e8ed;
+            --ts-text-secondary: #a0a0b0;
+            --ts-text-muted: #606070;
+            --ts-text-inverse: #0a0a0f;
+            --ts-accent-primary: #6366f1;
+            --ts-accent-hover: #818cf8;
+            --ts-accent-muted: rgba(99, 102, 241, 0.15);
+            --ts-accent-danger: #ef4444;
+            --ts-accent-success: #22c55e;
+            --ts-accent-warning: #f59e0b;
+        }
+        body {
+            margin: 0;
+            display: flex;
+            background: var(--ts-bg-deep);
+            color: var(--ts-text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            background: var(--ts-bg-base);
+        }
+        #controls {
+            width: 380px;
+            padding: 20px;
+            background: var(--ts-bg-panel);
+            height: 100vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+            border-left: 1px solid var(--ts-border-subtle);
+        }
+        canvas {
+            border: 1px solid var(--ts-border-subtle);
+        }
+        h2 {
+            margin: 0 0 20px 0;
+            color: var(--ts-accent-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        h3 {
+            font-size: 0.8rem;
+            margin: 24px 0 12px 0;
+            color: var(--ts-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 500;
+            border-bottom: 1px solid var(--ts-border-subtle);
+            padding-bottom: 6px;
+        }
+        .control-group {
+            margin-bottom: 14px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--ts-text-secondary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        input[type="range"] {
+            width: 100%;
+            margin-bottom: 4px;
+            accent-color: var(--ts-accent-primary);
+        }
+        input[type="number"], select, input[type="color"] {
+            width: 100%;
+            background: var(--ts-bg-elevated);
+            border: 1px solid var(--ts-border-subtle);
+            color: var(--ts-text-primary);
+            padding: 6px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            box-sizing: border-box;
+        }
+        input[type="color"] {
+            padding: 2px;
+            height: 32px;
+            cursor: pointer;
+        }
+        .value-display {
+            font-size: 11px;
+            color: var(--ts-accent-primary);
+            text-align: right;
+            display: block;
+            margin-top: 2px;
+        }
+        .button-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        button {
+            flex: 1;
+            background: var(--ts-accent-primary);
+            color: var(--ts-text-inverse);
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: var(--ts-accent-hover);
+        }
+        button.secondary {
+            background: var(--ts-bg-elevated);
+            color: var(--ts-text-primary);
+            border: 1px solid var(--ts-border-default);
+        }
+        button.secondary:hover {
+            background: var(--ts-border-subtle);
+        }
+        button.danger {
+            background: var(--ts-accent-danger);
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .checkbox-group input[type="checkbox"] {
+            accent-color: var(--ts-accent-primary);
+        }
+        .checkbox-group label {
+            margin: 0;
+            text-transform: none;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .info-badge {
+            display: inline-block;
+            background: var(--ts-accent-muted);
+            color: var(--ts-accent-primary);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="canvas-wrapper"></div>
+    </div>
+
+    <div id="controls">
+        <h2>Curves Factory</h2>
+        <div class="info-badge">Harmonograph-based | 6 curve systems</div>
+
+        <h3>Factory Mode</h3>
+        <div class="control-group">
+            <label for="mode">Algorithm</label>
+            <select id="mode">
+                <option value="harmonograph">Harmonograph (Pendulum)</option>
+                <option value="hilbert">Hilbert Curve (Space-filling)</option>
+                <option value="lissajous">Lissajous Curves (Harmonic)</option>
+                <option value="rose">Rose Curves (Polar)</option>
+                <option value="spacefill">Space-Filling (Recursive)</option>
+                <option value="dragon">Dragon Curve (Fractal)</option>
+            </select>
+        </div>
+
+        <h3>Canvas</h3>
+        <div class="control-group">
+            <label for="paperSize">Paper Size</label>
+            <select id="paperSize">
+                <option value="A4_landscape">A4 Landscape</option>
+                <option value="A4_portrait">A4 Portrait</option>
+                <option value="A3_landscape">A3 Landscape</option>
+                <option value="A3_portrait">A3 Portrait</option>
+                <option value="square_medium">Square Medium</option>
+                <option value="square_large">Square Large</option>
+            </select>
+        </div>
+        <div class="control-group">
+            <label for="bgColor">Background</label>
+            <input type="color" id="bgColor" value="#ffffff">
+        </div>
+        <div class="control-group">
+            <label for="strokeColor">Stroke Color</label>
+            <input type="color" id="strokeColor" value="#000000">
+        </div>
+        <div class="control-group">
+            <label for="accentColor">Accent Color</label>
+            <input type="color" id="accentColor" value="#6366f1">
+        </div>
+
+        <h3>Core Parameters</h3>
+        <div class="control-group">
+            <label for="frequency">Frequency A <span class="value-display" id="frequency-val">3.0</span></label>
+            <input type="range" id="frequency" min="0.5" max="20" step="0.5" value="3.0">
+        </div>
+        <div class="control-group">
+            <label for="frequencyB">Frequency B <span class="value-display" id="frequencyB-val">2.0</span></label>
+            <input type="range" id="frequencyB" min="0.5" max="20" step="0.5" value="2.0">
+        </div>
+        <div class="control-group">
+            <label for="amplitude">Amplitude <span class="value-display" id="amplitude-val">200</span></label>
+            <input type="range" id="amplitude" min="50" max="400" step="10" value="200">
+        </div>
+        <div class="control-group">
+            <label for="damping">Damping <span class="value-display" id="damping-val">0.002</span></label>
+            <input type="range" id="damping" min="0" max="0.01" step="0.001" value="0.002">
+        </div>
+        <div class="control-group">
+            <label for="phase">Phase Shift <span class="value-display" id="phase-val">0.5</span></label>
+            <input type="range" id="phase" min="0" max="2" step="0.05" value="0.5">
+        </div>
+        <div class="control-group">
+            <label for="iterations">Iterations / Depth <span class="value-display" id="iterations-val">6</span></label>
+            <input type="range" id="iterations" min="1" max="12" step="1" value="6">
+        </div>
+
+        <h3>Blending</h3>
+        <div class="control-group">
+            <label for="layers">Layers <span class="value-display" id="layers-val">3</span></label>
+            <input type="range" id="layers" min="1" max="10" step="1" value="3">
+        </div>
+        <div class="control-group">
+            <label for="rotation">Rotation <span class="value-display" id="rotation-val">0</span></label>
+            <input type="range" id="rotation" min="0" max="360" step="5" value="0">
+        </div>
+        <div class="control-group">
+            <label for="noise">Noise Influence <span class="value-display" id="noise-val">0.1</span></label>
+            <input type="range" id="noise" min="0" max="1" step="0.05" value="0.1">
+        </div>
+
+        <h3>Render</h3>
+        <div class="checkbox-group">
+            <input type="checkbox" id="showGrid">
+            <label for="showGrid">Show Grid</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="plotterOptimized" checked>
+            <label for="plotterOptimized">Plotter Optimized</label>
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="showPoints">
+            <label for="showPoints">Show Points</label>
+        </div>
+
+        <h3>Seed</h3>
+        <div class="control-group">
+            <label>Seed: <span id="seed-display">-</span></label>
+            <input type="number" id="seed" min="1" max="999999" style="width:100%;">
+        </div>
+
+        <h3>Actions</h3>
+        <div class="button-row">
+            <button id="regenerate">Regenerate</button>
+            <button id="randomize" class="secondary">Randomize</button>
+        </div>
+
+        <h3>Export</h3>
+        <div class="button-row">
+            <button id="exportSVG" class="secondary">SVG</button>
+            <button id="exportPNG" class="secondary">PNG</button>
+        </div>
+
+        <h3>Presets</h3>
+        <div class="preset-row">
+            <input type="text" id="preset-name" placeholder="preset name" style="flex:1;background:var(--ts-bg-elevated);border:1px solid var(--ts-border-subtle);color:var(--ts-text-primary);padding:6px 8px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;">
+            <button id="save-preset" style="flex:0 0 auto;padding:6px 10px;">Save</button>
+        </div>
+        <div class="control-group">
+            <select id="preset-select">
+                <option value="">-- Select Preset --</option>
+            </select>
+        </div>
+        <div class="button-row">
+            <button id="load-preset" class="secondary">Load</button>
+            <button id="delete-preset" class="danger">Delete</button>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // CURVES FACTORY - Core Parameter Space
+        // ==========================================
+
+        let params = {
+            mode: 'harmonograph',
+            paperSize: 'A4_landscape',
+            bgColor: '#ffffff',
+            strokeColor: '#000000',
+            accentColor: '#6366f1',
+            frequency: 3.0,
+            frequencyB: 2.0,
+            amplitude: 200,
+            damping: 0.002,
+            phase: 0.5,
+            iterations: 6,
+            layers: 3,
+            rotation: 0,
+            noise: 0.1,
+            showGrid: false,
+            plotterOptimized: true,
+            showPoints: false,
+            seed: Math.floor(Math.random() * 1000000)
+        };
+
+        const paperSizes = {
+            'A4_landscape': { width: 842, height: 595 },
+            'A4_portrait': { width: 595, height: 842 },
+            'A3_landscape': { width: 1191, height: 842 },
+            'A3_portrait': { width: 842, height: 1191 },
+            'square_medium': { width: 600, height: 600 },
+            'square_large': { width: 800, height: 800 }
+        };
+
+        let canvasWidth, canvasHeight;
+        let seedRandom;
+        let paths = [];
+
+        function setSeed(s) {
+            params.seed = s;
+            document.getElementById('seed-display').textContent = s;
+            document.getElementById('seed').value = s;
+            let _s = s;
+            seedRandom = () => {
+                _s |= 0;
+                _s = _s + 0x6D2B79F5 | 0;
+                let t = Math.imul(_s ^ _s >>> 15, 1 | _s);
+                t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+                return ((t ^ t >>> 14) >>> 0) / 4294967296;
+            };
+        }
+
+        function setup() {
+            updateCanvasSize();
+            const c = createCanvas(canvasWidth, canvasHeight);
+            c.parent('canvas-wrapper');
+            noLoop();
+            setSeed(params.seed);
+            setupControls();
+            loadPresets();
+            regenerate();
+        }
+
+        function updateCanvasSize() {
+            const size = paperSizes[params.paperSize];
+            const maxW = window.innerWidth - 400;
+            const maxH = window.innerHeight - 40;
+            const scale = Math.min(maxW / size.width, maxH / size.height, 1);
+            canvasWidth = Math.floor(size.width * scale);
+            canvasHeight = Math.floor(size.height * scale);
+        }
+
+        function windowResized() {
+            updateCanvasSize();
+            resizeCanvas(canvasWidth, canvasHeight);
+            regenerate();
+        }
+
+        function draw() {
+            background(params.bgColor);
+            paths = [];
+
+            push();
+            translate(width / 2, height / 2);
+            rotate(radians(params.rotation));
+
+            switch (params.mode) {
+                case 'harmonograph': drawHarmonograph(); break;
+                case 'hilbert': drawHilbert(); break;
+                case 'lissajous': drawLissajous(); break;
+                case 'rose': drawRose(); break;
+                case 'spacefill': drawSpaceFill(); break;
+                case 'dragon': drawDragon(); break;
+            }
+
+            pop();
+
+            if (params.plotterOptimized && paths.length > 0) {
+                drawPathsOptimized();
+            }
+
+            if (params.showPoints) {
+                drawPoints();
+            }
+
+            if (params.showGrid) {
+                drawGrid();
+            }
+        }
+
+        // ==========================================
+        // Harmonograph: Pendulum Physics
+        // ==========================================
+        function drawHarmonograph() {
+            const points = 2000;
+            const amp = params.amplitude;
+            const freq1 = params.frequency;
+            const freq2 = params.frequencyB;
+            const damp = params.damping;
+            const phase = params.phase * PI;
+            const layers = params.layers;
+
+            for (let l = 0; l < layers; l++) {
+                const layerAmp = amp * (1 - l * 0.15);
+                const layerFreq = 1 + l * 0.1;
+                const path = [];
+
+                for (let i = 0; i < points; i++) {
+                    const t = i * 0.01;
+                    const decay = Math.exp(-damp * t);
+                    const x = layerAmp * decay * Math.sin(freq1 * layerFreq * t + phase + l);
+                    const y = layerAmp * decay * Math.cos(freq2 * layerFreq * t + l * 0.5);
+                    const nx = x + (noise(t * 0.1, l) - 0.5) * params.noise * 20;
+                    const ny = y + (noise(t * 0.1 + 100, l) - 0.5) * params.noise * 20;
+                    path.push({ x: nx, y: ny });
+                }
+                paths.push(path);
+            }
+
+            if (!params.plotterOptimized) {
+                stroke(params.strokeColor);
+                strokeWeight(1);
+                noFill();
+                paths.forEach(path => {
+                    if (path.length < 2) return;
+                    beginShape();
+                    path.forEach(p => vertex(p.x, p.y));
+                    endShape();
+                });
+            }
+        }
+
+        // ==========================================
+        // Hilbert Curve: Space-filling
+        // ==========================================
+        function drawHilbert() {
+            const order = Math.min(6, params.iterations);
+            const size = Math.min(width, height) * 0.8;
+            const step = size / (Math.pow(2, order) - 1);
+            const path = [];
+
+            function hilbert(x, y, xi, xj, yi, yj, n) {
+                if (n <= 0) {
+                    const px = x + (xi + yi) / 2;
+                    const py = y + (xj + yj) / 2;
+                    path.push({
+                        x: (px - size / 2) * params.amplitude / 200,
+                        y: (py - size / 2) * params.amplitude / 200
+                    });
+                } else {
+                    hilbert(x, y, yi/2, yj/2, xi/2, xj/2, n - 1);
+                    hilbert(x + xi/2, y + xj/2, xi/2, xj/2, yi/2, yj/2, n - 1);
+                    hilbert(x + xi/2 + yi/2, y + xj/2 + yj/2, xi/2, xj/2, yi/2, yj/2, n - 1);
+                    hilbert(x + xi/2 + yi, y + xj/2 + yj, -yi/2, -yj/2, -xi/2, -xj/2, n - 1);
+                }
+            }
+
+            hilbert(0, 0, 0, step, step, 0, order);
+            paths.push(path);
+
+            if (!params.plotterOptimized) {
+                stroke(params.strokeColor);
+                strokeWeight(1);
+                noFill();
+                beginShape();
+                path.forEach(p => vertex(p.x, p.y));
+                endShape();
+            }
+        }
+
+        // ==========================================
+        // Lissajous: Harmonic Curves
+        // ==========================================
+        function drawLissajous() {
+            const layers = params.layers;
+            const points = 1000;
+            const a = params.frequency;
+            const b = params.frequencyB;
+            const amp = params.amplitude;
+            const delta = params.phase * PI;
+
+            for (let l = 0; l < layers; l++) {
+                const path = [];
+                const layerAmp = amp * (1 - l * 0.1);
+                const la = a + l * 0.2;
+                const lb = b + l * 0.3;
+
+                for (let i = 0; i < points; i++) {
+                    const t = (i / points) * TWO_PI * 2;
+                    const x = layerAmp * Math.sin(la * t + delta);
+                    const y = layerAmp * Math.sin(lb * t);
+                    const nx = x + (noise(x * 0.01, l) - 0.5) * params.noise * 10;
+                    const ny = y + (noise(y * 0.01 + 100, l) - 0.5) * params.noise * 10;
+                    path.push({ x: nx, y: ny });
+                }
+                paths.push(path);
+            }
+
+            if (!params.plotterOptimized) {
+                paths.forEach((path, idx) => {
+                    stroke(idx === 0 ? params.strokeColor : params.accentColor);
+                    strokeWeight(1);
+                    noFill();
+                    beginShape();
+                    path.forEach(p => vertex(p.x, p.y));
+                    endShape();
+                });
+            }
+        }
+
+        // ==========================================
+        // Rose Curves: Polar
+        // ==========================================
+        function drawRose() {
+            const k = params.frequency;
+            const amp = params.amplitude;
+            const points = 2000;
+            const layers = params.layers;
+
+            for (let l = 0; l < layers; l++) {
+                const path = [];
+                const layerK = k + l * 0.1;
+                const layerAmp = amp * (1 - l * 0.05);
+
+                for (let i = 0; i < points; i++) {
+                    const theta = (i / points) * TWO_PI * 4;
+                    const r = layerAmp * Math.cos(layerK * theta);
+                    const x = r * Math.cos(theta);
+                    const y = r * Math.sin(theta);
+                    const nx = x + (noise(theta * 0.1, l) - 0.5) * params.noise * 10;
+                    const ny = y + (noise(theta * 0.1 + 100, l) - 0.5) * params.noise * 10;
+                    path.push({ x: nx, y: ny });
+                }
+                paths.push(path);
+            }
+
+            if (!params.plotterOptimized) {
+                paths.forEach((path, idx) => {
+                    stroke(idx === 0 ? params.strokeColor : params.accentColor);
+                    strokeWeight(1);
+                    noFill();
+                    beginShape();
+                    path.forEach(p => vertex(p.x, p.y));
+                    endShape();
+                });
+            }
+        }
+
+        // ==========================================
+        // Space-Filling: Recursive
+        // ==========================================
+        function drawSpaceFill() {
+            const size = Math.min(width, height) * 0.4;
+            const depth = Math.min(params.iterations, 8);
+            const path = [];
+
+            function peano(x, y, w, h, d) {
+                if (d <= 0) {
+                    path.push({
+                        x: (x + w/2 - size) * params.amplitude / 200,
+                        y: (y + h/2 - size) * params.amplitude / 200
+                    });
+                    return;
+                }
+
+                const w3 = w / 3;
+                const h3 = h / 3;
+                const order = [
+                    [0, 0], [w3, 0], [2*w3, 0],
+                    [2*w3, h3], [w3, h3], [0, h3],
+                    [0, 2*h3], [w3, 2*h3], [2*w3, 2*h3]
+                ];
+
+                order.forEach(([ox, oy]) => {
+                    peano(x + ox, y + oy, w3, h3, d - 1);
+                });
+            }
+
+            peano(0, 0, size * 2, size * 2, depth);
+            paths.push(path);
+
+            if (!params.plotterOptimized) {
+                stroke(params.strokeColor);
+                strokeWeight(1);
+                noFill();
+                beginShape();
+                path.forEach(p => vertex(p.x, p.y));
+                endShape();
+            }
+        }
+
+        // ==========================================
+        // Dragon Curve: Fractal
+        // ==========================================
+        function drawDragon() {
+            const iterations = Math.min(params.iterations, 14);
+            const length = Math.min(width, height) * 0.3 / Math.pow(1.4, iterations);
+            let sequence = [1];
+
+            for (let i = 0; i < iterations; i++) {
+                const reversed = sequence.map(x => -x).reverse();
+                sequence = [...sequence, 1, ...reversed];
+            }
+
+            let x = 0;
+            let y = 0;
+            let angle = 0;
+            const path = [{ x, y }];
+
+            sequence.forEach(turn => {
+                angle += turn * PI / 2;
+                x += Math.cos(angle) * length * params.amplitude / 200;
+                y += Math.sin(angle) * length * params.amplitude / 200;
+                path.push({ x, y });
+            });
+
+            paths.push(path);
+
+            if (!params.plotterOptimized) {
+                stroke(params.strokeColor);
+                strokeWeight(1);
+                noFill();
+                beginShape();
+                path.forEach(p => vertex(p.x, p.y));
+                endShape();
+            }
+        }
+
+        // ==========================================
+        // Helpers
+        // ==========================================
+        function drawPathsOptimized() {
+            stroke(params.strokeColor);
+            strokeWeight(1);
+            noFill();
+            paths.forEach((path, idx) => {
+                if (path.length < 2) return;
+                stroke(idx === 0 ? params.strokeColor : params.accentColor);
+                beginShape();
+                path.forEach(p => vertex(p.x, p.y));
+                endShape();
+            });
+        }
+
+        function drawPoints() {
+            fill(params.accentColor);
+            noStroke();
+            paths.forEach(path => {
+                path.forEach((p, i) => {
+                    if (i % 10 === 0) {
+                        ellipse(p.x, p.y, 3, 3);
+                    }
+                });
+            });
+        }
+
+        function drawGrid() {
+            push();
+            stroke(red(params.strokeColor), green(params.strokeColor), blue(params.strokeColor), 30);
+            strokeWeight(0.5);
+            const step = 40;
+            for (let x = -width/2; x < width/2; x += step) {
+                line(x, -height/2, x, height/2);
+            }
+            for (let y = -height/2; y < height/2; y += step) {
+                line(-width/2, y, width/2, y);
+            }
+            pop();
+        }
+
+        // ==========================================
+        // Controls
+        // ==========================================
+        function setupControls() {
+            const inputs = ['frequency', 'frequencyB', 'amplitude', 'damping', 'phase', 'iterations', 'layers', 'rotation', 'noise'];
+            inputs.forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    el.addEventListener('input', (e) => {
+                        params[key] = parseFloat(e.target.value);
+                        document.getElementById(key + '-val').textContent = params[key];
+                        regenerate();
+                    });
+                }
+            });
+
+            const selects = ['mode', 'paperSize'];
+            selects.forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    el.addEventListener('change', (e) => {
+                        params[key] = e.target.value;
+                        if (key === 'paperSize') {
+                            updateCanvasSize();
+                            resizeCanvas(canvasWidth, canvasHeight);
+                        }
+                        regenerate();
+                    });
+                }
+            });
+
+            const colors = ['bgColor', 'strokeColor', 'accentColor'];
+            colors.forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    el.addEventListener('input', (e) => {
+                        params[key] = e.target.value;
+                        regenerate();
+                    });
+                }
+            });
+
+            const checkboxes = ['showGrid', 'plotterOptimized', 'showPoints'];
+            checkboxes.forEach(key => {
+                const el = document.getElementById(key);
+                if (el) {
+                    el.addEventListener('change', (e) => {
+                        params[key] = e.target.checked;
+                        regenerate();
+                    });
+                }
+            });
+
+            document.getElementById('regenerate').addEventListener('click', regenerate);
+            document.getElementById('randomize').addEventListener('click', () => {
+                setSeed(Math.floor(Math.random() * 1000000));
+                params.frequency = 0.5 + seedRandom() * 19.5;
+                params.frequencyB = 0.5 + seedRandom() * 19.5;
+                params.amplitude = 50 + Math.floor(seedRandom() * 350);
+                params.damping = seedRandom() * 0.01;
+                params.phase = seedRandom() * 2;
+                params.iterations = 1 + Math.floor(seedRandom() * 11);
+                params.layers = 1 + Math.floor(seedRandom() * 9);
+                params.rotation = Math.floor(seedRandom() * 360);
+                params.noise = seedRandom();
+                updateUI();
+                regenerate();
+            });
+
+            document.getElementById('seed').addEventListener('change', (e) => {
+                setSeed(parseInt(e.target.value) || Math.floor(Math.random() * 1000000));
+                regenerate();
+            });
+
+            document.getElementById('exportSVG').addEventListener('click', exportSVG);
+            document.getElementById('exportPNG').addEventListener('click', exportPNG);
+        }
+
+        function updateUI() {
+            const inputs = ['frequency', 'frequencyB', 'amplitude', 'damping', 'phase', 'iterations', 'layers', 'rotation', 'noise'];
+            inputs.forEach(key => {
+                const el = document.getElementById(key);
+                const val = document.getElementById(key + '-val');
+                if (el) el.value = params[key];
+                if (val) val.textContent = params[key];
+            });
+            document.getElementById('mode').value = params.mode;
+            document.getElementById('paperSize').value = params.paperSize;
+            document.getElementById('bgColor').value = params.bgColor;
+            document.getElementById('strokeColor').value = params.strokeColor;
+            document.getElementById('accentColor').value = params.accentColor;
+            document.getElementById('showGrid').checked = params.showGrid;
+            document.getElementById('plotterOptimized').checked = params.plotterOptimized;
+            document.getElementById('showPoints').checked = params.showPoints;
+        }
+
+        function regenerate() {
+            setSeed(params.seed);
+            paths = [];
+            redraw();
+        }
+
+        // ==========================================
+        // Export
+        // ==========================================
+        function exportSVG() {
+            const svg = generateSVG();
+            TSExport.downloadSVG(svg, `curves-factory-${params.mode}`);
+        }
+
+        function exportPNG() {
+            TSExport.downloadPNG(canvas, `curves-factory-${params.mode}`);
+        }
+
+        function generateSVG() {
+            const size = paperSizes[params.paperSize];
+            let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size.width} ${size.height}" width="${size.width}" height="${size.height}">\n`;
+            svg += `<rect width="${size.width}" height="${size.height}" fill="${params.bgColor}"/>\n`;
+
+            const cx = size.width / 2;
+            const cy = size.height / 2;
+            const sx = size.width / width;
+            const sy = size.height / height;
+            const rot = radians(params.rotation);
+            const cosR = Math.cos(rot);
+            const sinR = Math.sin(rot);
+
+            paths.forEach((path, idx) => {
+                if (path.length < 2) return;
+                const pts = path.map(p => {
+                    const rx = p.x * cosR - p.y * sinR;
+                    const ry = p.x * sinR + p.y * cosR;
+                    return `${(cx + rx) * sx},${(cy + ry) * sy}`;
+                }).join(' ');
+                svg += `<polyline points="${pts}" fill="none" stroke="${idx === 0 ? params.strokeColor : params.accentColor}" stroke-width="1"/>\n`;
+            });
+
+            svg += '</svg>';
+            return svg;
+        }
+
+        // ==========================================
+        // Presets
+        // ==========================================
+        const storageKey = 'curves_factory_presets';
+        let presets = {};
+
+        function loadPresets() {
+            try {
+                const stored = localStorage.getItem(storageKey);
+                presets = stored ? JSON.parse(stored) : {};
+            } catch (e) {
+                console.error('Failed to load presets:', e);
+                presets = {};
+            }
+            updatePresetList();
+        }
+
+        function savePresets() {
+            localStorage.setItem(storageKey, JSON.stringify(presets));
+        }
+
+        function updatePresetList() {
+            const select = document.getElementById('preset-select');
+            select.innerHTML = '<option value="">-- Select Preset --</option>';
+            Object.keys(presets).sort().forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        document.getElementById('save-preset').addEventListener('click', () => {
+            const name = document.getElementById('preset-name').value.trim();
+            if (name) {
+                presets[name] = { ...params, timestamp: Date.now() };
+                savePresets();
+                updatePresetList();
+                document.getElementById('preset-name').value = '';
+            }
+        });
+
+        document.getElementById('load-preset').addEventListener('click', () => {
+            const select = document.getElementById('preset-select');
+            if (select.value && presets[select.value]) {
+                Object.assign(params, presets[select.value]);
+                updateUI();
+                if (params.paperSize) {
+                    updateCanvasSize();
+                    resizeCanvas(canvasWidth, canvasHeight);
+                }
+                regenerate();
+            }
+        });
+
+        document.getElementById('delete-preset').addEventListener('click', () => {
+            const select = document.getElementById('preset-select');
+            if (select.value && confirm(`Delete preset "${select.value}"?`)) {
+                delete presets[select.value];
+                savePresets();
+                updatePresetList();
+            }
+        });
+    </script>
+</body>
+</html>

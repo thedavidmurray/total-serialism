@@ -1382,6 +1382,69 @@
       "status": "stable"
     },
     {
+      "id": "curves-factory",
+      "name": "Curves Factory",
+      "category": "curves",
+      "path": "algorithms/curves/curves-factory.html",
+      "description": "Unified factory for curve algorithms: harmonograph, hilbert curve, lissajous curves, rose curves, space-filling curves, and dragon curve. Harmonograph-based with parameter-space blending across all 6 curve systems.",
+      "complexity": "advanced",
+      "hasPresets": true,
+      "hasExport": [
+        "svg",
+        "png"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "harmonograph",
+        "hilbert",
+        "lissajous",
+        "rose",
+        "space-filling",
+        "dragon",
+        "factory",
+        "parametric"
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg",
+        "png"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "variable",
+      "motifFamilies": [
+        "curves",
+        "parametric",
+        "geometric",
+        "recursion",
+        "mathematical"
+      ],
+      "visualTraits": [
+        "geometric",
+        "rhythmic",
+        "structured",
+        "continuous",
+        "mathematical"
+      ],
+      "relatedSeeds": [
+        "harmonograph",
+        "hilbert-curve",
+        "lissajous",
+        "rose-curves",
+        "space-filling-standard",
+        "space-filling-curves"
+      ],
+      "status": "stable"
+    },
+    {
       "id": "flow-field-collision",
       "name": "Flow Field Collision",
       "category": "flow-fields",
