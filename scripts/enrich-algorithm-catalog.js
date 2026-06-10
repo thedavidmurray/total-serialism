@@ -635,11 +635,18 @@ function sortValues(values) {
 }
 
 function readAlgorithmSource(relativePath) {
-  const absolutePath = path.join(penPlotterRoot, relativePath);
-  if (!fs.existsSync(absolutePath)) {
-    return '';
+  // Catalog paths are relative to the repo root; older entries were
+  // relative to pen-plotter/, so fall back there for compatibility.
+  const candidates = [
+    path.join(repoRoot, relativePath),
+    path.join(penPlotterRoot, relativePath),
+  ];
+  for (const absolutePath of candidates) {
+    if (fs.existsSync(absolutePath)) {
+      return fs.readFileSync(absolutePath, 'utf8');
+    }
   }
-  return fs.readFileSync(absolutePath, 'utf8');
+  return '';
 }
 
 function detectEngines(source) {

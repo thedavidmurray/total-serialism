@@ -847,7 +847,7 @@
         </div>
       </div>
       <div class="header-actions">
-        <a href="../browse.html" class="header-btn" title="Open the ideation browser">
+        <a href="browse.html" class="header-btn" title="Open the ideation browser">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
             <path d="M3 6h18M3 12h18M3 18h12"/>
           </svg>
@@ -913,7 +913,7 @@
         <ul>
           <li>SVGs use stroke-only rendering (no fills) for clean plotting</li>
           <li>Path optimization reduces pen travel distance</li>
-          <li>Use the <a href="tools/plotter-preview-gui.html">Plotter Preview</a> tool to simulate drawing</li>
+          <li>Use the <a href="pen-plotter/tools/plotter-preview-gui.html">Plotter Preview</a> tool to simulate drawing</li>
           <li>Layer export available for multi-color plotting</li>
         </ul>
       </div>
@@ -922,9 +922,9 @@
         <h3>Recommended Algorithms for Beginners</h3>
         <div class="algo-suggestions">
           <a href="algorithms/geometric/spirotron-gui.html">Spirotron</a>
-          <a href="algorithms/curves/lissajous-gui.html">Lissajous Curves</a>
-          <a href="algorithms/voronoi/voronoi-stippling-gui.html">Voronoi Stippling</a>
-          <a href="algorithms/fractals/mandelbrot-julia-gui.html">Mandelbrot/Julia</a>
+          <a href="pen-plotter/algorithms/curves/lissajous-gui.html">Lissajous Curves</a>
+          <a href="pen-plotter/algorithms/voronoi/voronoi-stippling-gui.html">Voronoi Stippling</a>
+          <a href="pen-plotter/algorithms/fractals/mandelbrot-julia-gui.html">Mandelbrot/Julia</a>
         </div>
       </div>
 
@@ -967,7 +967,7 @@
     <p>Total Serialism &bull; <a href="https://github.com/thedavidmurray/total-serialism" target="_blank">GitHub</a></p>
   </footer>
 
-  <script src="../discovery-utils.js"></script>
+  <script src="discovery-utils.js"></script>
   <script>
     let catalog = null;
     let algorithms = [];
@@ -1027,7 +1027,7 @@
         .slice(0, 2)
         .map((trail) => `
           <a
-            href="../browse.html?related=${trail.algo.id}"
+            href="browse.html?related=${trail.algo.id}"
             class="card-trail-link"
             title="${escapeHtml(trail.description)}"
           >${escapeHtml(trail.label)}: ${escapeHtml(trail.algo.name)}</a>
@@ -1106,7 +1106,7 @@
             <div class="card-related">
               <span class="card-related-label">Try Next</span>
               ${renderRelatedLinks(algo)}
-              <a href="../browse.html?related=${algo.id}" class="card-more-link">More like this</a>
+              <a href="browse.html?related=${algo.id}" class="card-more-link">More like this</a>
             </div>
           </div>
         </div>
@@ -1202,7 +1202,7 @@
       if (e.key === 'Escape') closeHelp();
     });
 
-    fetch('../algorithm-catalog.json')
+    fetch('algorithm-catalog.json')
       .then((response) => response.json())
       .then((data) => {
         catalog = data;

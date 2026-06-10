@@ -157,6 +157,30 @@ npm install  # If dependencies are added later
 
 See [IMPROVEMENT-ROADMAP.md](IMPROVEMENT-ROADMAP.md) for detailed plans.
 
+## Deploying to edgelesslab.com
+
+The interactive app is published at https://edgelesslab.com/total-serialism/app/
+by copying this repo's runtime files into the website repo
+(`edgeless-ai/edgelesslab.com`) under `public/total-serialism/app/`. Next.js
+copies `public/` into the static export at build time, so the app ships on the
+next site deploy.
+
+To sync a fresh copy from a machine with both repos checked out:
+
+```bash
+./scripts/sync-website-app.sh /path/to/edgeless-website
+cd /path/to/edgeless-website
+git add public/total-serialism/app && git commit -m "Sync total-serialism app" && git push
+```
+
+The script copies only runtime files (HTML, JS, CSS, catalog JSON, assets) and
+excludes planning docs, tests, backups, and node_modules.
+
+Note on directory layout: `pen-plotter/algorithms/` is the canonical,
+actively maintained algorithm tree (shared controls, preset manager, SVG/PNG
+export, discovery rail). The root-level `algorithms/` tree is a legacy fork
+from January 2026 — `algorithm-catalog.json` no longer references it.
+
 ## Contributing
 
 This is a personal repository. Please create feature branches and submit pull requests for any changes.

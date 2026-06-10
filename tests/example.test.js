@@ -2,7 +2,7 @@
  * Example test to verify Jest setup
  */
 
-import { describe, it, expect } from '@jest/globals';
+const { describe, it, expect } = require('@jest/globals');
 
 describe('Jest Setup Verification', () => {
   it('should run basic tests', () => {
