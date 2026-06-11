@@ -53,6 +53,12 @@
     return (catalog.algorithms || []).find((algo) => currentPath.endsWith(algo.path));
   }
 
+  function resolveAlgorithmHref(relativeRoot, algorithmPath) {
+    // Catalog paths are app-root-relative; pages live in nested folders,
+    // so raw paths would resolve relative to the current folder.
+    return `${relativeRoot}${normalizePath(algorithmPath)}`;
+  }
+
   function loadScript(src) {
     if ([...document.scripts].some((script) => script.src === src)) {
       return Promise.resolve();
@@ -82,11 +88,11 @@
     return `<span class="ts-discovery-badge${className ? ` ${className}` : ''}">${escapeHtml(label)}</span>`;
   }
 
-  function renderTrailLinks(catalog, currentAlgorithm) {
+  function renderTrailLinks(catalog, currentAlgorithm, relativeRoot) {
     return global.TSDiscovery.getTrailSuggestions(catalog, currentAlgorithm.id)
       .map((trail) => `
         <a
-          href="${trail.algo.path}"
+          href="${resolveAlgorithmHref(relativeRoot, trail.algo.path)}"
           class="ts-discovery-trail"
           title="${escapeHtml(trail.description)}"
         >
@@ -97,10 +103,10 @@
       .join('');
   }
 
-  function renderRelatedCards(catalog, currentAlgorithm) {
+  function renderRelatedCards(catalog, currentAlgorithm, relativeRoot) {
     return global.TSDiscovery.getRelatedAlgorithms(catalog, currentAlgorithm.id, 3)
       .map((algo) => `
-        <a href="${algo.path}" class="ts-discovery-card">
+        <a href="${resolveAlgorithmHref(relativeRoot, algo.path)}" class="ts-discovery-card">
           <div class="ts-discovery-card-swatch" style="${global.TSDiscovery.buildPreviewStyle(algo)}"></div>
           <div class="ts-discovery-card-body">
             <div class="ts-discovery-card-name">${escapeHtml(algo.name)}</div>
@@ -115,10 +121,10 @@
       .join('');
   }
 
-  function renderWorkflowSteps(catalog, currentAlgorithm) {
+  function renderWorkflowSteps(catalog, currentAlgorithm, relativeRoot) {
     return global.TSDiscovery.getWorkflowSteps(catalog, currentAlgorithm)
       .map((tool) => `
-        <a href="${tool.path}" class="ts-guidance-link">
+        <a href="${resolveAlgorithmHref(relativeRoot, tool.path)}" class="ts-guidance-link">
           <span class="ts-guidance-link-name">${escapeHtml(tool.name)}</span>
           <span class="ts-guidance-link-copy">${escapeHtml(tool.guidance)}</span>
         </a>
@@ -138,17 +144,17 @@
       .join('');
   }
 
-  function buildPanelMarkup(catalog, currentAlgorithm, browseUrl) {
+  function buildPanelMarkup(catalog, currentAlgorithm, browseUrl, relativeRoot) {
     const accent = global.TSDiscovery.getPreviewAccent(currentAlgorithm);
-    const trails = renderTrailLinks(catalog, currentAlgorithm);
-    const relatedCards = renderRelatedCards(catalog, currentAlgorithm);
-    const workflowSteps = renderWorkflowSteps(catalog, currentAlgorithm);
+    const trails = renderTrailLinks(catalog, currentAlgorithm, relativeRoot);
+    const relatedCards = renderRelatedCards(catalog, currentAlgorithm, relativeRoot);
+    const workflowSteps = renderWorkflowSteps(catalog, currentAlgorithm, relativeRoot);
     const promptList = renderPromptList(currentAlgorithm);
     const useCases = renderUseCases(currentAlgorithm);
     const plotterSummary = global.TSDiscovery.getPlotterSummary(currentAlgorithm);
 
     return `
-      <details class="ts-discovery-panel" open>
+      <details class="ts-discovery-panel">
         <summary class="ts-discovery-summary">
           <span class="ts-discovery-summary-copy">
             <span class="ts-discovery-summary-kicker">Explore Next</span>
@@ -205,19 +211,12 @@
     }
 
     const wrapper = document.createElement('div');
-    wrapper.innerHTML = buildPanelMarkup(catalog, currentAlgorithm, urls.browseUrl);
+    wrapper.innerHTML = buildPanelMarkup(catalog, currentAlgorithm, urls.browseUrl, urls.relativeRoot);
     const panel = wrapper.firstElementChild;
 
-    const heading =
-      mountPoint.querySelector('h1, h2, .ts-algo-title') ||
-      mountPoint.querySelector('.ts-global-actions');
-
-    if (heading && heading.parentNode === mountPoint) {
-      heading.insertAdjacentElement('afterend', panel);
-      return;
-    }
-
-    mountPoint.prepend(panel);
+    // Discovery content is secondary to the working controls: mount it
+    // collapsed at the end of the panel so the tool comes first.
+    mountPoint.append(panel);
   }
 
   async function enhancePage() {
@@ -247,6 +246,7 @@
     getRepoRootRelativePath,
     getRootAssetUrls,
     normalizePath,
+    resolveAlgorithmHref,
   };
 
   if (document.readyState === 'loading') {
