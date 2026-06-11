@@ -202,10 +202,18 @@
     }
 
     /**
-     * Get canvas dimensions for current paper size
+     * Get canvas dimensions for current paper size.
+     * CanvasLayout is the canonical paper-size registry (alias-tolerant,
+     * consistent physical sizes across pages); the local PAPER_SIZES
+     * table only backs pages that don't load canvas-layout.js.
      * @returns {Object} { width, height }
      */
     getCanvasSize() {
+      const layout = typeof window !== 'undefined' ? window.CanvasLayout : null;
+      if (layout && typeof layout.getSize === 'function') {
+        const { width, height } = layout.getSize(this.params.paperSize);
+        return { width, height };
+      }
       const size = TSCanvasControls.PAPER_SIZES[this.params.paperSize];
       if (!size) {
         // Fallback to square if unknown paper size
