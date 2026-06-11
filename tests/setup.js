@@ -3,6 +3,13 @@
  * Configure global test utilities and mocks
  */
 
+// jsdom test environment does not provide TextEncoder/TextDecoder
+const { TextEncoder, TextDecoder } = require('util');
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
+
 // Add custom matchers for grid comparison
 expect.extend({
   toEqualGrid(received, expected) {

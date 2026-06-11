@@ -75,7 +75,7 @@ describe('algorithm page chrome utils', () => {
 
   test('all catalog pages include the shared page chrome script', () => {
     catalog.algorithms.forEach((algo) => {
-      const filePath = path.join(__dirname, '..', 'pen-plotter', algo.path);
+      const filePath = path.join(__dirname, '..', algo.path);
       const html = fs.readFileSync(filePath, 'utf8');
       expect(html.includes('algorithm-page-chrome.js')).toBe(true);
     });
