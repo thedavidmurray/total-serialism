@@ -96,4 +96,65 @@ describe('CanvasLayout', () => {
       expect(fit.height).toBe(1754);
     });
   });
+
+  describe('fitPointsToPaper contract', () => {
+    const bounds = (points, t) => {
+      const xs = points.map((p) => p.x * t.scale + t.dx);
+      const ys = points.map((p) => p.y * t.scale + t.dy);
+      return {
+        minX: Math.min(...xs), maxX: Math.max(...xs),
+        minY: Math.min(...ys), maxY: Math.max(...ys)
+      };
+    };
+    // Small attractor-like cloud (e.g. Clifford spans only a few units)
+    const points = [
+      { x: -1.8, y: -0.6 }, { x: 2.1, y: 0.4 }, { x: 0.3, y: 1.9 }, { x: -0.2, y: -2.2 }
+    ];
+    const paper = { width: 1754, height: 2480, margin: 100 };
+
+    test('fit scales small artwork up to use the paper, honoring margins', () => {
+      const t = layout.fitPointsToPaper(points, { ...paper, mode: 'fit' });
+      const b = bounds(points, t);
+      // Everything inside the margins...
+      expect(b.minX).toBeGreaterThanOrEqual(paper.margin - 1e-6);
+      expect(b.maxX).toBeLessThanOrEqual(paper.width - paper.margin + 1e-6);
+      expect(b.minY).toBeGreaterThanOrEqual(paper.margin - 1e-6);
+      expect(b.maxY).toBeLessThanOrEqual(paper.height - paper.margin + 1e-6);
+      // ...and the limiting axis actually touches the margins (no 18%-of-canvas output)
+      const usedW = b.maxX - b.minX;
+      const usedH = b.maxY - b.minY;
+      const fillsWidth = Math.abs(usedW - (paper.width - 2 * paper.margin)) < 1e-6;
+      const fillsHeight = Math.abs(usedH - (paper.height - 2 * paper.margin)) < 1e-6;
+      expect(fillsWidth || fillsHeight).toBe(true);
+    });
+
+    test('fit centers the artwork', () => {
+      const t = layout.fitPointsToPaper(points, { ...paper, mode: 'fit' });
+      const b = bounds(points, t);
+      expect((b.minX + b.maxX) / 2).toBeCloseTo(paper.width / 2, 6);
+      expect((b.minY + b.maxY) / 2).toBeCloseTo(paper.height / 2, 6);
+    });
+
+    test('fill covers the inner area, cropping the longer axis only', () => {
+      const t = layout.fitPointsToPaper(points, { ...paper, mode: 'fill' });
+      const b = bounds(points, t);
+      const usedW = b.maxX - b.minX;
+      const usedH = b.maxY - b.minY;
+      expect(Math.max(usedW, usedH)).toBeGreaterThanOrEqual(
+        Math.max(paper.width, paper.height) - 2 * paper.margin - 1e-6
+      );
+      // Both axes at least cover the inner area
+      expect(usedW).toBeGreaterThanOrEqual(paper.width - 2 * paper.margin - 1e-6);
+      expect(usedH).toBeGreaterThanOrEqual(paper.height - 2 * paper.margin - 1e-6);
+    });
+
+    test('degenerate input falls back to centered identity', () => {
+      expect(layout.fitPointsToPaper([], { width: 800, height: 600 }))
+        .toEqual({ scale: 1, dx: 400, dy: 300 });
+      const single = layout.fitPointsToPaper([{ x: 5, y: 5 }], { width: 800, height: 600, mode: 'fit' });
+      expect(Number.isFinite(single.scale)).toBe(true);
+      expect(5 * single.scale + single.dx).toBeCloseTo(400, 4);
+      expect(5 * single.scale + single.dy).toBeCloseTo(300, 4);
+    });
+  });
 });

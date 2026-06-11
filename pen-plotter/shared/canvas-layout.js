@@ -107,6 +107,42 @@
     };
   }
 
+  /**
+   * Compute a transform that places 2D points onto paper.
+   * mode 'fit'  — scale uniformly so all points sit inside the margins;
+   * mode 'fill' — scale uniformly to cover the inner area (may crop).
+   * Returns { scale, dx, dy }: apply as x * scale + dx, y * scale + dy.
+   */
+  function fitPointsToPaper(points, { width, height, margin = 0, mode = 'fit' } = {}) {
+    if (!points || points.length === 0 || !width || !height) {
+      return { scale: 1, dx: (width || 0) / 2, dy: (height || 0) / 2 };
+    }
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (const p of points) {
+      if (p.x < minX) minX = p.x;
+      if (p.x > maxX) maxX = p.x;
+      if (p.y < minY) minY = p.y;
+      if (p.y > maxY) maxY = p.y;
+    }
+
+    const artWidth = Math.max(maxX - minX, 1e-9);
+    const artHeight = Math.max(maxY - minY, 1e-9);
+    const safeMargin = Math.min(margin, (Math.min(width, height) - 2) / 2);
+    const innerW = width - safeMargin * 2;
+    const innerH = height - safeMargin * 2;
+
+    const scale = mode === 'fill'
+      ? Math.max(innerW / artWidth, innerH / artHeight)
+      : Math.min(innerW / artWidth, innerH / artHeight);
+
+    return {
+      scale,
+      dx: width / 2 - scale * (minX + maxX) / 2,
+      dy: height / 2 - scale * (minY + maxY) / 2
+    };
+  }
+
   function drawFrame(p5Instance, options = {}) {
     if (!p5Instance) return;
     const { width, height, margin = 0, color = [0, 200, 0], weight = 2 } = options;
@@ -181,5 +217,5 @@
     };
   }
 
-  window.CanvasLayout = { paperPresets, extendedPresets, getSize, normalizeKey, fitToPaper, drawFrame, attachFitZoom };
+  window.CanvasLayout = { paperPresets, extendedPresets, getSize, normalizeKey, fitToPaper, fitPointsToPaper, drawFrame, attachFitZoom };
 })();

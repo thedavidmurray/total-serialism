@@ -178,7 +178,19 @@
           </div>
           <div class="ts-control-group-content">
             <div class="control-group">
-              <label>Scale: <span id="scale-val">15</span></label>
+              <label>Sizing:</label>
+              <select id="fitMode" class="ts-select">
+                <option value="fit" selected>Fit (scale to paper, keep margin)</option>
+                <option value="fill">Fill (cover paper, may crop)</option>
+                <option value="manual">Manual (use scale slider)</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label>Margin: <span id="margin-val">60</span>px</label>
+              <input type="range" id="margin" min="0" max="300" value="60" step="5" class="ts-slider">
+            </div>
+            <div class="control-group">
+              <label>Manual Scale: <span id="scale-val">15</span></label>
               <input type="range" id="scale" min="1" max="100" value="15" step="1" class="ts-slider">
             </div>
             <div class="control-group">
@@ -219,7 +231,7 @@
             <div class="control-group">
               <label>Paper Size:</label>
               <select id="paperSize" class="ts-select">
-                <option value="square">Square (800x800)</option>
+                <option value="square">Square (300×300mm)</option>
                 <option value="a5">A5 Portrait</option>
                 <option value="a4">A4 Portrait</option>
                 <option value="a3" selected>A3 Portrait</option>
@@ -308,6 +320,8 @@
       strokeWeight: 0.5,
       opacity: 100,
       // Transform
+      fitMode: 'fit',
+      margin: 60,
       scale: 15,
       offsetX: 0,
       offsetY: 0,
@@ -338,6 +352,8 @@
         { key: 'drawMode', type: 'enum', options: ['lines', 'points'] },
         { key: 'strokeWeight', type: 'float', bytes: 2, min: 0.1, max: 3 },
         { key: 'opacity', type: 'int', bytes: 1, min: 5, max: 100 },
+        { key: 'fitMode', type: 'enum', options: ['fit', 'fill', 'manual'] },
+        { key: 'margin', type: 'int', bytes: 2, min: 0, max: 300 },
         { key: 'scale', type: 'float', bytes: 2, min: 1, max: 100 },
         { key: 'offsetX', type: 'int', bytes: 2, min: -500, max: 500 },
         { key: 'offsetY', type: 'int', bytes: 2, min: -500, max: 500 },
@@ -523,16 +539,15 @@
     // PROJECTION
     // ============================================
 
-    function project3D(point) {
+    // Project a point into the 2D drawing plane without scale or
+    // placement, so artwork bounds can be measured before sizing.
+    function projectDirection(point) {
       const { x, y, z } = point;
       const info = attractorInfo[params.attractorType];
 
       // 2D attractors: direct mapping
       if (!info.is3D) {
-        return {
-          x: x * params.scale + width / 2 + params.offsetX,
-          y: y * params.scale + height / 2 + params.offsetY
-        };
+        return { x, y };
       }
 
       // 3D projection
@@ -571,10 +586,38 @@
           py = y;
       }
 
-      return {
-        x: px * params.scale + width / 2 + params.offsetX,
-        y: -py * params.scale + height / 2 + params.offsetY  // Flip Y for screen coords
-      };
+      return { x: px, y: -py };  // Flip Y for screen coords
+    }
+
+    // Compute scale and placement for the current fit mode. Fit scales
+    // the artwork uniformly into the paper minus margins; Fill covers
+    // the paper (cropping the longer axis); Manual keeps the raw
+    // scale-slider behavior. Offset sliders nudge in every mode.
+    function getViewTransform(rawPoints) {
+      if (params.fitMode === 'manual' || rawPoints.length === 0) {
+        return {
+          scale: params.scale,
+          dx: width / 2 + params.offsetX,
+          dy: height / 2 + params.offsetY
+        };
+      }
+
+      const t = CanvasLayout.fitPointsToPaper(rawPoints, {
+        width,
+        height,
+        margin: params.margin,
+        mode: params.fitMode
+      });
+      return { scale: t.scale, dx: t.dx + params.offsetX, dy: t.dy + params.offsetY };
+    }
+
+    function projectAll() {
+      const rawPoints = points.map(projectDirection);
+      const t = getViewTransform(rawPoints);
+      return rawPoints.map((p) => ({
+        x: p.x * t.scale + t.dx,
+        y: p.y * t.scale + t.dy
+      }));
     }
 
     function copyShareUrl() {
@@ -615,17 +658,17 @@
       strokeWeight(params.strokeWeight);
       noFill();
 
+      const projected = projectAll();
+
       if (params.drawMode === 'lines') {
         beginShape();
-        for (const p of points) {
-          const proj = project3D(p);
+        for (const proj of projected) {
           vertex(proj.x, proj.y);
         }
         endShape();
       } else {
         // Points mode
-        for (const p of points) {
-          const proj = project3D(p);
+        for (const proj of projected) {
           point(proj.x, proj.y);
         }
       }
@@ -648,19 +691,18 @@
       if (points.length < 2) return '';
 
       const svgPaths = [];
+      const projected = projectAll();
 
       if (params.drawMode === 'lines') {
-        const projectedPoints = points.map(p => project3D(p));
         svgPaths.push({
-          d: TSExport.pointsToPath(projectedPoints, false),
+          d: TSExport.pointsToPath(projected, false),
           stroke: params.strokeColor,
           strokeWidth: params.strokeWeight,
           opacity: params.opacity / 100
         });
       } else {
         // Points as small circles
-        for (const p of points) {
-          const proj = project3D(p);
+        for (const proj of projected) {
           svgPaths.push({
             d: `M ${proj.x} ${proj.y} m -${params.strokeWeight/2},0 a ${params.strokeWeight/2},${params.strokeWeight/2} 0 1,0 ${params.strokeWeight},0 a ${params.strokeWeight/2},${params.strokeWeight/2} 0 1,0 -${params.strokeWeight},0`,
             stroke: params.strokeColor,
@@ -699,6 +741,7 @@ ${pathsMarkup}</svg>`;
       window.statsDisplay = new TSStatsDisplay().attach();
 
       setupControls();
+      updateSizingControls();
       setupExportButtons();
       loadAttractorDefaults();
       canvasControls.setupRandomizeButton();
@@ -750,6 +793,7 @@ ${pathsMarkup}</svg>`;
         { id: 'skip', param: 'skip', parse: parseInt },
         { id: 'strokeWeight', param: 'strokeWeight', parse: parseFloat },
         { id: 'opacity', param: 'opacity', parse: parseInt },
+        { id: 'margin', param: 'margin', parse: parseInt },
         { id: 'scale', param: 'scale', parse: parseFloat },
         { id: 'offsetX', param: 'offsetX', parse: parseInt },
         { id: 'offsetY', param: 'offsetY', parse: parseInt },
@@ -775,6 +819,13 @@ ${pathsMarkup}</svg>`;
       // Draw mode
       document.getElementById('drawMode').addEventListener('change', (e) => {
         params.drawMode = e.target.value;
+        drawAttractor();
+      });
+
+      // Sizing mode
+      document.getElementById('fitMode').addEventListener('change', (e) => {
+        params.fitMode = e.target.value;
+        updateSizingControls();
         drawAttractor();
       });
 
@@ -944,6 +995,20 @@ ${pathsMarkup}</svg>`;
       });
     }
 
+    function updateSizingControls() {
+      const manual = params.fitMode === 'manual';
+      const scaleEl = document.getElementById('scale');
+      const marginEl = document.getElementById('margin');
+      if (scaleEl) {
+        scaleEl.disabled = !manual;
+        scaleEl.closest('.control-group').style.opacity = manual ? '' : '0.5';
+      }
+      if (marginEl) {
+        marginEl.disabled = manual;
+        marginEl.closest('.control-group').style.opacity = manual ? '0.5' : '';
+      }
+    }
+
     function randomizeAttractorParams() {
       const info = attractorInfo[params.attractorType];
 
@@ -978,7 +1043,7 @@ ${pathsMarkup}</svg>`;
       });
 
       // Update other controls
-      const controls = ['iterations', 'dt', 'skip', 'strokeWeight', 'opacity', 'scale', 'offsetX', 'offsetY', 'rotation', 'tilt'];
+      const controls = ['iterations', 'dt', 'skip', 'strokeWeight', 'opacity', 'margin', 'scale', 'offsetX', 'offsetY', 'rotation', 'tilt'];
       controls.forEach(id => {
         const el = document.getElementById(id);
         const display = document.getElementById(`${id}-val`);
@@ -989,6 +1054,7 @@ ${pathsMarkup}</svg>`;
       });
 
       document.getElementById('drawMode').value = params.drawMode;
+      document.getElementById('fitMode').value = params.fitMode;
       document.getElementById('paperSize').value = params.paperSize;
       document.getElementById('bgColor').value = params.bgColor;
       document.getElementById('strokeColor').value = params.strokeColor;
@@ -998,6 +1064,7 @@ ${pathsMarkup}</svg>`;
       document.getElementById('seed').value = params.seed;
 
       updateProjectionButtons();
+      updateSizingControls();
     }
 
     function draw() {
