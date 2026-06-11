@@ -73,6 +73,20 @@ describe('algorithm page chrome utils', () => {
     expect(match.id).toBe('arrows');
   });
 
+  test('resolves catalog paths against the app root, not the page folder', () => {
+    const urls = utils.getRootAssetUrls(
+      '/total-serialism/pen-plotter/algorithms/packing/arrows-gui.html',
+      'https://thedavidmurray.github.io/total-serialism/pen-plotter/algorithms/packing/arrows-gui.html'
+    );
+    const pageHref = 'https://thedavidmurray.github.io/total-serialism/pen-plotter/algorithms/packing/arrows-gui.html';
+    const href = utils.resolveAlgorithmHref(urls.relativeRoot, 'pen-plotter/algorithms/natural/dla-gui.html');
+
+    expect(href).toBe('../../../pen-plotter/algorithms/natural/dla-gui.html');
+    expect(new URL(href, pageHref).pathname).toBe(
+      '/total-serialism/pen-plotter/algorithms/natural/dla-gui.html'
+    );
+  });
+
   test('all catalog pages include the shared page chrome script', () => {
     catalog.algorithms.forEach((algo) => {
       const filePath = path.join(__dirname, '..', algo.path);
