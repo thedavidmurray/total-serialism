@@ -41,16 +41,54 @@
     letterportrait: { width: 1275, height: 1650, label: 'Letter Portrait', mm: '216×279' },
     letterlandscape: { width: 1650, height: 1275, label: 'Letter Landscape', mm: '279×216' },
     letter_portrait: { width: 1275, height: 1650, label: 'Letter Portrait', mm: '216×279' },
-    letter_landscape: { width: 1650, height: 1275, label: 'Letter Landscape', mm: '279×216' }
+    letter_landscape: { width: 1650, height: 1275, label: 'Letter Landscape', mm: '279×216' },
+    // Landscape shorthands (A3L, letterL, ...)
+    a5l: { width: 1240, height: 874, label: 'A5 Landscape', mm: '210×148' },
+    a4l: { width: 1754, height: 1240, label: 'A4 Landscape', mm: '297×210' },
+    a3l: { width: 2480, height: 1754, label: 'A3 Landscape', mm: '420×297' },
+    letterl: { width: 1650, height: 1275, label: 'Letter Landscape', mm: '279×216' },
+    // US sizes beyond letter
+    legal: { width: 1275, height: 2102, label: 'US Legal (216×356mm)', mm: '216×356' },
+    tabloid: { width: 1650, height: 2551, label: 'US Tabloid (279×432mm)', mm: '279×432' },
+    // Square mm variants
+    square_small: { width: 1181, height: 1181, label: 'Square Small (200×200mm)', mm: '200×200' }
   };
+
+  // Pages spell presets inconsistently (a3-landscape, a3landscape,
+  // A3_landscape, "A3 Landscape"); resolve them all to one entry instead
+  // of silently falling back to the 800×600 custom size.
+  function normalizeKey(preset) {
+    return String(preset || '').toLowerCase().replace(/[-_\s]/g, '');
+  }
+
+  const normalizedPresets = {};
+  [paperPresets, extendedPresets].forEach((table) => {
+    Object.keys(table).forEach((key) => {
+      normalizedPresets[normalizeKey(key)] = table[key];
+    });
+  });
 
   function getSize(preset = 'custom') {
     // Check extended presets first (handles orientation variants)
     if (extendedPresets[preset]) {
       return extendedPresets[preset];
     }
-    // Fall back to base presets
-    return paperPresets[preset] || paperPresets.custom;
+    if (paperPresets[preset]) {
+      return paperPresets[preset];
+    }
+    // Alias-tolerant lookup before giving up
+    const normalized = normalizedPresets[normalizeKey(preset)];
+    if (normalized) {
+      return normalized;
+    }
+    // Literal pixel dimensions like "800x600"
+    const pixelMatch = /^(\d{2,5})x(\d{2,5})$/.exec(String(preset || '').trim());
+    if (pixelMatch) {
+      const width = parseInt(pixelMatch[1], 10);
+      const height = parseInt(pixelMatch[2], 10);
+      return { width, height, label: `${width}×${height}px`, mm: `${width}×${height}px` };
+    }
+    return paperPresets.custom;
   }
 
   function fitToPaper({ artWidth, artHeight, preset = 'custom', margin = 0 }) {
@@ -143,5 +181,5 @@
     };
   }
 
-  window.CanvasLayout = { paperPresets, extendedPresets, getSize, fitToPaper, drawFrame, attachFitZoom };
+  window.CanvasLayout = { paperPresets, extendedPresets, getSize, normalizeKey, fitToPaper, drawFrame, attachFitZoom };
 })();
