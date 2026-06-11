@@ -179,11 +179,21 @@ body::before {
 
 .ts-algo-title {
   font-family: var(--ts-font-display);
-  font-size: 1rem;
-  font-weight: 400;
-  color: var(--ts-text-primary);
-  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--ts-accent-primary);
+  margin: 0 0 16px 0;
   letter-spacing: 0.02em;
+}
+
+/* Override inline styles when ts-algo-title is applied via init.js */
+#controls h2.ts-algo-title {
+  font-family: var(--ts-font-display) !important;
+  font-style: normal !important;
+  color: var(--ts-accent-primary) !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
 }
 
 /* ============================================

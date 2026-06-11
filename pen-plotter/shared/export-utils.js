@@ -436,6 +436,125 @@ ${pathsMarkup}</svg>`;
     },
 
     // ==========================================
+    // CONFIG-DRIVEN MOUNT CONTROLS
+    // ==========================================
+
+    /**
+     * Mount export control buttons into the sidebar, driven by config.
+     * Creates the Export control-group HTML and wires up event listeners.
+     *
+     * @param {Object} config Page configuration object
+     * @param {string[]} config.exports Array of export types: 'svg', 'plotter-svg', 'png', 'gif'
+     * @param {Object} [config.handlers] Custom handler functions per export type
+     * @param {Function} [config.handlers.svg] Custom SVG export handler
+     * @param {Function} [config.handlers.plotterSvg] Custom Plotter SVG handler
+     * @param {Function} [config.handlers.png] Custom PNG handler
+     * @param {Function} [config.handlers.gif] Custom GIF handler
+     * @param {Function} [config.getCanvas] Function returning the canvas element
+     * @param {string} [config.algorithmName] Name for exported filenames
+     * @param {Element} [config.mountTarget] DOM element to mount into (defaults to #controls)
+     * @param {string} [config.insertBefore] CSS selector -- insert export group before this element
+     */
+    mountControls: function(config = {}) {
+      const self = this;
+      const exports = config.exports || ['png'];
+      const handlers = config.handlers || {};
+      const algorithmName = config.algorithmName || self.defaults.filename;
+      const getCanvas = config.getCanvas || (() => self.getCanvas());
+
+      // Build button markup
+      const cols = exports.length >= 3 ? 'three' : '';
+      const buttonMarkup = exports.map(type => {
+        const id = `ts-export-${type}`;
+        const labels = {
+          'svg': 'SVG',
+          'plotter-svg': 'Plotter SVG',
+          'png': 'PNG',
+          'gif': 'GIF'
+        };
+        return `<button id="${id}" class="secondary">${labels[type] || type.toUpperCase()}</button>`;
+      }).join('\n        ');
+
+      const html = `
+    <div class="control-group ts-export-controls" data-ts-init="export">
+      <h3>Export</h3>
+      <div class="button-group ${cols}">
+        ${buttonMarkup}
+      </div>
+    </div>`;
+
+      // Find mount point
+      const mountTarget = config.mountTarget || document.getElementById('controls');
+      if (!mountTarget) {
+        console.warn('[TSExport] No mount target found for export controls');
+        return;
+      }
+
+      // Don't mount twice
+      if (mountTarget.querySelector('[data-ts-init="export"]')) {
+        console.log('[TSExport] Export controls already mounted');
+        return;
+      }
+
+      // Insert before a specific element if specified, otherwise append
+      const insertRef = config.insertBefore
+        ? mountTarget.querySelector(config.insertBefore)
+        : null;
+
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html.trim();
+      const exportGroup = wrapper.firstElementChild;
+
+      if (insertRef) {
+        insertRef.parentNode.insertBefore(exportGroup, insertRef);
+      } else {
+        mountTarget.appendChild(exportGroup);
+      }
+
+      // Wire event listeners
+      const defaultHandlers = {
+        'svg': handlers.svg || (() => {
+          const canvas = getCanvas();
+          if (canvas) self.canvasToSVG(canvas, algorithmName);
+        }),
+        'plotter-svg': handlers.plotterSvg || null,
+        'png': handlers.png || (() => {
+          const canvas = getCanvas();
+          if (canvas) self.downloadPNG(canvas, algorithmName, { scale: 2 });
+        }),
+        'gif': handlers.gif || null,
+      };
+
+      exports.forEach(type => {
+        const btn = document.getElementById(`ts-export-${type}`);
+        const handler = defaultHandlers[type];
+        if (btn && handler) {
+          btn.addEventListener('click', async () => {
+            btn.classList.add('exporting');
+            btn.disabled = true;
+            try {
+              await handler();
+            } catch (err) {
+              console.error(`[TSExport] ${type} export failed:`, err);
+              if (typeof TSToast !== 'undefined') {
+                TSToast.show(`${type.toUpperCase()} export failed`, 'error');
+              }
+            } finally {
+              btn.classList.remove('exporting');
+              btn.disabled = false;
+            }
+          });
+        } else if (btn && !handler) {
+          btn.disabled = true;
+          btn.title = `${type} export not configured for this algorithm`;
+          btn.style.opacity = '0.4';
+        }
+      });
+
+      console.log(`[TSExport] Mounted controls: ${exports.join(', ')}`);
+    },
+
+    // ==========================================
     // PLOTTER FORMAT EXPORTS (DXF, HPGL, GCODE)
     // ==========================================
 
