@@ -1,143 +1,143 @@
 {
   "version": "2.1.0",
-  "lastUpdated": "2026-03-10",
+  "lastUpdated": "2026-06-11",
   "stats": {
-    "totalAlgorithms": 93,
+    "totalAlgorithms": 99,
     "totalCategories": 20,
-    "featuredCount": 13,
-    "plotterSafeCount": 83,
+    "featuredCount": 15,
+    "plotterSafeCount": 89,
     "mediumCounts": {
       "systems": 26,
       "screen": 4,
-      "plotter": 56,
-      "tools": 7
+      "plotter": 60,
+      "tools": 9
     },
     "plotterReadinessCounts": {
       "adaptable": 32,
       "screen-first": 5,
-      "native": 49,
-      "tool": 7
+      "native": 53,
+      "tool": 9
     }
   },
   "categories": {
     "advanced": {
       "name": "Advanced",
       "shortLabel": "Adv",
-      "icon": "\u25c7",
+      "icon": "◇",
       "description": "Dense scientific and mathematical systems for ambitious plots."
     },
     "ai": {
       "name": "AI",
       "shortLabel": "AI",
-      "icon": "\u25ce",
+      "icon": "◎",
       "description": "Machine-learning assisted experiments and neural pattern studies."
     },
     "cellular-automata": {
       "name": "Cellular Automata",
       "shortLabel": "CA",
-      "icon": "\u25a6",
+      "icon": "▦",
       "description": "Rule-driven systems where simple local logic creates emergent structure."
     },
     "chemical": {
       "name": "Chemical",
       "shortLabel": "Chem",
-      "icon": "\u25cc",
+      "icon": "◌",
       "description": "Reaction, diffusion, and material-inspired studies with organic flow."
     },
     "curves": {
       "name": "Curves",
       "shortLabel": "Curves",
-      "icon": "\u223f",
+      "icon": "∿",
       "description": "Parametric, harmonic, and recursive line systems."
     },
     "flow-fields": {
       "name": "Flow Fields",
       "shortLabel": "Flow",
-      "icon": "\u219d",
+      "icon": "↝",
       "description": "Vector-field driven motion and contour-following trajectories."
     },
     "fluid-dynamics": {
       "name": "Fluid Dynamics",
       "shortLabel": "Fluid",
-      "icon": "\u2248",
+      "icon": "≈",
       "description": "Flow simulations and turbulence-inspired structures."
     },
     "fractals": {
       "name": "Fractals",
       "shortLabel": "Frac",
-      "icon": "\u2736",
+      "icon": "✶",
       "description": "Recursive and contour-derived forms with self-similar detail."
     },
     "geometric": {
       "name": "Geometric",
       "shortLabel": "Geo",
-      "icon": "\u25e7",
+      "icon": "◧",
       "description": "Tilings, spirals, grids, and structured line compositions."
     },
     "hybrid": {
       "name": "Hybrid",
       "shortLabel": "Hybrid",
-      "icon": "\u2b21",
+      "icon": "⬡",
       "description": "Composable systems that blend multiple algorithm families."
     },
     "image-processing": {
       "name": "Image Processing",
       "shortLabel": "Image",
-      "icon": "\u25eb",
+      "icon": "◫",
       "description": "Raster-to-line workflows, hatching, halftones, and contour extraction."
     },
     "natural": {
       "name": "Natural",
       "shortLabel": "Nat",
-      "icon": "\u273f",
+      "icon": "✿",
       "description": "Growth, branching, weather, and organism-inspired forms."
     },
     "packing": {
       "name": "Packing",
       "shortLabel": "Pack",
-      "icon": "\u25cd",
+      "icon": "◍",
       "description": "Motif placement, dense compositions, and collision-aware arrangement."
     },
     "physics": {
       "name": "Physics",
       "shortLabel": "Phys",
-      "icon": "\u27f2",
+      "icon": "⟲",
       "description": "Particle, force, field, and interference-based systems."
     },
     "reaction-diffusion": {
       "name": "Reaction Diffusion",
       "shortLabel": "RD",
-      "icon": "\u25d0",
+      "icon": "◐",
       "description": "Chemical pattern formation, thresholds, and contour-ready fields."
     },
     "symmetry": {
       "name": "Symmetry",
       "shortLabel": "Sym",
-      "icon": "\u2723",
+      "icon": "✣",
       "description": "Tessellations, ornamental systems, and repeating structure."
     },
     "textures": {
       "name": "Textures",
       "shortLabel": "Tex",
-      "icon": "\u2592",
+      "icon": "▒",
       "description": "Surface treatments, hatch structures, and repeatable fills."
     },
     "tools": {
       "name": "Tools",
       "shortLabel": "Tools",
-      "icon": "\u2699",
+      "icon": "⚙",
       "description": "Prep, optimization, preview, export, and validation utilities."
     },
     "trees-lsystems": {
       "name": "Trees & L-Systems",
       "shortLabel": "L-Sys",
-      "icon": "\u27d0",
+      "icon": "⟐",
       "description": "Branching grammars, recursive trees, and botanical structures."
     },
     "voronoi": {
       "name": "Voronoi",
       "shortLabel": "Voro",
-      "icon": "\u2b22",
+      "icon": "⬢",
       "description": "Cellular partitioning, stippling, and route optimization studies."
     }
   },
@@ -407,7 +407,7 @@
       "name": "Vortex Street",
       "category": "advanced",
       "path": "pen-plotter/algorithms/advanced/vortex-street-gui.html",
-      "description": "Fluid dynamics vortex patterns (von K\u00e1rm\u00e1n vortex street)",
+      "description": "Fluid dynamics vortex patterns (von Kármán vortex street)",
       "complexity": "advanced",
       "hasPresets": false,
       "hasExport": [
@@ -869,7 +869,7 @@
       "name": "Convection Cells",
       "category": "chemical",
       "path": "pen-plotter/algorithms/chemical/convection-cells-gui.html",
-      "description": "Thermal convection patterns (Rayleigh-B\u00e9nard convection)",
+      "description": "Thermal convection patterns (Rayleigh-Bénard convection)",
       "complexity": "advanced",
       "hasPresets": false,
       "hasExport": [
@@ -1379,6 +1379,58 @@
         "maze-generator",
         "space-filling-standard"
       ],
+      "status": "stable"
+    },
+    {
+      "id": "curves-factory",
+      "name": "Curves Factory",
+      "category": "curves",
+      "path": "pen-plotter/algorithms/curves/curves-factory.html",
+      "description": "Unified factory for curve algorithms: harmonograph, hilbert curve, lissajous curves, rose curves, space-filling curves, and dragon curve. Harmonograph-based with parameter-space blending across all 6 curve systems.",
+      "complexity": "advanced",
+      "hasPresets": true,
+      "hasExport": [
+        "svg",
+        "png"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "harmonograph",
+        "hilbert",
+        "lissajous",
+        "rose",
+        "space-filling",
+        "dragon",
+        "factory",
+        "parametric"
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "parametric",
+        "recursion"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "rhythmic"
+      ],
+      "relatedSeeds": [],
       "status": "stable"
     },
     {
@@ -2045,10 +2097,10 @@
     },
     {
       "id": "moir-patterns",
-      "name": "Moir\u00e9 Patterns",
+      "name": "Moiré Patterns",
       "category": "geometric",
       "path": "pen-plotter/algorithms/geometric/moire-patterns-gui.html",
-      "description": "Moir\u00e9 Patterns builds structured geometric linework for pen plotting and iterative exploration.",
+      "description": "Moiré Patterns builds structured geometric linework for pen plotting and iterative exploration.",
       "complexity": "intermediate",
       "hasPresets": false,
       "hasExport": [
@@ -3537,6 +3589,60 @@
       "status": "stable"
     },
     {
+      "id": "natural-factory",
+      "name": "Natural Factory",
+      "category": "natural",
+      "path": "pen-plotter/algorithms/natural/natural-factory.html",
+      "description": "Unified factory for natural algorithms: astronomy, coral growth, crystal growth, DLA, differential growth, lightning, phyllotaxis, and space colonization. Astronomy-based with parameter-space blending across all 8 natural systems.",
+      "complexity": "advanced",
+      "hasPresets": true,
+      "hasExport": [
+        "svg",
+        "png"
+      ],
+      "featured": true,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "natural",
+        "astronomy",
+        "coral",
+        "crystal",
+        "dla",
+        "differential-growth",
+        "lightning",
+        "phyllotaxis",
+        "space-colonization",
+        "factory",
+        "parametric"
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "optional",
+      "penCount": "single",
+      "motifFamilies": [
+        "branching",
+        "growth",
+        "particles"
+      ],
+      "visualTraits": [
+        "emergent",
+        "flowing",
+        "organic"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
+    },
+    {
       "id": "arrows",
       "name": "Arrows",
       "category": "packing",
@@ -4819,6 +4925,162 @@
         "flow-hatching",
         "tsp-art"
       ],
+      "status": "stable"
+    },
+    {
+      "id": "harmonograph-datgui",
+      "name": "Harmonograph (dat.gui)",
+      "category": "curves",
+      "path": "pen-plotter/algorithms/curves/harmonograph-datgui.html",
+      "description": "Alternate harmonograph implementation using dat.gui controls for parametric curve exploration.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "curves",
+        "plotter"
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "png",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "curves",
+        "parametric",
+        "recursion"
+      ],
+      "visualTraits": [
+        "continuous",
+        "geometric",
+        "rhythmic"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
+    },
+    {
+      "id": "hatching-demo",
+      "name": "Hatching & Texture Library Demo",
+      "category": "textures",
+      "path": "algorithms/textures/hatching-demo.html",
+      "description": "Interactive hatching and texture library demo showcasing various surface fill techniques for pen plotters.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [
+        "svg"
+      ],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "textures",
+        "plotter"
+      ],
+      "medium": "plotter",
+      "engine": [
+        "p5"
+      ],
+      "outputs": [
+        "canvas",
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "native",
+      "colorDependency": "none",
+      "penCount": "single",
+      "motifFamilies": [
+        "fill",
+        "hatching",
+        "texture"
+      ],
+      "visualTraits": [
+        "dense",
+        "repetitive",
+        "textural"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
+    },
+    {
+      "id": "algorithm-validator",
+      "name": "Algorithm Validator",
+      "category": "tools",
+      "path": "pen-plotter/algorithms/tools/algorithm-validator.html",
+      "description": "Validation tool for checking algorithm pages against design system and export requirements.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "validation"
+      ],
+      "medium": "tools",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [],
+      "inputs": [],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
+      "status": "stable"
+    },
+    {
+      "id": "functional-validator",
+      "name": "Functional Validator",
+      "category": "tools",
+      "path": "pen-plotter/algorithms/tools/functional-validator.html",
+      "description": "Functional testing tool for verifying algorithm behavior and output correctness.",
+      "complexity": "intermediate",
+      "hasPresets": false,
+      "hasExport": [],
+      "featured": false,
+      "plotterSafe": true,
+      "requiresImage": false,
+      "tags": [
+        "tools",
+        "validation"
+      ],
+      "medium": "tools",
+      "engine": [
+        "vanilla"
+      ],
+      "outputs": [
+        "svg"
+      ],
+      "inputs": [],
+      "plotterReadiness": "tool",
+      "colorDependency": "none",
+      "penCount": "n/a",
+      "motifFamilies": [
+        "utility"
+      ],
+      "visualTraits": [
+        "functional"
+      ],
+      "relatedSeeds": [],
       "status": "stable"
     }
   ]

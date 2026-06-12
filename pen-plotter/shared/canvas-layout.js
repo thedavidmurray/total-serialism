@@ -217,5 +217,57 @@
     };
   }
 
-  window.CanvasLayout = { paperPresets, extendedPresets, getSize, normalizeKey, fitToPaper, fitPointsToPaper, drawFrame, attachFitZoom };
+  /**
+   * Mount a paper size <select> into a container element.
+   * When the user changes the selection, resizes the canvas via CanvasLayout.getSize()
+   * and calls an optional onResize callback.
+   *
+   * options:
+   *   container    HTMLElement  The #controls div to append into
+   *   algorithmName string      Used for the label
+   *   getCanvas    () => HTMLCanvasElement | null
+   *   onResize     (preset) => void  Optional callback after resize
+   */
+  function mountSelector({ container, algorithmName = '', getCanvas, onResize } = {}) {
+    if (!container) return;
+
+    // Build the options list from base paperPresets
+    const presetKeys = Object.keys(paperPresets);
+    const options = presetKeys
+      .map(k => `<option value="${k}">${paperPresets[k].label}</option>`)
+      .join('\n');
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'control-group ts-paper-size-selector';
+    wrapper.innerHTML = `
+      <h3 style="margin:0 0 8px 0;font-size:13px;color:#888;text-transform:uppercase;letter-spacing:.05em;">Paper Size</h3>
+      <select id="ts-paper-preset" style="width:100%;padding:5px;background:#333;color:#fff;border:1px solid #555;border-radius:4px;">
+        ${options}
+      </select>
+    `;
+
+    container.appendChild(wrapper);
+
+    const select = wrapper.querySelector('#ts-paper-preset');
+    select.addEventListener('change', () => {
+      const preset = select.value;
+      const size = getSize(preset);
+      const canvas = typeof getCanvas === 'function' ? getCanvas() : null;
+      if (canvas) {
+        canvas.width = size.width;
+        canvas.height = size.height;
+        // Trigger a redraw if p5 is available
+        if (typeof redraw === 'function') {
+          redraw();
+        }
+      }
+      if (typeof onResize === 'function') {
+        onResize(preset, size);
+      }
+    });
+
+    return wrapper;
+  }
+
+  window.CanvasLayout = { paperPresets, extendedPresets, getSize, normalizeKey, fitToPaper, fitPointsToPaper, drawFrame, attachFitZoom, mountSelector };
 })();
